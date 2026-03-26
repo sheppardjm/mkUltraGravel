@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-26)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** Phase 2 — Astro Project Setup
+**Current focus:** Phase 2 — Scaffold + Design System
 
 ## Current Position
 
 Phase: 2 of 10 (Scaffold + Design System) — In progress
-Plan: 1 of 5 in current phase (02-01 complete)
-Status: Phase 2 in progress — Astro 6 + Tailwind v4 scaffold complete
+Plan: 2 of 5 in current phase (02-02 complete)
+Status: Phase 2 in progress — design token system and page scaffold complete
 
-Last activity: 2026-03-26 — Completed 02-01-PLAN.md (Astro 6 init, Tailwind v4 via Vite plugin, cascade layers)
+Last activity: 2026-03-26 — Completed 02-02-PLAN.md (design tokens, Astro Fonts API, BaseLayout, 5-section index)
 
-Progress: [██░░░░░░░░] 12% (6/50 plans)
+Progress: [██░░░░░░░░] 14% (7/50 plans)
 
 ## Performance Metrics
 
@@ -29,11 +29,11 @@ Progress: [██░░░░░░░░] 12% (6/50 plans)
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-data-pipeline | 5 | ~14 min | ~2.8 min |
-| 02-scaffold-design-system | 1 | ~4 min | ~4 min |
+| 02-scaffold-design-system | 2 | ~5 min | ~2.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-03 (~4 min), 01-04 (~1 min), 01-05 (~1 min), 02-01 (~4 min)
-- Trend: Stable; Vite/rollup platform-specific dep issues required extra reinstall steps
+- Last 5 plans: 01-04 (~1 min), 01-05 (~1 min), 02-01 (~4 min), 02-02 (~1 min)
+- Trend: Stable; font/token work faster than expected (Fonts API confirmed in Astro 6.1.1)
 
 *Updated after each plan completion*
 
@@ -66,6 +66,11 @@ Recent decisions affecting current work:
 - [02-01]: Tailwind v4 is CSS-first — config lives in global.css @theme block, no tailwind.config.js
 - [02-01]: Cascade layer order @layer leaflet, base, components, utilities declared FIRST in global.css before @import tailwindcss
 - [02-01]: npm install must run via volta run (not bare npm) to install platform-specific rollup/vite binaries for Node 22
+- [02-02]: Astro Fonts API (fontProviders.google()) confirmed available in Astro 6.1.1 — imported from "astro/config"
+- [02-02]: oklch color space used for all tokens — perceptually uniform, natural for precise dark palette control
+- [02-02]: --font-sans aliased to var(--font-mono) — intentional monospace-everything brutalist aesthetic
+- [02-02]: Section anchors (hero, route, sectors, photos, info) are permanent — downstream phases fill content, never rename IDs
+- [02-02]: BaseLayout.astro is the universal wrapper — all pages use it, never write their own <html>/<head>
 
 ### Pending Todos
 
@@ -79,6 +84,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26T23:39:02Z
-Stopped at: Completed 02-01-PLAN.md — Astro 6 + Tailwind v4 scaffold operational, ready for 02-02 design tokens.
+Last session: 2026-03-26T23:43:40Z
+Stopped at: Completed 02-02-PLAN.md — design token system, Astro Fonts API, BaseLayout, and 5-section index complete. Ready for 02-03.
 Resume file: None
