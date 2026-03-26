@@ -5,33 +5,34 @@
 See: .planning/PROJECT.md (updated 2026-03-26)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** Phase 1 — Data Pipeline
+**Current focus:** Phase 2 — Astro Project Setup
 
 ## Current Position
 
-Phase: 1 of 10 (Data Pipeline)
-Plan: 4 of 5 in current phase
-Status: In progress
-Last activity: 2026-03-26 — Completed 01-04-PLAN.md (photo matcher + photos.json)
+Phase: 1 of 10 (Data Pipeline) — COMPLETE
+Plan: 5 of 5 in current phase
+Status: Phase 1 complete; ready for Phase 2
 
-Progress: [█░░░░░░░░░] 8% (4/50 plans)
+Last activity: 2026-03-26 — Completed 01-05-PLAN.md (data pipeline coordinator + Phase 1 validation)
+
+Progress: [██░░░░░░░░] 10% (5/50 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: ~3 min
-- Total execution time: 0.22 hours
+- Total plans completed: 5
+- Average duration: ~2.6 min
+- Total execution time: ~0.22 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-data-pipeline | 4 | ~13 min | ~3 min |
+| 01-data-pipeline | 5 | ~14 min | ~2.8 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (~2 min), 01-02 (~5 min), 01-03 (~4 min), 01-04 (~1 min)
-- Trend: Consistent pace; 01-04 fast due to well-established patterns
+- Last 5 plans: 01-01 (~2 min), 01-02 (~5 min), 01-03 (~4 min), 01-04 (~1 min), 01-05 (~1 min)
+- Trend: Consistent pace; data pipeline scripts well-established by end of phase
 
 *Updated after each plan completion*
 
@@ -57,6 +58,9 @@ Recent decisions affecting current work:
 - [01-03]: findPointAtMile helper established as standard pattern for all future mile-marker lookups
 - [01-04]: All 33 route photos lack EXIF GPS — confirmed manual-only (source: 'manual') in photos.json; EXIF attempt preserved as forward-compatible pattern
 - [01-04]: Scripts intentionally self-contained (findPointAtMile duplicated, not shared) — each script runnable independently without import side effects
+- [01-05]: prebuild npm lifecycle hook chosen for data generation — runs automatically before `npm run build`, no CI/CD config changes needed
+- [01-05]: dev script runs data generation once then starts astro dev — data is static/pre-generated, not watch-mode
+- [01-05]: build script references astro build even though Astro not yet installed — correct eventual command validated independently
 
 ### Pending Todos
 
@@ -70,6 +74,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26T19:07:24Z
-Stopped at: Completed 01-04-PLAN.md — Photo matcher written; photos.json generated (33 photos, all manual, mi 4-76); ready for Plan 01-05
+Last session: 2026-03-26T19:11:32Z
+Stopped at: Completed 01-05-PLAN.md — Coordinator script + package.json build integration; all Phase 1 criteria validated; Phase 1 COMPLETE
 Resume file: None
