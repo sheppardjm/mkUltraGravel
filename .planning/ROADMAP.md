@@ -50,11 +50,11 @@ MAP-01 through MAP-07, ROUTE-01, ROUTE-02, ROUTE-03, VIS-01, VIS-02, MAP-06)_
 **Plans:** 5 plans in 3 waves
 
 Plans:
-- [ ] 01-01-PLAN.md — Init project + GPX parser (wave 1)
-- [ ] 01-02-PLAN.md — Photo manifest curation with user verification (wave 1)
-- [ ] 01-03-PLAN.md — Annotation resolver: sectors/KOMs/restocks to lat/lon (wave 2)
-- [ ] 01-04-PLAN.md — Photo matcher: manifest + route-data to photos.json (wave 2)
-- [ ] 01-05-PLAN.md — Build pipeline wiring + full validation (wave 3)
+- [x] 01-01-PLAN.md — Init project + GPX parser (wave 1)
+- [x] 01-02-PLAN.md — Photo manifest curation with user verification (wave 1)
+- [x] 01-03-PLAN.md — Annotation resolver: sectors/KOMs/restocks to lat/lon (wave 2)
+- [x] 01-04-PLAN.md — Photo matcher: manifest + route-data to photos.json (wave 2)
+- [x] 01-05-PLAN.md — Build pipeline wiring + full validation (wave 3)
 
 ---
 
@@ -74,14 +74,12 @@ tokens, and every subsequent component can be styled without rework.
 4. Escher/CIA/surrealist visual motifs — distorted geometry, redacted-document texture, surveillance imagery — are present as design elements visible on the base page
 5. Tailwind v4 configured with `@theme` CSS config; cascade layers prevent Leaflet CSS conflicts
 
-**Plans:** TBD (5-7 plans estimated)
+**Plans:** 3 plans in 3 waves
 
 Plans:
-- [ ] 02-01: Initialize Astro 6 project with Tailwind v4 integration; confirm Node 22.12.0+ requirement
-- [ ] 02-02: Define dark color palette as CSS custom properties; apply to base layout component
-- [ ] 02-03: Configure Space Mono (body) and display heading font; add preload links and font-display fallback
-- [ ] 02-04: Build base page layout — single-page scroll structure with named section anchors
-- [ ] 02-05: Integrate tone reference images; implement Escher/CIA surrealist visual elements into base design
+- [ ] 02-01-PLAN.md — Astro 6 + Tailwind v4 init with cascade layers (wave 1)
+- [ ] 02-02-PLAN.md — Design tokens, fonts, BaseLayout, page scaffold (wave 2)
+- [ ] 02-03-PLAN.md — Visual motifs: grain overlay, tone images, surrealist elements (wave 3)
 
 ---
 
@@ -299,7 +297,7 @@ Note: Phases 2 and 1 can run in parallel. Phases 6, 7, and 8 can run in parallel
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Data Pipeline | 5/5 | Complete | 2026-03-26 |
-| 2. Scaffold + Design System | 0/5 | Not started | - |
+| 2. Scaffold + Design System | 0/3 | In progress | - |
 | 3. Map Core | 0/7 | Not started | - |
 | 4. Elevation Profile | 0/4 | Not started | - |
 | 5. Photo Map Markers | 0/3 | Not started | - |
