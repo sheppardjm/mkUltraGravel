@@ -1,14 +1,34 @@
 ---
-import "../styles/global.css";
+import BaseLayout from "../layouts/BaseLayout.astro";
 ---
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>MK Ultra Gravel</title>
-  </head>
-  <body>
-    <h1>MK Ultra Gravel</h1>
-    <p>Scaffold working. Design system incoming.</p>
-  </body>
-</html>
+
+<BaseLayout>
+  <main>
+    <section id="hero" class="min-h-screen flex items-center justify-center px-4">
+      <div class="text-center">
+        <h1 class="text-5xl md:text-7xl tracking-tight mb-4">MK Ultra Gravel</h1>
+        <p class="text-text-muted text-lg">June 7, 2026 &mdash; Marquette, MI &mdash; 100 miles</p>
+      </div>
+    </section>
+
+    <section id="route" class="min-h-screen px-4 py-16">
+      <h2 class="text-3xl md:text-5xl mb-8">The Route</h2>
+      <p class="text-text-muted">Map and elevation profile — Phase 3</p>
+    </section>
+
+    <section id="sectors" class="min-h-screen px-4 py-16">
+      <h2 class="text-3xl md:text-5xl mb-8">Gravel Sectors</h2>
+      <p class="text-text-muted">Paris-Roubaix rated sector cards — Phase 6</p>
+    </section>
+
+    <section id="photos" class="min-h-screen px-4 py-16">
+      <h2 class="text-3xl md:text-5xl mb-8">Route Photos</h2>
+      <p class="text-text-muted">Photo gallery — Phase 8</p>
+    </section>
+
+    <section id="info" class="min-h-screen px-4 py-16">
+      <h2 class="text-3xl md:text-5xl mb-8">Event Info</h2>
+      <p class="text-text-muted">Details, registration, GPX download — Phase 7</p>
+    </section>
+  </main>
+</BaseLayout>
