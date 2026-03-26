@@ -17,7 +17,7 @@ slot. Static content sections follow independently. Mobile audit and deployment 
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Data Pipeline** — Build-time GPX parser, annotation resolver, photo geo-matcher
-- [ ] **Phase 2: Scaffold + Design System** — Astro project, Tailwind tokens, dark brutalist identity
+- [x] **Phase 2: Scaffold + Design System** — Astro project, Tailwind tokens, dark brutalist identity
 - [ ] **Phase 3: Map Core** — Leaflet island with GPX polyline, sector/KOM/restock overlays
 - [ ] **Phase 4: Elevation Profile** — Profile chart integrated alongside the map
 - [ ] **Phase 5: Photo Map Markers** — Geolocated photo markers with clustering on the map
@@ -77,9 +77,9 @@ tokens, and every subsequent component can be styled without rework.
 **Plans:** 3 plans in 3 waves
 
 Plans:
-- [ ] 02-01-PLAN.md — Astro 6 + Tailwind v4 init with cascade layers (wave 1)
-- [ ] 02-02-PLAN.md — Design tokens, fonts, BaseLayout, page scaffold (wave 2)
-- [ ] 02-03-PLAN.md — Visual motifs: grain overlay, tone images, surrealist elements (wave 3)
+- [x] 02-01-PLAN.md — Astro 6 + Tailwind v4 init with cascade layers (wave 1)
+- [x] 02-02-PLAN.md — Design tokens, fonts, BaseLayout, page scaffold (wave 2)
+- [x] 02-03-PLAN.md — Visual motifs: grain overlay, tone images, surrealist elements (wave 3)
 
 ---
 
@@ -297,7 +297,7 @@ Note: Phases 2 and 1 can run in parallel. Phases 6, 7, and 8 can run in parallel
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Data Pipeline | 5/5 | Complete | 2026-03-26 |
-| 2. Scaffold + Design System | 0/3 | In progress | - |
+| 2. Scaffold + Design System | 3/3 | Complete | 2026-03-26 |
 | 3. Map Core | 0/7 | Not started | - |
 | 4. Elevation Profile | 0/4 | Not started | - |
 | 5. Photo Map Markers | 0/3 | Not started | - |

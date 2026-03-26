@@ -35,9 +35,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **VIS-01**: Photo gallery displays route photos in a grid layout
 - [ ] **VIS-02**: Lightbox viewer opens photos full-size when clicked
-- [ ] **VIS-03**: Dark brutalist psychedelic design aesthetic throughout the site
-- [ ] **VIS-04**: Creepy display font for headers, monospaced font for body text
-- [ ] **VIS-05**: Escher/CIA/surrealist visual elements integrated into design using tone reference images
+- [x] **VIS-03**: Dark brutalist psychedelic design aesthetic throughout the site
+- [x] **VIS-04**: Creepy display font for headers, monospaced font for body text
+- [x] **VIS-05**: Escher/CIA/surrealist visual elements integrated into design using tone reference images
 
 ### Performance & Mobile
 
@@ -99,9 +99,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EVENT-04 | Phase 7 | Pending |
 | VIS-01 | Phase 8 | Pending |
 | VIS-02 | Phase 8 | Pending |
-| VIS-03 | Phase 2 | Pending |
-| VIS-04 | Phase 2 | Pending |
-| VIS-05 | Phase 2 | Pending |
+| VIS-03 | Phase 2 | Complete |
+| VIS-04 | Phase 2 | Complete |
+| VIS-05 | Phase 2 | Complete |
 | PERF-01 | Phase 9 | Pending |
 | PERF-02 | Phase 9 | Pending |
 
