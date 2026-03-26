@@ -10,27 +10,27 @@ See: .planning/PROJECT.md (updated 2026-03-26)
 ## Current Position
 
 Phase: 1 of 10 (Data Pipeline)
-Plan: 1 of 5 in current phase
+Plan: 2 of 5 in current phase
 Status: In progress
-Last activity: 2026-03-26 — Completed 01-01-PLAN.md (GPX parser + route-data.json)
+Last activity: 2026-03-26 — Completed 01-02-PLAN.md (photo manifest curation)
 
-Progress: [█░░░░░░░░░] 2% (1/50 plans)
+Progress: [█░░░░░░░░░] 4% (2/50 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: ~2 min
-- Total execution time: 0.03 hours
+- Total plans completed: 2
+- Average duration: ~4 min
+- Total execution time: 0.12 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-data-pipeline | 1 | ~2 min | ~2 min |
+| 01-data-pipeline | 2 | ~7 min | ~4 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (~2 min)
+- Last 5 plans: 01-01 (~2 min), 01-02 (~5 min)
 - Trend: Establishing baseline
 
 *Updated after each plan completion*
@@ -49,6 +49,8 @@ Recent decisions affecting current work:
 - [01-01]: gpxparser requires @xmldom/xmldom for DOMParser shim in Node.js; install alongside gpxparser
 - [01-01]: gpxparser cumul array has length equal to points.length (not N-1); prepend 0, slice last to align indexes
 - [01-01]: route-data.json is canonical data source for all downstream phases (map, elevation, photos, annotations)
+- [01-02]: photo-manifest.js uses explicit allowlist (33 entries) — photo pipeline relies on curation, not directory scanning; match-photos.js must consume this manifest
+- [01-02]: Mile markers estimated from terrain/landmark cues; not from EXIF GPS (GPS status still unknown — Plan 01-03 will inspect)
 
 ### Pending Todos
 
@@ -62,6 +64,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26T17:49:56Z
-Stopped at: Completed 01-01-PLAN.md — GPX parser and route-data.json generated; ready for Plan 01-02
+Last session: 2026-03-26T18:00:00Z
+Stopped at: Completed 01-02-PLAN.md — Photo manifest curated (33 photos, mi 4-76); user approved at checkpoint; ready for Plan 01-03
 Resume file: None
