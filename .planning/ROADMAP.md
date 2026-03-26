@@ -1,0 +1,310 @@
+# Roadmap: MK Ultra Gravel
+
+## Overview
+
+A 10-phase build that starts with the load-bearing data pipeline and ends with a deployed,
+audited site ready to convert gravel cyclists into registered participants for June 7, 2026.
+The data pipeline feeds everything — map, annotations, photo markers, gallery, static route
+cards — so it executes first. The map is the centrepiece feature and gets the second major
+slot. Static content sections follow independently. Mobile audit and deployment close the build.
+
+## Phases
+
+**Phase Numbering:**
+- Integer phases (1, 2, 3): Planned milestone work
+- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+
+Decimal phases appear between their surrounding integers in numeric order.
+
+- [ ] **Phase 1: Data Pipeline** — Build-time GPX parser, annotation resolver, photo geo-matcher
+- [ ] **Phase 2: Scaffold + Design System** — Astro project, Tailwind tokens, dark brutalist identity
+- [ ] **Phase 3: Map Core** — Leaflet island with GPX polyline, sector/KOM/restock overlays
+- [ ] **Phase 4: Elevation Profile** — Profile chart integrated alongside the map
+- [ ] **Phase 5: Photo Map Markers** — Geolocated photo markers with clustering on the map
+- [ ] **Phase 6: Route Info Sections** — Sector cards, KOM listings, restock listings
+- [ ] **Phase 7: Hero + Event Info + CTAs** — Above-fold content, event details, donation, GPX download
+- [ ] **Phase 8: Photo Gallery + Lightbox** — 33-photo grid with full-screen lightbox
+- [ ] **Phase 9: Mobile + Performance Audit** — Scroll trap, contrast, animation, Core Web Vitals
+- [ ] **Phase 10: Deployment** — Cloudflare Pages, custom domain, live preview
+
+---
+
+## Phase Details
+
+### Phase 1: Data Pipeline
+
+**Goal:** All downstream components have machine-readable data to consume — the GPX track,
+sector/KOM/restock annotations resolved to lat/lon, and 33 photos with position assignments.
+
+**Depends on:** Nothing (first phase)
+
+**Requirements:** _(no direct v1 UI requirements — this is the shared foundation that enables
+MAP-01 through MAP-07, ROUTE-01, ROUTE-02, ROUTE-03, VIS-01, VIS-02, MAP-06)_
+
+**Success Criteria** (what must be TRUE):
+1. `public/data/route-data.json` exists with lat/lon/elevation/mile-marker per trackpoint
+2. `public/data/annotations.json` exists with all 6 sectors, 3 KOM segments, and 4 restock points each carrying resolved lat/lon coordinates and correct mile markers
+3. `public/data/photos.json` exists with all 33 photos each assigned a lat/lon position (EXIF-derived or manually assigned from mile marker estimate)
+4. The raw GPX file is available at a public URL path for download with the correct filename
+
+**Plans:** TBD (5-8 plans estimated)
+
+Plans:
+- [ ] 01-01: Inspect source assets — check GPX trackpoint count, photo EXIF GPS status, file sizes
+- [ ] 01-02: Write `parse-gpx.js` — parse `MK Ultra.gpx` into `route-data.json`; downsample if >2000 points
+- [ ] 01-03: Write `resolve-annotations.js` — resolve sector/KOM/restock mile markers against route to lat/lon in `annotations.json`
+- [ ] 01-04: Write `match-photos.js` — EXIF extraction with manual mile-marker fallback; produce `photos.json`
+- [ ] 01-05: Wire build scripts into Astro build pipeline; verify all three JSON files generated on `astro build`
+
+---
+
+### Phase 2: Scaffold + Design System
+
+**Goal:** The Astro project exists, the dark brutalist psychedelic identity is encoded as CSS
+tokens, and every subsequent component can be styled without rework.
+
+**Depends on:** Nothing (can run in parallel with Phase 1)
+
+**Requirements:** VIS-03, VIS-04, VIS-05
+
+**Success Criteria** (what must be TRUE):
+1. `astro dev` starts and serves a base page with no build errors
+2. The dark palette (near-black backgrounds, acid-green/blood-red/off-white accents) is defined as CSS custom properties and applied to the base layout
+3. A creepy display font (headers) and a monospaced font (body) are loaded with no flash of unstyled text
+4. Escher/CIA/surrealist visual motifs — distorted geometry, redacted-document texture, surveillance imagery — are present as design elements visible on the base page
+5. Tailwind v4 configured with `@theme` CSS config; cascade layers prevent Leaflet CSS conflicts
+
+**Plans:** TBD (5-7 plans estimated)
+
+Plans:
+- [ ] 02-01: Initialize Astro 6 project with Tailwind v4 integration; confirm Node 22.12.0+ requirement
+- [ ] 02-02: Define dark color palette as CSS custom properties; apply to base layout component
+- [ ] 02-03: Configure Space Mono (body) and display heading font; add preload links and font-display fallback
+- [ ] 02-04: Build base page layout — single-page scroll structure with named section anchors
+- [ ] 02-05: Integrate tone reference images; implement Escher/CIA surrealist visual elements into base design
+
+---
+
+### Phase 3: Map Core
+
+**Goal:** The map is fully interactive — the GPX route is rendered, all 6 gravel sectors and
+3 KOM segments are highlighted as colored overlays, all 4 restock points are marked, and the
+map works correctly on mobile without scroll-trapping.
+
+**Depends on:** Phase 1 (route-data.json, annotations.json), Phase 2 (design system)
+
+**Requirements:** MAP-01, MAP-02, MAP-03, MAP-04, MAP-05
+
+**Success Criteria** (what must be TRUE):
+1. The full 80-mile GPX route appears as a polyline on the map; the map auto-fits to the route bounds on load
+2. All 6 gravel sectors are highlighted as distinct colored segments with star-rating badges visible at reasonable zoom levels (e.g., zoom 10+)
+3. All 3 KOM segments are highlighted with a distinct color and show name, gradient, and elevation gain in a popup
+4. All 4 restock points appear as map markers that show name and mile marker in a popup
+5. On a real mobile device, single-finger scroll moves the page past the map without trapping the user inside it
+
+**Plans:** TBD (6-9 plans estimated)
+
+Plans:
+- [ ] 03-01: Set up Leaflet 1.9.4 Astro island (`client:load`); wire Stadia Maps / Carto Dark Matter tiles; confirm attribution is styled (not hidden)
+- [ ] 03-02: Render GPX polyline from `route-data.json`; verify downsampled track fits map bounds on load
+- [ ] 03-03: Wire `Leaflet.GestureHandling` from first map commit; test on real mobile device
+- [ ] 03-04: Render sector overlays from `annotations.json` with star-rating color scale and popups
+- [ ] 03-05: Render KOM segment overlays with gradient/elevation popups
+- [ ] 03-06: Render restock point markers with name/mile-marker popups
+- [ ] 03-07: Style map controls and popups to match dark design system
+
+---
+
+### Phase 4: Elevation Profile
+
+**Goal:** An elevation profile chart is displayed alongside (or integrated below) the map,
+showing the full 80-mile elevation character at a glance, synchronized with the route.
+
+**Depends on:** Phase 1 (route-data.json with elevation per point), Phase 2 (design system), Phase 3 (map rendered)
+
+**Requirements:** MAP-07
+
+**Success Criteria** (what must be TRUE):
+1. The elevation profile is visible on the same screen area as the map (below or beside it — not a separate page or section)
+2. The profile accurately represents the 80-mile elevation shape from the GPX data
+3. Gravel sector mile-marker ranges are visually indicated on the profile (shaded bands or tick marks)
+4. The profile renders correctly at mobile viewport widths without overflow or illegibility
+
+**Plans:** TBD (3-5 plans estimated)
+
+Plans:
+- [ ] 04-01: Select charting approach — Leaflet elevation plugin, Chart.js, or SVG path from route-data.json
+- [ ] 04-02: Implement elevation profile component reading from `route-data.json`
+- [ ] 04-03: Overlay sector ranges on profile as colored bands; verify alignment with map sector overlays
+- [ ] 04-04: Responsive sizing — ensure profile adapts to mobile viewports without horizontal scroll
+
+---
+
+### Phase 5: Photo Map Markers
+
+**Goal:** All 33 route photos appear as clickable clustered markers on the map; clicking a
+marker shows a thumbnail and opens the full photo.
+
+**Depends on:** Phase 1 (photos.json with lat/lon), Phase 3 (map stable)
+
+**Requirements:** MAP-06
+
+**Success Criteria** (what must be TRUE):
+1. All 33 photos are represented as markers on the map at their geo-matched positions
+2. Markers cluster at low zoom levels so the map is not crowded with 33 overlapping icons
+3. Clicking a marker shows a thumbnail preview and a link/button to view the full-size photo
+4. Photo markers do not cause visible pan or zoom jank on mid-range mobile hardware
+
+**Plans:** TBD (3-5 plans estimated)
+
+Plans:
+- [ ] 05-01: Wire `Leaflet.markercluster` into the map island; confirm cluster/uncluster behavior
+- [ ] 05-02: Render photo markers from `photos.json`; bind thumbnail popups to each marker
+- [ ] 05-03: Test pan/zoom performance on a real mid-range Android device with all 33 markers loaded
+
+---
+
+### Phase 6: Route Info Sections
+
+**Goal:** Below the map, riders can read structured information about every gravel sector,
+KOM segment, and restock point — rendered as styled cards from the annotation data.
+
+**Depends on:** Phase 1 (annotations.json), Phase 2 (design system)
+
+**Requirements:** ROUTE-01, ROUTE-02, ROUTE-03
+
+**Success Criteria** (what must be TRUE):
+1. All 6 gravel sectors appear as Paris-Roubaix style cards showing name, mile marker, distance, and star rating (rendered as filled stars, 1-5)
+2. All 3 KOM segments appear in a listing showing name, mile marker, distance, gradient percentage, and elevation gain
+3. All 4 restock points appear in a listing showing name and mile marker
+4. Sector star ratings are visually distinct — a 5-star C4 sector reads as more serious than a 2-star Forest Service Rd at a glance
+
+**Plans:** TBD (4-6 plans estimated)
+
+Plans:
+- [ ] 06-01: Build `SectorList` Astro component — reads from `annotations.json` at build time; renders Paris-Roubaix style cards
+- [ ] 06-02: Implement star rating display — 1-5 filled/empty stars with color scale by rating
+- [ ] 06-03: Build `KomList` Astro component — reads from `annotations.json`; displays gradient and elevation gain
+- [ ] 06-04: Build `RestockList` Astro component — reads from `annotations.json`; displays name and mile marker
+
+---
+
+### Phase 7: Hero + Event Info + CTAs
+
+**Goal:** A visitor who lands on the page immediately knows when and where the event is, how
+to register, and what the ride costs — and is compelled to click Register before scrolling.
+
+**Depends on:** Phase 2 (design system)
+
+**Requirements:** EVENT-01, EVENT-02, EVENT-03, EVENT-04, MAP-08
+
+**Success Criteria** (what must be TRUE):
+1. The event date (June 7, 2026), start location (Marquette Fire Bell), distance (80 miles), and cost (free / $10 suggested donation) are visible above the fold without scrolling on both desktop and mobile
+2. A BikeReg registration CTA button appears above the fold AND again below the map section — neither instance requires scrolling past non-CTA content to find it
+3. A live countdown timer showing days/hours/minutes to June 7, 2026 is visible on page load
+4. The Great Lakes Recovery Centers donation info ($10 suggested) is displayed with enough context to explain the cause
+5. A GPX file download link uses the correct filename attribute (`mk-ultra-gravel-2026.gpx`) and is accessible from the page
+
+**Plans:** TBD (4-6 plans estimated)
+
+Plans:
+- [ ] 07-01: Build hero section — event title, date, location, distance, cost, above-fold CTA button; add `<link rel="preload">` for hero background
+- [ ] 07-02: Implement countdown timer — vanilla JS, updates every second, gracefully handles post-event state
+- [ ] 07-03: Build event info block — format, donation info, Great Lakes Recovery Centers explanation
+- [ ] 07-04: Wire GPX download link with `download="mk-ultra-gravel-2026.gpx"` attribute
+- [ ] 07-05: Place second BikeReg CTA below map section; confirm both CTAs link to the correct BikeReg URL
+
+---
+
+### Phase 8: Photo Gallery + Lightbox
+
+**Goal:** Riders can browse all 33 route photos in a grid and open any photo full-screen to
+feel the character of the terrain before committing to register.
+
+**Depends on:** Phase 1 (photos.json), Phase 2 (design system)
+
+**Requirements:** VIS-01, VIS-02
+
+**Success Criteria** (what must be TRUE):
+1. All 33 route photos appear in a CSS grid layout styled to match the dark brutalist design
+2. Thumbnail images are optimized (WebP, resized) via Astro image pipeline so the gallery loads without significant delay on a 4G connection
+3. Clicking any photo opens a full-screen lightbox viewer with the full-size image
+4. The lightbox can be closed with a visible button, the Escape key, and by clicking outside the image
+
+**Plans:** TBD (3-5 plans estimated)
+
+Plans:
+- [ ] 08-01: Configure Astro image optimization pipeline — generate WebP thumbnails for all 33 photos
+- [ ] 08-02: Build photo gallery grid component with lazy-loading for below-fold images
+- [ ] 08-03: Implement lightbox — FSLightbox or equivalent vanilla JS; wire keyboard and click-outside dismiss
+
+---
+
+### Phase 9: Mobile + Performance Audit
+
+**Goal:** The site is confirmed usable on a real mobile device in outdoor conditions — no
+scroll traps, readable contrast, no animation jank, acceptable load times.
+
+**Depends on:** All preceding phases (audits complete product)
+
+**Requirements:** PERF-01, PERF-02
+
+**Success Criteria** (what must be TRUE):
+1. On a real mobile device, a user can scroll past the map using a single finger without being trapped inside it
+2. Every body text / background color combination passes WCAG AA contrast (4.5:1 minimum); every large text / background passes 3:1 minimum
+3. All CSS animations use only `transform` and `opacity` — no layout-triggering properties (`top`, `left`, `width`) are animated
+4. Largest Contentful Paint (LCP) is under 2.5 seconds on a simulated 4G mobile connection (Chrome DevTools)
+5. The site layout is functional and readable at 375px viewport width (iPhone SE baseline)
+
+**Plans:** TBD (4-6 plans estimated)
+
+Plans:
+- [ ] 09-01: Real-device mobile scroll test — map gesture handling, photo gallery, all scroll sections
+- [ ] 09-02: WCAG contrast audit — test every foreground/background combination in dark theme; fix failures
+- [ ] 09-03: Animation audit — inspect all CSS animations in DevTools at 6x CPU throttle; fix any layout-reflow animations
+- [ ] 09-04: Core Web Vitals baseline — Lighthouse mobile run; address LCP, CLS, INP issues
+
+---
+
+### Phase 10: Deployment
+
+**Goal:** The site is live at its production URL, served from Cloudflare Pages, ready to
+receive traffic and survive a viral share from the cycling community.
+
+**Depends on:** Phase 9 (audit-clean build)
+
+**Requirements:** _(no direct v1 requirement — enables delivery of all requirements to users)_
+
+**Success Criteria** (what must be TRUE):
+1. `astro build` produces a fully static output with no errors or warnings
+2. The site is accessible at the production domain with valid HTTPS
+3. A Cloudflare Pages project is connected to the git repository — pushing to main triggers an automatic rebuild and deploy
+4. The site loads correctly on a real mobile device via the production URL (not localhost)
+
+**Plans:** TBD (2-4 plans estimated)
+
+Plans:
+- [ ] 10-01: Create Cloudflare Pages project; connect to git repository; configure build command (`astro build`) and output directory (`dist`)
+- [ ] 10-02: Configure custom domain and verify HTTPS certificate
+- [ ] 10-03: Smoke test production URL on desktop and mobile — all features functional, no localhost references
+
+---
+
+## Progress
+
+**Execution Order:** 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10
+
+Note: Phases 2 and 1 can run in parallel. Phases 6, 7, and 8 can run in parallel once Phases 1-2 are complete.
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 1. Data Pipeline | 0/5 | Not started | - |
+| 2. Scaffold + Design System | 0/5 | Not started | - |
+| 3. Map Core | 0/7 | Not started | - |
+| 4. Elevation Profile | 0/4 | Not started | - |
+| 5. Photo Map Markers | 0/3 | Not started | - |
+| 6. Route Info Sections | 0/4 | Not started | - |
+| 7. Hero + Event Info + CTAs | 0/5 | Not started | - |
+| 8. Photo Gallery + Lightbox | 0/3 | Not started | - |
+| 9. Mobile + Performance Audit | 0/4 | Not started | - |
+| 10. Deployment | 0/3 | Not started | - |
