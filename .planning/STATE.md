@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-03-26)
 ## Current Position
 
 Phase: 1 of 10 (Data Pipeline)
-Plan: 2 of 5 in current phase
+Plan: 3 of 5 in current phase
 Status: In progress
-Last activity: 2026-03-26 — Completed 01-02-PLAN.md (photo manifest curation)
+Last activity: 2026-03-26 — Completed 01-03-PLAN.md (annotation resolver + annotations.json)
 
-Progress: [█░░░░░░░░░] 4% (2/50 plans)
+Progress: [█░░░░░░░░░] 6% (3/50 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
+- Total plans completed: 3
 - Average duration: ~4 min
-- Total execution time: 0.12 hours
+- Total execution time: 0.20 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-data-pipeline | 2 | ~7 min | ~4 min |
+| 01-data-pipeline | 3 | ~12 min | ~4 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (~2 min), 01-02 (~5 min)
-- Trend: Establishing baseline
+- Last 5 plans: 01-01 (~2 min), 01-02 (~5 min), 01-03 (~4 min)
+- Trend: Consistent 4-min pace
 
 *Updated after each plan completion*
 
@@ -51,6 +51,10 @@ Recent decisions affecting current work:
 - [01-01]: route-data.json is canonical data source for all downstream phases (map, elevation, photos, annotations)
 - [01-02]: photo-manifest.js uses explicit allowlist (33 entries) — photo pipeline relies on curation, not directory scanning; match-photos.js must consume this manifest
 - [01-02]: Mile markers estimated from terrain/landmark cues; not from EXIF GPS (GPS status still unknown — Plan 01-03 will inspect)
+- [01-03]: annotations.json shape confirmed: { sectors[], kom[], restock[] } — downstream phases (map, route-info) must use this shape
+- [01-03]: Segment track arrays include all intermediate trackpoints for polyline rendering on map
+- [01-03]: Down Jeep sector (83mi) exceeds route end (79.6mi) — clamped to last trackpoint; Phase 3 map should treat as near-end-of-route marker
+- [01-03]: findPointAtMile helper established as standard pattern for all future mile-marker lookups
 
 ### Pending Todos
 
@@ -64,6 +68,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26T18:00:00Z
-Stopped at: Completed 01-02-PLAN.md — Photo manifest curated (33 photos, mi 4-76); user approved at checkpoint; ready for Plan 01-03
+Last session: 2026-03-26T19:09:00Z
+Stopped at: Completed 01-03-PLAN.md — Annotation resolver written; annotations.json generated (6 sectors, 3 KOMs, 4 restocks); ready for Plan 01-04
 Resume file: None
