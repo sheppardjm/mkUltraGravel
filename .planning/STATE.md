@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-03-26)
 ## Current Position
 
 Phase: 1 of 10 (Data Pipeline)
-Plan: 0 of 5 in current phase
-Status: Ready to plan
-Last activity: 2026-03-26 — Roadmap created; requirements mapped; STATE.md initialized
+Plan: 1 of 5 in current phase
+Status: In progress
+Last activity: 2026-03-26 — Completed 01-01-PLAN.md (GPX parser + route-data.json)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█░░░░░░░░░] 2% (1/50 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: —
-- Total execution time: 0 hours
+- Total plans completed: 1
+- Average duration: ~2 min
+- Total execution time: 0.03 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| — | — | — | — |
+| 01-data-pipeline | 1 | ~2 min | ~2 min |
 
 **Recent Trend:**
-- Last 5 plans: —
-- Trend: —
+- Last 5 plans: 01-01 (~2 min)
+- Trend: Establishing baseline
 
 *Updated after each plan completion*
 
@@ -46,6 +46,9 @@ Recent decisions affecting current work:
 - [Roadmap]: Elevation profile integrated alongside the map (Phase 4), not a standalone section
 - [Roadmap]: Photo EXIF status is unknown — Phase 1 must inspect all 33 photos before building the matcher; plan for full manual fallback
 - [Roadmap]: Use Leaflet 1.9.4 (not 2.0 alpha — ESM-only, broken API); Stadia Maps Stamen Toner or Carto Dark Matter tiles
+- [01-01]: gpxparser requires @xmldom/xmldom for DOMParser shim in Node.js; install alongside gpxparser
+- [01-01]: gpxparser cumul array has length equal to points.length (not N-1); prepend 0, slice last to align indexes
+- [01-01]: route-data.json is canonical data source for all downstream phases (map, elevation, photos, annotations)
 
 ### Pending Todos
 
@@ -59,6 +62,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26
-Stopped at: Roadmap created; REQUIREMENTS.md traceability updated; ready to plan Phase 1
+Last session: 2026-03-26T17:49:56Z
+Stopped at: Completed 01-01-PLAN.md — GPX parser and route-data.json generated; ready for Plan 01-02
 Resume file: None
