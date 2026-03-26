@@ -47,14 +47,14 @@ MAP-01 through MAP-07, ROUTE-01, ROUTE-02, ROUTE-03, VIS-01, VIS-02, MAP-06)_
 3. `public/data/photos.json` exists with all 33 photos each assigned a lat/lon position (EXIF-derived or manually assigned from mile marker estimate)
 4. The raw GPX file is available at a public URL path for download with the correct filename
 
-**Plans:** TBD (5-8 plans estimated)
+**Plans:** 5 plans in 3 waves
 
 Plans:
-- [ ] 01-01: Inspect source assets — check GPX trackpoint count, photo EXIF GPS status, file sizes
-- [ ] 01-02: Write `parse-gpx.js` — parse `MK Ultra.gpx` into `route-data.json`; downsample if >2000 points
-- [ ] 01-03: Write `resolve-annotations.js` — resolve sector/KOM/restock mile markers against route to lat/lon in `annotations.json`
-- [ ] 01-04: Write `match-photos.js` — EXIF extraction with manual mile-marker fallback; produce `photos.json`
-- [ ] 01-05: Wire build scripts into Astro build pipeline; verify all three JSON files generated on `astro build`
+- [ ] 01-01-PLAN.md — Init project + GPX parser (wave 1)
+- [ ] 01-02-PLAN.md — Photo manifest curation with user verification (wave 1)
+- [ ] 01-03-PLAN.md — Annotation resolver: sectors/KOMs/restocks to lat/lon (wave 2)
+- [ ] 01-04-PLAN.md — Photo matcher: manifest + route-data to photos.json (wave 2)
+- [ ] 01-05-PLAN.md — Build pipeline wiring + full validation (wave 3)
 
 ---
 
@@ -298,7 +298,7 @@ Note: Phases 2 and 1 can run in parallel. Phases 6, 7, and 8 can run in parallel
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Data Pipeline | 0/5 | Not started | - |
+| 1. Data Pipeline | 0/5 | Planned | - |
 | 2. Scaffold + Design System | 0/5 | Not started | - |
 | 3. Map Core | 0/7 | Not started | - |
 | 4. Elevation Profile | 0/4 | Not started | - |
