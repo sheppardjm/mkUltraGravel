@@ -9,30 +9,31 @@ See: .planning/PROJECT.md (updated 2026-03-26)
 
 ## Current Position
 
-Phase: 1 of 10 (Data Pipeline) — COMPLETE
-Plan: 5 of 5 in current phase
-Status: Phase 1 complete; ready for Phase 2
+Phase: 2 of 10 (Scaffold + Design System) — In progress
+Plan: 1 of 5 in current phase (02-01 complete)
+Status: Phase 2 in progress — Astro 6 + Tailwind v4 scaffold complete
 
-Last activity: 2026-03-26 — Completed 01-05-PLAN.md (data pipeline coordinator + Phase 1 validation)
+Last activity: 2026-03-26 — Completed 02-01-PLAN.md (Astro 6 init, Tailwind v4 via Vite plugin, cascade layers)
 
-Progress: [██░░░░░░░░] 10% (5/50 plans)
+Progress: [██░░░░░░░░] 12% (6/50 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
-- Average duration: ~2.6 min
-- Total execution time: ~0.22 hours
+- Total plans completed: 6
+- Average duration: ~2.8 min
+- Total execution time: ~0.28 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-data-pipeline | 5 | ~14 min | ~2.8 min |
+| 02-scaffold-design-system | 1 | ~4 min | ~4 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (~2 min), 01-02 (~5 min), 01-03 (~4 min), 01-04 (~1 min), 01-05 (~1 min)
-- Trend: Consistent pace; data pipeline scripts well-established by end of phase
+- Last 5 plans: 01-03 (~4 min), 01-04 (~1 min), 01-05 (~1 min), 02-01 (~4 min)
+- Trend: Stable; Vite/rollup platform-specific dep issues required extra reinstall steps
 
 *Updated after each plan completion*
 
@@ -61,6 +62,10 @@ Recent decisions affecting current work:
 - [01-05]: prebuild npm lifecycle hook chosen for data generation — runs automatically before `npm run build`, no CI/CD config changes needed
 - [01-05]: dev script runs data generation once then starts astro dev — data is static/pre-generated, not watch-mode
 - [01-05]: build script references astro build even though Astro not yet installed — correct eventual command validated independently
+- [02-01]: @tailwindcss/vite pulls in Vite 8 as peer dep, but Astro 6 requires Vite 7 — overrides.vite=^7 in package.json is required
+- [02-01]: Tailwind v4 is CSS-first — config lives in global.css @theme block, no tailwind.config.js
+- [02-01]: Cascade layer order @layer leaflet, base, components, utilities declared FIRST in global.css before @import tailwindcss
+- [02-01]: npm install must run via volta run (not bare npm) to install platform-specific rollup/vite binaries for Node 22
 
 ### Pending Todos
 
@@ -74,6 +79,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26
-Stopped at: Phase 1 complete and verified (4/4 must-haves). GPX updated to 100mi route (2,498 trackpoints, 98.2mi). Ready for Phase 2.
+Last session: 2026-03-26T23:39:02Z
+Stopped at: Completed 02-01-PLAN.md — Astro 6 + Tailwind v4 scaffold operational, ready for 02-02 design tokens.
 Resume file: None
