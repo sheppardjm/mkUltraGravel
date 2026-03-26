@@ -54,7 +54,7 @@ Recent decisions affecting current work:
 - [01-02]: Mile markers estimated from terrain/landmark cues; not from EXIF GPS (GPS status still unknown — Plan 01-03 will inspect)
 - [01-03]: annotations.json shape confirmed: { sectors[], kom[], restock[] } — downstream phases (map, route-info) must use this shape
 - [01-03]: Segment track arrays include all intermediate trackpoints for polyline rendering on map
-- [01-03]: Down Jeep sector (83mi) exceeds route end (79.6mi) — clamped to last trackpoint; Phase 3 map should treat as near-end-of-route marker
+- [01-03]: Down Jeep sector (83mi) now resolves correctly after GPX extended to ~98mi; all 6 sectors have distinct coordinates
 - [01-03]: findPointAtMile helper established as standard pattern for all future mile-marker lookups
 - [01-04]: All 33 route photos lack EXIF GPS — confirmed manual-only (source: 'manual') in photos.json; EXIF attempt preserved as forward-compatible pattern
 - [01-04]: Scripts intentionally self-contained (findPointAtMile duplicated, not shared) — each script runnable independently without import side effects
@@ -74,6 +74,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26T19:11:32Z
-Stopped at: Completed 01-05-PLAN.md — Coordinator script + package.json build integration; all Phase 1 criteria validated; Phase 1 COMPLETE
+Last session: 2026-03-26
+Stopped at: Phase 1 complete and verified (4/4 must-haves). GPX updated to 100mi route (2,498 trackpoints, 98.2mi). Ready for Phase 2.
 Resume file: None

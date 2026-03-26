@@ -16,7 +16,7 @@ slot. Static content sections follow independently. Mobile audit and deployment 
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Data Pipeline** — Build-time GPX parser, annotation resolver, photo geo-matcher
+- [x] **Phase 1: Data Pipeline** — Build-time GPX parser, annotation resolver, photo geo-matcher
 - [ ] **Phase 2: Scaffold + Design System** — Astro project, Tailwind tokens, dark brutalist identity
 - [ ] **Phase 3: Map Core** — Leaflet island with GPX polyline, sector/KOM/restock overlays
 - [ ] **Phase 4: Elevation Profile** — Profile chart integrated alongside the map
@@ -298,7 +298,7 @@ Note: Phases 2 and 1 can run in parallel. Phases 6, 7, and 8 can run in parallel
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Data Pipeline | 0/5 | Planned | - |
+| 1. Data Pipeline | 5/5 | Complete | 2026-03-26 |
 | 2. Scaffold + Design System | 0/5 | Not started | - |
 | 3. Map Core | 0/7 | Not started | - |
 | 4. Elevation Profile | 0/4 | Not started | - |
