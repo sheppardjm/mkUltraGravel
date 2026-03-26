@@ -4,31 +4,63 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
 <BaseLayout>
   <main>
-    <section id="hero" class="min-h-screen flex items-center justify-center px-4">
-      <div class="text-center">
-        <h1 class="text-5xl md:text-7xl tracking-tight mb-4">MK Ultra Gravel</h1>
-        <p class="text-text-muted text-lg">June 7, 2026 &mdash; Marquette, MI &mdash; 100 miles</p>
+    <section id="hero" class="relative min-h-screen flex items-center justify-center px-4 overflow-hidden">
+      <img
+        src="/tone/CIA-MKULTRA-IG_Page_01.jpg"
+        alt=""
+        class="tone-image inset-0 w-full h-full object-cover"
+        loading="eager"
+      />
+      <div class="relative z-10 text-center">
+        <p class="stamp mb-6">Classification: Ultra</p>
+        <h1 class="text-5xl md:text-8xl tracking-tight mb-4">MK Ultra Gravel</h1>
+        <p class="text-text-muted text-lg md:text-xl">
+          June 7, 2026 &mdash; Marquette, MI &mdash; 100 miles
+        </p>
+        <p class="text-text-muted text-sm mt-4">
+          Subject: <span class="redacted">mind control</span> gravel cycling
+        </p>
       </div>
     </section>
 
-    <section id="route" class="min-h-screen px-4 py-16">
-      <h2 class="text-3xl md:text-5xl mb-8">The Route</h2>
-      <p class="text-text-muted">Map and elevation profile — Phase 3</p>
+    <section id="route" class="relative min-h-screen px-4 py-16 overflow-hidden border-t border-border">
+      <img
+        src="/tone/escharian_stairs_fb.webp"
+        alt=""
+        class="tone-image inset-0 w-full h-full object-cover"
+        loading="lazy"
+      />
+      <div class="relative z-10">
+        <h2 class="text-3xl md:text-5xl mb-8">The Route</h2>
+        <p class="text-text-muted">Map and elevation profile — Phase 3</p>
+      </div>
     </section>
 
-    <section id="sectors" class="min-h-screen px-4 py-16">
-      <h2 class="text-3xl md:text-5xl mb-8">Gravel Sectors</h2>
-      <p class="text-text-muted">Paris-Roubaix rated sector cards — Phase 6</p>
+    <section id="sectors" class="relative min-h-screen px-4 py-16 overflow-hidden border-t border-border">
+      <div class="relative z-10">
+        <h2 class="text-3xl md:text-5xl mb-8">Gravel Sectors</h2>
+        <p class="text-text-muted">Paris-Roubaix rated sector cards — Phase 6</p>
+      </div>
     </section>
 
-    <section id="photos" class="min-h-screen px-4 py-16">
-      <h2 class="text-3xl md:text-5xl mb-8">Route Photos</h2>
-      <p class="text-text-muted">Photo gallery — Phase 8</p>
+    <section id="photos" class="relative min-h-screen px-4 py-16 overflow-hidden border-t border-border">
+      <img
+        src="/tone/lsd-mind-control.jpg"
+        alt=""
+        class="tone-image inset-0 w-full h-full object-cover"
+        loading="lazy"
+      />
+      <div class="relative z-10">
+        <h2 class="text-3xl md:text-5xl mb-8">Route Photos</h2>
+        <p class="text-text-muted">Photo gallery — Phase 8</p>
+      </div>
     </section>
 
-    <section id="info" class="min-h-screen px-4 py-16">
-      <h2 class="text-3xl md:text-5xl mb-8">Event Info</h2>
-      <p class="text-text-muted">Details, registration, GPX download — Phase 7</p>
+    <section id="info" class="relative min-h-screen px-4 py-16 overflow-hidden border-t border-border">
+      <div class="relative z-10 classified-border p-8 max-w-2xl">
+        <h2 class="text-3xl md:text-5xl mb-8">Event Info</h2>
+        <p class="text-text-muted">Details, registration, GPX download — Phase 7</p>
+      </div>
     </section>
   </main>
 </BaseLayout>
