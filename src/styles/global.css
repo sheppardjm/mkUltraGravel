@@ -1,0 +1,15 @@
+/* Cascade layer order — declared FIRST, before any imports.
+   Leaflet CSS (Phase 3) goes in the lowest-priority layer so
+   Tailwind utilities always win. */
+@layer leaflet, base, components, utilities;
+
+/* Tailwind v4 — CSS-first config, no tailwind.config.js */
+@import "tailwindcss";
+
+/* Leaflet CSS will be imported here in Phase 3:
+   @import "leaflet/dist/leaflet.css" layer(leaflet); */
+
+/* Design tokens — populated in Plan 02-02 */
+@theme {
+  /* Colors, fonts, spacing defined in next plan */
+}
