@@ -11,12 +11,12 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 
 Milestone: v2.0
 Phase: 14 of 15 (Content)
-Plan: — (ready to plan)
-Status: Ready to plan
+Plan: 1 of 2 in phase
+Status: In progress
 
-Last activity: 2026-03-27 — Phase 13 complete (bidirectional map-elevation interactivity: crosshair sync, sector hover/click highlights, flyToBounds zoom)
+Last activity: 2026-03-27 — Completed 14-01-PLAN.md (MkUltraExplainer component, .redacted-reveal CSS, FOIA citation)
 
-Progress: [██████████████░░░░░░] 37/39 plans complete (v1.0 30 + v2.0 7); Phase 14 next
+Progress: [███████████████░░░░░] 38/41 plans complete (v1.0 30 + v2.0 8); Phase 14 Plan 02 next
 
 ## Performance Metrics
 
@@ -73,6 +73,8 @@ Recent decisions affecting current work:
 - [13-02]: sectorPolylines reference array (index-keyed from forEach) gives O(1) polyline access in event handlers without re-querying Leaflet layers
 - [13-02]: chart.update('none') mandatory on all annotation mutations — enforced to maintain TBT 0ms; never call chart.update() without 'none' param
 - [13-02]: map.once('moveend') restores polyline styles after flyToBounds — ensures styles not frozen if user hovers immediately after elevation click
+- [14-01]: .redacted-reveal additive CSS variant — .redacted class unchanged; new variant has cursor:pointer, color-swap hover reveal, focus-visible, prefers-reduced-motion
+- [14-01]: MkUltraExplainer placed between hero and #route — name context before map, natural reading flow
 
 ### Pending Todos
 
@@ -86,6 +88,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27T23:15:00Z
-Stopped at: Phase 13 verified and complete — Phase 14 next
+Last session: 2026-03-27T23:43:40Z
+Stopped at: Completed 14-01-PLAN.md — Phase 14 Plan 02 next
 Resume file: None
