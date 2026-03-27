@@ -13,13 +13,11 @@ const photos = JSON.parse(photosRaw) as Array<{
 
 <div id="photo-gallery" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
   {photos.map((photo, i) => (
-    <button
-      type="button"
-      class="gallery-item aspect-[3/4] overflow-hidden cursor-pointer border-0 p-0 bg-transparent"
-      data-index={i}
-      data-src={`/images/${photo.filename}`}
-      data-w={photo.width}
-      data-h={photo.height}
+    <a
+      href={`/images/${photo.filename}`}
+      data-pswp-width={photo.width}
+      data-pswp-height={photo.height}
+      class="gallery-item aspect-[3/4] overflow-hidden cursor-pointer"
       aria-label={`View route photo at mile ${photo.mi}`}
     >
       <img
@@ -29,7 +27,7 @@ const photos = JSON.parse(photosRaw) as Array<{
         decoding="async"
         class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
       />
-    </button>
+    </a>
   ))}
 </div>
 
@@ -40,26 +38,13 @@ function initGallery() {
   const gallery = document.getElementById('photo-gallery');
   if (!gallery) return;
 
-  const items = Array.from(gallery.querySelectorAll('.gallery-item')).map(el => {
-    const btn = el as HTMLButtonElement;
-    return {
-      src: btn.dataset.src!,
-      width: parseInt(btn.dataset.w!, 10),
-      height: parseInt(btn.dataset.h!, 10),
-      alt: btn.querySelector('img')?.alt || '',
-    };
-  });
-
   const lightbox = new PhotoSwipeLightbox({
-    dataSource: items,
+    gallery: '#photo-gallery',
+    children: '.gallery-item',
     pswpModule: () => import('photoswipe'),
     bgOpacity: 0.95,
   });
   lightbox.init();
-
-  gallery.querySelectorAll('.gallery-item').forEach((el, i) => {
-    el.addEventListener('click', () => lightbox.loadAndOpen(i));
-  });
 }
 
 // Support Astro View Transitions
