@@ -85,21 +85,38 @@
 
   // Render gravel sector overlays
   const sectorBadges = L.layerGroup();
+  const sectorPolylines: any[] = [];
 
-  annotations.sectors.forEach((sector: { name: string; stars: number; lengthMi: number; track: { lat: number; lon: number }[] }) => {
+  annotations.sectors.forEach((sector: { name: string; stars: number; lengthMi: number; track: { lat: number; lon: number }[] }, i: number) => {
     const sectorLatlngs = sector.track.map((pt) => [pt.lat, pt.lon] as [number, number]);
-    L.polyline(sectorLatlngs, {
+    const originalStyle = {
       color: starColors[sector.stars] || '#ffffff',
       weight: 5,
       opacity: 0.9
-    })
-    .bindPopup(
-      `<strong>${sector.name}</strong><br>` +
-      `${'★'.repeat(sector.stars)}${'☆'.repeat(5 - sector.stars)}<br>` +
-      `${sector.lengthMi.toFixed(1)} mi`,
-      { className: 'dark-popup' }
-    )
-    .addTo(map);
+    };
+
+    const poly = L.polyline(sectorLatlngs, { ...originalStyle })
+      .bindPopup(
+        `<strong>${sector.name}</strong><br>` +
+        `${'★'.repeat(sector.stars)}${'☆'.repeat(5 - sector.stars)}<br>` +
+        `${sector.lengthMi.toFixed(1)} mi`,
+        { className: 'dark-popup' }
+      )
+      .addTo(map);
+
+    poly.on('mouseover', () => {
+      window.dispatchEvent(new CustomEvent('map:sectorHover', { detail: { sectorIndex: i } }));
+      poly.setStyle({ weight: 7, opacity: 1.0 });
+    });
+    poly.on('mouseout', () => {
+      window.dispatchEvent(new CustomEvent('map:sectorHover', { detail: { sectorIndex: null } }));
+      poly.setStyle(originalStyle);
+    });
+    poly.on('click', () => {
+      window.dispatchEvent(new CustomEvent('map:sectorClick', { detail: { sectorIndex: i } }));
+    });
+
+    sectorPolylines.push(poly);
 
     // Persistent star-rating badge at sector midpoint
     const mid = Math.floor(sector.track.length / 2);
@@ -228,6 +245,32 @@
   // Listen for elevation hover end — hide crosshair
   window.addEventListener('elevation:hoverEnd', (() => {
     crosshair.setStyle({ opacity: 0, fillOpacity: 0 });
+  }) as EventListener, { signal });
+
+  // Listen for elevation:sectorClick — zoom map to sector bounds and briefly highlight the polyline
+  window.addEventListener('elevation:sectorClick', ((e: Event) => {
+    const { sectorIndex } = (e as CustomEvent<{sectorIndex: number}>).detail;
+    const poly = sectorPolylines[sectorIndex];
+    if (poly) {
+      sectorPolylines.forEach((p: any, i: number) => {
+        if (i === sectorIndex) {
+          p.setStyle({ weight: 7, opacity: 1.0 });
+        } else {
+          p.setStyle({ weight: 5, opacity: 0.4 });
+        }
+      });
+      map.flyToBounds(poly.getBounds(), { maxZoom: 14, padding: [40, 40] });
+      map.once('moveend', () => {
+        sectorPolylines.forEach((p: any, i: number) => {
+          const sector = annotations.sectors[i];
+          p.setStyle({
+            color: starColors[sector.stars] || '#ffffff',
+            weight: 5,
+            opacity: 0.9
+          });
+        });
+      });
+    }
   }) as EventListener, { signal });
   } // end initMap
 
