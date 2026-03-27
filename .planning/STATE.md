@@ -102,6 +102,9 @@ Recent decisions affecting current work:
 - [06-01]: Astro components use fs.readFileSync + process.cwd() for build-time JSON loading — no __dirname (ESM), no Vite module import from public/
 - [06-01]: Star rating colors rendered via inline style= attribute with hex values — matches RouteMap.astro starColors map exactly without CSS variable indirection
 - [06-02]: Phase 6 verified complete — all 13 annotation items confirmed in static HTML, all 6 visual checks passed on first inspection, no fixes required
+- [07-01]: data-* attribute bridge used for CountdownTimer — define:vars forces is:inline which kills Astro bundling; data-target on container div is the correct pattern
+- [07-01]: EDT offset (-04:00) for June 7 event — Marquette MI is Eastern time, EDT is UTC-4 in summer; only EVENT_DATE_ISO constant needs updating if time changes
+- [07-01]: Named head slot added to BaseLayout.astro before </head> — enables Plan 03 to inject hero preload link without global mutation
 
 ### Pending Todos
 
@@ -117,5 +120,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-27
-Stopped at: Completed 07-02-PLAN.md (EventInfoBlock.astro component created)
+Stopped at: Completed 07-01-PLAN.md (BaseLayout head slot + CountdownTimer.astro created); 07-02 also complete
 Resume file: None
