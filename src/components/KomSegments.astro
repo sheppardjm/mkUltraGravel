@@ -10,18 +10,32 @@ const kom = annotations.kom as Array<{
   lengthMi: number;
   grade: number;
   elevFt: number;
+  coverPhoto?: string;
 }>;
 ---
 
 <div class="space-y-4">
   {kom.map((segment) => (
-    <div class="classified-border bg-bg-surface p-4">
-      <h3 class="text-accent-green mb-2">{segment.name}</h3>
-      <div class="grid grid-cols-2 gap-x-6 gap-y-1 text-text-muted text-sm">
-        <span>Mile {segment.startMi}</span>
-        <span>{segment.lengthMi.toFixed(2)} mi</span>
-        <span>{segment.grade}% grade</span>
-        <span>{segment.elevFt} ft gain</span>
+    <div class="classified-border bg-bg-surface overflow-hidden">
+      {segment.coverPhoto && (
+        <img
+          src={`/images/cards/${segment.coverPhoto.replace(/\.(jpg|jpeg|png)$/i, '.webp')}`}
+          alt={`${segment.name} climb`}
+          width="600"
+          height="338"
+          loading="lazy"
+          decoding="async"
+          class="w-full aspect-video object-cover"
+        />
+      )}
+      <div class="p-4">
+        <h3 class="text-accent-green mb-2">{segment.name}</h3>
+        <div class="grid grid-cols-2 gap-x-6 gap-y-1 text-text-muted text-sm">
+          <span>Mile {segment.startMi}</span>
+          <span>{segment.lengthMi.toFixed(2)} mi</span>
+          <span>{segment.grade}% grade</span>
+          <span>{segment.elevFt} ft gain</span>
+        </div>
       </div>
     </div>
   ))}
