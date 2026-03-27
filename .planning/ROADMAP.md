@@ -100,16 +100,12 @@ map works correctly on mobile without scroll-trapping.
 4. All 4 restock points appear as map markers that show name and mile marker in a popup
 5. On a real mobile device, single-finger scroll moves the page past the map without trapping the user inside it
 
-**Plans:** TBD (6-9 plans estimated)
+**Plans:** 3 plans in 3 waves
 
 Plans:
-- [ ] 03-01: Set up Leaflet 1.9.4 Astro island (`client:load`); wire Stadia Maps / Carto Dark Matter tiles; confirm attribution is styled (not hidden)
-- [ ] 03-02: Render GPX polyline from `route-data.json`; verify downsampled track fits map bounds on load
-- [ ] 03-03: Wire `Leaflet.GestureHandling` from first map commit; test on real mobile device
-- [ ] 03-04: Render sector overlays from `annotations.json` with star-rating color scale and popups
-- [ ] 03-05: Render KOM segment overlays with gradient/elevation popups
-- [ ] 03-06: Render restock point markers with name/mile-marker popups
-- [ ] 03-07: Style map controls and popups to match dark design system
+- [ ] 03-01-PLAN.md — Install Leaflet, create RouteMap.astro with Carto tiles + GPX polyline + gesture handling (wave 1)
+- [ ] 03-02-PLAN.md — Add sector/KOM/restock annotation overlays with popups (wave 2)
+- [ ] 03-03-PLAN.md — Dark-theme popup/control styling + mobile verification (wave 3)
 
 ---
 
@@ -298,7 +294,7 @@ Note: Phases 2 and 1 can run in parallel. Phases 6, 7, and 8 can run in parallel
 |-------|----------------|--------|-----------|
 | 1. Data Pipeline | 5/5 | Complete | 2026-03-26 |
 | 2. Scaffold + Design System | 3/3 | Complete | 2026-03-26 |
-| 3. Map Core | 0/7 | Not started | - |
+| 3. Map Core | 0/3 | Not started | - |
 | 4. Elevation Profile | 0/4 | Not started | - |
 | 5. Photo Map Markers | 0/3 | Not started | - |
 | 6. Route Info Sections | 0/4 | Not started | - |
