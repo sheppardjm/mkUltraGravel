@@ -1,10 +1,14 @@
 #!/usr/bin/env node
 /**
  * Data pipeline coordinator.
- * Runs all three data generation scripts in sequence:
+ * Runs all data generation scripts in sequence:
  * 1. parse-gpx.js -> public/data/route-data.json + public/mk-ultra.gpx
  * 2. resolve-annotations.js -> public/data/annotations.json
  * 3. match-photos.js -> public/data/photos.json
+ * 4. generate-thumbnails.js -> public/images/thumbs/ (400px WebP)
+ * 5. assign-card-photos.js -> annotations.json (coverPhoto) + public/images/cards/
+ * 6. convert-hero.js -> public/images/hero.webp
+ * 7. convert-tone-images.js -> public/tone/*.webp
  *
  * Usage: node scripts/generate-data.js
  * Wired as: npm run prebuild (runs before astro build)
@@ -53,6 +57,18 @@ try {
   console.log('--- generate-thumbnails.js complete ---\n');
 } catch (err) {
   console.error('\nERROR: generate-thumbnails.js failed with exit code ' + err.status);
+  process.exit(1);
+}
+
+// Assign cover photos to sector/KOM cards and generate card crops.
+// Runs after match-photos.js (photos.json) and image copy (public/images/).
+// Writes coverPhoto field into annotations.json and generates 600x338 WebP card crops.
+console.log('--- Running assign-card-photos.js ---');
+try {
+  execSync(`node "${path.join(__dirname, 'assign-card-photos.js')}"`, { stdio: 'inherit', cwd: path.join(__dirname, '..') });
+  console.log('--- assign-card-photos.js complete ---\n');
+} catch (err) {
+  console.error('\nERROR: assign-card-photos.js failed with exit code ' + err.status);
   process.exit(1);
 }
 
