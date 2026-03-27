@@ -87,10 +87,31 @@
     }
   };
 
+  // Binary search for nearest track point by mile value — O(log n) per hover event
+  function findNearestTrackPoint(
+    track: {lat: number; lon: number; mi: number}[],
+    mile: number
+  ): {lat: number; lon: number; mi: number} | null {
+    if (!track.length) return null;
+    let lo = 0, hi = track.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (track[mid].mi < mile) lo = mid + 1;
+      else hi = mid;
+    }
+    if (lo > 0 && Math.abs(track[lo-1].mi - mile) < Math.abs(track[lo].mi - mile)) {
+      return track[lo-1];
+    }
+    return track[lo];
+  }
+
+  // rAF throttle — prevents queuing multiple animation frames on rapid mouse movement
+  let rafPending = false;
+
   // Null guard — module scripts defer until DOM is ready, but guard defensively
   // Note: top-level return is not valid in ESM modules — use conditional block instead
   const canvas = document.getElementById('elevation-chart') as HTMLCanvasElement;
-  if (canvas) new Chart(canvas, {
+  const chartInstance = canvas ? new Chart(canvas, {
     type: 'line',
     data: {
       datasets: [{
@@ -108,6 +129,23 @@
       animation: false,     // static chart — no entry animation
       responsive: true,
       maintainAspectRatio: false,  // REQUIRED: wrapper div controls height
+      onHover: (event: any, _activeElements: any, chart: any) => {
+        if (rafPending) return;
+        rafPending = true;
+        requestAnimationFrame(() => {
+          rafPending = false;
+          if (!event.native) return;
+          const canvasPos = Chart.helpers.getRelativePosition(event.native, chart);
+          const mile = chart.scales.x.getValueForPixel(canvasPos.x);
+          if (mile == null) return;
+          const pt = findNearestTrackPoint(routeData, mile);
+          if (pt) {
+            window.dispatchEvent(new CustomEvent('elevation:hover', {
+              detail: { lat: pt.lat, lon: pt.lon }
+            }));
+          }
+        });
+      },
       plugins: {
         legend: { display: false },
         decimation: {
@@ -144,7 +182,14 @@
       }
     },
     plugins: [darkBgPlugin]  // registered here (Chart constructor array), not in options.plugins
-  });
+  }) : null;
+
+  // Dispatch elevation:hoverEnd when cursor leaves the chart canvas
+  if (canvas) {
+    canvas.addEventListener('mouseleave', () => {
+      window.dispatchEvent(new CustomEvent('elevation:hoverEnd'));
+    });
+  }
   } // end initElevation
 
   // Defer Chart.js loading until user scrolls (same pattern as RouteMap).
