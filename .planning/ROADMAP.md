@@ -125,13 +125,10 @@ showing the full 80-mile elevation character at a glance, synchronized with the 
 3. Gravel sector mile-marker ranges are visually indicated on the profile (shaded bands or tick marks)
 4. The profile renders correctly at mobile viewport widths without overflow or illegibility
 
-**Plans:** TBD (3-5 plans estimated)
+**Plans:** 1 plan in 1 wave
 
 Plans:
-- [ ] 04-01: Select charting approach — Leaflet elevation plugin, Chart.js, or SVG path from route-data.json
-- [ ] 04-02: Implement elevation profile component reading from `route-data.json`
-- [ ] 04-03: Overlay sector ranges on profile as colored bands; verify alignment with map sector overlays
-- [ ] 04-04: Responsive sizing — ensure profile adapts to mobile viewports without horizontal scroll
+- [ ] 04-01-PLAN.md — Install Chart.js, create ElevationProfile.astro with sector bands, wire into index.astro (wave 1)
 
 ---
 
@@ -296,7 +293,7 @@ Note: Phases 2 and 1 can run in parallel. Phases 6, 7, and 8 can run in parallel
 | 1. Data Pipeline | 5/5 | Complete | 2026-03-26 |
 | 2. Scaffold + Design System | 3/3 | Complete | 2026-03-26 |
 | 3. Map Core | 4/4 | Complete | 2026-03-26 |
-| 4. Elevation Profile | 0/4 | Not started | - |
+| 4. Elevation Profile | 0/1 | Not started | - |
 | 5. Photo Map Markers | 0/3 | Not started | - |
 | 6. Route Info Sections | 0/4 | Not started | - |
 | 7. Hero + Event Info + CTAs | 0/5 | Not started | - |
