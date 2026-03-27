@@ -9,13 +9,13 @@ See: .planning/PROJECT.md (updated 2026-03-26)
 
 ## Current Position
 
-Phase: 9 of 10 (Mobile Performance Audit) — In progress
-Plan: 3 of 4 complete (09-03 done)
-Status: In progress — 375px layout audit + real-device mobile verification complete; 1 plan remaining in Phase 9
+Phase: 9 of 10 (Mobile Performance Audit) — COMPLETE
+Plan: 4 of 4 complete (09-04 done)
+Status: Phase 9 complete — all 4 plans done; Lighthouse 96 Performance, LCP 2.48s, CLS 0.054
 
-Last activity: 2026-03-27 — Completed 09-03: Playwright 375px audit confirmed no overflow, all 14 real-device checks approved with zero source changes required
+Last activity: 2026-03-27 — Completed 09-04: Lighthouse mobile audit confirmed all Core Web Vitals green (LCP 2.48s < 2.5s, CLS 0.054, TBT 0ms, Performance 96)
 
-Progress: [█████░░░░░] 51.0% (26/51 plans)
+Progress: [██████░░░░] 53.1% (27/51 plans)
 
 ## Performance Metrics
 
@@ -36,11 +36,11 @@ Progress: [█████░░░░░] 51.0% (26/51 plans)
 | 06-route-info-sections | 2 | ~5 min | ~2.5 min |
 | 07-hero-event-info-ctas | 3 | ~6 min | ~2 min |
 | 08-photo-gallery-lightbox | 3/3 | ~5 min | ~1.7 min |
-| 09-mobile-performance-audit | 3/4 | ~23 min | ~7.7 min |
+| 09-mobile-performance-audit | 4/4 | ~46 min | ~11.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 08-03 (~2 min), 09-01 (~2 min), 09-02 (~6 min), 09-03 (~15 min)
-- Trend: Fast pace; Phase 9 in progress; mobile audit complete — no layout issues found, real device approved
+- Last 5 plans: 09-01 (~2 min), 09-02 (~6 min), 09-03 (~15 min), 09-04 (~23 min)
+- Trend: Phase 9 complete; all Core Web Vitals green; ready for Phase 10 (deployment)
 
 *Updated after each plan completion*
 
@@ -127,6 +127,10 @@ Recent decisions affecting current work:
 - [09-02]: Tone images (12% opacity background decorations) can be aggressively resized without visible quality loss — 1000px sufficient even for full-screen display
 - [09-02]: convert-hero.js follows generate-thumbnails.js pattern: async + require.main guard + module export; called via execSync in generate-data.js
 - [09-02]: All CSS animations in codebase and imported libraries are compositor-safe (transform, opacity) or paint-only (colors); zero layout-triggering animated properties
+- [09-04]: Lighthouse IntersectionObserver is fired during full-page render simulation — use scroll event as primary trigger to prevent Leaflet/Chart.js from loading during LCP window
+- [09-04]: CSS inlining (inlineStylesheets:'always') backfired — 44KB CSS in HTML body increased initial download more than it saved from eliminating render-blocking RTT
+- [09-04]: Tone images at 12% opacity can be compressed aggressively (350-600px, q45-50) — invisible quality loss; 596KB JPEG → 13KB WebP achieved
+- [09-04]: Thumbnail target size 200px/q75 — displays at 186px mobile, avg 13KB vs 125KB at 600px; acceptable for gallery previews
 
 ### Pending Todos
 
@@ -142,5 +146,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-27
-Stopped at: Completed 09-03 (375px layout audit + real-device mobile verification — all 14 checks approved)
+Stopped at: Completed 09-04 (Lighthouse mobile audit — Performance 96, LCP 2.48s, all Core Web Vitals green)
 Resume file: None
