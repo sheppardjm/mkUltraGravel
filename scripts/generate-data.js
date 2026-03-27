@@ -56,4 +56,15 @@ try {
   process.exit(1);
 }
 
+// Convert hero image to WebP for LCP optimization.
+// Runs after thumbnail generation. Idempotent — skips if WebP already exists.
+console.log('--- Running convert-hero.js ---');
+try {
+  execSync(`node "${path.join(__dirname, 'convert-hero.js')}"`, { stdio: 'inherit', cwd: path.join(__dirname, '..') });
+  console.log('--- convert-hero.js complete ---\n');
+} catch (err) {
+  console.error('\nERROR: convert-hero.js failed with exit code ' + err.status);
+  process.exit(1);
+}
+
 console.log('=== Data pipeline complete ===');
