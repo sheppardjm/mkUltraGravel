@@ -9,13 +9,13 @@ See: .planning/PROJECT.md (updated 2026-03-26)
 
 ## Current Position
 
-Phase: 4 of 10 (Elevation Profile) — FULLY VERIFIED
-Plan: 1 of 1 complete (04-01 done)
-Status: Phase 4 fully verified; ready to begin Phase 5
+Phase: 5 of 10 (Photo Map Markers) — In progress
+Plan: 1 of 1 complete (05-01 done)
+Status: Phase 5 plan 1 complete; pending human visual verification of map markers
 
-Last activity: 2026-03-26 — Completed Phase 4 (Chart.js elevation profile with sector bands)
+Last activity: 2026-03-26 — Completed 05-01 (leaflet.markercluster photo markers on map)
 
-Progress: [███░░░░░░░] 25.5% (13/51 plans)
+Progress: [████░░░░░░] 27.5% (14/51 plans)
 
 ## Performance Metrics
 
@@ -34,8 +34,8 @@ Progress: [███░░░░░░░] 25.5% (13/51 plans)
 | 04-elevation-profile | 1 | ~2 min | ~2 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-02 (~1 min), 03-03 (~2 min), 03-04 (~1 min), 04-01 (~2 min)
-- Trend: Stable pace; Chart.js elevation profile complete; ESM guard pattern established
+- Last 5 plans: 03-03 (~2 min), 03-04 (~1 min), 04-01 (~2 min), 05-01 (~4 min)
+- Trend: Stable pace; markercluster photo markers complete; photo copy step established in pipeline
 
 *Updated after each plan completion*
 
@@ -90,6 +90,10 @@ Recent decisions affecting current work:
 - [04-01]: Chart.js uses await import('chart.js/auto') — same SSR-safe pattern as Leaflet; Chart.register(plugin) MUST be called before new Chart()
 - [04-01]: Responsive canvas requires wrapper div with fixed px heights and maintainAspectRatio: false — never use % or vh for wrapper height
 - [04-01]: ESM guard pattern: use `if (canvas) { ... }` not `if (!canvas) return` — top-level return is forbidden in ECMAScript modules (Astro script blocks compile to ESM)
+- [05-01]: markercluster accessed as (L as any).markerClusterGroup() — side-effect import attaches to window.L but TypeScript types don't merge onto L namespace
+- [05-01]: addLayers() bulk add to markerClusterGroup (not addLayer() in loop) — markercluster performance best practice
+- [05-01]: img width="180" fixed in popup HTML — prevents autopan/image-load race condition (Pitfall 3 from Phase 5 research)
+- [05-01]: Photo copy step in generate-data.js: images/ -> public/images/ via fs.copyFileSync — runs on every prebuild/dev invocation
 
 ### Pending Todos
 
@@ -105,5 +109,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-26
-Stopped at: Completed Phase 4 (elevation-profile) — fully verified, ready for Phase 5
+Stopped at: Completed 05-01 (photo map markers) — build clean, pending dev server visual verification
 Resume file: None
