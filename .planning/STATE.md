@@ -10,10 +10,10 @@ See: .planning/PROJECT.md (updated 2026-03-26)
 ## Current Position
 
 Phase: 5 of 10 (Photo Map Markers) — In progress
-Plan: 1 of 1 complete (05-01 done)
-Status: Phase 5 plan 1 complete; pending human visual verification of map markers
+Plan: 2 of 2 in progress (05-02 at checkpoint)
+Status: Awaiting human mobile verification — dev server running at http://192.168.1.143:4321
 
-Last activity: 2026-03-26 — Completed 05-01 (leaflet.markercluster photo markers on map)
+Last activity: 2026-03-27 — Started 05-02 (mobile verification plan); dev server up, checkpoint reached
 
 Progress: [████░░░░░░] 27.5% (14/51 plans)
 
@@ -108,6 +108,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26
-Stopped at: Completed 05-01 (photo map markers) — build clean, pending dev server visual verification
+Last session: 2026-03-27
+Stopped at: 05-02 checkpoint — dev server running at http://192.168.1.143:4321, awaiting mobile verification
 Resume file: None
