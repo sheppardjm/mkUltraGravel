@@ -40,12 +40,11 @@ Full details: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
   3. Laughing Whitefish River no longer appears in the restock points list or map markers
   4. New photos are visible in the photo gallery and as map markers after deploy
   5. Route total distance and elevation gain are present in route-data.json (available for all downstream display)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 11-01: Correct segment mile markers in resolve-annotations.js + remove Laughing Whitefish restock
-- [ ] 11-02: Correct photo mile-marker positions in photo-manifest.js + add new photos to manifest
-- [ ] 11-03: Compute and expose route total distance and elevation gain in route-data.json
+- [ ] 11-01-PLAN.md — Add 20 new photos to manifest + sync data.md to corrected script values
+- [ ] 11-02-PLAN.md — Restructure route-data.json with meta wrapper + update all consumers
 
 #### Phase 12: Photo Pipeline + Card Photos + Image Quality
 
@@ -128,7 +127,7 @@ Plans:
 | 8. Photo Gallery + Lightbox | v1.0 | 3/3 | Complete | 2026-03-27 |
 | 9. Mobile + Performance Audit | v1.0 | 4/4 | Complete | 2026-03-27 |
 | 10. Deployment | v1.0 | 3/3 | Complete | 2026-03-27 |
-| 11. Data Corrections | v2.0 | 0/TBD | Not started | - |
+| 11. Data Corrections | v2.0 | 0/2 | Not started | - |
 | 12. Photo Pipeline + Card Photos | v2.0 | 0/TBD | Not started | - |
 | 13. Map-Elevation Interactivity | v2.0 | 0/TBD | Not started | - |
 | 14. Content | v2.0 | 0/TBD | Not started | - |
