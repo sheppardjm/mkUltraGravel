@@ -246,10 +246,10 @@ scroll traps, readable contrast, no animation jank, acceptable load times.
 **Plans:** 4 plans in 3 waves
 
 Plans:
-- [ ] 09-01-PLAN.md — WCAG contrast audit: calculate all oklch token pairs, fix failures (wave 1)
-- [ ] 09-02-PLAN.md — Hero image WebP conversion + fetchpriority + animation audit confirmation (wave 1)
-- [ ] 09-03-PLAN.md — 375px layout audit + real-device mobile scroll/usability verification (wave 2)
-- [ ] 09-04-PLAN.md — Lighthouse mobile Core Web Vitals baseline + final fixes (wave 3)
+- [x] 09-01-PLAN.md — WCAG contrast audit: calculate all oklch token pairs, fix failures (wave 1)
+- [x] 09-02-PLAN.md — Hero image WebP conversion + fetchpriority + animation audit confirmation (wave 1)
+- [x] 09-03-PLAN.md — 375px layout audit + real-device mobile scroll/usability verification (wave 2)
+- [x] 09-04-PLAN.md — Lighthouse mobile Core Web Vitals baseline + final fixes (wave 3)
 
 ---
 
@@ -268,12 +268,12 @@ receive traffic and survive a viral share from the cycling community.
 3. A Cloudflare Pages project is connected to the git repository — pushing to main triggers an automatic rebuild and deploy
 4. The site loads correctly on a real mobile device via the production URL (not localhost)
 
-**Plans:** TBD (2-4 plans estimated)
+**Plans:** 3 plans in 3 waves
 
 Plans:
-- [ ] 10-01: Create Cloudflare Pages project; connect to git repository; configure build command (`astro build`) and output directory (`dist`)
-- [ ] 10-02: Configure custom domain and verify HTTPS certificate
-- [ ] 10-03: Smoke test production URL on desktop and mobile — all features functional, no localhost references
+- [ ] 10-01-PLAN.md — Git repo hygiene (.gitignore, .node-version), commit source assets, push to GitHub (wave 1)
+- [ ] 10-02-PLAN.md — Create Cloudflare Pages project, configure build, verify first deploy (wave 2)
+- [ ] 10-03-PLAN.md — Custom domain setup + production smoke test on desktop and mobile (wave 3)
 
 ---
 
@@ -293,5 +293,5 @@ Note: Phases 2 and 1 can run in parallel. Phases 6, 7, and 8 can run in parallel
 | 6. Route Info Sections | 2/2 | Complete | 2026-03-26 |
 | 7. Hero + Event Info + CTAs | 3/3 | Complete | 2026-03-26 |
 | 8. Photo Gallery + Lightbox | 3/3 | Complete | 2026-03-27 |
-| 9. Mobile + Performance Audit | 0/4 | Not started | - |
+| 9. Mobile + Performance Audit | 4/4 | Complete | 2026-03-27 |
 | 10. Deployment | 0/3 | Not started | - |
