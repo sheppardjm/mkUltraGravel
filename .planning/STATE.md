@@ -9,13 +9,13 @@ See: .planning/PROJECT.md (updated 2026-03-26)
 
 ## Current Position
 
-Phase: 5 of 10 (Photo Map Markers) — FULLY VERIFIED
-Plan: 2 of 2 complete (05-02 done)
-Status: Phase 5 fully verified; ready to begin Phase 6
+Phase: 6 of 10 (Route Info Sections) — In progress
+Plan: 1 of 2 complete (06-01 done)
+Status: Route info cards built; awaiting mobile verification (06-02)
 
-Last activity: 2026-03-27 — Completed 05-02 (mobile verification); all 7 checks passed on real device
+Last activity: 2026-03-27 — Completed 06-01; GravelSectors, KomSegments, RestockPoints wired into #sectors
 
-Progress: [████░░░░░░] 29.4% (15/51 plans)
+Progress: [████░░░░░░] 31.4% (16/51 plans)
 
 ## Performance Metrics
 
@@ -33,6 +33,7 @@ Progress: [████░░░░░░] 29.4% (15/51 plans)
 | 03-map-core | 4 | ~6 min | ~1.5 min |
 | 04-elevation-profile | 1 | ~2 min | ~2 min |
 | 05-photo-map-markers | 2 | ~9 min | ~4.5 min |
+| 06-route-info-sections | 1 | ~3 min | ~3 min |
 
 **Recent Trend:**
 - Last 5 plans: 03-04 (~1 min), 04-01 (~2 min), 05-01 (~4 min), 05-02 (~5 min)
@@ -97,6 +98,8 @@ Recent decisions affecting current work:
 - [05-01]: Photo copy step in generate-data.js: images/ -> public/images/ via fs.copyFileSync — runs on every prebuild/dev invocation
 - [05-02]: Mobile-verified: all 7 photo marker checks passed on real device — cluster render, tap-to-zoom, popup tap, thumbnail load, full-size link, pan/zoom smooth, scroll pass-through
 - [05-02]: Popup thumbnail increased from 180px to 260px after mobile feedback — width="260" with maxWidth: 300 on popup container
+- [06-01]: Astro components use fs.readFileSync + process.cwd() for build-time JSON loading — no __dirname (ESM), no Vite module import from public/
+- [06-01]: Star rating colors rendered via inline style= attribute with hex values — matches RouteMap.astro starColors map exactly without CSS variable indirection
 
 ### Pending Todos
 
@@ -112,5 +115,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-27
-Stopped at: Completed 05-02-PLAN.md (Phase 5 fully done)
+Stopped at: Completed 06-01-PLAN.md (route info cards built, wired into #sectors)
 Resume file: None
