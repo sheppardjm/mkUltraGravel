@@ -5,22 +5,22 @@
 See: .planning/PROJECT.md (updated 2026-03-26)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** Phase 8 — Photo Gallery
+**Current focus:** Phase 9 — Mobile Polish
 
 ## Current Position
 
-Phase: 8 of 10 (Photo Gallery + Lightbox) — In progress
-Plan: 1 of 2 complete (08-01 done)
-Status: In progress; thumbnail pipeline complete, photo gallery component next
+Phase: 8 of 10 (Photo Gallery + Lightbox) — Complete
+Plan: 2 of 2 complete (08-02 done)
+Status: Phase 8 complete; photo gallery with PhotoSwipe lightbox live
 
-Last activity: 2026-03-27 — Completed 08-01; sharp installed, generate-thumbnails.js wired into data pipeline, 33 WebP thumbs generated, photos.json enriched with width/height
+Last activity: 2026-03-27 — Completed 08-02; PhotoGallery.astro with 33-thumbnail grid, PhotoSwipe lightbox bundled, wired into index.astro
 
-Progress: [████░░░░░░] 41.2% (21/51 plans)
+Progress: [████░░░░░░] 43.1% (22/51 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 21
+- Total plans completed: 22
 - Average duration: ~2.0 min
 - Total execution time: ~0.56 hours
 
@@ -35,11 +35,11 @@ Progress: [████░░░░░░] 41.2% (21/51 plans)
 | 05-photo-map-markers | 2 | ~9 min | ~4.5 min |
 | 06-route-info-sections | 2 | ~5 min | ~2.5 min |
 | 07-hero-event-info-ctas | 3 | ~6 min | ~2 min |
-| 08-photo-gallery-lightbox | 1/2 | ~1 min | ~1 min |
+| 08-photo-gallery-lightbox | 2/2 | ~3 min | ~1.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 07-01 (~2 min), 07-02 (~1 min), 07-03 (~3 min), 08-01 (~1 min)
-- Trend: Fast pace; thumbnail pipeline installed cleanly
+- Last 5 plans: 07-02 (~1 min), 07-03 (~3 min), 08-01 (~1 min), 08-02 (~2 min)
+- Trend: Fast pace; photo gallery shipped cleanly with PhotoSwipe bundled
 
 *Updated after each plan completion*
 
@@ -113,6 +113,9 @@ Recent decisions affecting current work:
 - [08-01]: Original image dimensions stored in photos.json (not thumbnail dims) — PhotoSwipe requires full-size width/height for correct lightbox layout
 - [08-01]: Thumbnail step is a post-step after scripts[] loop in generate-data.js — depends on both photos.json (match-photos) and public/images/ (copy step), so must run last
 - [08-01]: generate-thumbnails.js exports generateThumbnails() and supports standalone invocation via require.main pattern
+- [08-02]: PhotoSwipe CSS via @layer in global.css (not frontmatter import) — matches established leaflet CSS pattern, avoids SSR/build issues
+- [08-02]: PhotoSwipe core as dynamic import chunk (pswpModule: () => import('photoswipe')) — loads only when lightbox opens
+- [08-02]: data-* bridge for gallery items (src/w/h on each button) — consistent with [07-01], enables bundled non-inline script
 
 ### Pending Todos
 
@@ -128,5 +131,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-27
-Stopped at: Completed 08-01-PLAN.md (thumbnail pipeline + photos.json dimensions)
+Stopped at: Completed 08-02-PLAN.md (photo gallery component + PhotoSwipe lightbox)
 Resume file: None
