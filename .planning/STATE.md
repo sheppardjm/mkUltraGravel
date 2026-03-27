@@ -9,20 +9,20 @@ See: .planning/PROJECT.md (updated 2026-03-26)
 
 ## Current Position
 
-Phase: 8 of 10 (Photo Gallery + Lightbox) — Complete
-Plan: 3 of 3 complete (08-03 done)
-Status: Phase 8 complete; all 3 plans executed, verified (4/4 must-haves) — ready for Phase 9
+Phase: 9 of 10 (Mobile Performance Audit) — In progress
+Plan: 1 of 4 complete (09-01 done)
+Status: In progress — WCAG contrast audit complete; 3 plans remaining in Phase 9
 
-Last activity: 2026-03-27 — Completed Phase 8; thumbnail pipeline, PhotoGallery grid + PhotoSwipe lightbox, human-verified with 2 bugs fixed
+Last activity: 2026-03-27 — Completed 09-01: WCAG AA contrast audit; fixed --color-text-muted and --color-accent-red tokens
 
-Progress: [█████░░░░░] 45.1% (23/51 plans)
+Progress: [█████░░░░░] 47.1% (24/51 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 23
+- Total plans completed: 24
 - Average duration: ~2.0 min
-- Total execution time: ~0.58 hours
+- Total execution time: ~0.60 hours
 
 **By Phase:**
 
@@ -36,10 +36,11 @@ Progress: [█████░░░░░] 45.1% (23/51 plans)
 | 06-route-info-sections | 2 | ~5 min | ~2.5 min |
 | 07-hero-event-info-ctas | 3 | ~6 min | ~2 min |
 | 08-photo-gallery-lightbox | 3/3 | ~5 min | ~1.7 min |
+| 09-mobile-performance-audit | 1/4 | ~2 min | ~2 min |
 
 **Recent Trend:**
-- Last 5 plans: 07-03 (~3 min), 08-01 (~1 min), 08-02 (~2 min), 08-03 (~2 min)
-- Trend: Fast pace; Phase 8 complete with 2 bugs found and fixed during human verification
+- Last 5 plans: 08-01 (~1 min), 08-02 (~2 min), 08-03 (~2 min), 09-01 (~2 min)
+- Trend: Fast pace; Phase 9 started; WCAG audit complete in single pass
 
 *Updated after each plan completion*
 
@@ -119,6 +120,9 @@ Recent decisions affecting current work:
 - [08-02→fix]: Standard PhotoSwipe gallery/children selector pattern with <a href> + data-pswp-width/height — dataSource+loadAndOpen didn't reliably open the clicked photo
 - [08-02→fix]: .pswp__img { max-width: none } in @layer components — Tailwind preflight img { max-width: 100% } in base layer collapsed lightbox images to 0px width because PhotoSwipe zoom wrapper has no explicit width
 - [08-03]: Human-verified: all 11 gallery+lightbox checks passed — grid count/layout/thumbnails/speed/theme + lightbox open/nav/3-close-methods/theme
+- [09-01]: --color-text-muted raised L=0.55->0.62 — worst-case pair (muted on elevated bg) needed L>=0.586; 0.62 gives 5.16:1+ on all backgrounds
+- [09-01]: --color-accent-red raised L=0.45->0.50 — minimum L for 3:1 large-text threshold was 0.4756; 0.50 chosen as next round increment
+- [09-01]: Hardcoded raw oklch values in Leaflet/PhotoSwipe sections must stay in sync with @theme tokens — updated all 4 (close button, attribution, attribution links, pswp icon-color-secondary)
 
 ### Pending Todos
 
@@ -134,5 +138,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-27
-Stopped at: Completed Phase 8 (Photo Gallery + Lightbox); all 3 plans executed, verified
+Stopped at: Completed 09-01 (WCAG contrast audit + token fixes)
 Resume file: None
