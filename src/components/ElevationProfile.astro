@@ -85,10 +85,9 @@
   };
 
   // Null guard — module scripts defer until DOM is ready, but guard defensively
+  // Note: top-level return is not valid in ESM modules — use conditional block instead
   const canvas = document.getElementById('elevation-chart') as HTMLCanvasElement;
-  if (!canvas) return;
-
-  new Chart(canvas, {
+  if (canvas) new Chart(canvas, {
     type: 'line',
     data: {
       datasets: [{
