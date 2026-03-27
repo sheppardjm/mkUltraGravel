@@ -10,7 +10,20 @@
  * Wired as: npm run prebuild (runs before astro build)
  */
 const { execSync } = require('child_process');
+const fs = require('fs');
 const path = require('path');
+
+// Copy route photos to public/images/ for browser serving
+const srcImagesDir = path.join(__dirname, '..', 'images');
+const destImagesDir = path.join(__dirname, '..', 'public', 'images');
+if (!fs.existsSync(destImagesDir)) {
+  fs.mkdirSync(destImagesDir, { recursive: true });
+}
+const jpgs = fs.readdirSync(srcImagesDir).filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f));
+jpgs.forEach(filename => {
+  fs.copyFileSync(path.join(srcImagesDir, filename), path.join(destImagesDir, filename));
+});
+console.log(`Copied ${jpgs.length} images to public/images/`);
 
 const scripts = [
   'parse-gpx.js',
