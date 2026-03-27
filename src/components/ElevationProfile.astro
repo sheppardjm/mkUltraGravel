@@ -71,6 +71,12 @@
       backgroundColor: starColors[sector.stars] + '22',  // ~13% opacity fill
       borderColor: starColors[sector.stars] + '66',       // ~40% opacity border
       borderWidth: 1,
+      _baseColor: starColors[sector.stars],               // stored for highlight/restore
+      click: () => {
+        window.dispatchEvent(new CustomEvent('elevation:sectorClick', {
+          detail: { sectorIndex: i }
+        }));
+      },
     };
   });
 
@@ -190,6 +196,51 @@
       window.dispatchEvent(new CustomEvent('elevation:hoverEnd'));
     });
   }
+
+  // AbortController for cleanup — removes window listeners when page unloads
+  const controller = new AbortController();
+  const { signal } = controller;
+  window.addEventListener('beforeunload', () => controller.abort(), { once: true });
+
+  // Listen for map:sectorHover — highlight the hovered sector's annotation band
+  window.addEventListener('map:sectorHover', ((e: Event) => {
+    const { sectorIndex } = (e as CustomEvent<{sectorIndex: number | null}>).detail;
+    const annots = (chartInstance as any).options.plugins.annotation.annotations;
+    Object.keys(annots).forEach(key => {
+      const annot = annots[key];
+      if (annot._baseColor) {
+        annot.backgroundColor = annot._baseColor + '22';
+        annot.borderColor = annot._baseColor + '66';
+      }
+    });
+    if (sectorIndex !== null) {
+      const key = `sector_${sectorIndex}`;
+      if (annots[key] && annots[key]._baseColor) {
+        annots[key].backgroundColor = annots[key]._baseColor + '66';
+        annots[key].borderColor = annots[key]._baseColor + 'aa';
+      }
+    }
+    (chartInstance as any).update('none');
+  }) as EventListener, { signal });
+
+  // Listen for map:sectorClick — dim all other sectors, strongly highlight the clicked one
+  window.addEventListener('map:sectorClick', ((e: Event) => {
+    const { sectorIndex } = (e as CustomEvent<{sectorIndex: number}>).detail;
+    const annots = (chartInstance as any).options.plugins.annotation.annotations;
+    Object.keys(annots).forEach(key => {
+      const annot = annots[key];
+      if (annot._baseColor) {
+        annot.backgroundColor = annot._baseColor + '15';
+        annot.borderColor = annot._baseColor + '33';
+      }
+    });
+    const key = `sector_${sectorIndex}`;
+    if (annots[key] && annots[key]._baseColor) {
+      annots[key].backgroundColor = annots[key]._baseColor + '88';
+      annots[key].borderColor = annots[key]._baseColor + 'cc';
+    }
+    (chartInstance as any).update('none');
+  }) as EventListener, { signal });
   } // end initElevation
 
   // Defer Chart.js loading until user scrolls (same pattern as RouteMap).
