@@ -10,10 +10,10 @@ See: .planning/PROJECT.md (updated 2026-03-26)
 ## Current Position
 
 Phase: 3 of 10 (Map Core) — In progress
-Plan: 2 of 3 complete in current phase
-Status: In progress
+Plan: 2.5 of 3 (03-03 Task 1 complete; paused at checkpoint:human-verify Task 2)
+Status: Awaiting mobile verification checkpoint
 
-Last activity: 2026-03-26 — Completed 03-02-PLAN.md (Annotation overlays — sectors, KOMs, restock)
+Last activity: 2026-03-27 — Completed 03-03 Task 1 (dark popup/control CSS); paused at mobile verify checkpoint
 
 Progress: [██░░░░░░░░] 20% (10/50 plans)
 
@@ -79,6 +79,9 @@ Recent decisions affecting current work:
 - [03-02]: Promise.all for parallel fetch of route-data.json and annotations.json — established pattern for all map overlay work
 - [03-02]: L.divIcon with inline styles only — never default L.icon in Astro/Vite builds (broken PNG paths in production)
 - [03-02]: :global() required for Leaflet-managed DOM elements (divIcon) in Astro component style blocks
+- [03-03]: Raw oklch() values in Leaflet popup CSS — Leaflet injects popup DOM at document root, outside Astro component where @theme vars are defined; var() refs may not resolve
+- [03-03]: !important on .leaflet-control-* rules — Leaflet inlines some control styles, requiring !important for reliable override beyond cascade layer ordering
+- [03-03]: Popup theming pattern: pass { className: 'dark-popup' } as second arg to bindPopup(); scope CSS as .leaflet-popup.dark-popup .leaflet-popup-content-wrapper in @layer components
 
 ### Pending Todos
 
@@ -93,6 +96,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26
-Stopped at: Completed 03-02-PLAN.md (Annotation overlays: 6 sector polylines, 3 KOM polylines, 4 restock divIcon markers)
+Last session: 2026-03-27
+Stopped at: 03-03-PLAN.md Task 1 complete (dark popup CSS + bindPopup wiring); paused at checkpoint:human-verify (Task 2: mobile device verification)
+Resume signal: User types "approved" or describes issues after testing on real mobile device at http://192.168.1.143:4321
 Resume file: None
