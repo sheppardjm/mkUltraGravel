@@ -66,6 +66,8 @@
   };
 
   // Render gravel sector overlays
+  const sectorBadges = L.layerGroup();
+
   annotations.sectors.forEach((sector: { name: string; stars: number; lengthMi: number; track: { lat: number; lon: number }[] }) => {
     const sectorLatlngs = sector.track.map((pt) => [pt.lat, pt.lon] as [number, number]);
     L.polyline(sectorLatlngs, {
@@ -80,7 +82,33 @@
       { className: 'dark-popup' }
     )
     .addTo(map);
+
+    // Persistent star-rating badge at sector midpoint
+    const mid = Math.floor(sector.track.length / 2);
+    const midPt = sector.track[mid];
+    const starStr = '★'.repeat(sector.stars) + '☆'.repeat(5 - sector.stars);
+    const badge = L.marker([midPt.lat, midPt.lon], {
+      icon: L.divIcon({
+        className: 'sector-badge',
+        html: `<span style="color:${starColors[sector.stars] || '#ffffff'}">${starStr}</span>`,
+        iconSize: [null, null] as any,
+        iconAnchor: [0, 0]
+      }),
+      interactive: false
+    });
+    sectorBadges.addLayer(badge);
   });
+
+  // Show sector badges only at zoom 10+
+  function updateBadgeVisibility() {
+    if (map.getZoom() >= 10) {
+      if (!map.hasLayer(sectorBadges)) map.addLayer(sectorBadges);
+    } else {
+      if (map.hasLayer(sectorBadges)) map.removeLayer(sectorBadges);
+    }
+  }
+  map.on('zoomend', updateBadgeVisibility);
+  updateBadgeVisibility(); // initial check
 
   // Render KOM overlays — dashed chartreuse green, distinct from sector colors
   annotations.kom.forEach((kom: { name: string; grade: number; elevFt: number; lengthMi: number; track: { lat: number; lon: number }[] }) => {
