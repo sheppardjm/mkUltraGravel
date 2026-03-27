@@ -10,12 +10,12 @@ See: .planning/PROJECT.md (updated 2026-03-26)
 ## Current Position
 
 Phase: 3 of 10 (Map Core) — In progress
-Plan: 1 of N in current phase
+Plan: 2 of 3 complete in current phase
 Status: In progress
 
-Last activity: 2026-03-26 — Completed 03-01-PLAN.md (Leaflet map foundation)
+Last activity: 2026-03-26 — Completed 03-02-PLAN.md (Annotation overlays — sectors, KOMs, restock)
 
-Progress: [██░░░░░░░░] 18% (9/50 plans)
+Progress: [██░░░░░░░░] 20% (10/50 plans)
 
 ## Performance Metrics
 
@@ -30,11 +30,11 @@ Progress: [██░░░░░░░░] 18% (9/50 plans)
 |-------|-------|-------|----------|
 | 01-data-pipeline | 5 | ~14 min | ~2.8 min |
 | 02-scaffold-design-system | 3 | ~8 min | ~2.7 min |
-| 03-map-core | 1 | ~2 min | ~2 min |
+| 03-map-core | 2 | ~3 min | ~1.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-01 (~4 min), 02-02 (~1 min), 02-03 (~3 min), 03-01 (~2 min)
-- Trend: Stable pace; Leaflet dynamic import pattern confirmed working with Astro SSR
+- Last 5 plans: 02-02 (~1 min), 02-03 (~3 min), 03-01 (~2 min), 03-02 (~1 min)
+- Trend: Stable pace; map overlay pattern (Promise.all + divIcon) established for 03-03 photo markers
 
 *Updated after each plan completion*
 
@@ -76,6 +76,9 @@ Recent decisions affecting current work:
 - [03-01]: Leaflet CSS via global.css @layer leaflet only — never in component script or style block
 - [03-01]: GestureHandling addInitHook must be called before L.map() — plugin registration order matters
 - [03-01]: Carto Dark Matter tiles confirmed as tile provider (no API key) — Stadia Maps signup not completed
+- [03-02]: Promise.all for parallel fetch of route-data.json and annotations.json — established pattern for all map overlay work
+- [03-02]: L.divIcon with inline styles only — never default L.icon in Astro/Vite builds (broken PNG paths in production)
+- [03-02]: :global() required for Leaflet-managed DOM elements (divIcon) in Astro component style blocks
 
 ### Pending Todos
 
@@ -86,9 +89,10 @@ None yet.
 - **[Resolved - 01-04]** Photo EXIF GPS status confirmed: all 33 photos lack GPS data. photos.json uses manual mile-marker positions for all entries.
 - **[Pre-Phase 3]** BikeReg registration URL not confirmed — needed before Phase 7 CTAs can be wired. Confirm with event director before Phase 7.
 - **[Resolved - 03-01]** Stadia Maps free-tier signup not completed — fell back to Carto Dark Matter tiles (no API key required). Map is live.
+- **[Resolved - 03-02]** Plan research had incorrect KOM field names (gradient/elevGain) — actual fields are grade/elevFt. Verified against annotations.json before coding.
 
 ## Session Continuity
 
 Last session: 2026-03-26
-Stopped at: Completed 03-01-PLAN.md (Leaflet map foundation with Carto tiles, GPX polyline, gesture handling)
+Stopped at: Completed 03-02-PLAN.md (Annotation overlays: 6 sector polylines, 3 KOM polylines, 4 restock divIcon markers)
 Resume file: None
