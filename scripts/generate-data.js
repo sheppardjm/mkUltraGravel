@@ -45,4 +45,15 @@ for (const script of scripts) {
   }
 }
 
+// Generate WebP thumbnails and enrich photos.json with width/height.
+// Runs after match-photos.js (produces photos.json) and image copy step (produces public/images/).
+console.log('--- Running generate-thumbnails.js ---');
+try {
+  execSync(`node "${path.join(__dirname, 'generate-thumbnails.js')}"`, { stdio: 'inherit', cwd: path.join(__dirname, '..') });
+  console.log('--- generate-thumbnails.js complete ---\n');
+} catch (err) {
+  console.error('\nERROR: generate-thumbnails.js failed with exit code ' + err.status);
+  process.exit(1);
+}
+
 console.log('=== Data pipeline complete ===');
