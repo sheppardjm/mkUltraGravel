@@ -74,11 +74,11 @@ Plans:
   3. Clicking a sector band in the elevation profile zooms the map to that segment and highlights its polyline
   4. Clicking a sector polyline on the map highlights the corresponding band in the elevation profile
   5. Lighthouse mobile TBT remains at 0ms after all sync interactions are wired (measured post-implementation)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 13-01: Implement elevation-to-map sync (SYNC-01): CustomEvent bus, Chart.js onHover, Leaflet circleMarker crosshair, rAF throttle, AbortController cleanup
-- [ ] 13-02: Implement map-to-elevation sync (SYNC-02, SYNC-03, SYNC-04): sector polyline mouseover events, elevation annotation highlight updates, click-to-zoom behavior
+- [ ] 13-01-PLAN.md — Elevation-to-map crosshair sync: Chart.js onHover, binary search track lookup, CustomEvent dispatch, Leaflet circleMarker crosshair, rAF throttle
+- [ ] 13-02-PLAN.md — Map-to-elevation sector sync: sector polyline hover/click events, annotation highlight updates, annotation click-to-zoom, flyToBounds
 
 #### Phase 14: Content
 
