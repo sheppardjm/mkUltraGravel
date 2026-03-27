@@ -22,9 +22,9 @@
 
 ### Visual Enhancements
 
-- [ ] **VIS-06**: Each sector card displays a representative photo
-- [ ] **VIS-07**: Each KOM card displays a representative photo
-- [ ] **VIS-08**: Gallery thumbnails increased from 200px to 400px width with improved WebP quality
+- [x] **VIS-06**: Each sector card displays a representative photo
+- [x] **VIS-07**: Each KOM card displays a representative photo
+- [x] **VIS-08**: Gallery thumbnails increased from 200px to 400px width with improved WebP quality
 - [ ] **VIS-09**: Subtle hover animations on buttons and cards (brutalist-appropriate: hard shifts, not smooth easing)
 - [ ] **VIS-10**: Subtle load/entrance animations on sections as they scroll into view
 - [ ] **VIS-11**: Click feedback animations on interactive elements
@@ -66,9 +66,9 @@
 | DATA-03 | Phase 11 | Complete |
 | DATA-04 | Phase 11 | Complete |
 | DATA-05 | Phase 11 | Complete |
-| VIS-06 | Phase 12 | Pending |
-| VIS-07 | Phase 12 | Pending |
-| VIS-08 | Phase 12 | Pending |
+| VIS-06 | Phase 12 | Complete |
+| VIS-07 | Phase 12 | Complete |
+| VIS-08 | Phase 12 | Complete |
 | SYNC-01 | Phase 13 | Pending |
 | SYNC-02 | Phase 13 | Pending |
 | SYNC-03 | Phase 13 | Pending |

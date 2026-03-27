@@ -59,9 +59,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 12-01-PLAN.md — Build assign-card-photos.js script + extend annotations.json with coverPhoto field
-- [ ] 12-02-PLAN.md — Wire coverPhoto into GravelSectors.astro and KomSegments.astro card components
-- [ ] 12-03-PLAN.md — Upgrade thumbnails to 400px/q80 + wire assign-card-photos.js into pipeline
+- [x] 12-01-PLAN.md — Build assign-card-photos.js script + extend annotations.json with coverPhoto field
+- [x] 12-02-PLAN.md — Wire coverPhoto into GravelSectors.astro and KomSegments.astro card components
+- [x] 12-03-PLAN.md — Upgrade thumbnails to 400px/q80 + wire assign-card-photos.js into pipeline
 
 #### Phase 13: Map-Elevation Interactivity
 
@@ -128,7 +128,7 @@ Plans:
 | 9. Mobile + Performance Audit | v1.0 | 4/4 | Complete | 2026-03-27 |
 | 10. Deployment | v1.0 | 3/3 | Complete | 2026-03-27 |
 | 11. Data Corrections | v2.0 | 2/2 | Complete | 2026-03-27 |
-| 12. Photo Pipeline + Card Photos | v2.0 | 0/3 | Not started | - |
+| 12. Photo Pipeline + Card Photos | v2.0 | 3/3 | Complete | 2026-03-27 |
 | 13. Map-Elevation Interactivity | v2.0 | 0/TBD | Not started | - |
 | 14. Content | v2.0 | 0/TBD | Not started | - |
 | 15. Animations | v2.0 | 0/TBD | Not started | - |

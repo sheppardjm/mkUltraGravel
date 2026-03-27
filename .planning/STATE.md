@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v2.0 — Phase 12: Card Photos
+**Current focus:** v2.0 — Phase 13: Map-Elevation Interactivity
 
 ## Current Position
 
 Milestone: v2.0
-Phase: 12 of 15 (Photo Pipeline + Card Photos + Image Quality)
-Plan: 3 of 3 in phase
-Status: Phase complete
+Phase: 13 of 15 (Map-Elevation Interactivity)
+Plan: — (ready to plan)
+Status: Ready to plan
 
-Last activity: 2026-03-27 — Plan 12-03 complete (400px thumbnails + full pipeline automation)
+Last activity: 2026-03-27 — Phase 12 complete (card photos on all sectors/KOMs, 400px thumbnails, pipeline automated)
 
 Progress: [█████████████░░░░░░░] 35/37 plans complete (v1.0 30 + v2.0 5); Phase 13 next
 
@@ -81,6 +81,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27T22:23:39Z
-Stopped at: Plan 12-03 complete — Phase 12 done; Phase 13 next
+Last session: 2026-03-27T22:30:00Z
+Stopped at: Phase 12 verified and complete — Phase 13 next
 Resume file: None
