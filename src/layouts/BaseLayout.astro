@@ -20,8 +20,14 @@ const {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <Font cssVariable="--font-mono" />
     <Font cssVariable="--font-display" />
+    <!-- Preconnect to Carto CDN for Leaflet map tiles — reduces connection latency when map loads -->
+    <link rel="preconnect" href="https://a.basemaps.cartocdn.com" />
+    <link rel="preconnect" href="https://b.basemaps.cartocdn.com" />
+    <link rel="preconnect" href="https://c.basemaps.cartocdn.com" />
+    <link rel="preconnect" href="https://d.basemaps.cartocdn.com" />
     <slot name="head" />
   </head>
   <body>

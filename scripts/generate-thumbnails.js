@@ -46,9 +46,12 @@ async function generateThumbnails() {
       continue;
     }
 
-    // Generate WebP thumbnail at 600px wide
+    // Generate WebP thumbnail at 200px wide
+    // Gallery displays at ~186px on mobile and ~250px on desktop (2-col/3-col grid).
+    // 200px at q75 produces ~7-15KB per thumbnail vs ~22-28KB at 300px.
+    // Thumbnails are gallery previews — users click for full-size. Quality budget is generous.
     await sharp(srcPath)
-      .resize(600, null, { withoutEnlargement: true })
+      .resize(200, null, { withoutEnlargement: true })
       .webp({ quality: 75, effort: 4 })
       .toFile(thumbPath);
 

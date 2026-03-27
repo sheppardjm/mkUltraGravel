@@ -31,6 +31,9 @@
 </style>
 
 <script>
+  // IntersectionObserver-based lazy init — Chart.js + route-data only load when chart scrolls into view.
+  // Defers 70KB (chart.js) + 44KB (route-data.json) off the LCP critical path.
+  async function initElevation() {
   // Dynamic import avoids SSR "window is undefined" error — Chart.js requires browser globals
   const { Chart } = await import('chart.js/auto');
   // AnnotationPlugin must be registered BEFORE new Chart() — silent failure otherwise
@@ -142,4 +145,32 @@
     },
     plugins: [darkBgPlugin]  // registered here (Chart constructor array), not in options.plugins
   });
+  } // end initElevation
+
+  // Defer Chart.js loading until user scrolls (same pattern as RouteMap).
+  // Scroll event fires on first scroll; IntersectionObserver with 0 rootMargin for anchor nav.
+  let elevationInitialized = false;
+  const chartCanvas = document.getElementById('elevation-chart');
+
+  function tryInitElevation() {
+    if (!elevationInitialized) {
+      elevationInitialized = true;
+      initElevation();
+    }
+  }
+
+  if (chartCanvas) {
+    window.addEventListener('scroll', tryInitElevation, { once: true, passive: true });
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          observer.disconnect();
+          tryInitElevation();
+        }
+      },
+      { rootMargin: '0px' }
+    );
+    observer.observe(chartCanvas);
+  }
 </script>

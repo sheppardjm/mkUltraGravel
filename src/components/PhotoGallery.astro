@@ -23,7 +23,7 @@ const photos = JSON.parse(photosRaw) as Array<{
       <img
         src={`/images/thumbs/${photo.filename.replace(/\.(jpg|jpeg|png)$/i, '.webp')}`}
         alt={`Route photo at mile ${photo.mi}`}
-        loading={i < 8 ? 'eager' : 'lazy'}
+        loading="lazy"
         decoding="async"
         class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
       />

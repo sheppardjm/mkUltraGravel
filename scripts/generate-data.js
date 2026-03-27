@@ -67,4 +67,16 @@ try {
   process.exit(1);
 }
 
+// Convert below-fold tone images (lsd-mind-control.jpg, Mkultra-lsd-doc.jpg) to WebP.
+// These are 12%-opacity background decorations — aggressive compression is invisible.
+// Reduces 611KB JPEG to ~60KB WebP, significantly improving LCP on the photos section.
+console.log('--- Running convert-tone-images.js ---');
+try {
+  execSync(`node "${path.join(__dirname, 'convert-tone-images.js')}"`, { stdio: 'inherit', cwd: path.join(__dirname, '..') });
+  console.log('--- convert-tone-images.js complete ---\n');
+} catch (err) {
+  console.error('\nERROR: convert-tone-images.js failed with exit code ' + err.status);
+  process.exit(1);
+}
+
 console.log('=== Data pipeline complete ===');

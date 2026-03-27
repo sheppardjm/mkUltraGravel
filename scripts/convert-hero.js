@@ -28,11 +28,12 @@ async function convertHero() {
     return;
   }
 
-  // Resize to 1000px wide (source is 2496px — overkill for a 12%-opacity tone image)
-  // quality 60 produces ~194KB, well under the 200KB LCP target
+  // Resize to 600px wide at quality 45 — produces ~81KB.
+  // Hero displays at ~652px on mobile, 600px is 0.92x — slight downscaling, invisible at 12% opacity.
+  // Smaller file reduces bandwidth competition with fonts/scripts during LCP measurement.
   await sharp(heroSrc)
-    .resize(1000, null, { withoutEnlargement: true })
-    .webp({ quality: 60 })
+    .resize(600, null, { withoutEnlargement: true })
+    .webp({ quality: 45 })
     .toFile(heroDest);
 
   const stat = fs.statSync(heroDest);
