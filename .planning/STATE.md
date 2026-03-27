@@ -10,12 +10,12 @@ See: .planning/PROJECT.md (updated 2026-03-26)
 ## Current Position
 
 Phase: 9 of 10 (Mobile Performance Audit) — In progress
-Plan: 1 of 4 complete (09-01 done)
-Status: In progress — WCAG contrast audit complete; 3 plans remaining in Phase 9
+Plan: 2 of 4 complete (09-02 done)
+Status: In progress — LCP hero WebP + animation audit complete; 2 plans remaining in Phase 9
 
-Last activity: 2026-03-27 — Completed 09-01: WCAG AA contrast audit; fixed --color-text-muted and --color-accent-red tokens
+Last activity: 2026-03-27 — Completed 09-02: hero image 1374KB JPEG → 194KB WebP, fetchpriority=high, all CSS animations confirmed compositor-safe
 
-Progress: [█████░░░░░] 47.1% (24/51 plans)
+Progress: [█████░░░░░] 49.0% (25/51 plans)
 
 ## Performance Metrics
 
@@ -36,11 +36,11 @@ Progress: [█████░░░░░] 47.1% (24/51 plans)
 | 06-route-info-sections | 2 | ~5 min | ~2.5 min |
 | 07-hero-event-info-ctas | 3 | ~6 min | ~2 min |
 | 08-photo-gallery-lightbox | 3/3 | ~5 min | ~1.7 min |
-| 09-mobile-performance-audit | 1/4 | ~2 min | ~2 min |
+| 09-mobile-performance-audit | 2/4 | ~8 min | ~4 min |
 
 **Recent Trend:**
-- Last 5 plans: 08-01 (~1 min), 08-02 (~2 min), 08-03 (~2 min), 09-01 (~2 min)
-- Trend: Fast pace; Phase 9 started; WCAG audit complete in single pass
+- Last 5 plans: 08-02 (~2 min), 08-03 (~2 min), 09-01 (~2 min), 09-02 (~6 min)
+- Trend: Fast pace; Phase 9 in progress; hero LCP optimization and animation audit complete
 
 *Updated after each plan completion*
 
@@ -123,6 +123,10 @@ Recent decisions affecting current work:
 - [09-01]: --color-text-muted raised L=0.55->0.62 — worst-case pair (muted on elevated bg) needed L>=0.586; 0.62 gives 5.16:1+ on all backgrounds
 - [09-01]: --color-accent-red raised L=0.45->0.50 — minimum L for 3:1 large-text threshold was 0.4756; 0.50 chosen as next round increment
 - [09-01]: Hardcoded raw oklch values in Leaflet/PhotoSwipe sections must stay in sync with @theme tokens — updated all 4 (close button, attribution, attribution links, pswp icon-color-secondary)
+- [09-02]: Hero WebP at 1000px/q60 = 194KB — source is 2496x3150 scanned document; quality 80 (plan default) produced 830KB; resize to 1000px required to hit under 200KB target
+- [09-02]: Tone images (12% opacity background decorations) can be aggressively resized without visible quality loss — 1000px sufficient even for full-screen display
+- [09-02]: convert-hero.js follows generate-thumbnails.js pattern: async + require.main guard + module export; called via execSync in generate-data.js
+- [09-02]: All CSS animations in codebase and imported libraries are compositor-safe (transform, opacity) or paint-only (colors); zero layout-triggering animated properties
 
 ### Pending Todos
 
@@ -138,5 +142,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-27
-Stopped at: Completed 09-01 (WCAG contrast audit + token fixes)
+Stopped at: Completed 09-02 (Hero WebP LCP optimization + animation audit)
 Resume file: None
