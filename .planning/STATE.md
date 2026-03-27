@@ -5,22 +5,22 @@
 See: .planning/PROJECT.md (updated 2026-03-26)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** Phase 6 — Photo Gallery
+**Current focus:** Phase 7 — Event Info
 
 ## Current Position
 
-Phase: 6 of 10 (Route Info Sections) — In progress
-Plan: 1 of 2 complete (06-01 done)
-Status: Route info cards built; awaiting mobile verification (06-02)
+Phase: 6 of 10 (Route Info Sections) — Complete
+Plan: 2 of 2 complete (06-02 done)
+Status: Phase 6 complete; all 6 visual checks passed — ready for Phase 7 (Event Info)
 
-Last activity: 2026-03-27 — Completed 06-01; GravelSectors, KomSegments, RestockPoints wired into #sectors
+Last activity: 2026-03-26 — Completed 06-02; visual verification checkpoint approved, Phase 6 done
 
-Progress: [████░░░░░░] 31.4% (16/51 plans)
+Progress: [████░░░░░░] 33.3% (17/51 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 13
+- Total plans completed: 17
 - Average duration: ~2.3 min
 - Total execution time: ~0.50 hours
 
@@ -33,11 +33,11 @@ Progress: [████░░░░░░] 31.4% (16/51 plans)
 | 03-map-core | 4 | ~6 min | ~1.5 min |
 | 04-elevation-profile | 1 | ~2 min | ~2 min |
 | 05-photo-map-markers | 2 | ~9 min | ~4.5 min |
-| 06-route-info-sections | 1 | ~3 min | ~3 min |
+| 06-route-info-sections | 2 | ~5 min | ~2.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-04 (~1 min), 04-01 (~2 min), 05-01 (~4 min), 05-02 (~5 min)
-- Trend: Stable pace; Phase 5 complete with mobile-verified photo markers
+- Last 5 plans: 04-01 (~2 min), 05-01 (~4 min), 05-02 (~5 min), 06-01 (~3 min), 06-02 (~2 min)
+- Trend: Stable pace; Phase 6 complete with verified route info sections
 
 *Updated after each plan completion*
 
@@ -100,6 +100,7 @@ Recent decisions affecting current work:
 - [05-02]: Popup thumbnail increased from 180px to 260px after mobile feedback — width="260" with maxWidth: 300 on popup container
 - [06-01]: Astro components use fs.readFileSync + process.cwd() for build-time JSON loading — no __dirname (ESM), no Vite module import from public/
 - [06-01]: Star rating colors rendered via inline style= attribute with hex values — matches RouteMap.astro starColors map exactly without CSS variable indirection
+- [06-02]: Phase 6 verified complete — all 13 annotation items confirmed in static HTML, all 6 visual checks passed on first inspection, no fixes required
 
 ### Pending Todos
 
@@ -108,12 +109,12 @@ None yet.
 ### Blockers/Concerns
 
 - **[Resolved - 01-04]** Photo EXIF GPS status confirmed: all 33 photos lack GPS data. photos.json uses manual mile-marker positions for all entries.
-- **[Pre-Phase 3]** BikeReg registration URL not confirmed — needed before Phase 7 CTAs can be wired. Confirm with event director before Phase 7.
+- **[Pre-Phase 7]** BikeReg registration URL not confirmed — needed before Phase 7 CTAs can be wired. Confirm with event director before Phase 7.
 - **[Resolved - 03-01]** Stadia Maps free-tier signup not completed — fell back to Carto Dark Matter tiles (no API key required). Map is live.
 - **[Resolved - 03-02]** Plan research had incorrect KOM field names (gradient/elevGain) — actual fields are grade/elevFt. Verified against annotations.json before coding.
 
 ## Session Continuity
 
-Last session: 2026-03-27
-Stopped at: Completed 06-01-PLAN.md (route info cards built, wired into #sectors)
+Last session: 2026-03-26
+Stopped at: Completed 06-02-PLAN.md (visual verification approved; Phase 6 complete)
 Resume file: None
