@@ -21,7 +21,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Map Core** — Leaflet island with GPX polyline, sector/KOM/restock overlays
 - [x] **Phase 4: Elevation Profile** — Profile chart integrated alongside the map
 - [x] **Phase 5: Photo Map Markers** — Geolocated photo markers with clustering on the map
-- [ ] **Phase 6: Route Info Sections** — Sector cards, KOM listings, restock listings
+- [x] **Phase 6: Route Info Sections** — Sector cards, KOM listings, restock listings
 - [ ] **Phase 7: Hero + Event Info + CTAs** — Above-fold content, event details, donation, GPX download
 - [ ] **Phase 8: Photo Gallery + Lightbox** — 33-photo grid with full-screen lightbox
 - [ ] **Phase 9: Mobile + Performance Audit** — Scroll trap, contrast, animation, Core Web Vitals
@@ -170,13 +170,11 @@ KOM segment, and restock point — rendered as styled cards from the annotation 
 3. All 4 restock points appear in a listing showing name and mile marker
 4. Sector star ratings are visually distinct — a 5-star C4 sector reads as more serious than a 2-star Forest Service Rd at a glance
 
-**Plans:** TBD (4-6 plans estimated)
+**Plans:** 2 plans in 2 waves
 
 Plans:
-- [ ] 06-01: Build `SectorList` Astro component — reads from `annotations.json` at build time; renders Paris-Roubaix style cards
-- [ ] 06-02: Implement star rating display — 1-5 filled/empty stars with color scale by rating
-- [ ] 06-03: Build `KomList` Astro component — reads from `annotations.json`; displays gradient and elevation gain
-- [ ] 06-04: Build `RestockList` Astro component — reads from `annotations.json`; displays name and mile marker
+- [x] 06-01-PLAN.md — Build GravelSectors, KomSegments, RestockPoints components + wire into index.astro (wave 1)
+- [x] 06-02-PLAN.md — Visual verification of rendered cards at desktop and mobile widths (wave 2)
 
 ---
 
@@ -294,7 +292,7 @@ Note: Phases 2 and 1 can run in parallel. Phases 6, 7, and 8 can run in parallel
 | 3. Map Core | 4/4 | Complete | 2026-03-26 |
 | 4. Elevation Profile | 1/1 | Complete | 2026-03-26 |
 | 5. Photo Map Markers | 2/2 | Complete | 2026-03-27 |
-| 6. Route Info Sections | 0/4 | Not started | - |
+| 6. Route Info Sections | 2/2 | Complete | 2026-03-26 |
 | 7. Hero + Event Info + CTAs | 0/5 | Not started | - |
 | 8. Photo Gallery + Lightbox | 0/3 | Not started | - |
 | 9. Mobile + Performance Audit | 0/4 | Not started | - |

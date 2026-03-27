@@ -20,9 +20,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Route Information
 
-- [ ] **ROUTE-01**: Gravel sectors displayed as Paris-Roubaix style cards with name, mile marker, distance, and star rating (1-5)
-- [ ] **ROUTE-02**: KOM segments displayed with name, mile marker, distance, gradient percentage, and elevation gain
-- [ ] **ROUTE-03**: Restock points displayed with name and mile marker
+- [x] **ROUTE-01**: Gravel sectors displayed as Paris-Roubaix style cards with name, mile marker, distance, and star rating (1-5)
+- [x] **ROUTE-02**: KOM segments displayed with name, mile marker, distance, gradient percentage, and elevation gain
+- [x] **ROUTE-03**: Restock points displayed with name and mile marker
 
 ### Event Information
 
@@ -90,9 +90,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MAP-06 | Phase 5 | Complete |
 | MAP-07 | Phase 4 | Complete |
 | MAP-08 | Phase 7 | Pending |
-| ROUTE-01 | Phase 6 | Pending |
-| ROUTE-02 | Phase 6 | Pending |
-| ROUTE-03 | Phase 6 | Pending |
+| ROUTE-01 | Phase 6 | Complete |
+| ROUTE-02 | Phase 6 | Complete |
+| ROUTE-03 | Phase 6 | Complete |
 | EVENT-01 | Phase 7 | Pending |
 | EVENT-02 | Phase 7 | Pending |
 | EVENT-03 | Phase 7 | Pending |
