@@ -218,12 +218,12 @@ feel the character of the terrain before committing to register.
 3. Clicking any photo opens a full-screen lightbox viewer with the full-size image
 4. The lightbox can be closed with a visible button, the Escape key, and by clicking outside the image
 
-**Plans:** TBD (3-5 plans estimated)
+**Plans:** 3 plans in 3 waves
 
 Plans:
-- [ ] 08-01: Configure Astro image optimization pipeline — generate WebP thumbnails for all 33 photos
-- [ ] 08-02: Build photo gallery grid component with lazy-loading for below-fold images
-- [ ] 08-03: Implement lightbox — FSLightbox or equivalent vanilla JS; wire keyboard and click-outside dismiss
+- [ ] 08-01-PLAN.md — Install sharp, create thumbnail generator, wire into prebuild pipeline, enrich photos.json with dimensions (wave 1)
+- [ ] 08-02-PLAN.md — Install PhotoSwipe, build PhotoGallery.astro grid + lightbox, wire into index.astro (wave 2)
+- [ ] 08-03-PLAN.md — Human verification of gallery grid + lightbox on desktop and mobile (wave 3)
 
 ---
 
