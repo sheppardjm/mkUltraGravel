@@ -19,7 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Data Pipeline** — Build-time GPX parser, annotation resolver, photo geo-matcher
 - [x] **Phase 2: Scaffold + Design System** — Astro project, Tailwind tokens, dark brutalist identity
 - [x] **Phase 3: Map Core** — Leaflet island with GPX polyline, sector/KOM/restock overlays
-- [ ] **Phase 4: Elevation Profile** — Profile chart integrated alongside the map
+- [x] **Phase 4: Elevation Profile** — Profile chart integrated alongside the map
 - [ ] **Phase 5: Photo Map Markers** — Geolocated photo markers with clustering on the map
 - [ ] **Phase 6: Route Info Sections** — Sector cards, KOM listings, restock listings
 - [ ] **Phase 7: Hero + Event Info + CTAs** — Above-fold content, event details, donation, GPX download
@@ -128,7 +128,7 @@ showing the full 80-mile elevation character at a glance, synchronized with the 
 **Plans:** 1 plan in 1 wave
 
 Plans:
-- [ ] 04-01-PLAN.md — Install Chart.js, create ElevationProfile.astro with sector bands, wire into index.astro (wave 1)
+- [x] 04-01-PLAN.md — Install Chart.js, create ElevationProfile.astro with sector bands, wire into index.astro (wave 1)
 
 ---
 
@@ -293,7 +293,7 @@ Note: Phases 2 and 1 can run in parallel. Phases 6, 7, and 8 can run in parallel
 | 1. Data Pipeline | 5/5 | Complete | 2026-03-26 |
 | 2. Scaffold + Design System | 3/3 | Complete | 2026-03-26 |
 | 3. Map Core | 4/4 | Complete | 2026-03-26 |
-| 4. Elevation Profile | 0/1 | Not started | - |
+| 4. Elevation Profile | 1/1 | Complete | 2026-03-26 |
 | 5. Photo Map Markers | 0/3 | Not started | - |
 | 6. Route Info Sections | 0/4 | Not started | - |
 | 7. Hero + Event Info + CTAs | 0/5 | Not started | - |

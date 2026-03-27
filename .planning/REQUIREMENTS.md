@@ -15,7 +15,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **MAP-04**: KOM segments are highlighted on the map with gradient/elevation info
 - [x] **MAP-05**: Restock points are displayed as markers on the map
 - [ ] **MAP-06**: Geo-located photos are displayed as clickable markers on the map
-- [ ] **MAP-07**: Elevation profile is displayed alongside the map, synchronized with the route
+- [x] **MAP-07**: Elevation profile is displayed alongside the map, synchronized with the route
 - [ ] **MAP-08**: User can download the GPX file
 
 ### Route Information
@@ -88,7 +88,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MAP-04 | Phase 3 | Complete |
 | MAP-05 | Phase 3 | Complete |
 | MAP-06 | Phase 5 | Pending |
-| MAP-07 | Phase 4 | Pending |
+| MAP-07 | Phase 4 | Complete |
 | MAP-08 | Phase 7 | Pending |
 | ROUTE-01 | Phase 6 | Pending |
 | ROUTE-02 | Phase 6 | Pending |
