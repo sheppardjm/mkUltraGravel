@@ -20,7 +20,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Scaffold + Design System** — Astro project, Tailwind tokens, dark brutalist identity
 - [x] **Phase 3: Map Core** — Leaflet island with GPX polyline, sector/KOM/restock overlays
 - [x] **Phase 4: Elevation Profile** — Profile chart integrated alongside the map
-- [ ] **Phase 5: Photo Map Markers** — Geolocated photo markers with clustering on the map
+- [x] **Phase 5: Photo Map Markers** — Geolocated photo markers with clustering on the map
 - [ ] **Phase 6: Route Info Sections** — Sector cards, KOM listings, restock listings
 - [ ] **Phase 7: Hero + Event Info + CTAs** — Above-fold content, event details, donation, GPX download
 - [ ] **Phase 8: Photo Gallery + Lightbox** — 33-photo grid with full-screen lightbox
@@ -150,8 +150,8 @@ marker shows a thumbnail and opens the full photo.
 **Plans:** 2 plans in 2 waves
 
 Plans:
-- [ ] 05-01-PLAN.md — Install markercluster, copy photos to public/images/, wire 33 photo markers with clustering + thumbnail popups into RouteMap.astro (wave 1)
-- [ ] 05-02-PLAN.md — Mobile performance verification: cluster/uncluster, tap popups, pan/zoom smoothness on real device (wave 2)
+- [x] 05-01-PLAN.md — Install markercluster, copy photos to public/images/, wire 33 photo markers with clustering + thumbnail popups into RouteMap.astro (wave 1)
+- [x] 05-02-PLAN.md — Mobile performance verification: cluster/uncluster, tap popups, pan/zoom smoothness on real device (wave 2)
 
 ---
 
@@ -293,7 +293,7 @@ Note: Phases 2 and 1 can run in parallel. Phases 6, 7, and 8 can run in parallel
 | 2. Scaffold + Design System | 3/3 | Complete | 2026-03-26 |
 | 3. Map Core | 4/4 | Complete | 2026-03-26 |
 | 4. Elevation Profile | 1/1 | Complete | 2026-03-26 |
-| 5. Photo Map Markers | 0/2 | Not started | - |
+| 5. Photo Map Markers | 2/2 | Complete | 2026-03-27 |
 | 6. Route Info Sections | 0/4 | Not started | - |
 | 7. Hero + Event Info + CTAs | 0/5 | Not started | - |
 | 8. Photo Gallery + Lightbox | 0/3 | Not started | - |

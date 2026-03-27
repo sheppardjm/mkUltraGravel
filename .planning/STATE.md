@@ -9,9 +9,9 @@ See: .planning/PROJECT.md (updated 2026-03-26)
 
 ## Current Position
 
-Phase: 5 of 10 (Photo Map Markers) — Complete
+Phase: 5 of 10 (Photo Map Markers) — FULLY VERIFIED
 Plan: 2 of 2 complete (05-02 done)
-Status: Phase 5 complete — ready for Phase 6
+Status: Phase 5 fully verified; ready to begin Phase 6
 
 Last activity: 2026-03-27 — Completed 05-02 (mobile verification); all 7 checks passed on real device
 
@@ -96,11 +96,11 @@ Recent decisions affecting current work:
 - [05-01]: img width="180" fixed in popup HTML — prevents autopan/image-load race condition (Pitfall 3 from Phase 5 research)
 - [05-01]: Photo copy step in generate-data.js: images/ -> public/images/ via fs.copyFileSync — runs on every prebuild/dev invocation
 - [05-02]: Mobile-verified: all 7 photo marker checks passed on real device — cluster render, tap-to-zoom, popup tap, thumbnail load, full-size link, pan/zoom smooth, scroll pass-through
-- [05-02]: Popup thumbnail (180px width) is functional but visually small on mobile — future improvement candidate for Phase 6 or polish pass
+- [05-02]: Popup thumbnail increased from 180px to 260px after mobile feedback — width="260" with maxWidth: 300 on popup container
 
 ### Pending Todos
 
-- [Future] Photo popup thumbnail too small on mobile (180px) — consider increasing to 240px+ or using responsive CSS in RouteMap.astro `.photo-popup` rule
+None yet.
 
 ### Blockers/Concerns
 

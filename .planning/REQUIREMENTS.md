@@ -14,7 +14,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **MAP-03**: Gravel sectors are highlighted as distinct colored segments on the map with star ratings
 - [x] **MAP-04**: KOM segments are highlighted on the map with gradient/elevation info
 - [x] **MAP-05**: Restock points are displayed as markers on the map
-- [ ] **MAP-06**: Geo-located photos are displayed as clickable markers on the map
+- [x] **MAP-06**: Geo-located photos are displayed as clickable markers on the map
 - [x] **MAP-07**: Elevation profile is displayed alongside the map, synchronized with the route
 - [ ] **MAP-08**: User can download the GPX file
 
@@ -87,7 +87,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MAP-03 | Phase 3 | Complete |
 | MAP-04 | Phase 3 | Complete |
 | MAP-05 | Phase 3 | Complete |
-| MAP-06 | Phase 5 | Pending |
+| MAP-06 | Phase 5 | Complete |
 | MAP-07 | Phase 4 | Complete |
 | MAP-08 | Phase 7 | Pending |
 | ROUTE-01 | Phase 6 | Pending |
