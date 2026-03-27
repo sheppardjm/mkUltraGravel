@@ -1,0 +1,41 @@
+---
+import { readFileSync } from "fs";
+import { join } from "path";
+
+const raw = readFileSync(join(process.cwd(), "public", "data", "annotations.json"), "utf-8");
+const annotations = JSON.parse(raw);
+const sectors = annotations.sectors as Array<{
+  name: string;
+  startMi: number;
+  lengthMi: number;
+  stars: number;
+}>;
+
+const starColors: Record<number, string> = {
+  1: "#888888",
+  2: "#aaaaaa",
+  3: "#f5a623",
+  4: "#e86d1f",
+  5: "#c0392b",
+};
+---
+
+<div class="space-y-4">
+  {sectors.map((sector) => (
+    <div class="classified-border bg-bg-surface p-4">
+      <div class="flex items-start justify-between gap-4">
+        <h3 class="text-accent-white text-lg">{sector.name}</h3>
+        <span
+          class="text-base tracking-widest shrink-0"
+          style={`color: ${starColors[sector.stars]}`}
+        >
+          {"★".repeat(sector.stars)}{"☆".repeat(5 - sector.stars)}
+        </span>
+      </div>
+      <div class="flex gap-6 text-text-muted text-sm mt-1">
+        <span>Mile {sector.startMi}</span>
+        <span>{sector.lengthMi.toFixed(1)} mi</span>
+      </div>
+    </div>
+  ))}
+</div>

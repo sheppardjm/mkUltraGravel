@@ -1,0 +1,28 @@
+---
+import { readFileSync } from "fs";
+import { join } from "path";
+
+const raw = readFileSync(join(process.cwd(), "public", "data", "annotations.json"), "utf-8");
+const annotations = JSON.parse(raw);
+const kom = annotations.kom as Array<{
+  name: string;
+  startMi: number;
+  lengthMi: number;
+  grade: number;
+  elevFt: number;
+}>;
+---
+
+<div class="space-y-4">
+  {kom.map((segment) => (
+    <div class="classified-border bg-bg-surface p-4">
+      <h3 class="text-accent-green mb-2">{segment.name}</h3>
+      <div class="grid grid-cols-2 gap-x-6 gap-y-1 text-text-muted text-sm">
+        <span>Mile {segment.startMi}</span>
+        <span>{segment.lengthMi.toFixed(2)} mi</span>
+        <span>{segment.grade}% grade</span>
+        <span>{segment.elevFt} ft gain</span>
+      </div>
+    </div>
+  ))}
+</div>
