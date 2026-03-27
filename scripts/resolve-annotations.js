@@ -148,7 +148,6 @@ const koms = [
 ];
 
 const restocks = [
-  { name: "Laughing Whitefish River", mi: 21.8 },
   { name: "Chatham Convenience Store", mi: 37.3 },
   { name: "Rumely Gas Station", mi: 46.3 },
   { name: "Dollar General", mi: 76.1 },
