@@ -243,13 +243,13 @@ scroll traps, readable contrast, no animation jank, acceptable load times.
 4. Largest Contentful Paint (LCP) is under 2.5 seconds on a simulated 4G mobile connection (Chrome DevTools)
 5. The site layout is functional and readable at 375px viewport width (iPhone SE baseline)
 
-**Plans:** TBD (4-6 plans estimated)
+**Plans:** 4 plans in 3 waves
 
 Plans:
-- [ ] 09-01: Real-device mobile scroll test — map gesture handling, photo gallery, all scroll sections
-- [ ] 09-02: WCAG contrast audit — test every foreground/background combination in dark theme; fix failures
-- [ ] 09-03: Animation audit — inspect all CSS animations in DevTools at 6x CPU throttle; fix any layout-reflow animations
-- [ ] 09-04: Core Web Vitals baseline — Lighthouse mobile run; address LCP, CLS, INP issues
+- [ ] 09-01-PLAN.md — WCAG contrast audit: calculate all oklch token pairs, fix failures (wave 1)
+- [ ] 09-02-PLAN.md — Hero image WebP conversion + fetchpriority + animation audit confirmation (wave 1)
+- [ ] 09-03-PLAN.md — 375px layout audit + real-device mobile scroll/usability verification (wave 2)
+- [ ] 09-04-PLAN.md — Lighthouse mobile Core Web Vitals baseline + final fixes (wave 3)
 
 ---
 
