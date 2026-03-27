@@ -33,8 +33,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Visual & Gallery
 
-- [ ] **VIS-01**: Photo gallery displays route photos in a grid layout
-- [ ] **VIS-02**: Lightbox viewer opens photos full-size when clicked
+- [x] **VIS-01**: Photo gallery displays route photos in a grid layout
+- [x] **VIS-02**: Lightbox viewer opens photos full-size when clicked
 - [x] **VIS-03**: Dark brutalist psychedelic design aesthetic throughout the site
 - [x] **VIS-04**: Creepy display font for headers, monospaced font for body text
 - [x] **VIS-05**: Escher/CIA/surrealist visual elements integrated into design using tone reference images
@@ -97,8 +97,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EVENT-02 | Phase 7 | Complete |
 | EVENT-03 | Phase 7 | Complete |
 | EVENT-04 | Phase 7 | Complete |
-| VIS-01 | Phase 8 | Pending |
-| VIS-02 | Phase 8 | Pending |
+| VIS-01 | Phase 8 | Complete |
+| VIS-02 | Phase 8 | Complete |
 | VIS-03 | Phase 2 | Complete |
 | VIS-04 | Phase 2 | Complete |
 | VIS-05 | Phase 2 | Complete |
@@ -112,4 +112,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-03-26*
-*Last updated: 2026-03-26 after roadmap creation — traceability complete*
+*Last updated: 2026-03-27 after Phase 8 completion — VIS-01, VIS-02 complete*

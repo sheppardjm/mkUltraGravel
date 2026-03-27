@@ -23,7 +23,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 5: Photo Map Markers** — Geolocated photo markers with clustering on the map
 - [x] **Phase 6: Route Info Sections** — Sector cards, KOM listings, restock listings
 - [x] **Phase 7: Hero + Event Info + CTAs** — Above-fold content, event details, donation, GPX download
-- [ ] **Phase 8: Photo Gallery + Lightbox** — 33-photo grid with full-screen lightbox
+- [x] **Phase 8: Photo Gallery + Lightbox** — 33-photo grid with full-screen lightbox
 - [ ] **Phase 9: Mobile + Performance Audit** — Scroll trap, contrast, animation, Core Web Vitals
 - [ ] **Phase 10: Deployment** — Cloudflare Pages, custom domain, live preview
 
@@ -221,9 +221,9 @@ feel the character of the terrain before committing to register.
 **Plans:** 3 plans in 3 waves
 
 Plans:
-- [ ] 08-01-PLAN.md — Install sharp, create thumbnail generator, wire into prebuild pipeline, enrich photos.json with dimensions (wave 1)
-- [ ] 08-02-PLAN.md — Install PhotoSwipe, build PhotoGallery.astro grid + lightbox, wire into index.astro (wave 2)
-- [ ] 08-03-PLAN.md — Human verification of gallery grid + lightbox on desktop and mobile (wave 3)
+- [x] 08-01-PLAN.md — Install sharp, create thumbnail generator, wire into prebuild pipeline, enrich photos.json with dimensions (wave 1)
+- [x] 08-02-PLAN.md — Install PhotoSwipe, build PhotoGallery.astro grid + lightbox, wire into index.astro (wave 2)
+- [x] 08-03-PLAN.md — Human verification of gallery grid + lightbox on desktop and mobile (wave 3)
 
 ---
 
@@ -292,6 +292,6 @@ Note: Phases 2 and 1 can run in parallel. Phases 6, 7, and 8 can run in parallel
 | 5. Photo Map Markers | 2/2 | Complete | 2026-03-27 |
 | 6. Route Info Sections | 2/2 | Complete | 2026-03-26 |
 | 7. Hero + Event Info + CTAs | 3/3 | Complete | 2026-03-26 |
-| 8. Photo Gallery + Lightbox | 0/3 | Not started | - |
+| 8. Photo Gallery + Lightbox | 3/3 | Complete | 2026-03-27 |
 | 9. Mobile + Performance Audit | 0/4 | Not started | - |
 | 10. Deployment | 0/3 | Not started | - |
