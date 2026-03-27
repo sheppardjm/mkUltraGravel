@@ -1,0 +1,49 @@
+---
+// RouteMap.astro — Leaflet interactive map with Carto Dark Matter tiles and GPX route polyline
+// Dynamic imports in <script> prevent SSR "window is undefined" errors (Pitfall 1)
+// Leaflet CSS is imported via global.css in @layer leaflet (not here)
+---
+
+<div id="map" class="route-map"></div>
+
+<style>
+  .route-map {
+    width: 100%;
+    height: 60vh;
+    min-height: 400px;
+    position: relative;
+    z-index: 0;
+  }
+</style>
+
+<script>
+  // Dynamic import avoids SSR "window is undefined" error — Leaflet requires browser globals
+  const L = (await import('leaflet')).default;
+
+  // Wire GestureHandling BEFORE map init — addInitHook must be called before L.map()
+  const { GestureHandling } = await import('leaflet-gesture-handling');
+  L.Map.addInitHook('addHandler', 'gestureHandling', GestureHandling);
+
+  // Initialize map with gestureHandling enabled
+  const map = L.map('map', { gestureHandling: true });
+
+  // Carto Dark Matter tiles — no API key required
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 20
+  }).addTo(map);
+
+  // Fetch route data and render GPX polyline
+  const routeData = await fetch('/data/route-data.json').then(r => r.json());
+  const latlngs = routeData.map((pt: { lat: number; lon: number }) => [pt.lat, pt.lon] as [number, number]);
+  const routeLine = L.polyline(latlngs, {
+    color: '#d4d4d4',
+    weight: 3,
+    opacity: 0.7,
+    smoothFactor: 1
+  }).addTo(map);
+
+  // Auto-fit map to the full route bounds
+  map.fitBounds(routeLine.getBounds(), { padding: [20, 20] });
+</script>
