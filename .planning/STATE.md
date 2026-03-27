@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-03-26)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** Phase 3 — Map Core
+**Current focus:** Phase 4 — Elevation Profile
 
 ## Current Position
 
-Phase: 3 of 10 (Map Core) — COMPLETE
-Plan: 3 of 3 complete (03-01, 03-02, 03-03 all done)
-Status: Phase 3 complete; ready to begin Phase 4
+Phase: 3 of 10 (Map Core) — FULLY VERIFIED
+Plan: 4 of 4 complete (03-01, 03-02, 03-03, 03-04 all done)
+Status: Phase 3 fully verified; ready to begin Phase 4
 
-Last activity: 2026-03-26 — Completed 03-03 (dark popup/control CSS + mobile verification checkpoint approved)
+Last activity: 2026-03-27 — Completed 03-04 (persistent star-rating badges, closed SC2 gap)
 
-Progress: [███░░░░░░░] 21.5% (11/51 plans)
+Progress: [███░░░░░░░] 23.5% (12/51 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
-- Average duration: ~2.8 min
-- Total execution time: ~0.37 hours
+- Total plans completed: 9
+- Average duration: ~2.6 min
+- Total execution time: ~0.38 hours
 
 **By Phase:**
 
@@ -30,11 +30,11 @@ Progress: [███░░░░░░░] 21.5% (11/51 plans)
 |-------|-------|-------|----------|
 | 01-data-pipeline | 5 | ~14 min | ~2.8 min |
 | 02-scaffold-design-system | 3 | ~8 min | ~2.7 min |
-| 03-map-core | 3 | ~5 min | ~1.7 min |
+| 03-map-core | 4 | ~6 min | ~1.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-03 (~3 min), 03-01 (~2 min), 03-02 (~1 min), 03-03 (~2 min)
-- Trend: Stable pace; Phase 3 map-core complete; dark-popup className pattern established for future photo markers
+- Last 5 plans: 03-01 (~2 min), 03-02 (~1 min), 03-03 (~2 min), 03-04 (~1 min)
+- Trend: Stable pace; Phase 3 fully verified; zoom-gated LayerGroup pattern established for future conditional overlays
 
 *Updated after each plan completion*
 
@@ -83,6 +83,9 @@ Recent decisions affecting current work:
 - [03-03]: !important on .leaflet-control-* rules — Leaflet inlines some control styles, requiring !important for reliable override beyond cascade layer ordering
 - [03-03]: Popup theming pattern: pass { className: 'dark-popup' } as second arg to bindPopup(); scope CSS as .leaflet-popup.dark-popup .leaflet-popup-content-wrapper in @layer components
 - [03-03]: Mobile-verified: GestureHandling single-finger scroll-pass-through works on real device; two-finger pan works; dark popups readable
+- [03-04]: L.layerGroup() for zoom-gated overlays — create group, populate, toggle with zoomend + immediate initial updateBadgeVisibility() call
+- [03-04]: interactive: false on badge L.marker() — click events pass through to polyline below, preserving popup behavior
+- [03-04]: iconSize: [null, null] on divIcon — auto-sizes to content; avoids fixed box clipping variable-width star strings
 
 ### Pending Todos
 
@@ -97,6 +100,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26
-Stopped at: Completed 03-03-PLAN.md — Phase 3 (map-core) fully done
+Last session: 2026-03-27
+Stopped at: Completed 03-04-PLAN.md — Phase 3 (map-core) fully verified, SC2 gap closed
 Resume file: None
