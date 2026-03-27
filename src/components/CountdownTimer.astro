@@ -1,0 +1,48 @@
+---
+// Target: June 7, 2026 at 9:00 AM CDT (UTC-5)
+// CDT = Central Daylight Time (Marquette, MI is in Eastern but the event time is placeholder)
+// Using America/New_York EDT offset for Marquette: UTC-4
+const EVENT_DATE_ISO = '2026-06-07T09:00:00-04:00';
+---
+
+<div id="countdown" data-target={EVENT_DATE_ISO} class="flex items-center justify-center gap-6 text-accent-white font-mono">
+  <div>
+    <span id="cd-days" class="text-4xl md:text-6xl font-bold tabular-nums">--</span><span class="text-text-muted text-xs uppercase tracking-widest ml-1">d</span>
+  </div>
+  <div>
+    <span id="cd-hours" class="text-4xl md:text-6xl font-bold tabular-nums">--</span><span class="text-text-muted text-xs uppercase tracking-widest ml-1">h</span>
+  </div>
+  <div>
+    <span id="cd-minutes" class="text-4xl md:text-6xl font-bold tabular-nums">--</span><span class="text-text-muted text-xs uppercase tracking-widest ml-1">m</span>
+  </div>
+</div>
+
+<p id="cd-done" hidden class="text-accent-green text-lg uppercase tracking-widest text-center">
+  The day is here. Get out there.
+</p>
+
+<script>
+  const container = document.getElementById('countdown') as HTMLElement | null;
+  if (container) {
+    const target = new Date(container.dataset.target!).getTime();
+    const days = document.getElementById('cd-days')!;
+    const hours = document.getElementById('cd-hours')!;
+    const minutes = document.getElementById('cd-minutes')!;
+    const done = document.getElementById('cd-done') as HTMLElement;
+
+    const tick = () => {
+      const diff = target - Date.now();
+      if (diff <= 0) {
+        container.hidden = true;
+        done.hidden = false;
+        return;
+      }
+      days.textContent = String(Math.floor(diff / 86400000));
+      hours.textContent = String(Math.floor((diff % 86400000) / 3600000));
+      minutes.textContent = String(Math.floor((diff % 3600000) / 60000));
+    };
+
+    tick(); // Immediate call — no flash of '--' values
+    setInterval(tick, 1000);
+  }
+</script>
