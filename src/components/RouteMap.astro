@@ -171,9 +171,9 @@
     L.marker([photo.lat, photo.lon], { icon: photoIcon })
       .bindPopup(
         `<a href="/images/${photo.filename}" target="_blank" rel="noopener">` +
-        `<img src="/images/${photo.filename}" width="180" style="display:block;border-radius:2px;" loading="lazy">` +
+        `<img src="/images/${photo.filename}" width="260" style="display:block;border-radius:2px;" loading="lazy">` +
         `</a>`,
-        { className: 'dark-popup', maxWidth: 220 }
+        { className: 'dark-popup', maxWidth: 300 }
       )
   );
 
