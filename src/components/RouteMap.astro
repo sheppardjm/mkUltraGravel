@@ -14,6 +14,12 @@
     position: relative;
     z-index: 0;
   }
+
+  /* Leaflet appends divIcon elements outside the component scope — :global() required */
+  :global(.restock-marker) {
+    background: transparent !important;
+    border: none !important;
+  }
 </style>
 
 <script>
@@ -34,8 +40,11 @@
     maxZoom: 20
   }).addTo(map);
 
-  // Fetch route data and render GPX polyline
-  const routeData = await fetch('/data/route-data.json').then(r => r.json());
+  // Fetch route data and annotations in parallel
+  const [routeData, annotations] = await Promise.all([
+    fetch('/data/route-data.json').then(r => r.json()),
+    fetch('/data/annotations.json').then(r => r.json())
+  ]);
   const latlngs = routeData.map((pt: { lat: number; lon: number }) => [pt.lat, pt.lon] as [number, number]);
   const routeLine = L.polyline(latlngs, {
     color: '#d4d4d4',
@@ -46,4 +55,62 @@
 
   // Auto-fit map to the full route bounds
   map.fitBounds(routeLine.getBounds(), { padding: [20, 20] });
+
+  // Star-rating color scale — brutalist palette
+  const starColors: Record<number, string> = {
+    1: '#888888',   // light gravel — muted gray
+    2: '#aaaaaa',   // moderate — lighter gray
+    3: '#f5a623',   // amber — getting rough
+    4: '#e86d1f',   // orange — hard
+    5: '#c0392b'    // red — brutal
+  };
+
+  // Render gravel sector overlays
+  annotations.sectors.forEach((sector: { name: string; stars: number; lengthMi: number; track: { lat: number; lon: number }[] }) => {
+    const sectorLatlngs = sector.track.map((pt) => [pt.lat, pt.lon] as [number, number]);
+    L.polyline(sectorLatlngs, {
+      color: starColors[sector.stars] || '#ffffff',
+      weight: 5,
+      opacity: 0.9
+    })
+    .bindPopup(
+      `<strong>${sector.name}</strong><br>` +
+      `${'★'.repeat(sector.stars)}${'☆'.repeat(5 - sector.stars)}<br>` +
+      `${sector.lengthMi.toFixed(1)} mi`
+    )
+    .addTo(map);
+  });
+
+  // Render KOM overlays — dashed chartreuse green, distinct from sector colors
+  annotations.kom.forEach((kom: { name: string; grade: number; elevFt: number; lengthMi: number; track: { lat: number; lon: number }[] }) => {
+    const komLatlngs = kom.track.map((pt) => [pt.lat, pt.lon] as [number, number]);
+    L.polyline(komLatlngs, {
+      color: '#7fff00',
+      weight: 6,
+      opacity: 0.85,
+      dashArray: '8, 4'
+    })
+    .bindPopup(
+      `<strong>${kom.name}</strong><br>` +
+      `Grade: ${kom.grade}%<br>` +
+      `Elevation: ${kom.elevFt} ft<br>` +
+      `${kom.lengthMi.toFixed(1)} mi`
+    )
+    .addTo(map);
+  });
+
+  // Render restock point markers — cyan divIcon avoids broken default icon paths in Vite builds
+  annotations.restock.forEach((stop: { name: string; mi: number; lat: number; lon: number }) => {
+    const icon = L.divIcon({
+      className: 'restock-marker',
+      html: '<div style="width:12px;height:12px;background:#22d3ee;border:2px solid #fff;border-radius:50%;"></div>',
+      iconSize: [16, 16],
+      iconAnchor: [8, 8],
+      popupAnchor: [0, -10]
+    });
+
+    L.marker([stop.lat, stop.lon], { icon })
+      .bindPopup(`<strong>${stop.name}</strong><br>Mile ${stop.mi}`)
+      .addTo(map);
+  });
 </script>
