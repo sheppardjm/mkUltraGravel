@@ -16,7 +16,7 @@ provides:
   - Dark-styled zoom controls and attribution
   - Gesture-handling overlay text styled with mono font
   - All bindPopup() calls wired with className: 'dark-popup'
-  - Mobile scroll-trap prevention verified on real device (pending checkpoint)
+  - Mobile scroll-trap prevention verified on real device (confirmed)
 
 affects: [04-route-profile, any future map work]
 
@@ -42,20 +42,20 @@ patterns-established:
   - "Leaflet popup theming: pass { className: 'dark-popup' } as second arg to bindPopup(), scope CSS as .leaflet-popup.dark-popup .leaflet-popup-content-wrapper in @layer components"
 
 # Metrics
-duration: partial (checkpoint at Task 2)
+duration: ~2min automation + real-device checkpoint
 completed: 2026-03-26
 ---
 
 # Phase 03 Plan 03: Dark Popup Styling and Mobile Verification Summary
 
-**Dark-themed Leaflet popups via .dark-popup CSS class in @layer components, with zoom/attribution controls styled to match the brutalist dark palette; mobile gesture handling pending real-device verification.**
+**Dark-themed Leaflet popups via .dark-popup CSS class in @layer components, zoom/attribution controls styled to match brutalist dark palette, mobile scroll-trap prevention verified on real device.**
 
 ## Performance
 
-- **Duration:** ~5 min (Task 1 complete; paused at Task 2 checkpoint)
-- **Started:** 2026-03-27T00:27:18Z
-- **Completed:** (pending mobile verification)
-- **Tasks:** 1/2 complete
+- **Duration:** ~2 min automation + real-device checkpoint approval
+- **Started:** 2026-03-26T20:28:03Z
+- **Completed:** 2026-03-26T20:29:37Z (checkpoint approved 2026-03-26)
+- **Tasks:** 2/2 complete
 - **Files modified:** 2
 
 ## Accomplishments
@@ -70,9 +70,9 @@ completed: 2026-03-26
 Each task was committed atomically:
 
 1. **Task 1: Add dark-theme popup and control CSS to global.css and wire into RouteMap** - `c8bc3e3` (feat)
-2. **Task 2: Verify map on mobile device** - pending checkpoint approval
+2. **Task 2: Verify map on mobile device** - checkpoint:human-verify (approved — scroll-trap, dark popups, two-finger pan all confirmed)
 
-**Plan metadata:** pending final commit
+**Plan metadata:** (this commit)
 
 ## Files Created/Modified
 - `src/styles/global.css` - Added Leaflet dark theme overrides in @layer components (popups, zoom, attribution, gesture overlay)
@@ -87,15 +87,15 @@ Each task was committed atomically:
 None - plan executed exactly as written.
 
 ## Issues Encountered
-None — build passed clean on first attempt.
+None — build passed clean on first attempt. Mobile checkpoint approved without issues: scroll-trap prevention works, dark popups render correctly on real device, two-finger map interaction works as expected.
 
 ## User Setup Required
 
 None - no external service configuration required.
 
 ## Next Phase Readiness
-- After mobile checkpoint approval: Phase 3 (map-core) is fully complete
-- Phase 4 (route profile) can proceed — interactive map with all overlays, dark styling, and gesture handling ready
+- Phase 3 (map-core) is fully complete — all 3 plans done
+- Phase 4 (route profile / elevation) can proceed — interactive map with all overlays, dark styling, and gesture handling verified
 - No blockers identified
 
 ---

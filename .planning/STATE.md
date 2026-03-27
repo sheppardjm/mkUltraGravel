@@ -9,13 +9,13 @@ See: .planning/PROJECT.md (updated 2026-03-26)
 
 ## Current Position
 
-Phase: 3 of 10 (Map Core) — In progress
-Plan: 2.5 of 3 (03-03 Task 1 complete; paused at checkpoint:human-verify Task 2)
-Status: Awaiting mobile verification checkpoint
+Phase: 3 of 10 (Map Core) — COMPLETE
+Plan: 3 of 3 complete (03-01, 03-02, 03-03 all done)
+Status: Phase 3 complete; ready to begin Phase 4
 
-Last activity: 2026-03-27 — Completed 03-03 Task 1 (dark popup/control CSS); paused at mobile verify checkpoint
+Last activity: 2026-03-26 — Completed 03-03 (dark popup/control CSS + mobile verification checkpoint approved)
 
-Progress: [██░░░░░░░░] 20% (10/50 plans)
+Progress: [███░░░░░░░] 21.5% (11/51 plans)
 
 ## Performance Metrics
 
@@ -30,11 +30,11 @@ Progress: [██░░░░░░░░] 20% (10/50 plans)
 |-------|-------|-------|----------|
 | 01-data-pipeline | 5 | ~14 min | ~2.8 min |
 | 02-scaffold-design-system | 3 | ~8 min | ~2.7 min |
-| 03-map-core | 2 | ~3 min | ~1.5 min |
+| 03-map-core | 3 | ~5 min | ~1.7 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-02 (~1 min), 02-03 (~3 min), 03-01 (~2 min), 03-02 (~1 min)
-- Trend: Stable pace; map overlay pattern (Promise.all + divIcon) established for 03-03 photo markers
+- Last 5 plans: 02-03 (~3 min), 03-01 (~2 min), 03-02 (~1 min), 03-03 (~2 min)
+- Trend: Stable pace; Phase 3 map-core complete; dark-popup className pattern established for future photo markers
 
 *Updated after each plan completion*
 
@@ -82,6 +82,7 @@ Recent decisions affecting current work:
 - [03-03]: Raw oklch() values in Leaflet popup CSS — Leaflet injects popup DOM at document root, outside Astro component where @theme vars are defined; var() refs may not resolve
 - [03-03]: !important on .leaflet-control-* rules — Leaflet inlines some control styles, requiring !important for reliable override beyond cascade layer ordering
 - [03-03]: Popup theming pattern: pass { className: 'dark-popup' } as second arg to bindPopup(); scope CSS as .leaflet-popup.dark-popup .leaflet-popup-content-wrapper in @layer components
+- [03-03]: Mobile-verified: GestureHandling single-finger scroll-pass-through works on real device; two-finger pan works; dark popups readable
 
 ### Pending Todos
 
@@ -96,7 +97,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27
-Stopped at: 03-03-PLAN.md Task 1 complete (dark popup CSS + bindPopup wiring); paused at checkpoint:human-verify (Task 2: mobile device verification)
-Resume signal: User types "approved" or describes issues after testing on real mobile device at http://192.168.1.143:4321
+Last session: 2026-03-26
+Stopped at: Completed 03-03-PLAN.md — Phase 3 (map-core) fully done
 Resume file: None
