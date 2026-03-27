@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Data Pipeline** — Build-time GPX parser, annotation resolver, photo geo-matcher
 - [x] **Phase 2: Scaffold + Design System** — Astro project, Tailwind tokens, dark brutalist identity
-- [ ] **Phase 3: Map Core** — Leaflet island with GPX polyline, sector/KOM/restock overlays
+- [x] **Phase 3: Map Core** — Leaflet island with GPX polyline, sector/KOM/restock overlays
 - [ ] **Phase 4: Elevation Profile** — Profile chart integrated alongside the map
 - [ ] **Phase 5: Photo Map Markers** — Geolocated photo markers with clustering on the map
 - [ ] **Phase 6: Route Info Sections** — Sector cards, KOM listings, restock listings
@@ -106,7 +106,7 @@ Plans:
 - [x] 03-01-PLAN.md — Install Leaflet, create RouteMap.astro with Carto tiles + GPX polyline + gesture handling (wave 1)
 - [x] 03-02-PLAN.md — Add sector/KOM/restock annotation overlays with popups (wave 2)
 - [x] 03-03-PLAN.md — Dark-theme popup/control styling + mobile verification (wave 3)
-- [ ] 03-04-PLAN.md — Gap closure: persistent star-rating badges at sector midpoints (wave 1)
+- [x] 03-04-PLAN.md — Gap closure: persistent star-rating badges at sector midpoints (wave 1)
 
 ---
 
@@ -295,7 +295,7 @@ Note: Phases 2 and 1 can run in parallel. Phases 6, 7, and 8 can run in parallel
 |-------|----------------|--------|-----------|
 | 1. Data Pipeline | 5/5 | Complete | 2026-03-26 |
 | 2. Scaffold + Design System | 3/3 | Complete | 2026-03-26 |
-| 3. Map Core | 0/3 | Not started | - |
+| 3. Map Core | 4/4 | Complete | 2026-03-26 |
 | 4. Elevation Profile | 0/4 | Not started | - |
 | 5. Photo Map Markers | 0/3 | Not started | - |
 | 6. Route Info Sections | 0/4 | Not started | - |

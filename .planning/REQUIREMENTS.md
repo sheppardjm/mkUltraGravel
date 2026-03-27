@@ -9,11 +9,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Map & Route
 
-- [ ] **MAP-01**: User can view the full 80-mile route on an interactive map
-- [ ] **MAP-02**: GPX track is rendered as a polyline on the map
-- [ ] **MAP-03**: Gravel sectors are highlighted as distinct colored segments on the map with star ratings
-- [ ] **MAP-04**: KOM segments are highlighted on the map with gradient/elevation info
-- [ ] **MAP-05**: Restock points are displayed as markers on the map
+- [x] **MAP-01**: User can view the full 80-mile route on an interactive map
+- [x] **MAP-02**: GPX track is rendered as a polyline on the map
+- [x] **MAP-03**: Gravel sectors are highlighted as distinct colored segments on the map with star ratings
+- [x] **MAP-04**: KOM segments are highlighted on the map with gradient/elevation info
+- [x] **MAP-05**: Restock points are displayed as markers on the map
 - [ ] **MAP-06**: Geo-located photos are displayed as clickable markers on the map
 - [ ] **MAP-07**: Elevation profile is displayed alongside the map, synchronized with the route
 - [ ] **MAP-08**: User can download the GPX file
@@ -82,11 +82,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| MAP-01 | Phase 3 | Pending |
-| MAP-02 | Phase 3 | Pending |
-| MAP-03 | Phase 3 | Pending |
-| MAP-04 | Phase 3 | Pending |
-| MAP-05 | Phase 3 | Pending |
+| MAP-01 | Phase 3 | Complete |
+| MAP-02 | Phase 3 | Complete |
+| MAP-03 | Phase 3 | Complete |
+| MAP-04 | Phase 3 | Complete |
+| MAP-05 | Phase 3 | Complete |
 | MAP-06 | Phase 5 | Pending |
 | MAP-07 | Phase 4 | Pending |
 | MAP-08 | Phase 7 | Pending |
