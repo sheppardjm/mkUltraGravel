@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Astro generated
+.astro/
+
+# Generated images (rebuilt from images/ by prebuild)
+public/images/
+
+# OS files
+.DS_Store
+*.DS_Store
+
+# Environment
+.env
+.env.*
+
+# Playwright MCP
+.playwright-mcp/
