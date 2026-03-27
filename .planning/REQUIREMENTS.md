@@ -16,7 +16,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **MAP-05**: Restock points are displayed as markers on the map
 - [x] **MAP-06**: Geo-located photos are displayed as clickable markers on the map
 - [x] **MAP-07**: Elevation profile is displayed alongside the map, synchronized with the route
-- [ ] **MAP-08**: User can download the GPX file
+- [x] **MAP-08**: User can download the GPX file
 
 ### Route Information
 
@@ -26,10 +26,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Event Information
 
-- [ ] **EVENT-01**: Event date (June 7, 2026), start time, and start location (Marquette Fire Bell) are prominently displayed
-- [ ] **EVENT-02**: Donation information for Great Lakes Recovery Centers is displayed with suggested $10 amount
-- [ ] **EVENT-03**: BikeReg registration CTA is prominent and appears multiple times on the page (above fold and below map)
-- [ ] **EVENT-04**: Live countdown timer to June 7, 2026
+- [x] **EVENT-01**: Event date (June 7, 2026), start time, and start location (Marquette Fire Bell) are prominently displayed
+- [x] **EVENT-02**: Donation information for Great Lakes Recovery Centers is displayed with suggested $10 amount
+- [x] **EVENT-03**: BikeReg registration CTA is prominent and appears multiple times on the page (above fold and below map)
+- [x] **EVENT-04**: Live countdown timer to June 7, 2026
 
 ### Visual & Gallery
 
@@ -89,14 +89,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MAP-05 | Phase 3 | Complete |
 | MAP-06 | Phase 5 | Complete |
 | MAP-07 | Phase 4 | Complete |
-| MAP-08 | Phase 7 | Pending |
+| MAP-08 | Phase 7 | Complete |
 | ROUTE-01 | Phase 6 | Complete |
 | ROUTE-02 | Phase 6 | Complete |
 | ROUTE-03 | Phase 6 | Complete |
-| EVENT-01 | Phase 7 | Pending |
-| EVENT-02 | Phase 7 | Pending |
-| EVENT-03 | Phase 7 | Pending |
-| EVENT-04 | Phase 7 | Pending |
+| EVENT-01 | Phase 7 | Complete |
+| EVENT-02 | Phase 7 | Complete |
+| EVENT-03 | Phase 7 | Complete |
+| EVENT-04 | Phase 7 | Complete |
 | VIS-01 | Phase 8 | Pending |
 | VIS-02 | Phase 8 | Pending |
 | VIS-03 | Phase 2 | Complete |

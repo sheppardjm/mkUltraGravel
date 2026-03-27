@@ -22,7 +22,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Elevation Profile** — Profile chart integrated alongside the map
 - [x] **Phase 5: Photo Map Markers** — Geolocated photo markers with clustering on the map
 - [x] **Phase 6: Route Info Sections** — Sector cards, KOM listings, restock listings
-- [ ] **Phase 7: Hero + Event Info + CTAs** — Above-fold content, event details, donation, GPX download
+- [x] **Phase 7: Hero + Event Info + CTAs** — Above-fold content, event details, donation, GPX download
 - [ ] **Phase 8: Photo Gallery + Lightbox** — 33-photo grid with full-screen lightbox
 - [ ] **Phase 9: Mobile + Performance Audit** — Scroll trap, contrast, animation, Core Web Vitals
 - [ ] **Phase 10: Deployment** — Cloudflare Pages, custom domain, live preview
@@ -194,14 +194,12 @@ to register, and what the ride costs — and is compelled to click Register befo
 4. The Great Lakes Recovery Centers donation info ($10 suggested) is displayed with enough context to explain the cause
 5. A GPX file download link uses the correct filename attribute (`mk-ultra-gravel-2026.gpx`) and is accessible from the page
 
-**Plans:** TBD (4-6 plans estimated)
+**Plans:** 3 plans in 2 waves
 
 Plans:
-- [ ] 07-01: Build hero section — event title, date, location, distance, cost, above-fold CTA button; add `<link rel="preload">` for hero background
-- [ ] 07-02: Implement countdown timer — vanilla JS, updates every second, gracefully handles post-event state
-- [ ] 07-03: Build event info block — format, donation info, Great Lakes Recovery Centers explanation
-- [ ] 07-04: Wire GPX download link with `download="mk-ultra-gravel-2026.gpx"` attribute
-- [ ] 07-05: Place second BikeReg CTA below map section; confirm both CTAs link to the correct BikeReg URL
+- [x] 07-01-PLAN.md — BaseLayout head slot + CountdownTimer.astro (wave 1)
+- [x] 07-02-PLAN.md — EventInfoBlock.astro with donation info + GPX download (wave 1)
+- [x] 07-03-PLAN.md — Wire hero, CTAs, countdown, event info into index.astro (wave 2)
 
 ---
 
@@ -293,7 +291,7 @@ Note: Phases 2 and 1 can run in parallel. Phases 6, 7, and 8 can run in parallel
 | 4. Elevation Profile | 1/1 | Complete | 2026-03-26 |
 | 5. Photo Map Markers | 2/2 | Complete | 2026-03-27 |
 | 6. Route Info Sections | 2/2 | Complete | 2026-03-26 |
-| 7. Hero + Event Info + CTAs | 0/5 | Not started | - |
+| 7. Hero + Event Info + CTAs | 3/3 | Complete | 2026-03-26 |
 | 8. Photo Gallery + Lightbox | 0/3 | Not started | - |
 | 9. Mobile + Performance Audit | 0/4 | Not started | - |
 | 10. Deployment | 0/3 | Not started | - |

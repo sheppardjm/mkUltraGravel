@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-03-26)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** Phase 7 — Event Info
+**Current focus:** Phase 8 — Photo Gallery
 
 ## Current Position
 
-Phase: 7 of 10 (Hero + Event Info + CTAs) — In progress
-Plan: 2 of 3 complete (07-02 done)
-Status: EventInfoBlock.astro created; ready for Plan 03 (wire into index.astro, add CTAs)
+Phase: 7 of 10 (Hero + Event Info + CTAs) — Complete
+Plan: 3 of 3 complete (07-03 done)
+Status: Phase 7 complete; hero + CTAs + countdown + event info all wired and human-verified — ready for Phase 8
 
-Last activity: 2026-03-27 — Completed 07-02; EventInfoBlock.astro component created
+Last activity: 2026-03-26 — Completed Phase 7; all 3 plans executed, verification passed (4/5 — BikeReg URL intentionally pending)
 
-Progress: [████░░░░░░] 35.3% (18/51 plans)
+Progress: [████░░░░░░] 39.2% (20/51 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 18
-- Average duration: ~2.2 min
-- Total execution time: ~0.50 hours
+- Total plans completed: 20
+- Average duration: ~2.1 min
+- Total execution time: ~0.55 hours
 
 **By Phase:**
 
@@ -34,11 +34,11 @@ Progress: [████░░░░░░] 35.3% (18/51 plans)
 | 04-elevation-profile | 1 | ~2 min | ~2 min |
 | 05-photo-map-markers | 2 | ~9 min | ~4.5 min |
 | 06-route-info-sections | 2 | ~5 min | ~2.5 min |
-| 07-hero-event-info-ctas | 2 (of 3) | ~2 min | ~1 min |
+| 07-hero-event-info-ctas | 3 | ~6 min | ~2 min |
 
 **Recent Trend:**
-- Last 5 plans: 05-02 (~5 min), 06-01 (~3 min), 06-02 (~2 min), 07-01 (research), 07-02 (~1 min)
-- Trend: Stable pace; Phase 7 in progress, EventInfoBlock created
+- Last 5 plans: 06-01 (~3 min), 06-02 (~2 min), 07-01 (~2 min), 07-02 (~1 min), 07-03 (~3 min)
+- Trend: Stable pace; Phase 7 complete with all content verified
 
 *Updated after each plan completion*
 
@@ -105,6 +105,9 @@ Recent decisions affecting current work:
 - [07-01]: data-* attribute bridge used for CountdownTimer — define:vars forces is:inline which kills Astro bundling; data-target on container div is the correct pattern
 - [07-01]: EDT offset (-04:00) for June 7 event — Marquette MI is Eastern time, EDT is UTC-4 in summer; only EVENT_DATE_ISO constant needs updating if time changes
 - [07-01]: Named head slot added to BaseLayout.astro before </head> — enables Plan 03 to inject hero preload link without global mutation
+- [07-03]: Hero displays "80 miles" per roadmap, not 100 from route extension — meta description also corrected to match
+- [07-03]: BIKEREG_URL placeholder string used in both CTAs — intentionally non-functional pending event director confirmation
+- [07-03]: Named slot preload pattern: page-level <link rel="preload" slot="head" /> injects into <head> from index.astro
 
 ### Pending Todos
 
@@ -113,12 +116,12 @@ None yet.
 ### Blockers/Concerns
 
 - **[Resolved - 01-04]** Photo EXIF GPS status confirmed: all 33 photos lack GPS data. photos.json uses manual mile-marker positions for all entries.
-- **[Pre-Phase 7]** BikeReg registration URL not confirmed — needed before Phase 7 CTAs can be wired. Confirm with event director before Phase 7.
+- **[Active]** BikeReg registration URL not confirmed — CTAs wired with PENDING placeholder. Must confirm with event director before launch. Both hero CTA and below-map CTA use BIKEREG_URL constant in index.astro frontmatter.
 - **[Resolved - 03-01]** Stadia Maps free-tier signup not completed — fell back to Carto Dark Matter tiles (no API key required). Map is live.
 - **[Resolved - 03-02]** Plan research had incorrect KOM field names (gradient/elevGain) — actual fields are grade/elevFt. Verified against annotations.json before coding.
 
 ## Session Continuity
 
-Last session: 2026-03-27
-Stopped at: Completed 07-01-PLAN.md (BaseLayout head slot + CountdownTimer.astro created); 07-02 also complete
+Last session: 2026-03-26
+Stopped at: Completed Phase 7 (Hero + Event Info + CTAs); all 3 plans executed, verified
 Resume file: None
