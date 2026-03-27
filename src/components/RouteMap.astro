@@ -76,7 +76,8 @@
     .bindPopup(
       `<strong>${sector.name}</strong><br>` +
       `${'★'.repeat(sector.stars)}${'☆'.repeat(5 - sector.stars)}<br>` +
-      `${sector.lengthMi.toFixed(1)} mi`
+      `${sector.lengthMi.toFixed(1)} mi`,
+      { className: 'dark-popup' }
     )
     .addTo(map);
   });
@@ -94,7 +95,8 @@
       `<strong>${kom.name}</strong><br>` +
       `Grade: ${kom.grade}%<br>` +
       `Elevation: ${kom.elevFt} ft<br>` +
-      `${kom.lengthMi.toFixed(1)} mi`
+      `${kom.lengthMi.toFixed(1)} mi`,
+      { className: 'dark-popup' }
     )
     .addTo(map);
   });
@@ -110,7 +112,7 @@
     });
 
     L.marker([stop.lat, stop.lon], { icon })
-      .bindPopup(`<strong>${stop.name}</strong><br>Mile ${stop.mi}`)
+      .bindPopup(`<strong>${stop.name}</strong><br>Mile ${stop.mi}`, { className: 'dark-popup' })
       .addTo(map);
   });
 </script>
