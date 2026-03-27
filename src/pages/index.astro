@@ -1,13 +1,24 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import CountdownTimer from "../components/CountdownTimer.astro";
+import EventInfoBlock from "../components/EventInfoBlock.astro";
 import RouteMap from "../components/RouteMap.astro";
 import ElevationProfile from "../components/ElevationProfile.astro";
 import GravelSectors from "../components/GravelSectors.astro";
 import KomSegments from "../components/KomSegments.astro";
 import RestockPoints from "../components/RestockPoints.astro";
+
+// Placeholder — confirm with event director before launch
+const BIKEREG_URL = 'PENDING — confirm with event director';
 ---
 
 <BaseLayout>
+  <link
+    rel="preload"
+    href="/tone/CIA-MKULTRA-IG_Page_01.jpg"
+    as="image"
+    slot="head"
+  />
   <main>
     <section id="hero" class="relative min-h-screen flex items-center justify-center px-4 overflow-hidden">
       <img
@@ -16,13 +27,33 @@ import RestockPoints from "../components/RestockPoints.astro";
         class="tone-image inset-0 w-full h-full object-cover"
         loading="eager"
       />
-      <div class="relative z-10 text-center">
+      <div class="relative z-10 text-center max-w-3xl">
         <p class="stamp mb-6">Classification: Ultra</p>
         <h1 class="text-5xl md:text-8xl tracking-tight mb-4">MK Ultra Gravel</h1>
-        <p class="text-text-muted text-lg md:text-xl">
-          June 7, 2026 &mdash; Marquette, MI &mdash; 100 miles
+        <p class="text-text-muted text-lg md:text-xl mb-2">
+          June 7, 2026 &mdash; Marquette, MI
         </p>
-        <p class="text-text-muted text-sm mt-4">
+        <p class="text-text-muted text-sm mb-6">
+          Marquette Fire Bell &mdash; 80 miles &mdash; Free
+        </p>
+
+        <div class="mb-8">
+          <CountdownTimer />
+        </div>
+
+        <a
+          href={BIKEREG_URL}
+          class="inline-block bg-accent-green text-bg-base font-bold uppercase tracking-widest
+                 px-8 py-4 text-lg hover:opacity-90 transition-opacity mb-6"
+        >
+          Register Now
+        </a>
+
+        <p class="text-text-muted text-xs">
+          $10 suggested donation to Great Lakes Recovery Centers
+        </p>
+
+        <p class="text-text-muted text-sm mt-6">
           Subject: <span class="redacted">mind control</span> gravel cycling
         </p>
       </div>
@@ -41,6 +72,19 @@ import RestockPoints from "../components/RestockPoints.astro";
         <ElevationProfile />
       </div>
     </section>
+
+    <div class="relative px-4 py-12 text-center border-t border-border">
+      <p class="text-text-muted text-sm uppercase tracking-widest mb-4">
+        Like what you see?
+      </p>
+      <a
+        href={BIKEREG_URL}
+        class="inline-block bg-accent-green text-bg-base font-bold uppercase tracking-widest
+               px-8 py-4 text-lg hover:opacity-90 transition-opacity"
+      >
+        Register Now
+      </a>
+    </div>
 
     <section id="sectors" class="relative min-h-screen px-4 py-16 overflow-hidden border-t border-border">
       <div class="relative z-10">
@@ -74,9 +118,15 @@ import RestockPoints from "../components/RestockPoints.astro";
     </section>
 
     <section id="info" class="relative min-h-screen px-4 py-16 overflow-hidden border-t border-border">
-      <div class="relative z-10 classified-border p-8 max-w-2xl">
+      <img
+        src="/tone/Mkultra-lsd-doc.jpg"
+        alt=""
+        class="tone-image inset-0 w-full h-full object-cover"
+        loading="lazy"
+      />
+      <div class="relative z-10 max-w-2xl">
         <h2 class="text-3xl md:text-5xl mb-8">Event Info</h2>
-        <p class="text-text-muted">Details, registration, GPX download — Phase 7</p>
+        <EventInfoBlock />
       </div>
     </section>
   </main>
