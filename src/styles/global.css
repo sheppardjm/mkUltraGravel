@@ -1,7 +1,7 @@
 /* Cascade layer order — declared FIRST, before any imports.
    Leaflet CSS (Phase 3) goes in the lowest-priority layer so
    Tailwind utilities always win. */
-@layer leaflet, base, components, utilities;
+@layer leaflet, photoswipe, base, components, utilities;
 
 /* Tailwind v4 — CSS-first config, no tailwind.config.js */
 @import "tailwindcss";
@@ -10,6 +10,7 @@
 @import "leaflet-gesture-handling/dist/leaflet-gesture-handling.css" layer(leaflet);
 @import "leaflet.markercluster/dist/MarkerCluster.css" layer(leaflet);
 @import "leaflet.markercluster/dist/MarkerCluster.Default.css" layer(leaflet);
+@import "photoswipe/style.css" layer(photoswipe);
 
 /* Design tokens — dark brutalist palette + fonts */
 @theme {
@@ -168,6 +169,13 @@
     color: oklch(0.85 0.01 90);
     font-family: var(--font-mono);
     font-size: 0.875rem;
+  }
+
+  /* PhotoSwipe dark theme overrides */
+  .pswp {
+    --pswp-bg: oklch(0.10 0.01 250);
+    --pswp-icon-color: oklch(0.85 0.01 90);
+    --pswp-icon-color-secondary: oklch(0.55 0.01 90);
   }
 
   /* Sector star-rating badges — persistent divIcon markers at sector midpoints */
