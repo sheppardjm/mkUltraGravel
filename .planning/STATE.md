@@ -9,20 +9,20 @@ See: .planning/PROJECT.md (updated 2026-03-26)
 
 ## Current Position
 
-Phase: 7 of 10 (Hero + Event Info + CTAs) — Complete
-Plan: 3 of 3 complete (07-03 done)
-Status: Phase 7 complete; hero + CTAs + countdown + event info all wired and human-verified — ready for Phase 8
+Phase: 8 of 10 (Photo Gallery + Lightbox) — In progress
+Plan: 1 of 2 complete (08-01 done)
+Status: In progress; thumbnail pipeline complete, photo gallery component next
 
-Last activity: 2026-03-26 — Completed Phase 7; all 3 plans executed, verification passed (4/5 — BikeReg URL intentionally pending)
+Last activity: 2026-03-27 — Completed 08-01; sharp installed, generate-thumbnails.js wired into data pipeline, 33 WebP thumbs generated, photos.json enriched with width/height
 
-Progress: [████░░░░░░] 39.2% (20/51 plans)
+Progress: [████░░░░░░] 41.2% (21/51 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 20
-- Average duration: ~2.1 min
-- Total execution time: ~0.55 hours
+- Total plans completed: 21
+- Average duration: ~2.0 min
+- Total execution time: ~0.56 hours
 
 **By Phase:**
 
@@ -35,10 +35,11 @@ Progress: [████░░░░░░] 39.2% (20/51 plans)
 | 05-photo-map-markers | 2 | ~9 min | ~4.5 min |
 | 06-route-info-sections | 2 | ~5 min | ~2.5 min |
 | 07-hero-event-info-ctas | 3 | ~6 min | ~2 min |
+| 08-photo-gallery-lightbox | 1/2 | ~1 min | ~1 min |
 
 **Recent Trend:**
-- Last 5 plans: 06-01 (~3 min), 06-02 (~2 min), 07-01 (~2 min), 07-02 (~1 min), 07-03 (~3 min)
-- Trend: Stable pace; Phase 7 complete with all content verified
+- Last 5 plans: 07-01 (~2 min), 07-02 (~1 min), 07-03 (~3 min), 08-01 (~1 min)
+- Trend: Fast pace; thumbnail pipeline installed cleanly
 
 *Updated after each plan completion*
 
@@ -108,6 +109,10 @@ Recent decisions affecting current work:
 - [07-03]: Hero displays "80 miles" per roadmap, not 100 from route extension — meta description also corrected to match
 - [07-03]: BIKEREG_URL placeholder string used in both CTAs — intentionally non-functional pending event director confirmation
 - [07-03]: Named slot preload pattern: page-level <link rel="preload" slot="head" /> injects into <head> from index.astro
+- [08-01]: sharp installed via volta run npm — darwin-arm64 native binary; plain `node` (Node 20, x64) can't load it, but Volta-managed scripts always use Node 22 (arm64) so no runtime issue
+- [08-01]: Original image dimensions stored in photos.json (not thumbnail dims) — PhotoSwipe requires full-size width/height for correct lightbox layout
+- [08-01]: Thumbnail step is a post-step after scripts[] loop in generate-data.js — depends on both photos.json (match-photos) and public/images/ (copy step), so must run last
+- [08-01]: generate-thumbnails.js exports generateThumbnails() and supports standalone invocation via require.main pattern
 
 ### Pending Todos
 
@@ -122,6 +127,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26
-Stopped at: Completed Phase 7 (Hero + Event Info + CTAs); all 3 plans executed, verified
+Last session: 2026-03-27
+Stopped at: Completed 08-01-PLAN.md (thumbnail pipeline + photos.json dimensions)
 Resume file: None
