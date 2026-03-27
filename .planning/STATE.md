@@ -5,17 +5,18 @@
 See: .planning/PROJECT.md (updated 2026-03-26)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v1.0 shipped — planning next milestone
+**Current focus:** v2.0 — interactivity, leaderboards, data fixes, polish
 
 ## Current Position
 
-Milestone: v1.0 SHIPPED (2026-03-27)
-Phase: 10 of 10 — all complete
-Status: Site live at https://mkultragravel.netlify.app/
+Milestone: v2.0
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
 
-Last activity: 2026-03-27 — v1.0 milestone archived
+Last activity: 2026-03-27 — Milestone v2.0 started
 
-Progress: [██████████] 100% (30/30 plans)
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
@@ -151,5 +152,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-27
-Stopped at: v1.0 milestone archived — site live, ready for next milestone or done
+Stopped at: v2.0 milestone started — defining requirements
 Resume file: None

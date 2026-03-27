@@ -39,7 +39,21 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ### Active
 
-(None — v1.0 shipped. Define requirements for next milestone with `/gsd:new-milestone`.)
+#### Current Milestone: v2.0
+
+**Goal:** Elevate the site from informational to interactive — map-elevation sync, Strava leaderboards, data corrections, visual polish.
+
+**Target features:**
+- Map-elevation profile interactivity (crosshair sync + segment highlighting)
+- Live Strava KOM/QOM leaderboard
+- Photos on sector and KOM cards
+- MK Ultra name explainer section
+- Data fixes (segment locations, photo positions, restock cleanup)
+- Image quality improvements (thumbnails, WebP)
+- Correct registration + donation URLs
+- Subtle hover/click/load animations
+- New photos processed into pipeline
+- Route stats (length + elevation gain) on map/description
 
 ### Out of Scope
 
@@ -50,7 +64,7 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 - Blog / news updates — single-page event site
 - Email list signup — single event, high obligation, low return
 - Merchandise / shop — not the site's purpose
-- Strava live segment embeds — API rate limits make live embeds brittle
+- Strava live segment embeds — API rate limits make live embeds brittle (note: v2.0 leaderboard uses periodic scraping, not live embeds)
 - Weather widget — irrelevant before event day
 
 ## Context
@@ -96,4 +110,4 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | Scripts self-contained | findPointAtMile duplicated, not shared | Acceptable — each script runnable independently |
 
 ---
-*Last updated: 2026-03-27 after v1.0 milestone*
+*Last updated: 2026-03-27 after v2.0 milestone start*
