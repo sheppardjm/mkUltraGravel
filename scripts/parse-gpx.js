@@ -100,9 +100,25 @@ if (nullCount > 0) {
   process.exit(1);
 }
 
+// --- Compute route totals ---
+let gainM = 0;
+for (let i = 1; i < routeData.length; i++) {
+  const diff = routeData[i].ele - routeData[i - 1].ele;
+  if (diff > 0) gainM += diff;
+}
+
+const output = {
+  meta: {
+    totalMi: Math.round(routeData[routeData.length - 1].mi * 100) / 100,
+    elevationGainFt: Math.round(gainM * 3.28084),
+    trackpoints: routeData.length
+  },
+  track: routeData
+};
+
 // --- Write output ---
 fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-fs.writeFileSync(OUTPUT_FILE, JSON.stringify(routeData, null, 2), 'utf8');
+fs.writeFileSync(OUTPUT_FILE, JSON.stringify(output, null, 2), 'utf8');
 
 // --- Copy GPX to public ---
 fs.mkdirSync(path.dirname(GPX_DEST), { recursive: true });
@@ -116,6 +132,7 @@ console.log('\n--- Route Data Summary ---');
 console.log(`Total trackpoints : ${routeData.length}`);
 console.log(`First point       : lat=${first.lat}, lon=${first.lon}, mi=${first.mi}`);
 console.log(`Last point        : lat=${last.lat}, lon=${last.lon}, mi=${last.mi}`);
-console.log(`Total distance    : ${last.mi} miles`);
+console.log(`Total distance    : ${output.meta.totalMi} miles`);
+console.log(`Elevation gain    : ${output.meta.elevationGainFt} ft`);
 console.log(`Output            : ${OUTPUT_FILE}`);
 console.log(`GPX copy          : ${GPX_DEST}`);
