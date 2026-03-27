@@ -147,12 +147,11 @@ marker shows a thumbnail and opens the full photo.
 3. Clicking a marker shows a thumbnail preview and a link/button to view the full-size photo
 4. Photo markers do not cause visible pan or zoom jank on mid-range mobile hardware
 
-**Plans:** TBD (3-5 plans estimated)
+**Plans:** 2 plans in 2 waves
 
 Plans:
-- [ ] 05-01: Wire `Leaflet.markercluster` into the map island; confirm cluster/uncluster behavior
-- [ ] 05-02: Render photo markers from `photos.json`; bind thumbnail popups to each marker
-- [ ] 05-03: Test pan/zoom performance on a real mid-range Android device with all 33 markers loaded
+- [ ] 05-01-PLAN.md — Install markercluster, copy photos to public/images/, wire 33 photo markers with clustering + thumbnail popups into RouteMap.astro (wave 1)
+- [ ] 05-02-PLAN.md — Mobile performance verification: cluster/uncluster, tap popups, pan/zoom smoothness on real device (wave 2)
 
 ---
 
@@ -294,7 +293,7 @@ Note: Phases 2 and 1 can run in parallel. Phases 6, 7, and 8 can run in parallel
 | 2. Scaffold + Design System | 3/3 | Complete | 2026-03-26 |
 | 3. Map Core | 4/4 | Complete | 2026-03-26 |
 | 4. Elevation Profile | 1/1 | Complete | 2026-03-26 |
-| 5. Photo Map Markers | 0/3 | Not started | - |
+| 5. Photo Map Markers | 0/2 | Not started | - |
 | 6. Route Info Sections | 0/4 | Not started | - |
 | 7. Hero + Event Info + CTAs | 0/5 | Not started | - |
 | 8. Photo Gallery + Lightbox | 0/3 | Not started | - |
