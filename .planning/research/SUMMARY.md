@@ -1,17 +1,19 @@
 # Project Research Summary
 
-**Project:** MK Ultra Gravel — 80-mile gravel cycling event website
-**Domain:** Single-event static site with interactive GPX map, dark brutalist design
-**Researched:** 2026-03-26
+**Project:** MK Ultra Gravel — v2.0 Interactivity + Polish Milestone
+**Domain:** Static gravel cycling event website (Astro 6 + Leaflet + Chart.js)
+**Researched:** 2026-03-27
 **Confidence:** HIGH
+
+---
 
 ## Executive Summary
 
-MK Ultra Gravel is a hype-driven event site with one job: convert gravel cyclists into registered participants for a June 7, 2026 free-entry 80-mile ride in Marquette County, MI. The domain is well-understood — the build pattern is a static site with a single interactive island (Leaflet map) surrounded by static HTML content. The recommended approach is Astro 6 + Leaflet 1.9.4 + Tailwind v4, deployed to Cloudflare Pages. This stack is now a first-party combination: Cloudflare acquired Astro's parent company in January 2026, and Cloudflare Pages is provably the best free-tier static host for a project that may receive a viral traffic spike.
+MK Ultra Gravel v2.0 is a visual polish and interactivity layer on top of a fully-shipped static site. The v1.0 foundation is strong — Lighthouse Performance 96, TBT 0ms, a working GPX pipeline, photo gallery, interactive map, and elevation profile. v2.0 should be executed as targeted surgical additions to existing components, with zero mandatory new npm dependencies. The architecture is an Astro 6 static site that uses vanilla JS `<script>` blocks for runtime behavior; all v2.0 interactivity follows this same pattern using native browser `CustomEvent` dispatch for cross-component communication.
 
-The defining feature of this project is not the event information — it is the design identity and the interactive route map. No other gravel event site uses a dark, psychedelic, CIA-document aesthetic. The Paris-Roubaix-style sector cards and geolocated photo markers on the map are the features that will drive social sharing and word-of-mouth. These differentiators are achievable with the recommended stack, but they require a build-time data pipeline (GPX parsing, photo geo-matching, annotation resolution) that must be the first thing built. Everything else — hero, sector cards, gallery, CTAs — is pure static HTML once the data layer exists.
+The single most consequential finding across all four research dimensions is the **Strava API constraint**: the segment leaderboard endpoint has been blocked since June 2020, and Strava's November 2024 TOS update explicitly prohibits displaying other athletes' data to public anonymous visitors. A live-fetched KOM leaderboard is permanently off the table. The correct design is manual curation via JSON in the repo, with Strava segment deep-links for live data. This is simpler, more reliable, and eliminates the most complex and risky v2.0 feature. It should free up significant development scope that can be redirected to the photo card and interactivity work.
 
-The critical risks are mobile-specific and must be mitigated from day one, not retrofitted. Leaflet's mobile scroll trap will make the site unusable on phones if `Leaflet.GestureHandling` is not wired in from the first map commit. GPX trackpoint density will freeze mid-range Android devices if not downsampled before rendering. The dark design palette will fail WCAG contrast on outdoor screens unless every text/background combination is checked during implementation. None of these are difficult to fix early; all become expensive to retrofit after the fact.
+The four remaining feature clusters — map-elevation interactivity, photos on cards, animations, and the MK Ultra explainer section — are all achievable with zero or one optional new dependency. Map-elevation sync uses `CustomEvent` + `window.dispatchEvent()` between `ElevationProfile.astro` and `RouteMap.astro`; Chart.js 4's `onHover` and Leaflet's `setLatLng` provide all the primitives needed. Animations should be entirely vanilla CSS (`transition`, `@keyframes`, `transform`/`opacity`) to protect the current TBT 0ms score. The explainer is a static Astro component — it is a copywriting task with minimal engineering. The key implementation risk across this milestone is the mousemove/onHover sync firing at 60Hz and degrading map performance; throttle via `requestAnimationFrame` must be built in from the first commit.
 
 ---
 
@@ -19,220 +21,193 @@ The critical risks are mobile-specific and must be mitigated from day one, not r
 
 ### Recommended Stack
 
-Astro 6 (islands architecture) is the correct framework: it ships zero JS for static content and hydrates only the map component. The full React runtime cost of Next.js or Remix is unjustified for a site with one interactive component. Leaflet 1.9.4 is the correct map library — MapLibre GL's WebGL overhead is 6x the bundle size and adds zero value over Leaflet's raster tiles for a single GPX polyline. Cloudflare Pages free tier has unlimited bandwidth and 300+ edge PoPs, making it the only reasonable hosting choice given potential viral traffic from cycling community sharing.
+The v1.0 stack (Astro 6, Leaflet 1.9.4, Chart.js 4, chartjs-plugin-annotation 3.1.0, Sharp 0.34.5, Tailwind v4) is sufficient for all v2.0 features. **Net new mandatory dependencies: zero.** The optional `motion` library (12.x, formerly Framer Motion, rebranded 2025 for vanilla JS) may be added if scroll-triggered card entrance animations require coordinated sequencing that CSS cannot express, but vanilla CSS with `IntersectionObserver` should be the first attempt.
 
-**Note:** Leaflet 2.0.0-alpha.1 was released in August 2025 and is ESM-only with a broken API. Do not use it. `leaflet-gpx` targets the stable 1.9.x API.
+Do not add `chartjs-plugin-crosshair` — it was last published August 2023, has 59 open issues, and addresses intra-chart crosshair visualization rather than the cross-component (chart → map) sync the site needs. Chart.js 4's native `onHover` callback is cleaner and has zero maintenance risk. Do not add any Strava API client — the TOS bars the use case. Do not use `framer-motion` (old package name, superseded by `motion` on npm in early 2025).
 
-**Core technologies:**
-- Astro 6.1.0: static site framework with islands — zero-JS output except map component
-- Leaflet 1.9.4: interactive map — lightest viable option for one GPX polyline (42KB vs 250KB+ for MapLibre)
-- leaflet-gpx 2.2.0: GPX rendering plugin — purpose-built, handles elevation stats and markers
-- Stadia Maps: tile provider (Stamen Toner style) — free tier with SLA, black-and-white aesthetic matches CIA document theme
-- Tailwind CSS 4.2.2: styling — CSS-first config, cascade layers prevent Leaflet CSS conflicts
-- Cloudflare Pages: hosting — unlimited bandwidth free tier, fastest global CDN
-- exifr: build-time EXIF extraction from photos — runs in Node.js during Astro build, not in browser
-- Space Mono + display font (Special Elite or similar): typography — monospace editorial aesthetic
+**Core technologies (unchanged from v1.0):**
+- **Astro 6** — static site framework; `<script>` blocks compile to module scripts; inter-component communication via `window.dispatchEvent(CustomEvent)`
+- **Leaflet 1.9.4** — map; `L.circleMarker` + `setLatLng()` for elevation crosshair marker; `mouseover` events for segment hover
+- **Chart.js 4 + chartjs-plugin-annotation 3.1.0** — elevation profile; `onHover` callback for position broadcast; runtime annotation updates (`chart.update('none')`) for segment range highlight
+- **Sharp 0.34.5** — image pipeline; width 200→400px, quality 75→80 for retina gallery thumbnails; new 600×338 card photo target with `fit: 'cover'`
+- **Tailwind v4** — CSS; `transition-*` utilities for all hover animations; `@keyframes` for load and scroll animations
 
-See `/Users/Sheppardjm/Repos/mkUltraGravel/.planning/research/STACK.md` for full rationale and alternatives considered.
+See `/Users/Sheppardjm/Repos/mkUltraGravel/.planning/research/STACK.md` for full rationale.
 
 ### Expected Features
 
-The site exists to drive BikeReg registrations. Every feature decision should be evaluated against that goal. The interactive map and design identity are the primary draw — without them this is just another event info page.
-
 **Must have (table stakes):**
-- Event date, location, distance, cost — above the fold, first question every visitor asks
-- BikeReg registration CTA — impossible to miss; this is the conversion goal
-- GPX file download — non-negotiable in gravel cycling culture
-- Route overview with key stats — riders need to know terrain before committing
-- Photo gallery of the route — 33 photos already in repo
-- Donation / Great Lakes Recovery Centers info — free events require cause explanation
-- Mobile-responsive layout — 50%+ of cycling site traffic is mobile
-- Dark brutalist psychedelic design throughout — this IS the differentiator
+- Visual hover feedback on all interactive cards (sector, KOM, photo) — no hover = broken feel
+- Strava segment deep-link on KOM cards — cycling audience expects this
+- Some "about the name" explanation — without it, "MK Ultra" is opaque to non-cycling-history audience
+- Data corrections (segment locations, photo positions, restock cleanup, URLs) — correctness is baseline, not polish
 
-**Should have (differentiators):**
-- Interactive GPX map with sector overlays — the route visualization IS the product
-- Paris-Roubaix style sector cards with star ratings — recognized convention in cycling community
-- Geolocated route photos on the map — visceral "I have to ride this" response
-- KOM segment listings — adds competitive dimension without making it a race
-- Restock point listings with mile markers — signals organizers have thought it through
-- Elevation profile visualization — shows ride character at a glance
+**Should have (competitive differentiators):**
+- Chart-to-map elevation sync (hover elevation chart → crosshair marker on map) — matches what RideWithGPS and Komoot deliver; none of the comparable small event sites do this
+- Photos on sector/KOM cards — standard on pro cycling event sites (Paris-Roubaix, Belgian Waffle Ride); implicitly expected by the MK Ultra audience
+- Manual KOM/QOM leaderboard (JSON-curated, dated, Strava deep-link) — most small event sites don't curate this at all; top-3 with a "last updated" stamp is a meaningful differentiator
+- CIA document treatment for the explainer with real FOIA references — the specificity and humor are what make this shareable
+- Scroll-reveal stagger on card lists — creates cinematic quality consistent with the dark aesthetic
 
-**Defer to v2+:**
-- Geolocated photos on map: highest effort, highest payoff — defer until map is stable, not a gating dependency
-- Elevation profile: visual enhancement, not critical to MVP
-- KOM segment cards: lower rider utility than sector cards in MVP
-- Restock point cards: can be a simple text list in v1
+**Defer to v2.1+:**
+- Map-to-chart direction sync (hover map polyline → elevation highlight) — low-value direction; chart-to-map is the primary user flow
+- Sector card click → map zoom (cross-component navigation) — high complexity relative to impact
+- Chart.js draw-on animation — re-enabling `animation: { duration: 800 }` is fine but low priority
+- Any live Strava API integration — permanently blocked by TOS and endpoint restrictions
 
-**Explicit anti-features (do not build):**
-- Results / timing / leaderboard — this is not a race
-- User accounts / login — BikeReg handles participants
-- Blog / news feed — abandoned blogs look worse than no blog; use social media
-- Email list signup — single event, high obligation, low return
-- Merchandise / shop, sponsor logos, Strava live embeds, weather widget
+**Anti-features — do not build:**
+- Live Strava OAuth leaderboard — TOS violation as of November 2024
+- Strava embed iframe — broken in Chrome due to third-party cookie deprecation
+- Smooth ease-in-out hover curves, bounce physics — wrong aesthetic for brutalist dark design
+- Animated page transitions — incompatible with Astro's static rendering model
+- Any animation library (GSAP, Framer Motion) for "subtle" effects — bundle cost is not justified; CSS handles all cases needed for this site
 
-See `/Users/Sheppardjm/Repos/mkUltraGravel/.planning/research/FEATURES.md` for full feature analysis.
+See `/Users/Sheppardjm/Repos/mkUltraGravel/.planning/research/FEATURES.md` for the full feature analysis and dependency map.
 
 ### Architecture Approach
 
-The entire site is a single-page static site (`index.html`) with scroll sections. The architectural centerpiece is a build-time data pipeline: a Node.js build script parses `MK Ultra.gpx` into `route-data.json`, resolves sector/KOM/restock mile markers against the route to produce `annotations.json`, and attempts EXIF extraction on 33 photos to produce `photos.json`. All three JSON files live in `public/data/` and are fetched at runtime by the Leaflet island component. Static HTML components (sector cards, KOM listings, gallery) read from the same JSON files at build time via Astro frontmatter — eliminating runtime fetches for non-map content.
+v2.0 adds two inter-component communication channels to components that currently have zero shared state. The canonical Astro pattern for this is `window.dispatchEvent()` with named `CustomEvent`s — not `window.chartInstance` global variables, not a shared module. Both `ElevationProfile.astro` and `RouteMap.astro` remain fully isolated; they share only event names and payload shapes. Both components already fetch `route-data.json` independently; the second fetch resolves from browser cache. No change to the data pipeline is required for the sync feature.
 
-The Leaflet map must be initialized via `<script is:inline>` inside an Astro island, NOT inside a React component. Leaflet manages its own DOM and breaks inside virtual DOM environments.
+The build-time data pipeline gains two new scripts: `assign-card-photos.js` (photo-to-sector matching by mileage proximity, Haversine formula, pure Node.js arithmetic, no new dependency) and optionally `fetch-strava.js` (build-time Strava segment metadata fetch via `GET /segments/{id}` for `xoms` KOM/QOM times; graceful skip if env vars absent).
 
-**Major components:**
-1. Build pipeline (parse-gpx.js, match-photos.js, resolve-annotations.js) — produces all data JSON; everything depends on this
-2. Map component (Astro island, `client:load`) — Leaflet init, GPX polyline, photo markers, sector/KOM/restock markers
-3. Route info panels (SectorList, KomList, RestockList) — static HTML, Astro reads JSON at build time
-4. Photo gallery + lightbox — static grid with vanilla JS lightbox
-5. Hero + static sections — event info, donation info, registration CTA, GPX download
-6. Design system — CSS custom properties, dark palette, typography tokens
+**Modified components:**
+1. **`ElevationProfile.astro`** — emits `elevation:hover` (with `mi` value) on Chart.js `onHover`; listens to `map:segmentHover` and updates annotation `borderWidth`/color; emits `elevation:leave` on canvas `mouseleave`
+2. **`RouteMap.astro`** — listens to `elevation:hover` and moves a `L.circleMarker` crosshair via binary search of `routeData`; emits `map:segmentHover` on sector polyline `mouseover`
+3. **`KomSegments.astro`** — add `coverPhoto` image; add KOM/QOM time display from `leaderboard.json`; add Strava segment deep-link
+4. **`GravelSectors.astro`** — add `coverPhoto` image; add hover CSS
 
-**Directory structure:** see `/Users/Sheppardjm/Repos/mkUltraGravel/.planning/research/ARCHITECTURE.md` for the full recommended layout.
+**New build scripts:**
+5. **`assign-card-photos.js`** — matches photos to sectors/KOMs by mileage range proximity; enriches `annotations.json` with `coverPhoto` field
+6. **`fetch-strava.js`** (optional) — build-time fetch of `xoms` data; writes `public/data/leaderboard.json`; graceful skip if `STRAVA_CLIENT_ID` not set
+
+See `/Users/Sheppardjm/Repos/mkUltraGravel/.planning/research/ARCHITECTURE.md` for the complete event flow diagrams and build order.
 
 ### Critical Pitfalls
 
-1. **Leaflet mobile scroll trap** — Leaflet captures all single-finger touch events, trapping users on the map. Wire in `Leaflet.GestureHandling` (`gestureHandling: true`) from the first map commit. Do not defer this to mobile testing.
+1. **Strava TOS violation (Pitfalls 16 + 17)** — The November 2024 Strava API Agreement explicitly prohibits displaying other athletes' data to anonymous public visitors. The segment leaderboard endpoint has been blocked since June 2020 regardless of subscription status. Prevention: manual JSON curation only; never call `/segments/{id}/leaderboard`; never reference the client secret in static build output.
 
-2. **GPX trackpoint density freezing mobile** — 80-mile Garmin/Wahoo exports contain 10,000–30,000 points. Downsample to 500–1000 points for map rendering using `gpx-simplify` or `simplify-js`. Keep the original full-resolution file for download. Test on a real mid-range Android device, not just Chrome DevTools emulation.
+2. **TBT regression from mousemove or animation (Pitfalls 19 + 23)** — The current TBT 0ms is fragile. `mousemove`/`onHover` at 60Hz can block the main thread; animation libraries add script parse time; LCP candidates starting at `opacity: 0` delay LCP measurement. Prevention: throttle sync via `requestAnimationFrame`; use CSS `transition`/`@keyframes` with `transform`/`opacity` only; never start the hero or LCP image at opacity 0; run Lighthouse after every animation addition.
 
-3. **Photo markers as individual DOM nodes** — 33 image-thumbnail Leaflet markers cause pan jank and an unreadable marker pile at low zoom. Use `Leaflet.markercluster` from day one. Build clustering in at the start; retrofitting it is harder.
+3. **Strava token expiry causing silent build failures (Pitfall 18)** — Access tokens expire after 6 hours; if the build script doesn't handle the 401, it writes empty JSON and Netlify reports a successful deploy with blank leaderboard data. Prevention: implement token refresh on day one; fail the build loudly (exit non-zero) on any 401; store the refresh token, not just the access token; Strava rotates refresh tokens on every use — update the stored token after each refresh.
 
-4. **Dark design failing WCAG contrast on outdoor screens** — Cyclists read sites on phones in direct sunlight. Every text/background combination must pass WCAG AA (4.5:1 body, 3:1 large text). Run contrast checks during every component build, not at the end.
+4. **Event listener memory leak (Pitfall 20)** — Manually added `mousemove`/`mouseleave` listeners on the Chart.js canvas are not removed by `chart.destroy()`. Multiple re-initializations on resize accumulate leaked Chart.js and Leaflet references. Prevention: use `AbortController` with `{ signal: ac.signal }` on all manually registered listeners; call `ac.abort()` before `chart.destroy()`.
 
-5. **CSS animations triggering layout reflow** — Psychedelic effects animated via `top`, `left`, `width`, `background-position` run on the main thread and cause dropped frames on mobile. Animate only `transform` and `opacity`. Test with Chrome DevTools at 6x CPU throttle.
+5. **Image quality increase without measuring cumulative payload (Pitfall 22)** — Thirty-three thumbnails at 50% larger each is not a minor change. Prevention: establish a total thumbnail byte budget baseline (`du -sh public/images/thumbs/`) before quality changes; measure after; never change quality settings without a before/after comparison.
 
-**Additional critical pitfalls:**
-- **Tile API token without URL restrictions** — If using Mapbox (not recommended — use Stadia Maps), create a dedicated token with URL restrictions before writing any map code.
-- **Map tile attribution removed** — Removing `.leaflet-control-attribution` violates OSM/Stadia ToS. Style it to match the dark theme; do not hide it.
-- **BikeReg CTA buried below map** — Place CTA both above the fold and again below the map. The map is the attraction; registration is the goal.
-
-See `/Users/Sheppardjm/Repos/mkUltraGravel/.planning/research/PITFALLS.md` for all 15 pitfalls with phase-specific warnings.
+See `/Users/Sheppardjm/Repos/mkUltraGravel/.planning/research/PITFALLS.md` for the full 12-pitfall v2.0 list plus retained v1.0 warnings.
 
 ---
 
 ## Implications for Roadmap
 
-The build-time data pipeline is the load-bearing foundation. The map component cannot be built without `route-data.json`. Sector/KOM/restock annotations cannot be built without the annotation resolver. Photo geo-matching is the highest-uncertainty piece and should be addressed early so there is time to manually assign positions if EXIF data is absent.
+The research strongly supports a data-first, interactivity-second, polish-last ordering. Data corrections must precede all card/photo/map work. Map-elevation interactivity is the highest-complexity item and should be built in isolation. Card photos and animations are additive and independent. Strava leaderboard ships last because it has the most external operational dependencies.
 
-Everything after the data pipeline follows a natural complexity gradient: map rendering first (core feature, most complex), then the static content sections that read from the same data, then gallery and polish. The design system should be scaffolded before any component work so no rework is required.
+### Phase 1: Data Foundations + Corrections
 
-### Phase 1: Data Foundation
+**Rationale:** All subsequent card, map, and photo work depends on correct underlying data. Fixing segment locations, photo positions, restock markers, and URL data now prevents rework later. This is zero-risk cleanup with no new architecture.
 
-**Rationale:** All map and annotation features depend on `route-data.json` existing first. The GPX parser converts mile markers to lat/lon, which every other data component requires. Build this before any UI work begins.
+**Delivers:** Correct `annotations.json`, `photos.json`, and segment mile markers; valid registration and donation URLs; route stats added to map/description copy.
 
-**Delivers:** `route-data.json` (GPX track with lat/lon/ele/mi per point), `annotations.json` (sectors, KOMs, restock points with resolved coordinates), `photos.json` (photo list with lat/lon — EXIF-first with manual fallback).
+**Addresses:** Data fixes milestone item; unblocks all card, photo, and map phases.
 
-**Addresses:** GPX download (raw file available), route stats, photo marker positioning.
+**Avoids:** Building UI on bad data and having to revisit card positions after photo assignment completes.
 
-**Avoids:** Client-side GPX parsing (Pitfall from ARCHITECTURE.md), EXIF reading in browser, per-section JSON fetches causing multiple round trips.
+**Research flag:** Standard patterns — skip research-phase. Pure data corrections in existing pipeline scripts.
 
-**Research flag:** MEDIUM uncertainty on photo EXIF status — the 33 photos may lack GPS EXIF data. Plan for manual mile-marker assignment for some or all photos. Validate early.
+---
 
-### Phase 2: Project Scaffold and Design System
+### Phase 2: Photo Pipeline + Card Photos
 
-**Rationale:** All UI components depend on the design system. Setting typography, color tokens, and base layout before component work prevents rework. Astro project initialization and Node 22 verification belongs here.
+**Rationale:** Photo assignment (`assign-card-photos.js`) is a prerequisite for card photo display. This phase establishes the `coverPhoto` schema extension to `annotations.json`, then wires the photos into `GravelSectors.astro` and `KomSegments.astro`. Low risk — additive change to existing static components.
 
-**Delivers:** Astro 6 project, Tailwind v4 with `@theme` CSS config, dark palette custom properties, Space Mono body font, display heading font (Special Elite or equivalent), base layout component, font preloading.
+**Delivers:** Photos on all sector and KOM cards. Improved thumbnail quality (400px, q80) for retina gallery. New card photo crop target (600×338, `fit: 'cover'`).
 
-**Avoids:** Font FOUT causing layout shift (Pitfall 11) — set up `font-display`, preload links, and fallback metric overrides during this phase, not later.
+**Addresses:** Photos on sector/KOM cards; image quality improvements; new photos processing.
 
-**Research flag:** Standard patterns — skip research-phase. Astro 6 + Tailwind v4 integration is well-documented.
+**Avoids:** Pitfall 22 (cumulative payload) — establish byte budget baseline before and after thumbnail quality change; delete existing thumbs directory to force regeneration at new size.
 
-### Phase 3: Map Component (Core Feature)
+**Research flag:** Standard patterns — skip research-phase. Haversine photo matching is well-documented; Sharp API is stable.
 
-**Rationale:** The map is the centerpiece feature and the most complex component. It must be stable before photo markers and sector overlays are added. Depends on Phase 1 (route-data.json, annotations.json, photos.json) and Phase 2 (design system).
+---
 
-**Delivers:** Leaflet map island (`client:load`) with GPX polyline rendered, sector/KOM/restock annotation markers, photo markers with clustering, gesture handling for mobile.
+### Phase 3: Map-Elevation Interactivity
 
-**Uses:** Leaflet 1.9.4, Stadia Maps Stamen Toner tiles, `Leaflet.GestureHandling`, `Leaflet.markercluster`.
+**Rationale:** Highest complexity feature; build in isolation before any other runtime changes. Both components exist and initialize correctly. The custom event bus is the core new runtime architecture for v2.0 — establish it here, test both directions, measure Lighthouse before and after.
 
-**Avoids:**
-- Mobile scroll trap — wire `gestureHandling: true` from first map commit (Pitfall 1)
-- GPX trackpoint density — downsample to 500–1000 points for display (Pitfall 3)
-- Photo markers as individual DOM nodes — use markercluster from day one (Pitfall 4)
-- Tile attribution removed — style attribution to match dark theme, do not hide (Pitfall 8)
+**Delivers:** Hover elevation chart → crosshair `L.circleMarker` appears on map at correct GPS coordinate, moves continuously with cursor. Hover sector polyline on map → corresponding mileage range highlights on elevation chart annotation. Both directions via `window.CustomEvent`. Touch support (`touchmove`) wired in same pass as `mousemove`.
 
-**Research flag:** MEDIUM — confirm Stadia Maps free tier account creation and Stamen Toner tile URL at project start. Alternatively, Carto Dark Matter tiles (`https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png`) require no API key and may be simpler for initial development.
-
-### Phase 4: Route Info Sections (Static Content)
-
-**Rationale:** Sector cards, KOM listings, and restock points are pure static HTML rendered at build time from `annotations.json`. They can be built quickly after the data pipeline is established and are independent of the live map.
-
-**Delivers:** Paris-Roubaix style sector cards with star ratings (1–5), KOM segment listings with gradient and elevation gain, restock point listings with mile markers.
-
-**Addresses:** Paris-Roubaix sector feature (core identity differentiator), KOM segment display, practical restock information.
-
-**Avoids:** Elevation data inaccuracy — if displaying elevation gain stats for sectors, smooth or correct raw GPX elevation values; do not display unchecked GPS-derived numbers (Pitfall 9).
-
-**Research flag:** Standard patterns — Astro frontmatter data reads from JSON, static HTML output. No research needed.
-
-### Phase 5: Hero, Static Sections, and Registration CTA
-
-**Rationale:** Static content sections (hero, event info, donation info, registration CTA, GPX download) have no dependencies on other phases and can be drafted anytime, but final implementation belongs after the design system exists so styling is consistent.
-
-**Delivers:** Above-fold hero with event identity (title, date, location, distance), event format / donation cause block, BikeReg registration CTA (above fold AND below map), GPX download link with correct filename attribute.
+**Addresses:** Map-elevation profile interactivity (crosshair sync + segment highlighting).
 
 **Avoids:**
-- BikeReg CTA buried below map — place CTA above fold; repeat after map section (Pitfall 14)
-- Slow LCP from unpreloaded hero image — add `<link rel="preload">` in `<head>`; no `loading="lazy"` on hero (Pitfall 6)
-- GPX download named "track.gpx" — use `download="mk-ultra-gravel-2026.gpx"` attribute (Pitfall 12)
+- Pitfall 19 (mousemove at 60Hz blocking main thread) — `requestAnimationFrame` throttle gate from first commit
+- Pitfall 20 (listener leak on chart re-init) — `AbortController` from first commit
+- Pitfall 24 (chartjs-plugin-crosshair version incompatibility) — do not use the plugin; use native `onHover` callback
+- Pitfall 27 (touch events not wired) — implement `touchmove` handler in same phase as `mousemove`
 
-**Research flag:** Standard patterns — skip research-phase.
+**Research flag:** Patterns fully documented — skip research-phase. ARCHITECTURE.md provides the complete implementation blueprint including code examples for the event bus, `getValueForPixel` lookup, and `chart.update('none')` annotation update. Run Lighthouse after this phase to confirm TBT stays at 0ms before proceeding.
 
-### Phase 6: Photo Gallery and Lightbox
+---
 
-**Rationale:** The gallery depends on `photos.json` from Phase 1. It can be built as a standalone feature before photo markers are added to the map (the map photo markers are a v2 differentiator).
+### Phase 4: Animations
 
-**Delivers:** CSS grid photo gallery, vanilla JS lightbox (FSLightbox or equivalent), WebP-optimized thumbnails via Astro image pipeline, lazy-loaded full images.
+**Rationale:** Pure CSS/JS additions with no dependencies on other v2.0 phases. Placing animations after interactivity keeps the sync feature testing clean and ensures Lighthouse baseline from Phase 3 is measured before adding new visual complexity.
 
-**Avoids:** Photo popups containing full-resolution images causing 5–10 second load times on cellular (Pitfall 13) — serve thumbnails in gallery grid, optional full-size link only.
+**Delivers:** Hard box-shadow hover states on sector and KOM cards (brutalist aesthetic). Scroll-reveal `opacity`/`translateY` fade-in on card lists via `IntersectionObserver`. Hero text load animation via `@keyframes` with staggered `animation-delay`. Photo grayscale-to-color reveal on hover. Full `prefers-reduced-motion` compliance.
 
-**Research flag:** Standard patterns — FSLightbox or similar is well-documented. Astro image optimization is built-in.
-
-### Phase 7: Mobile Audit and Performance Polish
-
-**Rationale:** Several pitfalls are device-specific and cannot be validated in DevTools alone. A dedicated mobile testing phase prevents shipping a broken experience to the majority of visitors.
-
-**Delivers:** Validated mobile scroll behavior, contrast audit results, animation performance check, image optimization verification, Core Web Vitals baseline.
+**Addresses:** Subtle animations milestone item; CIA document aesthetic polish.
 
 **Avoids:**
-- Dark design contrast failures on outdoor screens — run WCAG checks on every text combination (Pitfall 7)
-- CSS animations triggering layout reflow — audit every animation for `transform`/`opacity` only (Pitfall 10)
-- Slow LCP on mobile — verify hero preload, check WebP serving, confirm no `loading="lazy"` on above-fold content (Pitfall 6)
+- Pitfall 23 (TBT regression) — never start LCP-candidate elements at `opacity: 0`; run Lighthouse after every animation addition, not just at the end
+- Anti-features: smooth ease-in-out curves, bounce physics, GSAP or Framer Motion bundle weight
 
-**Research flag:** Standard patterns — WCAG contrast checkers, Chrome DevTools, real device testing.
+**Research flag:** Standard patterns — skip research-phase. All approaches are CSS-only with IntersectionObserver; no library decisions required.
 
-### Phase 8: Deployment
+---
 
-**Rationale:** Cloudflare Pages deployment is a one-time setup that can be done early (for preview URLs) or last. No server-side config needed for a fully static output.
+### Phase 5: MK Ultra Name Explainer
 
-**Delivers:** Cloudflare Pages project connected to git, custom domain configured, preview deployment per branch.
+**Rationale:** Fully independent static component — no data dependencies, no runtime JS required. Can ship at any point; placed after interactivity to keep the highest-complexity phases uncluttered. The complexity here is copywriting, not engineering.
 
-**Uses:** Cloudflare Pages free tier, `astro build` static output.
+**Delivers:** New static Astro component explaining the MKULTRA connection (CIA covert program, 1953–1973, LSD, FOIA documents). CIA document aesthetic: monospace type, redaction-reveal CSS effect (click-to-uncover via CSS `width` transition on pseudo-element), real FOIA document links. Positioned between event info and map sections.
 
-**Research flag:** Standard patterns — Astro + Cloudflare Pages is well-documented and requires zero configuration for static output.
+**Addresses:** MK Ultra name explainer milestone item.
+
+**Avoids:** Video backgrounds (wrong medium, high bandwidth); animated page transitions (Astro static model incompatibility); over-engineering what is fundamentally a copywriting task.
+
+**Research flag:** Standard patterns — skip research-phase. Static Astro component, CSS-only interaction. Historical facts researched and documented in FEATURES.md.
+
+---
+
+### Phase 6: Strava KOM Leaderboard
+
+**Rationale:** Comes last because it has the most external operational prerequisites. Can ship with fallback empty JSON if Strava setup is not ready — `KomSegments.astro` renders gracefully without leaderboard data. The manual curation approach means the phase is not blocked by Strava API access at all; the JSON can be hand-authored first and the build-time fetch layer added afterward.
+
+**Delivers:** KOM/QOM time display on KOM cards (manual JSON, dated, with Strava deep-link). Optionally: `fetch-strava.js` build-time script that fetches `xoms` from `GET /segments/{id}` and writes `public/data/leaderboard.json`. Strava segment URLs on all KOM cards.
+
+**Addresses:** Strava KOM/QOM leaderboard milestone item (manual curation approach per TOS constraint).
+
+**Avoids:**
+- Pitfall 16 (client secret in static build) — Strava credentials in Netlify env vars only, accessed from build script only, never in browser JS
+- Pitfall 17 (leaderboard endpoint blocked) — never call `/segments/{id}/leaderboard`; use `/segments/{id}` `xoms` field only
+- Pitfall 18 (token expiry / silent failure) — implement refresh token rotation on day one; exit non-zero on 401
+- Pitfall 21 (rate limit exhaustion in CI) — cache-first fetch logic with `STRAVA_FETCH_ENABLED` guard for development builds
+- Pitfall 25 (private segments) — verify each segment's privacy setting in Strava before writing any API code
+
+**Research flag:** Has operational prerequisites that must be resolved before coding begins:
+- [ ] Strava segment IDs confirmed for Billie Helmer, Leaving Chatham, Silver Creek segments
+- [ ] Each segment verified as public (not private) in Strava settings
+- [ ] Strava developer application registered at developers.strava.com
+- [ ] Initial OAuth flow completed and refresh token stored in Netlify env vars
 
 ---
 
 ### Phase Ordering Rationale
 
-- The data pipeline (Phase 1) must precede all component work because mile-marker-to-coordinate resolution is a shared dependency across map, sectors, restocks, and photo gallery.
-- Design system (Phase 2) must precede component work to avoid rework — typography, color tokens, and base layout must exist before any component is styled.
-- Map (Phase 3) is the most complex feature and the site's central differentiator — it gets the first component slot so there is maximum time for iteration.
-- Static content sections (Phases 4–6) are independent of each other and can be parallelized once Phases 1–2 are complete.
-- Mobile audit (Phase 7) is intentionally a dedicated phase, not an afterthought. Multiple pitfalls are only discoverable on real devices.
-
-### Research Flags
-
-**Needs research / validate early:**
-- **Phase 1 (Photo geo-matching):** The 33 photos are likely Google Photos exports and likely lack EXIF GPS data. Inspect files before Phase 1 build to determine how many need manual mile-marker assignment. This is the highest-uncertainty item in the entire project.
-- **Phase 3 (Tile provider):** Confirm Stadia Maps free tier signup and Stamen Toner tile URL before map implementation. If Stadia signup is blocked, fall back to Carto Dark Matter (no API key required, dark aesthetic, OSM-based).
-- **Phase 3 (GPX file inspection):** Check actual trackpoint count in `MK Ultra.gpx` before building the GPX parser. If the file has fewer than 2,000 points already, downsampling may not be necessary.
-
-**Standard patterns (skip research-phase):**
-- **Phase 2:** Astro 6 + Tailwind v4 integration is documented in official Astro docs.
-- **Phase 4–6:** Static HTML components and image pipelines are well-documented Astro patterns.
-- **Phase 7:** WCAG contrast checking and Chrome DevTools usage are standard.
-- **Phase 8:** Astro + Cloudflare Pages is a first-party-endorsed deployment target.
+- **Data first** because all card, photo, and map work has a correctness dependency on `annotations.json` and `photos.json`. Building UI on wrong data guarantees rework.
+- **Photos second** because `assign-card-photos.js` establishes the `coverPhoto` schema extension that the Strava leaderboard phase also builds on top of.
+- **Interactivity isolated** in its own phase because it is the highest complexity item and the most likely to introduce regressions. Isolating it makes Lighthouse delta measurements unambiguous.
+- **Animations after interactivity** so the TBT baseline from Phase 3 is measured cleanly before adding new visual complexity.
+- **Explainer and leaderboard last** because the explainer is fully independent and the leaderboard has external operational prerequisites. Neither blocks anything else.
 
 ---
 
@@ -240,20 +215,22 @@ Everything after the data pipeline follows a natural complexity gradient: map re
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | All core versions verified against npm registry and official sources on 2026-03-26. Node 22.12.0+ requirement confirmed. Leaflet 2.0 alpha risk documented. |
-| Features | HIGH | Table stakes verified against 6+ live gravel event sites. Paris-Roubaix sector convention confirmed on official site. Anti-feature list grounded in project scope. |
-| Architecture | HIGH (core) / MEDIUM (photo matching) | Build-time pipeline and single-page pattern verified via working reference implementation (Ben Strawbridge Astro + Leaflet + GPX, 2026). Photo EXIF status is unverified — the 33 photos need inspection. |
-| Pitfalls | HIGH (mobile/performance/legal) / MEDIUM (photo/elevation specifics) | Leaflet mobile scroll trap, tile attribution, LCP, animation performance, and contrast pitfalls all have authoritative sources. GPX trackpoint counts and elevation accuracy percentages are training-data estimates. |
+| Stack | HIGH | All technology choices verified against official docs; zero mandatory new dependencies confirmed; `chartjs-plugin-crosshair` staleness confirmed via GitHub (last release August 2023, 59 open issues) |
+| Features | HIGH | Strava API constraints verified from official Strava changelog and TOS text; cycling event design patterns verified from reference sites (Paris-Roubaix, Belgian Waffle Ride); anti-feature list grounded in TOS and aesthetic constraints |
+| Architecture | HIGH | CustomEvent bus pattern is idiomatic Astro pattern confirmed in official docs; Chart.js `onHover` + `getValueForPixel` API verified; Leaflet `setLatLng`/`circleMarker` verified; one MEDIUM item: token refresh rotation is documented but real-world maintenance friction is training data |
+| Pitfalls | HIGH | Core pitfalls (TOS prohibition, token expiry, mousemove throttle, listener cleanup) verified from official documentation; image payload and crosshair plugin pitfalls verified from official + community sources |
 
 **Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **Photo EXIF status:** Unknown whether any of the 33 photos carry GPS coordinates. Inspect files with `exifr` before building the photo matcher. Plan for full manual assignment as the fallback.
-- **GPX trackpoint density:** The actual size and point count of `MK Ultra.gpx` has not been measured. Check file size and trackpoint count before deciding whether downsampling is necessary.
-- **BikeReg event URL:** The actual BikeReg registration URL for this event is not in the research files. This is required before the registration CTA can be built. Confirm with the event director.
-- **Stadia Maps signup:** Stadia Maps free tier pricing was verified as of 2025; confirm current terms at signup time. The fallback (Carto Dark Matter, no API key) is a viable alternative.
-- **Elevation stats source:** Raw GPX elevation data is unreliable. Before displaying elevation gain prominently, either run the GPX through a DEM correction service (GPXZ, Open Topo Data) or cross-reference against the Strava/Komoot version of the route.
+- **Strava segment IDs** — The KOM segments (Billie Helmer, Leaving Chatham, Silver Creek) need their Strava segment IDs confirmed. These may or may not exist as official public Strava segments. This must be resolved before Phase 6 can begin. If segments are not on Strava, the leaderboard is manual-only JSON with no live data component at all.
+
+- **Photo coverage per sector** — `assign-card-photos.js` assumes photos exist within each sector's mileage range. C4 (mile 58.7–64.35) and Down Jeep (mile 83.0–83.6) may have no photos assigned. Verify against the photo manifest; if gaps exist, either expand the search radius or assign the nearest route photo manually.
+
+- **Strava token rotation maintenance burden** — The recommended approach (manual token rotation after each deploy) is appropriate for low-frequency deploys. If deploy frequency increases, this becomes a maintenance burden. The automated alternative (Netlify API to self-update the env var) is complex. Monitor and reassess during Phase 6.
+
+- **`onHover` performance on mid-range Android** — The throttle pattern (`requestAnimationFrame`) is research-confirmed correct, but actual performance on mid-range Android should be verified with Chrome DevTools Performance tab after implementation, not assumed.
 
 ---
 
@@ -261,38 +238,38 @@ Everything after the data pipeline follows a natural complexity gradient: map re
 
 ### Primary (HIGH confidence)
 
-- Astro 6.1.0 GitHub releases — version verification
-- Astro official upgrade guide — Node 22.12.0+ requirement
-- Leaflet.js official download page — 1.9.4 current stable confirmed
-- Leaflet 2.0 alpha announcement — ESM-only, API break confirmed
-- Tailwind CSS v4 release blog — CSS-first config, cascade layers
-- Paris-Roubaix official sector listing — 1–5 star rating convention
-- Leaflet GitHub issues #4051, #4677 — mobile scroll hijacking confirmation
-- Leaflet.GestureHandling documentation — prevention pattern
-- Google web.dev LCP documentation — hero image preload requirement
-- WCAG 2.1 guidelines — contrast ratio thresholds
-- Mapbox security documentation — token URL restriction requirement
-- MDN compositing documentation — transform/opacity animation best practices
-- Ben Strawbridge Astro + Leaflet + GPX reference implementation (2026)
-- exifr.js GitHub — EXIF GPS extraction in Node.js
-- Cloudflare Pages vs Netlify comparison — free tier bandwidth
+- [Strava API Agreement November 2024](https://www.strava.com/legal/api) — Community Application definition; TOS prohibition on displaying other athletes' data to anonymous visitors
+- [Strava Changes to Segments API](https://developers.strava.com/docs/segment-changes/) — Leaderboard endpoint removal June 2020; confirmed unavailable
+- [Strava Authentication docs](https://developers.strava.com/docs/authentication/) — OAuth2 flow; 6-hour token expiry; refresh token rotation
+- [Strava Rate Limits](https://developers.strava.com/docs/rate-limits/) — 100 req/15 min non-upload, 1,000/day
+- [Strava November 2024 announcement](https://press.strava.com/articles/updates-to-stravas-api-agreement) — Context for TOS changes
+- [Astro client-side scripts docs](https://docs.astro.build/en/guides/client-side-scripts/) — CustomEvent pattern for cross-component communication
+- [Chart.js Interactions docs](https://www.chartjs.org/docs/latest/configuration/interactions.html) — `onHover` callback; `getValueForPixel` API
+- [Leaflet API reference](https://leafletjs.com/reference.html) — `setLatLng()`; `circleMarker`; polyline `mouseover` events
+- [Netlify environment variables](https://docs.netlify.com/build/configure-builds/environment-variables/) — env var scoping; build vs function scope
+- [Sharp WebP output + resize API](https://sharp.pixelplumbing.com/api-output/) — quality parameters; `fit: 'cover'` resize mode
+- [Avoid non-composited animations — Chrome Developers](https://developer.chrome.com/docs/lighthouse/performance/non-composited-animations) — `transform`/`opacity` compositor-only rule
+- [Total Blocking Time — web.dev](https://web.dev/articles/tbt) — TBT threshold; Lighthouse scoring weights
+- [prefers-reduced-motion — MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/prefers-reduced-motion) — Accessibility requirement
+- [W3C WCAG C39](https://www.w3.org/WAI/WCAG21/Techniques/css/C39) — Reduced motion technique
+- [Chart.js plugins docs](https://www.chartjs.org/docs/latest/developers/plugins.html) — `.destroy()` behavior; listener cleanup
+- [Leaflet GitHub Issue #9514](https://github.com/Leaflet/Leaflet/issues/9514) — Canvas mousemove throttle behavior confirmation
 
 ### Secondary (MEDIUM confidence)
 
-- Stadia Maps pricing page (2025) — free tier terms
-- Cloudflare Pages free tier details — bandwidth, build minutes
-- MapLibre vs Leaflet 2026 comparison — bundle size numbers
-- Mapbox performance docs — GeoJSON large data patterns
-- GPXZ blog — GPX elevation accuracy and DEM correction
-- FSLightbox — vanilla JS lightbox option
-- SBT GRVL, Grinduro, Ore to Shore, The Crusher, Belgian Waffle Ride, Lost & Found — feature benchmarking
-- Gravel Worlds, GRVL Cycling Raid Rockingham — section structure reference
-
-### Tertiary (LOW confidence)
-
-- Pitfall 15 (sector/KOM data offset from GPS drift) — derived from general GPS development experience; no authoritative source
+- [chartjs-plugin-crosshair GitHub](https://github.com/AbelHeinsbroek/chartjs-plugin-crosshair) — Last published August 2023; 59 open issues; staleness confirmed; Chart.js v4 compatibility issue #95
+- [Strava Community Hub: KOM/QOM data](https://communityhub.strava.com/developers-api-7/accessing-kom-qom-data-for-segment-1999) — `xoms` field on `/segments/{id}` endpoint confirmed
+- [Strava Community Hub: leaderboard discussion](https://communityhub.strava.com/developers-api-7/api-segment-leaderboards-and-efforts-3031) — Community corroboration of endpoint restriction
+- [Motion (animation library) official docs](https://motion.dev/docs) — Package rename from `framer-motion` to `motion`; vanilla JS API
+- [CSS scroll animations techniques 2025](https://mroy.club/articles/scroll-animations-techniques-and-considerations-for-2025) — IntersectionObserver vs native CSS scroll-driven; browser support comparison
+- [MKUltra — Wikipedia](https://en.wikipedia.org/wiki/MKUltra) — Historical facts for explainer component
+- [CIA FOIA MK-ULTRA documents](https://www.cia.gov/readingroom/document/06760269) — Primary source documents referenced in explainer
+- [MK-Ultra Princeton Special Collections](https://specialcollections.princeton.edu/2025/10/the-cias-quest-for-mind-control-piecing-together-project-mk-ultra-and-its-princeton-connections-part-i-allen-w-dulles-class-of-1914/) — Additional historical sourcing
+- [Netlify Secrets Controller](https://docs.netlify.com/build/environment-variables/secrets-controller/) — Proactive secret scanning
+- [Paris-Roubaix official site](https://www.paris-roubaix.fr) — Per-sector photo reference pattern
+- [MapTiler elevation profile marker sync example](https://docs.maptiler.com/sdk-js/examples/elevation-profile-control-marker/) — Cross-component sync reference implementation
 
 ---
 
-*Research completed: 2026-03-26*
+*Research completed: 2026-03-27*
 *Ready for roadmap: yes*

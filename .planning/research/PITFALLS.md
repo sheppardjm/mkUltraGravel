@@ -2,373 +2,384 @@
 
 **Domain:** Gravel cycling event website — static site with interactive map, GPX overlay, geo-located photos, dark brutalist design
 **Project:** MK Ultra Gravel
-**Researched:** 2026-03-26
+**Researched:** 2026-03-27
+**Scope:** v2.0 additions — Strava leaderboard, map-elevation interactivity, animations, image pipeline changes
+
+---
+
+> This file extends the v1.0 pitfalls with v2.0-specific risks. The v1.0 pitfalls (scroll hijacking,
+> token exposure, GPX density, photo marker DOM cost, contrast failures, animation reflow, etc.)
+> remain valid and are summarized in the Phase-Specific Warnings table at the bottom. The new
+> pitfalls below address what can go wrong when adding Strava integration, map-chart sync, and
+> visual polish to an already-optimized static site.
 
 ---
 
 ## Critical Pitfalls
 
-Mistakes that cause rewrites, event-day failures, or completely unusable experiences.
+Mistakes that cause rewrites, security incidents, or make a feature permanently broken.
 
 ---
 
-### Pitfall 1: Leaflet Map Scroll Hijacking on Mobile
+### Pitfall 16: Strava Client Secret Embedded in Static Site Build
 
-**What goes wrong:** On mobile, any Leaflet map embedded in a scrollable page captures all single-finger touch events. Visitors trying to scroll past the map get trapped — they pan the map instead of scrolling the page. This is the single most reported complaint in Leaflet GitHub issues for embedded maps.
+**What goes wrong:** The Strava OAuth flow requires a Client ID and Client Secret. A developer places both in an Astro `.env` file intending them to be server-side only, but any `PUBLIC_` prefix or inline script usage causes them to be injected into the static build output. The Client Secret is then visible in the page source to anyone who opens DevTools.
 
-**Why it happens:** Leaflet's default behavior treats all touch-drag events on the map container as map-panning gestures, intercepting browser scroll before the page sees it.
+**Why it happens:** Astro (like Vite) distinguishes public vs private env vars by prefix convention. `PUBLIC_STRAVA_CLIENT_SECRET` is public by name. Even without the prefix, if a developer embeds it in a `<script is:inline>` tag to call Strava's token endpoint from the browser, the secret ships in the HTML.
 
-**Consequences:** Cyclists checking the site on their phone before the event cannot scroll past the route section. The map becomes a scroll trap. On iOS, it also blocks "swipe from left edge to go back" navigation.
-
-**Prevention:** Use the `Leaflet.GestureHandling` plugin (`gestureHandling: true` in map init options). This mirrors Google Maps behavior — single-finger drag scrolls the page, two-finger drag pans the map, with a visible hint overlay. Alternatively, use `Leaflet.Sleep` for simpler "wake on click" behavior. Do NOT rely on CSS `pointer-events: none` alone — it disables all interaction including intentional map use.
-
-**Warning signs:**
-- You can scroll over the map on desktop but not on mobile
-- Users report being unable to scroll past a section
-- Chrome DevTools "mobile" emulation shows map consuming all touch events
-
-**Phase:** Address in the map implementation phase, before any testing. Wire in `gestureHandling` from the first commit.
-
-**Confidence:** HIGH — verified through Leaflet GitHub issues #4051, #4677, and the Leaflet.GestureHandling documentation.
-
----
-
-### Pitfall 2: Mapbox/Tile API Token Exposed Without URL Restrictions
-
-**What goes wrong:** On a static site, any API token embedded in client-side JavaScript is publicly visible. Without URL restrictions, anyone can copy the token and use it on their own projects, accruing charges to your account.
-
-**Why it happens:** Developers treat the token like a password (keep it secret) rather than like an OAuth public client ID (restrict its scope). Static sites have no server-side to proxy requests through, so the token must be in the JS.
-
-**Consequences:** Unexpectedly high billing, token abuse, potential account suspension. For Mapbox specifically, billing abuse is documented — exposing a token without restrictions lets attackers use it to serve tiles for their own sites at your expense.
+**Consequences:** An exposed Client Secret lets anyone obtain Strava access tokens on behalf of your application, exhaust your rate limits, and impersonate your app. Strava may revoke your application. The attacker can access any scope your app was granted.
 
 **Prevention:**
-- Create a **dedicated token for this project** — never use the default token
-- Enable **URL restrictions** on the token (only allow requests from your domain and localhost)
-- Scope the token to minimum permissions: `styles:read`, `fonts:read`, `tiles:read` only
-- Store the token in an environment variable (e.g., `.env`), inject at build time, never commit to git
-- Monitor usage via the Mapbox Statistics dashboard
+- Keep Client Secret in a Netlify Function (server-side runtime) only — never in static build output
+- Use `STRAVA_CLIENT_SECRET` (no `PUBLIC_` prefix) and access it only from `netlify/functions/*.js` files
+- Netlify environment variables scoped to "Functions" are not available to the static build process
+- Use Netlify Secrets Controller to proactively scan for accidental exposure
+- For the leaderboard use case, prefer a build-time fetch (the function runs during `netlify build`, writes a JSON file, and the secret never ships to the browser) over a runtime Netlify Function
 
 **Warning signs:**
-- Token is copy-pasted directly into JS source
-- No URL restrictions visible in your Mapbox account
-- Token is committed to git history
+- `PUBLIC_STRAVA_CLIENT_SECRET` in any `.env` file
+- `fetch('https://www.strava.com/oauth/token', ...)` in any client-side JavaScript
+- Client Secret appearing in rendered page source
 
-**Phase:** Address at project setup, before any map code is written. This is a one-time configuration that prevents permanent damage.
+**Phase:** Address in the Strava integration phase, before writing any OAuth code.
 
-**Confidence:** HIGH — verified directly from Mapbox security documentation and confirmed by security researcher documentation of Mapbox token abuse.
+**Confidence:** HIGH — verified from Netlify environment variable scoping docs, Astro public/private env convention, and Strava API security requirements.
 
 ---
 
-### Pitfall 3: GPX File Causes Map to Jank or Freeze on Mobile
+### Pitfall 17: Strava Leaderboard Endpoint Requires Subscriber Status — Not Just Authentication
 
-**What goes wrong:** A raw GPX export from a Garmin/Wahoo/Strava for an 80-mile route can contain 10,000–30,000 trackpoints. Parsing and rendering all of them at once in Leaflet/Mapbox GL JS on a mid-range phone causes noticeable freeze (2–5 seconds) or permanent jank during pan/zoom.
+**What goes wrong:** The developer authenticates successfully with the Strava API and writes code to call `GET /segments/{id}/leaderboard`. The endpoint returns a 403 or an empty leaderboard. The developer assumes a bug in their OAuth flow. The actual problem: as of June 18, 2020, Strava restricted the full segment leaderboard endpoint to Strava subscribers (paid accounts) only. Free-tier Strava users cannot access leaderboard data via the API regardless of their app's authentication status.
 
-**Why it happens:** GPX devices record a point every 1–5 seconds. Over 5+ hours of riding, this creates dense point arrays. The browser must parse the XML, build a GeoJSON polyline, then render it — all on the main thread if not carefully handled.
+**Why it happens:** The restriction is a billing change, not a technical limitation. The API endpoint exists and authenticates correctly; it just returns nothing for free-tier athletes. The relevant documentation is in `Changes to the Segments API` — a page separate from the main API reference — and is easy to miss.
 
-**Consequences:** The map freezes on load on mobile. Pan/zoom lags. On low-end Android (common among cyclists), it may crash the browser tab entirely.
+**Consequences:** If the MK Ultra Gravel KOM leaderboard is populated by fetching segment efforts from individual athletes' accounts, those athletes must be Strava subscribers for their entries to appear. Free-tier riders are silently excluded. The leaderboard appears empty or incomplete with no useful error message.
+
+**What is still available to non-subscribers:**
+- Individual segment efforts (effort count, personal times) for subscribers
+- Top 10 leaderboard entries remain accessible to all apps
+- Segment metadata (name, distance, grade) for public segments
 
 **Prevention:**
-- **Downsample the GPX before shipping it.** Use `gpx-simplify` or Mapbox's `simplify-js` to reduce trackpoints to ~500–1000 points for display. 1000 points is visually indistinguishable from 10,000 at typical map zoom levels.
-- Keep the original full-resolution GPX as the downloadable file, but render a simplified version.
-- Limit coordinate decimal precision to 5–6 places (saves file size with no perceptible accuracy loss).
-- Test on a real mid-range Android (not just Chrome DevTools emulation, which uses desktop CPU).
+- Design around the top-10 endpoint, not the full leaderboard — it works for all apps
+- Alternatively, fetch athlete efforts at build time using accounts the organizer controls (their own Strava account must be a subscriber)
+- If displaying real-time KOM standings is the goal, use the segment's own Strava URL as a link-out, not an API fetch
+- Document this constraint in the phase plan so future devs don't debug auth when the real issue is subscription status
 
 **Warning signs:**
-- Raw GPX file is larger than 500KB
-- Map takes more than 1 second to render the route
-- Noticeable lag when panning over the route line on mobile
+- `GET /segments/{id}/leaderboard` returning an empty `entries` array with a 200 status
+- Leaderboard data visible on strava.com but absent in API response
+- "athlete is not a subscriber" in error messages
 
-**Phase:** Address when implementing GPX rendering. Do not defer simplification to "optimization later."
+**Phase:** Address at Strava integration design time, before any leaderboard API code is written.
 
-**Confidence:** MEDIUM — Mapbox official docs confirm the GeoJSON/large data performance pattern; specific GPX point counts derived from general GPS device knowledge (training data — validate with actual file measurement).
+**Confidence:** HIGH — verified from Strava official `Changes to the Segments API` documentation (June 2020, still enforced).
 
 ---
 
-### Pitfall 4: 33 Photo Markers Rendered as Individual DOM Nodes
+### Pitfall 18: Strava Access Token Expires Every 6 Hours — Build Will Silently Fail
 
-**What goes wrong:** Placing 33 photo thumbnails as individual Leaflet markers on the map creates 33 DOM nodes that pan with the map. On mobile, this renders slowly and causes lag. At low zoom levels, markers overlap into an unreadable pile.
+**What goes wrong:** A developer stores a manually-obtained Strava access token as a Netlify environment variable. It works on the first deploy. Six hours later (or on the next deploy), the token has expired. The build script calls the Strava API, gets a 401, and either crashes with an unhandled error or — worse — silently writes an empty leaderboard JSON file. The site deploys successfully with blank leaderboard data and no one notices.
 
-**Why it happens:** Developers treat "33 markers" as a small number. It is small for clustering algorithms, but individual image-thumbnail markers (not just icons) are expensive because each is a positioned DOM element with an `<img>` tag.
+**Why it happens:** Strava access tokens expire after exactly 6 hours (21,600 seconds). The `expires_at` timestamp is in the initial OAuth response. Developers who manually exchange a code for a token once and copy it to Netlify env vars do not implement the refresh flow, so the first successful deploy creates false confidence that the system works.
 
-**Consequences:** Pan jank on mobile, overlapping unclickable markers at zoomed-out view, poor visual experience at macro zoom.
+**Consequences:** After 6 hours, every subsequent deploy fetches stale or empty leaderboard data. Silent data loss is harder to detect than a loud crash. If the build exits 0 even on a 401, Netlify reports a successful deployment.
 
 **Prevention:**
-- Use **Leaflet.markercluster** — groups nearby markers at low zoom, expands at high zoom. This is a known pattern for photo maps.
-- Render clusters as simple circle icons (cheap), expand to photo thumbnails only when zoomed in.
-- Lazy-load thumbnail images inside popups — do not preload all 33 thumbnails on map init.
-- Consider showing photo markers only at zoom level 12+ to avoid the "pile of icons" problem at overview zoom.
+- Store both the access token AND the refresh token as Netlify environment variables
+- Implement token refresh in the build script: check `expires_at` before every API call; if expired, POST to `https://www.strava.com/oauth/token` with `grant_type=refresh_token` using the stored refresh token; write the new access token and refresh token back to Netlify env vars via the Netlify API
+- Alternatively: design the data fetch to be triggered by a Netlify webhook on a schedule, refreshing tokens as part of that flow
+- Make the build script exit non-zero if the Strava fetch fails — do not silently write empty JSON
+
+**Important refresh token detail:** Strava rotates refresh tokens on every use. After refreshing, the old refresh token is immediately invalid. Store the new refresh token returned from the refresh response before using the new access token.
 
 **Warning signs:**
-- All 33 markers visible simultaneously at zoom level 10 or lower
-- Popups contain full-size images (not thumbnails)
-- Map init time scales with number of markers
+- Only `STRAVA_ACCESS_TOKEN` stored as env var, no `STRAVA_REFRESH_TOKEN`
+- Build script catches 401 errors and continues without aborting
+- Leaderboard data last updated timestamp does not match deploy time
 
-**Phase:** Address in photo marker implementation. Build clustering in from the start — retrofitting it is harder than starting with it.
+**Phase:** Address when building the Strava data fetch pipeline. Implement token refresh on day one; do not defer it as "cleanup later."
 
-**Confidence:** MEDIUM — Leaflet.markercluster is the well-documented solution; image-specific marker performance on mobile is training data, cross-referenced with general Leaflet performance guidance.
+**Confidence:** HIGH — token expiry (6 hours, 21,600 seconds) and refresh token rotation verified directly from Strava official OAuth documentation.
 
 ---
 
 ## Moderate Pitfalls
 
-Mistakes that cause user experience degradation or technical debt requiring significant rework.
+Mistakes that create technical debt, degrade performance, or produce subtle bugs.
 
 ---
 
-### Pitfall 5: Monospace Body Font Causing Reading Fatigue
+### Pitfall 19: Map-Elevation Sync via mousemove Fires Too Frequently — Blocks Main Thread
 
-**What goes wrong:** Monospace fonts for body text look great in screenshots and at small scale but become exhausting to read over longer passages. Visitors reading route descriptions, sector details, and KOM segment info will abandon reading before finishing.
+**What goes wrong:** The developer listens to `mousemove` on the Chart.js elevation profile canvas and updates a Leaflet map marker on every event. `mousemove` fires at 60Hz+ on desktop and at a similar rate on desktop-emulated mobile. Each handler calls `marker.setLatLng()`, which triggers a Leaflet DOM update. On mid-range Android, this creates visible map lag during hover.
 
-**Why it happens:** Monospace fonts have uniform character width, which creates awkward spacing in natural language (narrow letters like "i" get excessive padding, wide letters like "m" look cramped). This reduces reading speed by 10–30% compared to proportional fonts.
+**Why it happens:** `mousemove` is one of the most frequently firing browser events. Direct wiring of two heavy DOM operations (Chart.js internal pointer tracking + Leaflet marker repositioning) without rate limiting causes a throughput problem on constrained hardware.
 
-**Consequences:** Users skim or skip route/sector/restock descriptions. The atmospheric text that makes the psychedelic theme work goes unread. Mobile users are hit hardest because smaller screens amplify spacing issues.
+**Consequences:** Map lag on mobile, elevated TBT (Total Blocking Time) if the handler runs long, battery drain, and hot device during use. This risks degrading the current 96 Lighthouse score — TBT is 30% of the Performance score.
 
 **Prevention:**
-- Use monospace for **short, punchy copy only** — headings, labels, callouts, stats (e.g., "SECTOR 3 — ★★★★★ — 4.2 mi")
-- Use a high-quality variable-weight font (or carefully chosen proportional font) for body paragraphs longer than 2–3 lines
-- If monospace must be used everywhere for aesthetic reasons, set `font-size` at 16px minimum, `line-height` at 1.6–1.8, and constrain line length to 60–75 characters
+- Throttle the `mousemove` handler: allow it to run at most once per animation frame using `requestAnimationFrame` or a 16ms `setTimeout` gate
+- Alternatively, use Chart.js's built-in `afterEvent` plugin hook instead of raw `canvas.addEventListener('mousemove')` — Chart.js already throttles its own internal handling
+- The map marker update is the expensive operation; debounce it separately from the crosshair render
+- On mobile (touch devices), this sync is mostly irrelevant since touch does not produce continuous `mousemove` events — consider disabling the sync for touch contexts entirely
 
 **Warning signs:**
-- Body text paragraphs longer than 3 lines set in monospace
-- Line length exceeding 80 characters in monospace
-- Mobile users on sub-375px screens see text wrapping awkwardly
+- Chrome DevTools Performance panel shows repeated long tasks during elevation profile hover
+- Lighthouse TBT rises above 0ms after adding sync
+- Map visually lags 100–200ms behind cursor position on desktop
 
-**Phase:** Address in typography/design phase. This is a design decision that affects all content, not just a single component.
+**Phase:** Address when implementing map-elevation sync. Throttle must be in place before any performance testing.
 
-**Confidence:** MEDIUM — readability research on monospace for body text is well-established; specific numbers are from WCAG/typography guidelines confirmed via search.
+**Confidence:** HIGH — Leaflet canvas mousemove throttle behavior and 32ms internal throttle confirmed from Leaflet GitHub issue #9514; TBT impact of long tasks documented on web.dev.
 
 ---
 
-### Pitfall 6: LCP Image Not Preloaded — Slow Initial Paint on Mobile
+### Pitfall 20: Chart.js Custom Event Listeners Not Removed on Cleanup — Memory Leak
 
-**What goes wrong:** The hero section almost certainly contains the largest contentful element (a large atmospheric image or the map itself). If this image is not explicitly preloaded, browsers will discover it late in the parsing waterfall, causing LCP of 4–6 seconds on mobile connections.
+**What goes wrong:** To wire map-elevation sync, the developer adds `mousemove`, `mouseleave`, and `click` event listeners directly to the Chart.js canvas element. When the page is navigated away from or the chart is re-initialized (e.g., on resize or route data reload), the canvas is removed from the DOM but the listeners remain in memory, keeping references to the old Chart.js instance and the Leaflet map instance alive.
 
-**Why it happens:** Developers assume modern browsers are smart about prioritization. They are, but the browser must discover the hero image in the HTML before it can prioritize it. CSS backgrounds and JS-injected images are discovered even later.
+**Why it happens:** Chart.js's `.destroy()` method removes Chart.js's own internal event listeners but does not remove listeners the developer added manually to `chart.canvas`. If the canvas element reference is kept in a closure (as is common with the sync setup), the garbage collector cannot free those objects.
 
-**Consequences:** Slow LCP fails Core Web Vitals on mobile (threshold: 2.5 seconds). For a gravel event, many visitors arrive from Strava/Instagram links on mobile with variable LTE connections.
+**Consequences:** Over multiple re-initializations (e.g., user resizes window, chart is rebuilt), memory accumulates. On a single-page session, this may cause gradual slowdown. On a long session with Lighthouse open, the memory leak may surface as degraded scores over time.
 
 **Prevention:**
-- Add `<link rel="preload" as="image" href="/hero.webp">` in `<head>` for the above-fold hero image
-- Never set `loading="lazy"` on the above-fold/hero image (this is the single most common LCP mistake per the 2025 Web Almanac — 16% of pages still do this)
-- Serve hero images in WebP format with JPEG fallback
-- Compress images aggressively: a gravel photo at 1200px wide should be under 200KB
+- Store all manually added event listener functions as named references (not inline arrows) so they can be passed to `removeEventListener`
+- Remove all manually added listeners before calling `chart.destroy()` and before any chart re-initialization
+- Use an `AbortController` and pass its signal to all `addEventListener` calls — call `controller.abort()` to clean up all listeners at once
+- Example pattern:
+  ```javascript
+  const ac = new AbortController();
+  canvas.addEventListener('mousemove', handler, { signal: ac.signal });
+  // On cleanup:
+  ac.abort(); // removes all listeners registered with this controller
+  chart.destroy();
+  ```
 
 **Warning signs:**
-- Hero image not referenced in `<head>` — only in `<body>` or CSS
-- `loading="lazy"` on any above-fold image
-- Hero image larger than 400KB
+- Event listeners added as inline arrow functions: `canvas.addEventListener('mousemove', (e) => { ... })`
+- No cleanup code runs when the chart component is unmounted or resized
+- Chrome DevTools Memory tab shows Chart.js instances accumulating after window resize
 
-**Phase:** Address in initial site scaffolding before adding content. A late retrofit requires auditing all image usage.
+**Phase:** Address when implementing map-elevation sync. Build cleanup into the same code that registers listeners.
 
-**Confidence:** HIGH — verified by Google web.dev LCP documentation and the 2025 Web Almanac statistic on lazy-loaded LCP images.
+**Confidence:** HIGH — Chart.js `.destroy()` behavior documented in official Chart.js docs; AbortController pattern for listener cleanup is MDN-documented.
 
 ---
 
-### Pitfall 7: Dark Background with Insufficient Text Contrast
+### Pitfall 21: Strava Build-Time Fetch Counts Against Rate Limits — Daily Limit Hit by CI
 
-**What goes wrong:** Dark brutalist/psychedelic themes invite using near-black backgrounds with off-white, muted, or colored text. Creative color combinations (green-on-dark, cyan-on-navy, rust-on-black) often look great in design tools under ideal lighting but fail in direct sunlight — which is when cyclists are most likely reading the site.
+**What goes wrong:** Every Netlify deploy triggers the build-time Strava fetch. If a developer pushes many commits in a day during active development (iterating on the leaderboard display, fixing data pipeline bugs), each push triggers a deploy, each deploy calls the Strava segment leaderboard endpoint. At 2,000 requests/day (non-upload endpoints: 1,000/day), a busy development day can exhaust the daily limit mid-afternoon, causing all subsequent builds to fail.
 
-**Why it happens:** Design is done indoors on calibrated monitors. The audience reads it on phones in bright light or indirect glare.
+**Why it happens:** The rate limit is per-application, not per-deploy. Development activity is concentrated: 20 deploys * 5 API calls each = 100 requests consumed. In isolation that looks fine, but if the application also makes other Strava API calls (athlete data, multiple segment lookups), the budget disappears faster than expected.
 
-**Consequences:** Route descriptions, sector star ratings, and restock point info become unreadable in the field — exactly when users need them most.
+**Consequences:** Build failures for the rest of the day (or until midnight UTC reset). Stale leaderboard data in production if the build fails silently. Development velocity blocked until limits reset.
 
 **Prevention:**
-- Verify WCAG AA contrast (4.5:1 for body text, 3:1 for large text) for every text/background combination using a contrast checker
-- Do not exempt "decorative" or "atmospheric" text from contrast checks if it contains route information
-- Test specifically on OLED screens in "outdoor" brightness mode (many phones reduce contrast on OLED at full brightness)
-- Pure white (#FFFFFF) on pure black (#000000) has excellent contrast (21:1) but can cause halation/blooming on OLED — use near-white (#F5F5F5 or #E8E8E8) instead, which still passes at 18:1+
+- Cache the Strava API response in a JSON file committed to the repo (or stored in Netlify blob storage) with a timestamp; only re-fetch if the data is older than a configurable threshold (e.g., 24 hours)
+- Guard the fetch with an env variable: `STRAVA_FETCH_ENABLED=false` skips the API call during development builds and uses cached data
+- Count your expected API calls per deploy: segments * 1 leaderboard call + 1 token refresh = budget consumed per deploy
+- Set up rate limit monitoring by parsing `X-RateLimit-Usage` response headers and writing them to a build log
 
 **Warning signs:**
-- Colored text on dark colored background (e.g., `#7CFC00` on `#1A1A1A` — check it)
-- Font size below 14px for any informational text
-- Color combinations added without running a contrast check
+- API call happens unconditionally in the prebuild script
+- No local cache file checked before making API call
+- Multiple segments * multiple API calls per segment per deploy
 
-**Phase:** Address throughout design implementation. Run contrast checks as part of every component build.
+**Phase:** Address when building the Strava data fetch pipeline. Cache-first logic must be implemented before any CI/CD is wired.
 
-**Confidence:** HIGH — WCAG 2.1 guidelines are authoritative; outdoor screen readability context is verified via multiple design sources.
+**Confidence:** HIGH — rate limits (100 non-upload requests/15 min, 1,000/day for non-upload) verified from official Strava rate limits documentation.
 
 ---
 
-### Pitfall 8: Map Tile Attribution Removed or Obscured
+### Pitfall 22: Increasing Image Quality Without Checking Cumulative Bundle Impact
 
-**What goes wrong:** Removing or styling away the Leaflet/OpenStreetMap/Mapbox attribution text to keep the design clean violates the terms of service for every major tile provider. OpenStreetMap requires attribution. Mapbox requires its logo and attribution text to be visible.
+**What goes wrong:** The current thumbnails are 200px wide at q75. Increasing to 300px at q85 sounds modest — maybe 40–60% larger per image. But with 33 photos in the gallery grid, a 50% size increase per thumbnail multiplies to significant total page weight. The hero WebP and tone images also have their own quality budgets. The developer bumps quality numbers, runs a build, and doesn't notice the cumulative payload increase until Lighthouse flags it.
 
-**Why it happens:** The attribution is small, intrudes on the design, and sits in the corner — designers move it or set `opacity: 0` without thinking through the legal implications.
+**Why it happens:** Developers evaluate image quality changes per-image, not as a budget. A single thumbnail going from 18KB to 27KB feels trivial. Thirty-three thumbnails going from 594KB to 891KB in aggregate is a Lighthouse performance issue — especially on mobile, where image transfer weight heavily influences LCP and Total Byte Weight scores.
 
-**Consequences:** Terms of service violation. For Mapbox, this can result in account suspension. For OSM-based tiles, it violates the ODbL license.
+**Consequences:** Lighthouse Performance score degrades if total page weight crosses thresholds. TBT unaffected, but LCP and Speed Index can slip if image decode time increases. On slow mobile connections (which many cyclists use in rural Michigan), the visible load experience worsens.
 
 **Prevention:**
-- Style the attribution to fit the dark theme (change text color, background) but keep it legible and visible
-- Do not set `opacity: 0`, `display: none`, or `visibility: hidden` on attribution elements
-- If using Mapbox: their logo must remain visible
+- Establish a total image budget before changing quality settings: measure the current total size of all thumbnails and the hero image
+- Use Lighthouse or WebPageTest to get a baseline Total Byte Weight before any quality changes
+- When increasing quality, use Astro's `<Image>` component with explicit `width`, `quality`, and `format="webp"` — do not set quality globally; set it per image type
+- For thumbnails: favor width increase (more detail at same quality) over quality increase (diminishing returns above q75 for WebP)
+- For WebP specifically: q75 is already high quality; going above q80 produces visually indistinguishable results for photo thumbnails at the cost of meaningfully larger files
+- Measure after each change: `du -sh public/photos/thumbs/` before and after
 
 **Warning signs:**
-- `attributionControl: false` in map initialization
-- CSS targeting `.leaflet-control-attribution` with visibility or opacity properties
+- Quality increased without measuring total byte weight before and after
+- All 33 thumbnails regenerated without a size comparison
+- Lighthouse Total Byte Weight audit flags new weight warnings after deploy
 
-**Phase:** Address during map styling. Check every map theme/skin change against attribution visibility.
+**Phase:** Address in the image quality improvement phase. Always measure before and after; never change quality settings speculatively.
 
-**Confidence:** HIGH — verified directly from Mapbox and Leaflet/OSM terms of service.
+**Confidence:** MEDIUM — WebP quality tradeoffs and Astro image pipeline behavior verified from Astro official docs and web.dev image best practices; specific byte thresholds are approximations based on WebP compression characteristics.
 
 ---
 
-### Pitfall 9: GPX Elevation Data Inaccuracy Presented as Authoritative
+### Pitfall 23: Entrance Animations Delay LCP or Block Interaction — TBT Goes Nonzero
 
-**What goes wrong:** GPS devices (Garmin, Wahoo, Strava) record elevation via barometric altimeter or GPS altitude, both of which introduce error. Raw GPX elevation data for an 80-mile route can have cumulative elevation gain calculations that are 10–20% off from surveyed values. If you display "Total Gain: 8,420 ft" prominently, experienced cyclists will know it's wrong and distrust the site.
+**What goes wrong:** Adding "subtle" load animations (fade-in on scroll, entrance for hero text, stagger for sector cards) sounds safe. But if implemented as JavaScript-driven animations that start on `DOMContentLoaded` or as CSS animations on elements that contain the LCP candidate, they can delay when Lighthouse measures the Largest Contentful Paint. Worse, if the animation JavaScript blocks the main thread at startup (a long task), TBT goes from 0ms to measurable. The current site has TBT 0ms — this is extremely fragile.
 
-**Why it happens:** The GPX file contains `<ele>` values. It's tempting to parse them and display computed stats. The math is easy; the data is unreliable.
+**Why it happens:** CSS `animation` properties on the LCP image or hero element can delay when the element becomes "painted" from Lighthouse's perspective, especially if the animation starts the element at `opacity: 0` — Lighthouse may not measure LCP until the element reaches visible opacity. JavaScript animation libraries that load a large bundle (GSAP free is ~70KB, Framer Motion is ~140KB) add script parse/execution time.
 
-**Consequences:** Credibility damage with experienced riders who know what the actual elevation profile looks like. Worse, under-reporting elevation causes unprepared riders.
+**Consequences:** Lighthouse TBT rises above 0ms, scoring degrades. LCP may increase if the hero element starts invisible. The current score of 96 is in "good" territory; a TBT of 200ms would drop the score to approximately 85.
 
 **Prevention:**
-- Either use a DEM (Digital Elevation Model) service like GPXZ or Open Topo Data to correct GPX elevation against real terrain, or
-- Display elevation data with appropriate caveats (e.g., "approximate") and cross-reference against Strava/Komoot route data for the displayed values
-- Apply a smoothing filter before computing gain/loss — raw GPS elevation is noisy and cumulative sum of small errors vastly inflates or deflates totals
+- Implement entrance animations as pure CSS `transition` / `@keyframes` using only `transform` and `opacity` — these do not delay LCP measurement because they do not affect layout
+- Do NOT start the LCP hero image at `opacity: 0` with a CSS animation; the browser may not register the LCP paint until the element becomes visible
+- If JavaScript animation is needed, use the Web Animations API (`element.animate()`) which runs on the compositor thread — it does not add to TBT
+- Avoid adding third-party animation libraries (GSAP, Framer Motion, Anime.js) for "subtle" effects — the bundle cost is not justified; CSS handles all cases needed for this site
+- Run Lighthouse after adding each animation to confirm TBT stays at 0ms
 
 **Warning signs:**
-- Elevation gain computed directly from raw `<ele>` values without smoothing
-- Values that don't match the same route on Strava/RideWithGPS
+- Hero image or any LCP-candidate element starts with `opacity: 0` via CSS animation
+- JavaScript animation runs in a `DOMContentLoaded` or `load` handler on many elements simultaneously
+- Any new JS dependency over 5KB added for animation purposes
 
-**Phase:** Address when implementing route stats display. Do not ship unchecked elevation numbers.
+**Phase:** Address when adding animations. Run Lighthouse after every animation addition, not only at the end of the phase.
 
-**Confidence:** MEDIUM — GPXZ blog post on elevation accuracy confirms the issue; specific percentages are training data.
+**Confidence:** HIGH — LCP opacity-0 interaction documented in web.dev LCP guide; TBT threshold and Lighthouse scoring weights verified from Chrome Developers documentation.
 
 ---
 
-### Pitfall 10: CSS Animations Triggering Layout Reflow
+### Pitfall 24: Chart.js Crosshair Sync Plugin Version Incompatibility with Chart.js 4.x
 
-**What goes wrong:** Dark psychedelic designs invite dramatic CSS effects — animated backgrounds, glitch effects, parallax, pulsing elements. Implementing these by animating `top`, `left`, `width`, `height`, `margin`, or `background-position` triggers layout recalculation on every frame, causing dropped frames on mobile.
+**What goes wrong:** The most commonly cited crosshair plugin (`chartjs-plugin-crosshair`) was written for Chart.js 3.x. If the project uses Chart.js 4.x (which changed the plugin API), the crosshair plugin may silently fail to register, throw errors, or produce broken behavior. Issues in the plugin's GitHub confirm cross-version sync breakage exists.
 
-**Why it happens:** The visual effect works fine on a desktop GPU. Mobile GPUs and CPUs handle compositing differently, and layout-affecting animations are processed on the main thread.
+**Why it happens:** Chart.js 4.0 changed internal event handling. Plugins that accessed internal `_chart` properties or used the `Chart.plugins.register()` global registration API from v2/v3 break silently in v4.
 
-**Consequences:** Scroll jank, animation stuttering, battery drain, hot phone. Users on older phones will have a degraded experience of what's supposed to be an atmospheric design.
+**Consequences:** No crosshair draws on the elevation chart, meaning the entire map-elevation sync feature does not work. The bug may only surface after a dependency update — the plugin appears to work in initial testing but breaks after `npm update`.
 
 **Prevention:**
-- Animate only `transform` and `opacity` — these run on the compositor thread and never trigger layout reflow
-- For glitch effects: use `transform: translate()` and `clip-path` instead of positional properties
-- For parallax: use `transform: translateY()` not `top`/`margin`
-- Test animations with Chrome DevTools Performance panel on CPU throttling (6x slowdown simulates mid-range Android)
-- Use `will-change: transform` sparingly and intentionally on animated elements
+- Before choosing `chartjs-plugin-crosshair`, verify the currently installed Chart.js version in `package.json` and confirm that the plugin's README specifies compatible Chart.js versions
+- Alternatively, implement the crosshair as a custom Chart.js plugin (20–30 lines of code) using the `afterDraw` hook — this avoids any third-party version dependency entirely
+- If using the npm package, pin both Chart.js and the crosshair plugin versions and test together; do not allow independent updates
+- A custom plugin registered inline (not globally) is the safest approach for a site with a single chart
 
 **Warning signs:**
-- CSS animations on `background-position`, `top`, `left`, `width`, `height`, `margin`, `padding`
-- Scroll-linked animations that don't use `IntersectionObserver` or CSS scroll-timeline
-- Frame rate drops visible in DevTools during animation
+- `chartjs-plugin-crosshair` installed but crosshair not visible in browser
+- Console errors referencing `_chart` or `Chart.controllers`
+- Plugin README last updated more than 1 year ago
 
-**Phase:** Address during visual design implementation. Audit every animation property before shipping.
+**Phase:** Address at the start of the map-elevation sync implementation phase, before any sync logic is written.
 
-**Confidence:** HIGH — GPU compositing and layout reflow behavior is well-documented; verified via motion.dev animation tier list and MDN compositing documentation.
+**Confidence:** MEDIUM — Chart.js v3/v4 plugin API changes are documented; specific `chartjs-plugin-crosshair` v4 compatibility is confirmed from GitHub issue discussions but the plugin may have been updated since research.
 
 ---
 
 ## Minor Pitfalls
 
-Mistakes that degrade experience but are fixable without rewrites.
+Mistakes that are annoying but fixable without significant rework.
 
 ---
 
-### Pitfall 11: Custom Font FOUT Causing Layout Shift
+### Pitfall 25: Strava Segment Privacy — Public Route on Private Segment
 
-**What goes wrong:** The creepy display font loads after the page renders, causing the headline to flash from a fallback font (usually a system serif) to the custom font. This creates Cumulative Layout Shift (CLS) if the fonts have different metrics, pushing content down as the font swaps in.
+**What goes wrong:** The KOM segments on the MK Ultra Gravel route may be marked as private segments in Strava. Private segments are invisible to other users and invisible via the API, even with `read_all` scope on another user's behalf. The developer finds the segment on the organizer's Strava account but cannot retrieve it via API when using a different authenticated user.
 
 **Prevention:**
-- Use `font-display: swap` to show text immediately (FOUT is better than FOIT — invisible text)
-- Preload the display font: `<link rel="preload" href="/fonts/creepy.woff2" as="font" crossorigin>`
-- Define `size-adjust`, `ascent-override`, and `descent-override` in the `@font-face` fallback to match metrics of the fallback font to the custom font (reduces CLS to near-zero)
-- Self-host fonts — Google Fonts adds an external DNS lookup and round-trip before the font loads
+- Verify each KOM segment's privacy setting in Strava before designing the leaderboard integration
+- If segments are private, the organizer must make them public in their Strava settings before API access works
+- Alternatively, use segment effort data from the segment creator's account specifically, rather than fetching via a generic app OAuth flow
 
-**Phase:** Address during font setup in initial scaffolding.
+**Phase:** Address at the start of Strava integration planning.
 
-**Confidence:** HIGH — `font-display` and preloading are well-documented; `size-adjust` for fallback matching is a 2022+ CSS feature, confirmed by MDN.
-
----
-
-### Pitfall 12: GPX Download Filename as Generic "track.gpx"
-
-**What goes wrong:** When cyclists download the GPX, the browser names the file `track.gpx` or `export.gpx`. It lands in their downloads folder indistinguishable from 50 other GPX files. They can't find it when loading into their Garmin/Wahoo before the event.
-
-**Prevention:** Name the downloadable file `mk-ultra-gravel-2026.gpx`. Set the filename via the download link: `<a href="/route.gpx" download="mk-ultra-gravel-2026.gpx">`.
-
-**Phase:** Trivial fix — address when building the GPX download button.
-
-**Confidence:** HIGH — `download` attribute behavior is documented HTML spec behavior.
+**Confidence:** MEDIUM — private segment API behavior implied from Strava API reference and community discussions; specific privacy flag behavior is training data.
 
 ---
 
-### Pitfall 13: Photo Popups Containing Full-Resolution Images
+### Pitfall 26: Netlify Build Minutes Consumed by Heavy Prebuild Pipeline
 
-**What goes wrong:** Map photo popups open and load a 4MB JPEG directly in the popup. On cellular, this takes 5–10 seconds. Users assume the popup is broken.
+**What goes wrong:** The existing prebuild pipeline (GPX parsing, thumbnail generation via sharp, JSON generation) already runs on every deploy. Adding a Strava API fetch, a token refresh step, and potentially image processing for new photos increases build time. Netlify free tier allows 300 build minutes/month. A 3-minute build * 100 deploys/month = entire monthly allowance consumed.
 
 **Prevention:**
-- Serve two versions of each photo: a thumbnail (400px wide, <50KB WebP) for the popup preview, and a full version for optional "view large" link
-- Do not load any image until the popup is opened (lazy load within the popup)
-- Consider whether "view large" is even necessary for route-context photos
+- Profile the build time before and after adding new pipeline steps: `time npm run build` locally
+- Cache unchanged assets: sharp re-processes all images on every build unless an output cache is implemented; if the 33 photos are not changing, do not regenerate thumbnails on every deploy
+- Netlify's build cache can persist the `public/photos/thumbs/` directory across builds using `cache:` configuration in `netlify.toml`
+- Gate the Strava fetch behind a time check or manual trigger, not automatic on every deploy
 
-**Phase:** Address when implementing photo markers and popups.
+**Phase:** Address when adding new pipeline steps. Measure build time before and after each addition.
 
-**Confidence:** MEDIUM — general image loading best practices; specifics are training data.
-
----
-
-### Pitfall 14: BikeReg CTA Buried or Competing with Map
-
-**What goes wrong:** The interactive map is visually dominant. Visitors spend time exploring the route and never see or act on the registration CTA. Event organizers then wonder why traffic didn't convert.
-
-**Prevention:**
-- Place the BikeReg CTA both above the fold (before the map) and as a sticky element or repeated call-out below the map
-- Use high contrast for the CTA against the dark background — it must pop even in the psychedelic visual context
-- Minimum tap target of 48x48px on mobile (Apple HIG: 44x44, Google: 48x48)
-- Avoid "Register" as button copy — use something specific: "Sign Up for MK Ultra Gravel 2026"
-
-**Phase:** Address in layout/content phase. The map is an attraction; registration is the goal.
-
-**Confidence:** MEDIUM — event registration CTA patterns from web search; tap target sizes are documented Apple/Google guidelines.
+**Confidence:** MEDIUM — Netlify free tier build minutes (300/month) verified from Netlify pricing page; sharp re-processing behavior is training data.
 
 ---
 
-### Pitfall 15: Broken Sector/KOM Data When GPX Track and Manual Data Disagree
+### Pitfall 27: Map-Elevation Sync Broken on Mobile Touch — Hover Does Not Exist
 
-**What goes wrong:** You define 6 sectors and 3 KOM segments manually (start/end coordinates). The GPX track was recorded on a slightly different line or is slightly offset due to GPS drift. Sector markers don't land exactly on the route line, making the map look incorrect or confusing.
+**What goes wrong:** The entire map-elevation sync feature is designed around `mousemove` and `mouseenter` events on the Chart.js canvas. These events do not fire on mobile touch devices. A user on a phone sees the elevation chart, taps on a point, and nothing happens on the map. The feature silently does not exist for the majority of the site's visitors.
 
 **Prevention:**
-- Derive sector and KOM start/end points programmatically from the GPX track (snap to nearest trackpoint) rather than entering raw coordinates by hand
-- Or accept visual approximation and use map markers offset from the line with a connecting line/callout
-- Test the overlay at zoom levels cyclists will actually use (zoom 13–15)
+- After implementing `mousemove` sync, implement a parallel touch handler using `touchmove` on the chart canvas
+- Calculate the touch X position relative to the canvas and derive the corresponding elevation data point using the same logic as the mouse handler
+- Alternatively, implement the sync as a tap-to-highlight (not hover) — the user taps a point on the elevation chart and the map marker jumps to that location, then stays until another tap
+- Test on a real mobile device, not Chrome DevTools touch emulation, before shipping
 
-**Phase:** Address when implementing sector/KOM overlays on the map.
+**Phase:** Address when implementing map-elevation sync. Do not ship without touch support.
 
-**Confidence:** LOW — derived from GPS and map development experience; no authoritative source.
+**Confidence:** HIGH — mobile touch events vs mouse events distinction is documented browser behavior.
 
 ---
 
 ## Phase-Specific Warnings
 
+### v2.0 Phase Warnings
+
 | Phase Topic | Likely Pitfall | Mitigation |
 |-------------|----------------|------------|
-| Project scaffolding & map setup | Mapbox token without URL restrictions | Set URL restrictions before any other work |
-| GPX processing | Raw trackpoints freezing mobile | Simplify to 500–1000 points for display; keep original for download |
-| Photo markers | 33 DOM image nodes causing pan jank | Use Leaflet.markercluster from day one |
-| Map embedding | Mobile scroll hijacking | Add Leaflet.GestureHandling before testing on phone |
-| Route stats | Inaccurate elevation from raw GPS | Smooth or correct with DEM service before displaying numbers |
-| Typography implementation | Monospace fatigue on long text | Limit monospace to labels/headings, not paragraphs |
-| Dark design execution | Contrast failures on outdoor screens | Run WCAG contrast checks on every text combination |
+| Strava integration design | Client Secret in static build output | Use Netlify Functions scope; prefer build-time fetch with no secrets in browser |
+| Strava leaderboard endpoint | Free-tier subscriber restriction | Design around top-10 endpoint or link out; do not assume full leaderboard access |
+| Strava OAuth implementation | 6-hour token expiry causing silent build failures | Store refresh token; implement rotation; fail build loudly on 401 |
+| Strava API calls in CI | Rate limit exhaustion on busy dev days | Cache-first fetch; skip API call if cached data is fresh |
+| Strava segment visibility | Private segments invisible via API | Verify each segment's privacy setting before writing any API code |
+| Map-elevation sync | mousemove fires at 60Hz, blocks main thread | Throttle via rAF; use Chart.js `afterEvent` hook |
+| Map-elevation sync | Manual event listeners not cleaned up | Use AbortController; remove before chart.destroy() |
+| Map-elevation sync | Crosshair plugin version incompatibility | Verify Chart.js version compatibility; consider custom plugin |
+| Map-elevation sync | Touch events not wired | Implement touchmove handler in same phase as mousemove |
+| Entrance animations | LCP element starts at opacity:0 | Never animate LCP candidate from invisible; use transform/opacity only |
+| Entrance animations | TBT goes nonzero from JS animation | Prefer CSS animations; Web Animations API if JS needed; run Lighthouse after each |
+| Image quality increase | Cumulative byte weight not measured | Establish budget baseline; measure before and after every quality change |
+| Build pipeline additions | Netlify build minutes exceeded | Profile build time; cache thumbnails; gate Strava fetch on freshness check |
+
+### Retained v1.0 Phase Warnings
+
+| Phase Topic | Likely Pitfall | Mitigation |
+|-------------|----------------|------------|
+| Mobile scroll behavior | Leaflet scroll trap | gestureHandling: true from first map commit |
+| GPX rendering | Trackpoint density freezing mobile | Simplify to 500–1000 points for display |
+| Photo markers | 33 DOM image nodes causing pan jank | Leaflet.markercluster from day one |
+| Map attribution | Removed for design cleanliness | Style to match dark theme; do not hide |
+| Dark design execution | Contrast failures on outdoor screens | WCAG checks on every text combination |
 | Animations / visual effects | Layout reflow on mobile | Animate only transform and opacity |
 | Font loading | FOUT causing layout shift | Preload fonts, use size-adjust on fallback |
-| Hero/above-fold | Slow LCP on mobile | Preload hero image, no lazy-load on above-fold |
-| BikeReg integration | CTA buried under map | Place CTA before AND after map; make it persistent |
-| GPX download | Generic filename | Use download attribute with descriptive filename |
-| Map attribution | Removed for design cleanliness | Keep attribution; style it to match dark theme |
+| Hero / above-fold | Slow LCP on mobile | Preload hero image; no lazy-load above fold |
 
 ---
 
 ## Sources
 
-- Leaflet scroll hijacking: [Leaflet GitHub Discussion #8129](https://github.com/Leaflet/Leaflet/discussions/8129), [Issue #4051](https://github.com/Leaflet/Leaflet/issues/4051), [Issue #4677](https://github.com/Leaflet/Leaflet/issues/4677), [Leaflet.GestureHandling](https://elmarquis.github.io/Leaflet.GestureHandling/)
-- Mapbox security: [How to use Mapbox securely](https://docs.mapbox.com/help/troubleshooting/how-to-use-mapbox-securely/), [Mapbox token abuse research](https://blogs.jsmon.sh/mapbox-tokens/)
-- Mapbox performance: [Improve Mapbox GL JS performance](https://docs.mapbox.com/help/troubleshooting/mapbox-gl-js-performance/), [Working with large GeoJSON](https://docs.mapbox.com/help/troubleshooting/working-with-large-geojson-data/)
-- LCP and image loading: [Optimize LCP — web.dev](https://web.dev/articles/optimize-lcp), [Core Web Vitals 2025](https://systemsarchitect.net/core-web-vitals-2025/)
-- Font loading: [font-display guide](https://font-converters.com/guides/font-loading-strategies), [Font performance — DebugBear](https://www.debugbear.com/blog/website-font-performance)
-- Animation performance: [Web Animation Performance Tier List — motion.dev](https://motion.dev/magazine/web-animation-performance-tier-list), [CSS Animation GPU Techniques](https://www.usefulfunctions.co.uk/2025/11/08/css-animation-performance-gpu-acceleration-techniques/)
-- Contrast and dark design: [Brutalist Web Design principles](https://brutalist-web.design), [Neobrutalism best practices — NN/g](https://www.nngroup.com/articles/neobrutalism/)
-- GPX elevation accuracy: [GPXZ elevation accuracy](https://www.gpxz.io/blog/gpx-file-elevation-accuracy)
-- Event CTA mistakes: [Event registration landing page tips — Guidebook](https://blog.guidebook.com/mobile-guides/event-registration-landing-page-tips/)
+### HIGH confidence (verified from official documentation)
+
+- Strava rate limits: [Rate Limits — Strava Developers](https://developers.strava.com/docs/rate-limits/)
+- Strava segment restrictions: [Changes to the Segments API — Strava Developers](https://developers.strava.com/docs/segment-changes/)
+- Strava OAuth scopes and token expiry: [Getting Started — Strava Developers](https://developers.strava.com/docs/getting-started/), [OAuth Updates — Strava Developers](https://developers.strava.com/docs/oauth-updates/)
+- Netlify environment variable security and function scoping: [Environment Variables — Netlify Docs](https://docs.netlify.com/build/environment-variables/overview/), [Secrets Controller — Netlify Docs](https://docs.netlify.com/build/environment-variables/secrets-controller/)
+- Non-composited animations and Lighthouse: [Avoid non-composited animations — Chrome for Developers](https://developer.chrome.com/docs/lighthouse/performance/non-composited-animations)
+- TBT and Lighthouse scoring: [Total Blocking Time — web.dev](https://web.dev/articles/tbt)
+- Compositor-only properties (transform, opacity): [CSS GPU Animation — Smashing Magazine](https://www.smashingmagazine.com/2016/12/gpu-animation-doing-it-right/)
+- Chart.js event listener cleanup and `.destroy()`: [Chart.js Plugins documentation](https://www.chartjs.org/docs/latest/developers/plugins.html)
+- Leaflet canvas mousemove throttle: [Leaflet GitHub Issue #9514](https://github.com/Leaflet/Leaflet/issues/9514)
+
+### MEDIUM confidence (verified from official source + corroborating sources)
+
+- Astro image quality and WebP tradeoffs: [Astro Image and Assets API Reference](https://docs.astro.build/en/reference/modules/astro-assets/)
+- Chart.js crosshair plugin version compatibility: [chartjs-plugin-crosshair GitHub](https://github.com/AbelHeinsbroek/chartjs-plugin-crosshair), [sync issue #95](https://github.com/AbelHeinsbroek/chartjs-plugin-crosshair/issues/95)
+- Strava private segment API behavior: Strava API reference + community discussions
+- Netlify build minutes and thumbnail caching: [Netlify caching overview](https://docs.netlify.com/build/caching/caching-overview/)
+
+---
+
+*Research completed: 2026-03-27*
+*Scope: v2.0 pitfalls only (Pitfalls 16–27). v1.0 pitfalls (1–15) remain in file above the --- marker.*

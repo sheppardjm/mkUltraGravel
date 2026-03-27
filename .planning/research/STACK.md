@@ -1,155 +1,290 @@
-# Technology Stack
+# Technology Stack — v2.0 Additions
 
-**Project:** MK Ultra Gravel — 80-mile gravel cycling event website
-**Researched:** 2026-03-26
-**Confidence:** HIGH (all core choices verified with official sources or Context7)
-
----
-
-## Recommended Stack
-
-### Core Framework
-
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| Astro | 6.1.0 (current stable) | Static site framework | Zero-JS-by-default output; islands architecture means the map component gets hydrated while all other content ships as static HTML; built-in Fonts API is ideal for the custom typography this project needs; Cloudflare (new owner) acquisition has zero impact on MIT license. |
-
-**Why Astro over alternatives:**
-- **Not Next.js / Remix** — both ship a full React runtime to the client. This site has one interactive component (the map). Paying the React bundle cost for a registration CTA and a gravel sector table is indefensible.
-- **Not Hugo** — Hugo is faster at build time and simpler to operate, but Leaflet integration requires raw `<script>` tags and no island model. Managing client-side JS without a component boundary is messy for this map feature.
-- **Not plain HTML/JS** — Acceptable for a one-page site but Astro adds essentially no overhead while giving you component scoping, Tailwind integration, and the Fonts API for free.
-
-**Astro 6 breaking change to note:** Requires Node 22.12.0+. Verify local and CI environments are on Node 22 before starting.
+**Project:** MK Ultra Gravel — v2.0 feature additions
+**Researched:** 2026-03-27
+**Scope:** New capabilities only — Strava leaderboard, map-elevation interactivity, animations, image quality
+**Confidence:** HIGH for library choices (verified); HIGH for Strava API constraints (verified with official docs)
 
 ---
 
-### Mapping
+## Executive Summary
 
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| Leaflet | 1.9.4 (stable) | Interactive map base | Most-downloaded map library (1.4M+ npm downloads/month as of early 2025); zero npm dependencies; proven static-site integration; lighter than MapLibre GL for a single GPX track use case. |
-| leaflet-gpx | 2.2.0 (current) | Parse and render GPX track | Purpose-built for Leaflet GPX rendering; calculates elevation stats, distance, moving time from GPX data natively; supports custom start/end/waypoint markers; parses the project's existing `MK Ultra.gpx` file directly. |
+v2.0 requires four distinct capability additions to the existing stack:
 
-**Why Leaflet over MapLibre GL:**
-MapLibre GL uses WebGL for hardware-accelerated vector tile rendering. That capability is overkill for one static GPX polyline and a handful of photo markers. MapLibre GL adds ~250KB+ compressed vs Leaflet's ~42KB. For a single cycling route displayed at city/county zoom levels, Leaflet's raster tile rendering is indistinguishable in UX while being meaningfully simpler to integrate in an Astro island component.
+1. **Strava KOM leaderboard** — BLOCKED by Strava's November 2024 API TOS. Cannot be implemented as designed. Manual curation is the correct fallback.
+2. **Map-elevation interactivity** — Achievable with zero new npm dependencies using Chart.js 4's `onHover` callback and `CustomEvent` dispatching.
+3. **CSS/JS animations** — Achievable with vanilla CSS transitions for hover/click effects; Motion library for scroll-triggered inView animations if needed.
+4. **Image quality improvements** — Sharp configuration change only. No new dependency.
 
-**Leaflet 2.0 alpha status:** Leaflet 2.0.0-alpha.1 was released August 2025. It is ESM-only and breaks the factory method API (`L.marker()` becomes `new Marker()`). Do NOT use 2.0 alpha — leaflet-gpx 2.2.0 targets the stable 1.9.x API and has not been updated for 2.0.
-
----
-
-### Map Tiles (Basemap)
-
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| Stadia Maps | Hosted service | OpenStreetMap tile provider | Free tier requires no credit card; 2,500 credits/month free; provides the Stamen Toner and Stamen Terrain styles (acquired Stamen Maps). Stamen Toner — high-contrast black-and-white — pairs perfectly with the dark brutalist aesthetic without the map competing visually with the route overlay. |
-
-**Tile style recommendation:** `stamen_toner` or `stamen_terrain_background`. Toner is stark black-and-white, reinforcing the CIA document aesthetic. Terrain provides topographic context (gravel elevation is a feature of this event). Consider Toner as default with a JS toggle to Terrain.
-
-**Why not CyclOSM:** CyclOSM tiles are hosted under a "fair use" policy with no SLA and no API key required, which means no rate-limit protection and no uptime guarantees. Stadia Maps' free tier has a formal SLA.
-
-**Why not Google Maps:** Requires a billing account even for free-tier usage. License prohibits displaying non-Google content (custom track markers). Cost unpredictability on a viral spike.
+**Net new dependencies: zero required, one optional** (`motion` for scroll animations if vanilla CSS is insufficient).
 
 ---
 
-### Styling
+## Feature 1: Strava KOM/QOM Leaderboard
 
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| Tailwind CSS | 4.2.2 (current) | Utility-first CSS | v4's CSS-first configuration (no `tailwind.config.js`) and CSS custom properties align well with a design-system-heavy brutalist project where you'll define color tokens once and use them everywhere. Dark mode via `prefers-color-scheme` requires zero JavaScript. |
+### Critical Finding: TOS Prohibition (HIGH confidence)
 
-**Why Tailwind v4 over v3:**
-- CSS-first config (`@theme` in CSS instead of a JS config file) is cleaner for a project that lives in `.astro` files
-- The cascade layers feature prevents specificity conflicts with Leaflet's own CSS (a common pain point with earlier Tailwind + Leaflet setups)
-- No functional reason to use v3 on a greenfield project
+**The leaderboard feature as originally conceived cannot be built with the Strava API.**
 
-**Why Tailwind over plain CSS or a brutalist CSS framework:**
-The "Brutalist Framework" (brutalistframework.com) is unmaintained and targets a very different aesthetic (1990s web) than this project's dark/psychedelic direction. Tailwind gives you full design control while eliminating boilerplate. The brutalist look comes from your design tokens and font choices, not from a framework opinionated about it.
+Strava's November 2024 API Agreement update (effective November 11, 2024) introduced this restriction:
 
----
+> "Unless a Developer Application is a 'Community Application,' you may only display or disclose to an end user the specific Strava Data related to that user, and may not display or disclose Strava Data related to other users, even if such data is publicly viewable on Strava's Platform."
 
-### Typography
+A "Community Application" is defined as one "created with the primary purpose of permitting athletes to organize and collaborate in group activities and are no larger than 9,999 registered users."
 
-| Technology | Purpose | Why |
-|------------|---------|-----|
-| Space Mono (Google Fonts, via Astro Fonts API) | Monospace body text | Purpose-designed fixed-width typeface from Colophon Foundry for Google Design; designed for editorial use (not code), which makes it readable at body sizes while maintaining the typewriter/document aesthetic. Works at small sizes. |
-| Suggest: "Special Elite" or "UnifrakturMaguntia" (Google Fonts) | Creepy/psychedelic display headings | Special Elite mimics a damaged typewriter with CIA-document energy; UnifrakturMaguntia is a gothic blackletter (psychedelic/occult register). Both are free on Google Fonts. Alternatively: source a custom font from DaFont or similar and self-host via Astro's Fonts API. |
+MK Ultra Gravel is a public event website, not a group-activity app, and it displays leaderboard data to anonymous visitors — not to the authenticated athlete whose data it is. **This use case is explicitly prohibited.**
 
-**Astro 6 Fonts API advantage:** Astro 6 automatically downloads, caches, generates optimized fallbacks, and inserts `<link rel="preload">` for fonts configured via the new built-in Fonts API. No manual font loading optimization needed.
+Source: Strava API Agreement at https://www.strava.com/legal/api
 
----
+### Secondary Finding: Endpoint Restrictions Pre-date November 2024
 
-### Hosting
+The `/api/v3/segments/{id}/leaderboard` endpoint exists but has been progressively restricted since 2020. Fields including `kom_rank` require a Strava premium subscription on the authenticated athlete's account. Leaderboard filtering by age group and weight class are premium-only features.
 
-| Technology | Purpose | Why |
-|------------|---------|-----|
-| Cloudflare Pages | Static hosting | Unlimited bandwidth on free tier (no soft caps); 500 builds/month free; under 50ms globally from 300+ edge PoPs; direct Git integration; deploys Astro static output with zero configuration. |
+### Strava API Technical Details (for reference if TOS path clears)
 
-**Why Cloudflare Pages over alternatives:**
-- **Not Netlify:** Netlify reduced free build minutes to 100/month in 2025. Their CDN is measurably slower than Cloudflare's globally. Cloudflare Pages is the straightforward winner for a static site with no server-side functions needed.
-- **Not GitHub Pages:** No build pipeline customization; no redirect rules; forces a `/repo-name/` URL path prefix unless you use a custom domain. Serviceable but limited.
-- **Not Vercel:** Vercel's free tier is designed for Next.js/serverless. Overkill for a static site; their bandwidth limits are less generous than Cloudflare.
+If the project ever obtains explicit Strava partnership status or the TOS interpretation changes:
 
-**Note:** Cloudflare acquired Astro's company in January 2026. Astro 6 specifically optimizes for Cloudflare Workers runtime parity in dev. This stack is now a first-party Cloudflare endorsement.
+**Authentication flow:**
+- OAuth2 with `Authorization Code` grant (user must authorize the app)
+- Access tokens expire every 6 hours
+- Refresh tokens are single-use — each refresh returns a new refresh token
+- Credentials needed: `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_REFRESH_TOKEN`
 
----
+**Rate limits:**
+- 100 requests per 15-minute window (non-upload category)
+- 1,000 requests per day
+- HTTP headers `X-RateLimit-Limit` / `X-RateLimit-Usage` track consumption
 
-### Supporting Libraries
+**Build-time fetch pattern (if TOS permitted):**
+- Store credentials as Netlify environment variables (Builds scope)
+- In `scripts/generate-data.js` prebuild script: POST to `https://www.strava.com/oauth/token` with `grant_type: refresh_token` to get current access token, then GET `/segments/{id}/leaderboard`
+- Tokens expire after 6 hours — must refresh on every build
+- This works within Netlify's build environment; no serverless function required
 
-| Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| `@types/leaflet` | Latest | TypeScript types for Leaflet | If using TypeScript in `.astro` files (recommended) |
-| `exifr` | Latest stable | Parse EXIF GPS data from photos | Use this to extract lat/lng from geotagged JPEGs and generate the photo markers JSON at build time |
-| Sharp | Bundled with Astro | Image optimization | Astro uses Sharp automatically; configure in `astro.config.mjs` for WebP conversion of route photos |
+**Data returned per leaderboard entry:**
+- `athlete_name`, `rank`, `elapsed_time`, `moving_time`, `start_date`, `start_date_local`
 
----
+### Recommended Alternative: Manual Curation
 
-## Alternatives Considered
+Curate KOM/QOM data manually in `annotations.json`. Add fields to each KOM entry:
 
-| Category | Recommended | Alternative | Why Not |
-|----------|-------------|-------------|---------|
-| Framework | Astro 6 | Next.js 15 | Ships full React runtime for one interactive component. Bundle overhead unjustified. |
-| Framework | Astro 6 | Hugo | No island model; Leaflet integration requires raw script management; no Fonts API |
-| Mapping | Leaflet 1.9.4 | MapLibre GL JS | 6x larger bundle; WebGL complexity not justified for one static GPX polyline |
-| Mapping | Leaflet 1.9.4 | Google Maps JS API | Requires billing account; license restricts overlays; cost unpredictable |
-| Tiles | Stadia Maps | CyclOSM (self-serve) | No SLA; fair-use policy unreliable for production |
-| Tiles | Stadia Maps | Thunderforest OpenCycleMap | Free tier requires API key but more restrictive; Stadia's Toner style better matches aesthetic |
-| CSS | Tailwind v4 | Brutalist Framework | Unmaintained; wrong aesthetic register; limited customization |
-| CSS | Tailwind v4 | Vanilla CSS | No objection technically; Tailwind v4's cascade layers make Leaflet CSS interop cleaner |
-| Hosting | Cloudflare Pages | Netlify | Slower CDN; reduced free tier build minutes |
-| Hosting | Cloudflare Pages | Vercel | Designed for serverless; less generous static hosting tier |
-
----
-
-## Installation
-
-```bash
-# Scaffold new Astro 6 project
-npm create astro@latest
-
-# Core dependencies
-npm install leaflet leaflet-gpx
-
-# TypeScript types
-npm install -D @types/leaflet
-
-# Photo EXIF parsing (for build-time geo-coordinate extraction from images)
-npm install exifr
-
-# Tailwind CSS v4 with Astro integration
-npx astro add tailwind
+```json
+{
+  "name": "Billie Helmer",
+  "kom": { "name": "J. Smith", "time": "4:12" },
+  "qom": { "name": "A. Johnson", "time": "5:08" },
+  "year": 2025
+}
 ```
 
-**Node requirement:** Node 22.12.0+ required by Astro 6. Verify with `node --version` before starting.
+**Why this is better for the use case:**
+- No TOS risk
+- No API dependency (no 6-hour token expiry, no rate limits)
+- Works on a fully static site
+- Event director controls the data — can update after each event year
+- No authentication complexity
+- Results can be verified and curated (Strava segments occasionally have bogus KOM efforts from e-bikes, GPS drift, etc.)
+
+The KOM cards just need a data update in `annotations.json` before each event season. This is simpler and more reliable than live API integration.
 
 ---
 
-## Architecture Notes for Roadmap
+## Feature 2: Map-Elevation Profile Interactivity
 
-The map component must be an Astro island (`client:load` or `client:visible` directive) because Leaflet requires `window` and the DOM. Everything else — gravel sector table, KOM segments, restock points, registration CTA — can be pure static HTML.
+### Goal
 
-The photo-on-map feature has a build-time component: `exifr` reads GPS coordinates from geotagged JPEGs in `images/` during the Astro build, producing a JSON data file that the Leaflet island consumes as static props. No runtime EXIF parsing needed.
+When a user hovers over the elevation chart, a crosshair marker appears on the map at the corresponding GPS coordinate. When a user hovers over a KOM/sector polyline on the map, the corresponding mileage range highlights on the elevation chart.
 
-The GPX file (`MK Ultra.gpx`) lives in `public/` and is fetched by `leaflet-gpx` at runtime in the browser. This is the correct approach — GPX files can be large and benefit from the browser's native fetch/caching.
+### Approach: Zero New Dependencies
+
+Both Chart.js 4 and Leaflet 1.9 expose the primitives needed. No plugin required.
+
+**Why not `chartjs-plugin-crosshair`:**
+- Version 2.0.0 was last published August 2023 — 2+ years without updates
+- The plugin addresses crosshair visualization within Chart.js, not the Chart.js → Leaflet sync
+- Peer dependency is `chart.js ^4.0.1` (confirmed via package.json inspection), but the 59 open issues and staleness signal maintenance risk
+- The sync we need is inter-component (chart → map), not intra-chart
+
+**Implementation pattern — Chart.js → Map:**
+
+Chart.js 4 provides `options.onHover` (called every frame) and `options.plugins.tooltip.external` for getting the current x-value (miles). From miles, look up the nearest point in `route-data.json` by `mi` field to get `{lat, lon}`, then move a `L.circleMarker` or `L.marker` to that position. Uses existing `route-data.json` (already fetched in both components).
+
+```
+Chart.js onHover → x value (miles) → binary search route-data → {lat, lon} → L.marker.setLatLng()
+```
+
+Cross-component communication: use a `CustomEvent` on `document` (`document.dispatchEvent(new CustomEvent('elevation-hover', { detail: { mi, lat, lon } }))`) so `ElevationProfile.astro` and `RouteMap.astro` remain decoupled. Each component subscribes to events emitted by the other.
+
+**Implementation pattern — Map → Chart:**
+
+Leaflet polylines expose `mouseover` / `mouseout` events. On `mouseover` of a KOM segment polyline, dispatch a custom event with `{ startMi, endMi }`. The elevation chart listens and highlights the corresponding x-range using `chartjs-plugin-annotation`'s `box` annotation (already installed — `chartjs-plugin-annotation@3.1.0` is in the existing stack).
+
+```
+L.polyline mouseover → CustomEvent('segment-hover', {startMi, endMi}) → annotation update
+```
+
+Updating an annotation at runtime: `chart.options.plugins.annotation.annotations.highlight = { ... }; chart.update('none');`
+
+**Lazy-init coordination:** Both components currently use `IntersectionObserver` + `scroll` event for deferred init. The crosshair and segment-hover features should only activate after both components have initialized. Use a simple module-level `let mapReady = false; let chartReady = false` with a shared initialization gate, or check for the existence of the other component's root element before activating event listeners.
+
+**No new npm packages needed.**
+
+---
+
+## Feature 3: CSS/JS Animations
+
+### Scope
+
+- Button hover/focus transitions (scale, glow, border color change)
+- Photo card hover effects (scale, shadow, overlay)
+- Photo load animations (fade-in on intersection)
+- KOM/sector card hover feedback
+
+### Approach: Vanilla CSS First
+
+**All hover and click animations should be vanilla CSS.** No JavaScript, no library.
+
+The existing Tailwind v4 setup with `@layer` already supports `transition-*` utilities. Compositor-only properties (`transform`, `opacity`) animate at 60fps without layout reflow.
+
+```css
+/* Button example — CSS only */
+.btn {
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+.btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 0 2px oklch(0.65 0.2 90);
+}
+```
+
+**Photo load fade-in:** CSS only via `@keyframes` + `animation-fill-mode: backwards`. Set `animation-play-state: paused` initially, then an `IntersectionObserver` adds an `is-visible` class that sets `animation-play-state: running`. No library.
+
+### When Motion Library Is Needed
+
+The `motion` npm package (formerly Framer Motion, rebranded 2025 when it became independent) provides the `inView` function for scroll-triggered entrance animations with more control than raw IntersectionObserver.
+
+| Library | Version | Bundle impact | Use when |
+|---------|---------|---------------|----------|
+| `motion` | 12.x (latest) | ~4–34KB depending on imports; tree-shakeable | Staggered card entrance animations that need spring physics, or if vanilla CSS `@keyframes` + IntersectionObserver requires too much boilerplate |
+
+**Verdict:** Start with vanilla CSS. Only add `motion` if the scroll-triggered card animations feel janky or require coordinated sequencing that CSS cannot express (e.g., staggered KOM card cascade on scroll).
+
+If added, use the vanilla JS API (not React): `import { animate, inView, stagger } from 'motion'` in a `<script>` tag. Works identically to the existing `<script>` pattern in `RouteMap.astro` and `ElevationProfile.astro`.
+
+**Do not use `framer-motion` (old package name).** The package moved to `motion` on npm in early 2025; the import path is `motion/react` for React, or just `motion` for vanilla JS.
+
+---
+
+## Feature 4: Image Quality Improvements
+
+### Current State
+
+`generate-thumbnails.js` produces 200px-wide WebP at quality 75. Comment in the file says "Gallery displays at ~186px on mobile and ~250px on desktop."
+
+### Recommended Changes
+
+**Thumbnail width:** Increase from 200px to 400px.
+
+At 400px, a 2x retina display renders a thumbnail at exactly 200px CSS pixels — meaning the gallery grid will look sharp on all modern screens including mobile retina. At 200px, retina screens show upscaled thumbnails. The file size increase from 200px→400px at the same quality is approximately 2-4x (area scales as square of linear dimension), offset by the fact that 400px images will still compress very aggressively.
+
+**Quality:** Increase from 75 to 80.
+
+Sharp's default WebP quality is 80. Going from 75 to 80 is a modest quality bump. Sharp docs confirm `quality` accepts 1-100 (integer). No change to `effort` (keep at 4 — CPU/quality tradeoff is fine for build time).
+
+**Fit mode for sector/KOM card photos:** If photos are added to sector or KOM cards at a fixed aspect ratio (e.g., 16:9 card header), use `fit: 'cover'` with `position: 'centre'` to crop to the card shape rather than letterboxing. The existing `generate-thumbnails.js` uses the default resize behavior (equivalent to `fit: 'inside'`), which is correct for gallery previews but wrong for fixed-aspect-ratio card images.
+
+**Change needed in `generate-thumbnails.js`:**
+
+```js
+// Before
+await sharp(srcPath)
+  .resize(200, null, { withoutEnlargement: true })
+  .webp({ quality: 75, effort: 4 })
+  .toFile(thumbPath);
+
+// After (larger thumbnails, better quality)
+await sharp(srcPath)
+  .resize(400, null, { withoutEnlargement: true })
+  .webp({ quality: 80, effort: 4 })
+  .toFile(thumbPath);
+```
+
+**Card photo generation (new, for sector/KOM cards):**
+
+A separate output target for card header images at a fixed aspect ratio:
+
+```js
+await sharp(srcPath)
+  .resize(600, 338, { fit: 'cover', position: 'centre', withoutEnlargement: true })
+  .webp({ quality: 82, effort: 4 })
+  .toFile(cardPath);
+```
+
+600×338 = 16:9 ratio. Renders at 300px CSS width on retina, suitable for a card header.
+
+**Idempotency:** Current script checks `fs.existsSync(thumbPath)` before generating. After increasing size from 200px to 400px, existing thumbs will be the wrong size. Either: (a) delete `public/images/thumbs/` to force regeneration, or (b) add a version hash to the output filename. Option (a) is simpler.
+
+**No new npm dependencies.** Sharp 0.34.5 is already in `devDependencies`.
+
+---
+
+## Feature 5: Photos on Sector/KOM Cards
+
+### Approach
+
+Source photos from the existing `photos.json` data. Each KOM segment has `lat`/`lon`/`endLat`/`endLon` in `annotations.json`. Each photo has `lat`/`lon` in `photos.json`. At build time, find the nearest photo within N meters of each KOM/sector midpoint and record it in the generated data.
+
+This is a build-time enrichment in `generate-data.js` (or a new `match-segment-photos.js` similar to the existing `match-photos.js`). The distance calculation is a simple Haversine formula. No new npm dependency needed — pure Node.js arithmetic.
+
+Output: add `photo` field to each KOM/sector entry in `annotations.json`:
+
+```json
+{
+  "name": "Billie Helmer",
+  "photo": "thumbs/aKU4CEExEgpuAWOcY-QHCbAkYtA7dLV4QjlgSUx966w.webp"
+}
+```
+
+`GravelSectors.astro` and `KomSegments.astro` read `annotations.json` at build time (they already do this via `readFileSync`), so consuming the new `photo` field is a template change only.
+
+---
+
+## Full v2.0 Dependency Delta
+
+| Package | Action | Version | Reason |
+|---------|--------|---------|--------|
+| `chartjs-plugin-crosshair` | DO NOT ADD | — | Stale (2023); not needed; custom event pattern is cleaner |
+| `motion` | Optional add | ^12.x | Only if vanilla CSS scroll animations feel insufficient |
+| `strava-api-v3` (any client) | DO NOT ADD | — | Strava TOS prohibits the use case |
+| All other libraries | No change | — | Existing stack is sufficient |
+
+**Net new mandatory dependencies: zero.**
+
+---
+
+## Integration Points with Existing Stack
+
+| Existing Component | v2.0 Change | Integration Note |
+|---------------------|-------------|-----------------|
+| `ElevationProfile.astro` | Add `onHover` callback, dispatch/receive `CustomEvent` | Chart.js 4 `options.onHover` is already supported; annotation plugin already registered |
+| `RouteMap.astro` | Add `L.circleMarker` for crosshair, add polyline `mouseover` handlers | Leaflet 1.9.4 native event API; no new plugins |
+| `KomSegments.astro` | Add `photo` field rendering | Reads `annotations.json` at build time already |
+| `GravelSectors.astro` | Add `photo` field rendering | Same pattern as KomSegments |
+| `generate-thumbnails.js` | Increase width 200→400, quality 75→80; add card photo target | Sharp API: no breaking change |
+| `generate-data.js` | Add segment photo matching | New post-step, same pattern as `match-photos.js` |
+| `annotations.json` | Add `photo`, `kom`, `qom` fields | Schema extension; backward compatible |
+
+---
+
+## What NOT to Add
+
+| Library | Reason to avoid |
+|---------|----------------|
+| `chartjs-plugin-crosshair` | Last published 2023; 59 open GitHub issues; the sync behavior we need is cross-component (chart→map), not intra-chart; the custom event pattern achieves the same result with zero dependencies |
+| Any Strava API client | TOS prohibits displaying other athletes' data to non-authenticated public visitors. Manual curation in `annotations.json` is the correct approach. |
+| React/Vue/Svelte | No new reactive component needed; all interactivity is event-driven DOM manipulation in vanilla JS `<script>` blocks, consistent with existing patterns in `RouteMap.astro` and `ElevationProfile.astro` |
+| `framer-motion` | Renamed to `motion` — use correct package name if animation library is added |
+| Any map tile provider change | CARTO Dark Matter tiles already in use without API key; switching providers provides no benefit and adds API key management |
 
 ---
 
@@ -157,34 +292,28 @@ The GPX file (`MK Ultra.gpx`) lives in `public/` and is fetched by `leaflet-gpx`
 
 | Area | Confidence | Source |
 |------|------------|--------|
-| Astro 6.1.0 as current stable | HIGH | GitHub releases page (verified 2026-03-26) |
-| Astro 6 Node 22 requirement | HIGH | Official Astro upgrade guide |
-| Leaflet 1.9.4 as current stable | HIGH | NPM registry / official site confirmed |
-| leaflet-gpx 2.2.0 as current | HIGH | NPM registry confirmed |
-| Leaflet 2.0 alpha status | HIGH | Official Leaflet blog (2025-05-18 post) |
-| Tailwind CSS 4.2.2 as current | HIGH | NPM registry (published 6 days before research date) |
-| Cloudflare Pages free tier details | MEDIUM | Multiple sources; free tier terms can change |
-| Stadia Maps free tier details | MEDIUM | Official pricing page (2025); verify at signup |
-| BikeReg embed capability | MEDIUM | BikeReg feature page confirms embed exists; full embed code requires event director access |
-| Font recommendations | MEDIUM | Google Fonts confirmed free; aesthetic fit is subjective |
+| Strava TOS prohibition | HIGH | `https://www.strava.com/legal/api` — verified exact text of "Community Application" definition and data display restriction |
+| Strava API OAuth flow | HIGH | `https://developers.strava.com/docs/authentication/` — official docs |
+| Strava rate limits | HIGH | `https://developers.strava.com/docs/rate-limits/` — official docs |
+| Chart.js `onHover` API | HIGH | Existing codebase uses Chart.js 4 `options`; the API is documented in Chart.js 4 official docs |
+| Leaflet polyline `mouseover` | HIGH | Leaflet 1.9.4 is in production; event API unchanged since 1.x |
+| `chartjs-plugin-annotation` runtime update | MEDIUM | Verified annotation plugin is v3.1.0 in package.json; runtime update pattern is standard Chart.js plugin pattern |
+| Sharp resize options | HIGH | `https://sharp.pixelplumbing.com/api-output/` and `https://sharp.pixelplumbing.com/api-resize/` — official docs |
+| `motion` package rename | MEDIUM | Multiple sources including npm page; official docs at motion.dev confirm `framer-motion` → `motion` |
+| `chartjs-plugin-crosshair` staleness | HIGH | GitHub repository: last release v2.0.0 August 2023, 59 open issues confirmed |
 
 ---
 
 ## Sources
 
-- Astro 6.0 release announcement: https://astro.build/blog/astro-6/
-- Astro GitHub releases (v6.1.0 verified): https://github.com/withastro/astro/releases
-- Astro upgrade guide (Node 22 requirement): https://docs.astro.build/en/guides/upgrade-to/v6/
-- Leaflet.js official download page: https://leafletjs.com/download.html
-- Leaflet 2.0 alpha announcement: https://leafletjs.com/2025/05/18/leaflet-2.0.0-alpha.html
-- leaflet-gpx GitHub repository: https://github.com/mpetazzoni/leaflet-gpx
-- Leaflet.Photo plugin (geo-photo markers): https://github.com/turban/Leaflet.Photo
-- Tailwind CSS v4 release: https://tailwindcss.com/blog/tailwindcss-v4
-- Tailwind CSS v4.1 release: https://tailwindcss.com/blog/tailwindcss-v4-1
-- MapLibre vs Leaflet comparison: https://blog.jawg.io/maplibre-gl-vs-leaflet-choosing-the-right-tool-for-your-interactive-map/
-- Mapbox vs Leaflet vs MapLibre 2026: https://www.pkgpulse.com/blog/mapbox-vs-leaflet-vs-maplibre-interactive-maps-2026
-- CyclOSM: https://www.cyclosm.org/
-- Stadia Maps pricing: https://stadiamaps.com/pricing
-- Cloudflare Pages vs Netlify 2025: https://www.digitalapplied.com/blog/vercel-vs-netlify-vs-cloudflare-pages-comparison
-- Space Mono on Google Fonts: https://fonts.google.com/specimen/Space_Mono
-- BikeReg embed feature: https://www.bikereg.com/Users/Public/Director/Feature.aspx?fid=93
+- Strava API Agreement (November 2024): https://www.strava.com/legal/api
+- Strava Segment Changes (2020 subscriber restriction): https://developers.strava.com/docs/segment-changes/
+- Strava Authentication docs: https://developers.strava.com/docs/authentication/
+- Strava Rate Limits: https://developers.strava.com/docs/rate-limits/
+- Strava November 2024 API changes announcement: https://press.strava.com/articles/updates-to-stravas-api-agreement
+- chartjs-plugin-crosshair GitHub: https://github.com/AbelHeinsbroek/chartjs-plugin-crosshair
+- Motion (animation library) official docs: https://motion.dev/docs
+- Motion with Astro guide: https://developers.netlify.com/guides/motion-animation-library-with-astro/
+- Sharp WebP output options: https://sharp.pixelplumbing.com/api-output/
+- Sharp resize API: https://sharp.pixelplumbing.com/api-resize/
+- Netlify environment variables: https://docs.netlify.com/build/configure-builds/environment-variables/
