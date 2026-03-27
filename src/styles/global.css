@@ -6,8 +6,8 @@
 /* Tailwind v4 — CSS-first config, no tailwind.config.js */
 @import "tailwindcss";
 
-/* Leaflet CSS will be imported here in Phase 3:
-   @import "leaflet/dist/leaflet.css" layer(leaflet); */
+@import "leaflet/dist/leaflet.css" layer(leaflet);
+@import "leaflet-gesture-handling/dist/leaflet-gesture-handling.css" layer(leaflet);
 
 /* Design tokens — dark brutalist palette + fonts */
 @theme {
