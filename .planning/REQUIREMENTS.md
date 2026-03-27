@@ -61,31 +61,31 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DATA-01 | — | Pending |
-| DATA-02 | — | Pending |
-| DATA-03 | — | Pending |
-| DATA-04 | — | Pending |
-| DATA-05 | — | Pending |
-| SYNC-01 | — | Pending |
-| SYNC-02 | — | Pending |
-| SYNC-03 | — | Pending |
-| SYNC-04 | — | Pending |
-| VIS-06 | — | Pending |
-| VIS-07 | — | Pending |
-| VIS-08 | — | Pending |
-| VIS-09 | — | Pending |
-| VIS-10 | — | Pending |
-| VIS-11 | — | Pending |
-| CONT-01 | — | Pending |
-| CONT-02 | — | Pending |
-| CONT-03 | — | Pending |
-| CONT-04 | — | Pending |
+| DATA-01 | Phase 11 | Pending |
+| DATA-02 | Phase 11 | Pending |
+| DATA-03 | Phase 11 | Pending |
+| DATA-04 | Phase 11 | Pending |
+| DATA-05 | Phase 11 | Pending |
+| VIS-06 | Phase 12 | Pending |
+| VIS-07 | Phase 12 | Pending |
+| VIS-08 | Phase 12 | Pending |
+| SYNC-01 | Phase 13 | Pending |
+| SYNC-02 | Phase 13 | Pending |
+| SYNC-03 | Phase 13 | Pending |
+| SYNC-04 | Phase 13 | Pending |
+| CONT-01 | Phase 14 | Pending |
+| CONT-02 | Phase 14 | Pending |
+| CONT-03 | Phase 14 | Pending |
+| CONT-04 | Phase 14 | Pending |
+| VIS-09 | Phase 15 | Pending |
+| VIS-10 | Phase 15 | Pending |
+| VIS-11 | Phase 15 | Pending |
 
 **Coverage:**
 - v2.0 requirements: 19 total
-- Mapped to phases: 0
-- Unmapped: 19 (pending roadmap)
+- Mapped to phases: 19
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-27*
-*Last updated: 2026-03-27 after initial definition*
+*Last updated: 2026-03-27 — traceability mapped to Phases 11-15*
