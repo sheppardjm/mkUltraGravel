@@ -20,6 +20,16 @@
     background: transparent !important;
     border: none !important;
   }
+
+  :global(.photo-marker) {
+    background: transparent !important;
+    border: none !important;
+  }
+
+  :global(.photo-cluster) {
+    background: transparent !important;
+    border: none !important;
+  }
 </style>
 
 <script>
@@ -29,6 +39,9 @@
   // Wire GestureHandling BEFORE map init — addInitHook must be called before L.map()
   const { GestureHandling } = await import('leaflet-gesture-handling');
   L.Map.addInitHook('addHandler', 'gestureHandling', GestureHandling);
+
+  // markercluster — side-effect import; attaches L.markerClusterGroup() to window.L
+  await import('leaflet.markercluster');
 
   // Initialize map with gestureHandling enabled
   const map = L.map('map', { gestureHandling: true });
@@ -40,10 +53,11 @@
     maxZoom: 20
   }).addTo(map);
 
-  // Fetch route data and annotations in parallel
-  const [routeData, annotations] = await Promise.all([
+  // Fetch route data, annotations, and photos in parallel
+  const [routeData, annotations, photos] = await Promise.all([
     fetch('/data/route-data.json').then(r => r.json()),
-    fetch('/data/annotations.json').then(r => r.json())
+    fetch('/data/annotations.json').then(r => r.json()),
+    fetch('/data/photos.json').then(r => r.json())
   ]);
   const latlngs = routeData.map((pt: { lat: number; lon: number }) => [pt.lat, pt.lon] as [number, number]);
   const routeLine = L.polyline(latlngs, {
@@ -143,4 +157,42 @@
       .bindPopup(`<strong>${stop.name}</strong><br>Mile ${stop.mi}`, { className: 'dark-popup' })
       .addTo(map);
   });
+
+  // Photo markers with clustering — MAP-06: geolocated photos are the primary differentiator
+  const photoIcon = L.divIcon({
+    className: 'photo-marker',
+    html: '<div style="width:10px;height:10px;background:#22d3ee;border:2px solid #fff;border-radius:2px;"></div>',
+    iconSize: [14, 14],
+    iconAnchor: [7, 7],
+    popupAnchor: [0, -10]
+  });
+
+  const photoMarkers = photos.map((photo: { filename: string; lat: number; lon: number }) =>
+    L.marker([photo.lat, photo.lon], { icon: photoIcon })
+      .bindPopup(
+        `<a href="/images/${photo.filename}" target="_blank" rel="noopener">` +
+        `<img src="/images/${photo.filename}" width="180" style="display:block;border-radius:2px;" loading="lazy">` +
+        `</a>`,
+        { className: 'dark-popup', maxWidth: 220 }
+      )
+  );
+
+  const photoCluster = (L as any).markerClusterGroup({
+    maxClusterRadius: 60,
+    spiderfyOnMaxZoom: true,
+    showCoverageOnHover: false,
+    zoomToBoundsOnClick: true,
+    iconCreateFunction: (cluster: any) => {
+      const count = cluster.getChildCount();
+      return L.divIcon({
+        className: 'photo-cluster',
+        html: `<div style="width:32px;height:32px;background:oklch(0.18 0.01 250);border:2px solid #22d3ee;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:#22d3ee;font-family:monospace;">${count}</div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+    }
+  });
+
+  photoCluster.addLayers(photoMarkers);
+  map.addLayer(photoCluster);
 </script>
