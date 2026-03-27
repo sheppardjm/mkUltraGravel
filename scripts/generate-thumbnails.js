@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
  * Thumbnail generator for photo gallery.
- * Reads public/data/photos.json, generates 600px-wide WebP thumbnails
+ * Reads public/data/photos.json, generates 400px-wide WebP thumbnails
  * from each full-size image, and writes width/height back to photos.json.
  *
  * Thumbnails written to: public/images/thumbs/{basename}.webp
- * Idempotent: skips thumbnails that already exist.
+ * Stale thumbnails are cleared before regeneration to avoid dimension mismatch.
  *
  * Usage: node scripts/generate-thumbnails.js
  * Called by: scripts/generate-data.js (post-step after match-photos.js)
@@ -25,11 +25,17 @@ async function generateThumbnails() {
   // Ensure thumbs directory exists
   fs.mkdirSync(thumbsDir, { recursive: true });
 
+  // Clear stale thumbnails to force regeneration at new dimensions
+  const existingThumbs = fs.readdirSync(thumbsDir).filter(f => f.endsWith('.webp'));
+  if (existingThumbs.length > 0) {
+    existingThumbs.forEach(f => fs.unlinkSync(path.join(thumbsDir, f)));
+    console.log(`Cleared ${existingThumbs.length} stale thumbnails`);
+  }
+
   // Read photos.json
   const photos = JSON.parse(fs.readFileSync(photosJsonPath, 'utf8'));
 
   let generated = 0;
-  let skipped = 0;
 
   for (const photo of photos) {
     const srcPath = path.join(imagesDir, photo.filename);
@@ -41,18 +47,13 @@ async function generateThumbnails() {
     photo.width = metadata.width;
     photo.height = metadata.height;
 
-    if (fs.existsSync(thumbPath)) {
-      skipped++;
-      continue;
-    }
-
-    // Generate WebP thumbnail at 200px wide
+    // Generate WebP thumbnail at 400px wide
     // Gallery displays at ~186px on mobile and ~250px on desktop (2-col/3-col grid).
-    // 200px at q75 produces ~7-15KB per thumbnail vs ~22-28KB at 300px.
-    // Thumbnails are gallery previews — users click for full-size. Quality budget is generous.
+    // 400px provides crisp rendering on high-DPI screens (2x pixel ratio common on mobile).
+    // 400px at q80 produces ~15-30KB per thumbnail — acceptable for a retina-quality gallery preview.
     await sharp(srcPath)
-      .resize(200, null, { withoutEnlargement: true })
-      .webp({ quality: 75, effort: 4 })
+      .resize(400, null, { withoutEnlargement: true })
+      .webp({ quality: 80, effort: 4 })
       .toFile(thumbPath);
 
     generated++;
@@ -61,7 +62,7 @@ async function generateThumbnails() {
   // Write enriched photos.json back
   fs.writeFileSync(photosJsonPath, JSON.stringify(photos, null, 2) + '\n');
 
-  console.log(`Thumbnails: ${generated} generated, ${skipped} skipped`);
+  console.log(`Thumbnails: ${generated} generated`);
   console.log(`photos.json updated with width/height for ${photos.length} entries`);
 }
 
