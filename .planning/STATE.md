@@ -11,12 +11,12 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 
 Milestone: v2.0
 Phase: 13 of 15 (Map-Elevation Interactivity)
-Plan: 01 of 2 complete (13-01: elevation-to-map crosshair sync)
-Status: In progress
+Plan: 02 of 2 complete (13-02: bidirectional sector sync — Phase 13 DONE)
+Status: Phase 13 complete
 
-Last activity: 2026-03-27 — Completed 13-01-PLAN.md (elevation:hover CustomEvent + Leaflet crosshair circleMarker)
+Last activity: 2026-03-27 — Completed 13-02-PLAN.md (map:sectorHover/Click + elevation:sectorClick + flyToBounds bidirectional sync)
 
-Progress: [█████████████░░░░░░░] 36/38 plans complete (v1.0 30 + v2.0 6); Phase 13 plan 02 next
+Progress: [██████████████░░░░░░] 37/38 plans complete (v1.0 30 + v2.0 7); Phase 14 next
 
 ## Performance Metrics
 
@@ -70,6 +70,9 @@ Recent decisions affecting current work:
 - [11-02]: meta wrapper in route-data.json (not separate file) — avoids third parallel fetch in Astro components
 - [13-01]: window CustomEvent bus (not shared module) keeps ElevationProfile/RouteMap decoupled — no import coupling across Astro script tags
 - [13-01]: Pre-created circleMarker at [0,0] opacity:0 avoids addLayer/removeLayer on every hover frame — toggle opacity only
+- [13-02]: sectorPolylines reference array (index-keyed from forEach) gives O(1) polyline access in event handlers without re-querying Leaflet layers
+- [13-02]: chart.update('none') mandatory on all annotation mutations — enforced to maintain TBT 0ms; never call chart.update() without 'none' param
+- [13-02]: map.once('moveend') restores polyline styles after flyToBounds — ensures styles not frozen if user hovers immediately after elevation click
 
 ### Pending Todos
 
@@ -83,6 +86,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27T22:56:41Z
-Stopped at: Completed 13-01-PLAN.md — elevation:hover CustomEvent dispatch + Leaflet crosshair circleMarker
+Last session: 2026-03-27T23:02:49Z
+Stopped at: Completed 13-02-PLAN.md — bidirectional sector sync (map:sectorHover/Click + elevation:sectorClick + flyToBounds). Phase 13 complete.
 Resume file: None
