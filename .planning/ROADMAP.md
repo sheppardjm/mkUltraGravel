@@ -90,11 +90,11 @@ Plans:
   2. Both registration CTAs (hero and below-map) link to the confirmed BikeReg URL (not a placeholder)
   3. The GLRC donation link navigates to the correct Great Lakes Recovery Centers donation page
   4. The map section and route description display the total route distance and elevation gain
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 14-01: Build MkUltraExplainer.astro component — CIA document treatment, redaction-reveal CSS, FOIA references, insert between event info and map
-- [ ] 14-02: Update BIKEREG_URL and GLRC donation URL constants; display route stats from route-data.json in map section and description
+- [ ] 14-01-PLAN.md — Build MkUltraExplainer.astro component with redaction-reveal CSS, CIA history content, FOIA citation, insert between hero and map
+- [ ] 14-02-PLAN.md — Update BikeReg/GLRC URL constants in both files, add GLRC donation anchor, display route stats from route-data.json
 
 #### Phase 15: Animations
 
