@@ -43,8 +43,8 @@ Full details: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 **Plans**: 2 plans
 
 Plans:
-- [ ] 11-01-PLAN.md — Add 20 new photos to manifest + sync data.md to corrected script values
-- [ ] 11-02-PLAN.md — Restructure route-data.json with meta wrapper + update all consumers
+- [x] 11-01-PLAN.md — Add 20 new photos to manifest + sync data.md to corrected script values
+- [x] 11-02-PLAN.md — Restructure route-data.json with meta wrapper + update all consumers
 
 #### Phase 12: Photo Pipeline + Card Photos + Image Quality
 
@@ -127,7 +127,7 @@ Plans:
 | 8. Photo Gallery + Lightbox | v1.0 | 3/3 | Complete | 2026-03-27 |
 | 9. Mobile + Performance Audit | v1.0 | 4/4 | Complete | 2026-03-27 |
 | 10. Deployment | v1.0 | 3/3 | Complete | 2026-03-27 |
-| 11. Data Corrections | v2.0 | 0/2 | Not started | - |
+| 11. Data Corrections | v2.0 | 2/2 | Complete | 2026-03-27 |
 | 12. Photo Pipeline + Card Photos | v2.0 | 0/TBD | Not started | - |
 | 13. Map-Elevation Interactivity | v2.0 | 0/TBD | Not started | - |
 | 14. Content | v2.0 | 0/TBD | Not started | - |

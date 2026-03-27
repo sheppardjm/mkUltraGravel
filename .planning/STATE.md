@@ -10,20 +10,20 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 ## Current Position
 
 Milestone: v2.0
-Phase: 11 of 15 (Data Corrections) — COMPLETE
-Plan: 11-02 complete (both plans done)
-Status: Phase 11 complete — ready to plan Phase 12
+Phase: 12 of 15 (Photo Pipeline + Card Photos + Image Quality)
+Plan: — (ready to plan)
+Status: Ready to plan
 
 Last activity: 2026-03-27 — Plan 11-02 complete (route-data.json restructured, all consumers updated)
 
-Progress: [██████████░░░░░░░░░░] 30/30 v1.0 plans; 2/2 phase 11 plans complete
+Progress: [████████████░░░░░░░░] 32/32 plans complete (v1.0 30 + v2.0 2); Phase 12 next
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 30
-- Average duration: ~2.0 min
-- Total execution time: ~0.60 hours
+- Total plans completed: 32
+- Average duration: ~2.2 min
+- Total execution time: ~0.70 hours
 
 **By Phase:**
 
@@ -39,10 +39,11 @@ Progress: [██████████░░░░░░░░░░] 30/30 v
 | 08-photo-gallery-lightbox | 3 | ~5 min | ~1.7 min |
 | 09-mobile-performance-audit | 4 | ~46 min | ~11.5 min |
 | 10-deployment | 3 | ~10 min | ~3.3 min |
+| 11-data-corrections | 2 | ~11 min | ~5.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 09-04 (~23 min), 10-01 (~2 min), 10-02 (~5 min), 10-03 (~3 min)
-- Trend: v1.0 complete — beginning v2.0
+- Last 5 plans: 10-02 (~5 min), 10-03 (~3 min), 11-01 (~8 min), 11-02 (~3 min)
+- Trend: v2.0 started — Phase 11 complete, Phase 12 next
 
 *Updated after each plan completion*
 

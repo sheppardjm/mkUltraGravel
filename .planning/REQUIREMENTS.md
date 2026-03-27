@@ -7,11 +7,11 @@
 
 ### Data Fixes
 
-- [ ] **DATA-01**: Segment mile markers corrected in resolve-annotations.js (Down Jeep, Silver Creek, others as needed)
-- [ ] **DATA-02**: Photo mile-marker positions corrected in photo-manifest.js
-- [ ] **DATA-03**: Laughing Whitefish River removed from restock points
-- [ ] **DATA-04**: New photos added to manifest and processed through pipeline (thumbnails, WebP, photos.json)
-- [ ] **DATA-05**: Route total distance and elevation gain computed and available in route-data.json
+- [x] **DATA-01**: Segment mile markers corrected in resolve-annotations.js (Down Jeep, Silver Creek, others as needed)
+- [x] **DATA-02**: Photo mile-marker positions corrected in photo-manifest.js
+- [x] **DATA-03**: Laughing Whitefish River removed from restock points
+- [x] **DATA-04**: New photos added to manifest and processed through pipeline (thumbnails, WebP, photos.json)
+- [x] **DATA-05**: Route total distance and elevation gain computed and available in route-data.json
 
 ### Map-Elevation Interactivity
 
@@ -61,11 +61,11 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DATA-01 | Phase 11 | Pending |
-| DATA-02 | Phase 11 | Pending |
-| DATA-03 | Phase 11 | Pending |
-| DATA-04 | Phase 11 | Pending |
-| DATA-05 | Phase 11 | Pending |
+| DATA-01 | Phase 11 | Complete |
+| DATA-02 | Phase 11 | Complete |
+| DATA-03 | Phase 11 | Complete |
+| DATA-04 | Phase 11 | Complete |
+| DATA-05 | Phase 11 | Complete |
 | VIS-06 | Phase 12 | Pending |
 | VIS-07 | Phase 12 | Pending |
 | VIS-08 | Phase 12 | Pending |
