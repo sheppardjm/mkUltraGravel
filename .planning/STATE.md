@@ -11,12 +11,12 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 
 Milestone: v2.0
 Phase: 14 of 15 (Content)
-Plan: 1 of 2 in phase
-Status: In progress
+Plan: 2 of 2 in phase
+Status: Phase complete
 
-Last activity: 2026-03-27 — Completed 14-01-PLAN.md (MkUltraExplainer component, .redacted-reveal CSS, FOIA citation)
+Last activity: 2026-03-27 — Completed 14-02-PLAN.md (BikeReg+GLRC URLs activated, dynamic route stats in #route section)
 
-Progress: [███████████████░░░░░] 38/41 plans complete (v1.0 30 + v2.0 8); Phase 14 Plan 02 next
+Progress: [████████████████░░░░] 39/41 plans complete (v1.0 30 + v2.0 9); Phase 15 (Animations) next
 
 ## Performance Metrics
 
@@ -75,6 +75,8 @@ Recent decisions affecting current work:
 - [13-02]: map.once('moveend') restores polyline styles after flyToBounds — ensures styles not frozen if user hovers immediately after elevation click
 - [14-01]: .redacted-reveal additive CSS variant — .redacted class unchanged; new variant has cursor:pointer, color-swap hover reveal, focus-visible, prefers-reduced-motion
 - [14-01]: MkUltraExplainer placed between hero and #route — name context before map, natural reading flow
+- [14-02]: BIKEREG_URL = https://www.bikereg.com/mk-ultra-gravel (human-verified); GLRC_URL = https://www.glrc.org/donate (human-verified)
+- [14-02]: Route stats subtitle reads from route-data.json at build time — auto-updates when GPX pipeline reruns; formatted as integer miles + locale-comma elevation
 
 ### Pending Todos
 
@@ -82,12 +84,12 @@ None yet.
 
 ### Blockers/Concerns
 
-- **[Active]** BikeReg registration URL not confirmed — CTAs wired with PENDING placeholder. Addressed in Phase 14 (CONT-02).
+- **[Resolved - Phase 14]** BikeReg registration URL confirmed and activated — https://www.bikereg.com/mk-ultra-gravel (human-verified 2026-03-27).
 - **[Active - Phase 13]** onHover performance on mid-range Android unverified — must test with Chrome DevTools Performance tab after Phase 13 implementation, not assumed.
 - **[Resolved - Phase 12]** Photo coverage verified: C4 has 5 photos in range (mi 60-64.2). Down Jeep (mi 83.55-84.15) has 0 photos — uses nearest fallback at mi 80.2. Leaving Chatham KOM (mi 37.6-37.98) has 0 photos — uses fallback at mi 38. Fallback photos are thematically appropriate; adding specific photos is a future data correction if needed.
 
 ## Session Continuity
 
-Last session: 2026-03-27T23:43:40Z
-Stopped at: Completed 14-01-PLAN.md — Phase 14 Plan 02 next
+Last session: 2026-03-27T23:55:00Z
+Stopped at: Completed 14-02-PLAN.md — Phase 14 complete; Phase 15 (Animations) next
 Resume file: None
