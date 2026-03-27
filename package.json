@@ -31,5 +31,8 @@
   },
   "volta": {
     "node": "22.22.2"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.5"
   }
 }
