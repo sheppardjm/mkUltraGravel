@@ -86,6 +86,22 @@
     user-select: none;
   }
 
+  .redacted-reveal {
+    background-color: var(--color-accent-white);
+    color: var(--color-accent-white);
+    padding: 0 0.25em;
+    cursor: pointer;
+    transition: color 0.2s ease, background-color 0.2s ease;
+  }
+  .redacted-reveal:hover,
+  .redacted-reveal:focus-visible {
+    color: var(--color-bg-base);
+    background-color: var(--color-accent-green);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .redacted-reveal { transition: none; }
+  }
+
   .stamp {
     display: inline-block;
     border: 3px solid var(--color-accent-red);
