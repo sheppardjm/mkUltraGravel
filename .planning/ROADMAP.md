@@ -77,8 +77,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 13-01-PLAN.md — Elevation-to-map crosshair sync: Chart.js onHover, binary search track lookup, CustomEvent dispatch, Leaflet circleMarker crosshair, rAF throttle
-- [ ] 13-02-PLAN.md — Map-to-elevation sector sync: sector polyline hover/click events, annotation highlight updates, annotation click-to-zoom, flyToBounds
+- [x] 13-01-PLAN.md — Elevation-to-map crosshair sync: Chart.js onHover, binary search track lookup, CustomEvent dispatch, Leaflet circleMarker crosshair, rAF throttle
+- [x] 13-02-PLAN.md — Map-to-elevation sector sync: sector polyline hover/click events, annotation highlight updates, annotation click-to-zoom, flyToBounds
 
 #### Phase 14: Content
 
@@ -129,6 +129,6 @@ Plans:
 | 10. Deployment | v1.0 | 3/3 | Complete | 2026-03-27 |
 | 11. Data Corrections | v2.0 | 2/2 | Complete | 2026-03-27 |
 | 12. Photo Pipeline + Card Photos | v2.0 | 3/3 | Complete | 2026-03-27 |
-| 13. Map-Elevation Interactivity | v2.0 | 0/TBD | Not started | - |
+| 13. Map-Elevation Interactivity | v2.0 | 2/2 | Complete | 2026-03-27 |
 | 14. Content | v2.0 | 0/TBD | Not started | - |
 | 15. Animations | v2.0 | 0/TBD | Not started | - |

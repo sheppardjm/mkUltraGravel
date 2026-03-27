@@ -15,10 +15,10 @@
 
 ### Map-Elevation Interactivity
 
-- [ ] **SYNC-01**: Hovering on elevation chart shows a position marker on the map at the corresponding mile/lat-lon
-- [ ] **SYNC-02**: Hovering on the map route polyline highlights the corresponding position on the elevation chart
-- [ ] **SYNC-03**: Clicking a sector band in the elevation profile highlights that segment on the map and scrolls/zooms to it
-- [ ] **SYNC-04**: Clicking a sector overlay on the map highlights the corresponding band in the elevation profile
+- [x] **SYNC-01**: Hovering on elevation chart shows a position marker on the map at the corresponding mile/lat-lon
+- [x] **SYNC-02**: Hovering on the map route polyline highlights the corresponding position on the elevation chart
+- [x] **SYNC-03**: Clicking a sector band in the elevation profile highlights that segment on the map and scrolls/zooms to it
+- [x] **SYNC-04**: Clicking a sector overlay on the map highlights the corresponding band in the elevation profile
 
 ### Visual Enhancements
 
@@ -69,10 +69,10 @@
 | VIS-06 | Phase 12 | Complete |
 | VIS-07 | Phase 12 | Complete |
 | VIS-08 | Phase 12 | Complete |
-| SYNC-01 | Phase 13 | Pending |
-| SYNC-02 | Phase 13 | Pending |
-| SYNC-03 | Phase 13 | Pending |
-| SYNC-04 | Phase 13 | Pending |
+| SYNC-01 | Phase 13 | Complete |
+| SYNC-02 | Phase 13 | Complete |
+| SYNC-03 | Phase 13 | Complete |
+| SYNC-04 | Phase 13 | Complete |
 | CONT-01 | Phase 14 | Pending |
 | CONT-02 | Phase 14 | Pending |
 | CONT-03 | Phase 14 | Pending |
