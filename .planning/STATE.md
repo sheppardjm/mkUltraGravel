@@ -11,12 +11,12 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 
 Milestone: v2.0
 Phase: 13 of 15 (Map-Elevation Interactivity)
-Plan: — (ready to plan)
-Status: Ready to plan
+Plan: 01 of 2 complete (13-01: elevation-to-map crosshair sync)
+Status: In progress
 
-Last activity: 2026-03-27 — Phase 12 complete (card photos on all sectors/KOMs, 400px thumbnails, pipeline automated)
+Last activity: 2026-03-27 — Completed 13-01-PLAN.md (elevation:hover CustomEvent + Leaflet crosshair circleMarker)
 
-Progress: [█████████████░░░░░░░] 35/37 plans complete (v1.0 30 + v2.0 5); Phase 13 next
+Progress: [█████████████░░░░░░░] 36/38 plans complete (v1.0 30 + v2.0 6); Phase 13 plan 02 next
 
 ## Performance Metrics
 
@@ -68,6 +68,8 @@ Recent decisions affecting current work:
 - [11-01]: Photo mile markers set by route owner, not AI estimation
 - [11-02]: route-data.json is always { meta, track } — consumers use parsed.track ?? parsed fallback pattern
 - [11-02]: meta wrapper in route-data.json (not separate file) — avoids third parallel fetch in Astro components
+- [13-01]: window CustomEvent bus (not shared module) keeps ElevationProfile/RouteMap decoupled — no import coupling across Astro script tags
+- [13-01]: Pre-created circleMarker at [0,0] opacity:0 avoids addLayer/removeLayer on every hover frame — toggle opacity only
 
 ### Pending Todos
 
@@ -81,6 +83,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27T22:30:00Z
-Stopped at: Phase 12 verified and complete — Phase 13 next
+Last session: 2026-03-27T22:56:41Z
+Stopped at: Completed 13-01-PLAN.md — elevation:hover CustomEvent dispatch + Leaflet crosshair circleMarker
 Resume file: None
