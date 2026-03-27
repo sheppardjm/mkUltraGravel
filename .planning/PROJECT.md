@@ -2,7 +2,9 @@
 
 ## What This Is
 
-A website for MK Ultra Gravel — an 80-mile gravel cycling event through Marquette County, Michigan on June 7, 2026. Named after the CIA's infamous LSD experiments, the ride features rowdy, technical gravel sectors rated Paris-Roubaix style (1-5 stars). The site showcases the route, builds hype, and drives registration.
+A website for MK Ultra Gravel — an 80-mile gravel cycling event through Marquette County, Michigan on June 7, 2026. Named after the CIA's infamous LSD experiments, the ride features rowdy, technical gravel sectors rated Paris-Roubaix style (1-5 stars). The site showcases the route with an interactive map, elevation profile, photo gallery, and event details — driving registration through BikeReg.
+
+Live at: https://mkultragravel.netlify.app/
 
 ## Core Value
 
@@ -12,20 +14,32 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ### Validated
 
-(None yet — ship to validate)
+- MAP-01: Interactive map with full 80-mile route — v1.0
+- MAP-02: GPX track rendered as polyline — v1.0
+- MAP-03: Gravel sectors highlighted with star ratings — v1.0
+- MAP-04: KOM segments highlighted with gradient/elevation info — v1.0
+- MAP-05: Restock points displayed as markers — v1.0
+- MAP-06: 33 geo-located photos as clickable clustered markers — v1.0
+- MAP-07: Elevation profile alongside map with sector bands — v1.0
+- MAP-08: GPX file download — v1.0
+- ROUTE-01: Paris-Roubaix style sector cards — v1.0
+- ROUTE-02: KOM segment listings — v1.0
+- ROUTE-03: Restock point listings — v1.0
+- EVENT-01: Event date/location/details prominently displayed — v1.0
+- EVENT-02: GLRC donation info with $10 suggested amount — v1.0
+- EVENT-03: BikeReg CTA above fold + below map (URL pending confirmation) — v1.0
+- EVENT-04: Live countdown timer — v1.0
+- VIS-01: 33-photo gallery grid — v1.0
+- VIS-02: PhotoSwipe full-screen lightbox — v1.0
+- VIS-03: Dark brutalist psychedelic design — v1.0
+- VIS-04: Special Elite headers + Space Mono body — v1.0
+- VIS-05: CIA/Escher/surrealist visual motifs — v1.0
+- PERF-01: Responsive mobile layout (375px+) — v1.0
+- PERF-02: Map gesture handling without scroll-trapping — v1.0
 
 ### Active
 
-- [ ] Interactive map displaying the GPX route track
-- [ ] Geo-located route photos displayed on the map
-- [ ] GPX file download
-- [ ] Gravel sector listings with star ratings (Paris-Roubaix style)
-- [ ] KOM segment listings with gradient/elevation data
-- [ ] Restock point listings with mile markers
-- [ ] BikeReg registration call-to-action
-- [ ] Event details (date, start location, donation info)
-- [ ] Photo gallery showcasing route imagery
-- [ ] Dark, brutalist, psychedelic visual design
+(None — v1.0 shipped. Define requirements for next milestone with `/gsd:new-milestone`.)
 
 ### Out of Scope
 
@@ -34,8 +48,22 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 - Results / timing — not a race
 - Mobile app — web only
 - Blog / news updates — single-page event site
+- Email list signup — single event, high obligation, low return
+- Merchandise / shop — not the site's purpose
+- Strava live segment embeds — API rate limits make live embeds brittle
+- Weather widget — irrelevant before event day
 
 ## Context
+
+**Shipped v1.0** with ~1,917 LOC across 12 Astro/CSS/JS source files and 8 build scripts.
+
+**Tech stack:** Astro 6, Tailwind v4, Leaflet 1.9.4, Chart.js, PhotoSwipe, sharp (thumbnails)
+
+**Deployment:** Netlify with git-triggered CI/CD from GitHub. Prebuild pipeline generates route-data.json, annotations.json, photos.json, thumbnails, and hero WebP on every deploy.
+
+**Performance:** Lighthouse mobile Performance 96, LCP 2.48s, CLS 0.054, TBT 0ms. All Core Web Vitals green.
+
+**Known pre-launch item:** BikeReg registration URL is a placeholder — one-line edit in `src/pages/index.astro` (BIKEREG_URL constant) + push to deploy.
 
 **Event Details:**
 - Date: June 7, 2026
@@ -45,52 +73,27 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 - Format: Mass start, not a race
 - Registration: BikeReg (external)
 
-**Route Data:**
-- GPX track from Strava (loop route, starts/ends at same point near Marquette)
-- 33 route photos (need geo-location matching to GPX track)
-- Route passes through forests, overgrown two-track, gravel corridors
-
-**Gravel Sectors (Paris-Roubaix style ratings):**
-1. Sandstrom — 23.3mi, 5.89mi long, 3-star
-2. Akkala Rd — 39.4mi, 1.42mi long, 3-star
-3. Haavisto — 43.3mi, 1.42mi long, 4-star
-4. Forest Service Rd — 50.7mi, 6.45mi long, 2-star
-5. C4 — 58.7mi, 5.65mi long, 5-star
-6. Down Jeep — 83mi, 0.6mi long, 5-star
-
-**KOM Segments:**
-1. Billie Helmer — 21.9mi, 0.69mi, 6.4% grade, 236ft gain
-2. Leaving Chatham — 37.5mi, 0.33mi, 4.1% grade, 72ft gain
-3. Silver Creek — 78.1mi, 1.61mi, 4.4% grade, 373ft gain
-
-**Restock Points:**
-1. Laughing Whitefish River — 21.8mi
-2. Chatham Convenience Store — 37.3mi
-3. Rumely Gas Station — 46.3mi
-4. Dollar General — 76.1mi
-
-**Design Direction:**
-- Tone: Psychedelic, strange, brutalist — not a friendly cycling website
-- Inspired by: Escher impossible geometry, declassified CIA documents, surrealist art, mind-control imagery
-- Typography: Monospaced font for body text, creepy/unsettling font for headers and display text
-- Color: Dark palette
-- Tone reference images provided in `images/tone/` directory
-- Route photos in `images/` directory
-
 ## Constraints
 
 - **Tech stack**: Static site — no backend needed, content is fixed
 - **External dependency**: BikeReg handles registration, site links out
-- **Assets**: GPX file and 33 route photos already in repo; photo geo-locations need to be estimated from GPX mile markers
+- **Assets**: GPX file and 33 route photos in repo; photos use manual mile-marker positioning (no EXIF GPS)
 - **Timeline**: Site needs to be live well before June 7, 2026
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Paris-Roubaix sector rating system | Familiar to cycling audience, communicates difficulty clearly | — Pending |
-| BikeReg for registration | No need to build registration; established cycling platform | — Pending |
-| Free event with suggested donation | Lower barrier to entry, supports Great Lakes Recovery Centers | — Pending |
+| Paris-Roubaix sector rating system | Familiar to cycling audience, communicates difficulty clearly | Good — star-rated sector cards are a visual differentiator |
+| BikeReg for registration | No need to build registration; established cycling platform | Good — URL pending event director confirmation |
+| Free event with suggested donation | Lower barrier to entry, supports Great Lakes Recovery Centers | Good — donation context displayed clearly |
+| Leaflet 1.9.4 (not 2.0 alpha) | 2.0 is ESM-only with broken API | Good — stable, Carto Dark Matter tiles need no API key |
+| oklch color space for tokens | Perceptually uniform, precise dark palette control | Good — enabled WCAG contrast tuning with mathematical precision |
+| prebuild npm lifecycle hook | Data pipeline runs automatically before build | Good — zero manual steps, works on Netlify CI |
+| Netlify over Cloudflare Pages | User preference | Good — functionally equivalent, deployed in minutes |
+| Tailwind v4 CSS-first config | No tailwind.config.js, @theme in global.css | Good — cascade layers resolved Leaflet CSS conflicts |
+| Manual photo positioning | All 33 photos lack EXIF GPS | Acceptable — positions approximate but convincing on map |
+| Scripts self-contained | findPointAtMile duplicated, not shared | Acceptable — each script runnable independently |
 
 ---
-*Last updated: 2026-03-26 after initialization*
+*Last updated: 2026-03-27 after v1.0 milestone*
