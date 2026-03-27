@@ -9,13 +9,13 @@ See: .planning/PROJECT.md (updated 2026-03-26)
 
 ## Current Position
 
-Phase: 3 of 10 (Map Core) — FULLY VERIFIED
-Plan: 4 of 4 complete (03-01, 03-02, 03-03, 03-04 all done)
-Status: Phase 3 fully verified; ready to begin Phase 4
+Phase: 4 of 10 (Elevation Profile) — In progress
+Plan: 1 of ? complete (04-01 done)
+Status: In progress — 04-01 complete, awaiting human verification of elevation chart
 
-Last activity: 2026-03-27 — Completed 03-04 (persistent star-rating badges, closed SC2 gap)
+Last activity: 2026-03-27 — Completed 04-01 (Chart.js elevation profile below map)
 
-Progress: [███░░░░░░░] 23.5% (12/51 plans)
+Progress: [███░░░░░░░] 25.5% (13/51 plans)
 
 ## Performance Metrics
 
@@ -31,10 +31,11 @@ Progress: [███░░░░░░░] 23.5% (12/51 plans)
 | 01-data-pipeline | 5 | ~14 min | ~2.8 min |
 | 02-scaffold-design-system | 3 | ~8 min | ~2.7 min |
 | 03-map-core | 4 | ~6 min | ~1.5 min |
+| 04-elevation-profile | 1 | ~2 min | ~2 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-01 (~2 min), 03-02 (~1 min), 03-03 (~2 min), 03-04 (~1 min)
-- Trend: Stable pace; Phase 3 fully verified; zoom-gated LayerGroup pattern established for future conditional overlays
+- Last 5 plans: 03-02 (~1 min), 03-03 (~2 min), 03-04 (~1 min), 04-01 (~2 min)
+- Trend: Stable pace; Chart.js elevation profile complete; ESM guard pattern established
 
 *Updated after each plan completion*
 
@@ -86,6 +87,9 @@ Recent decisions affecting current work:
 - [03-04]: L.layerGroup() for zoom-gated overlays — create group, populate, toggle with zoomend + immediate initial updateBadgeVisibility() call
 - [03-04]: interactive: false on badge L.marker() — click events pass through to polyline below, preserving popup behavior
 - [03-04]: iconSize: [null, null] on divIcon — auto-sizes to content; avoids fixed box clipping variable-width star strings
+- [04-01]: Chart.js uses await import('chart.js/auto') — same SSR-safe pattern as Leaflet; Chart.register(plugin) MUST be called before new Chart()
+- [04-01]: Responsive canvas requires wrapper div with fixed px heights and maintainAspectRatio: false — never use % or vh for wrapper height
+- [04-01]: ESM guard pattern: use `if (canvas) { ... }` not `if (!canvas) return` — top-level return is forbidden in ECMAScript modules (Astro script blocks compile to ESM)
 
 ### Pending Todos
 
@@ -100,6 +104,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27
-Stopped at: Completed 03-04-PLAN.md — Phase 3 (map-core) fully verified, SC2 gap closed
+Last session: 2026-03-27T01:15:08Z
+Stopped at: Completed 04-01-PLAN.md — Chart.js elevation profile below map, build passing
 Resume file: None
