@@ -42,7 +42,7 @@
 
   // Parallel fetch — established Promise.all pattern from RouteMap.astro
   const [routeData, annotations] = await Promise.all([
-    fetch('/data/route-data.json').then(r => r.json()),
+    fetch('/data/route-data.json').then(r => r.json()).then(d => d.track ?? d),
     fetch('/data/annotations.json').then(r => r.json())
   ]);
 

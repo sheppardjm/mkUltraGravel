@@ -59,7 +59,7 @@
 
   // Fetch route data, annotations, and photos in parallel
   const [routeData, annotations, photos] = await Promise.all([
-    fetch('/data/route-data.json').then(r => r.json()),
+    fetch('/data/route-data.json').then(r => r.json()).then(d => d.track ?? d),
     fetch('/data/annotations.json').then(r => r.json()),
     fetch('/data/photos.json').then(r => r.json())
   ]);

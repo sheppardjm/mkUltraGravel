@@ -35,7 +35,8 @@ if (!fs.existsSync(routeDataPath)) {
   process.exit(1);
 }
 
-const routeData = JSON.parse(fs.readFileSync(routeDataPath, 'utf8'));
+const parsed = JSON.parse(fs.readFileSync(routeDataPath, 'utf8'));
+const routeData = parsed.track ?? parsed;
 
 // ---------------------------------------------------------------------------
 // Core helper: find trackpoint closest to targetMile
