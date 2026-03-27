@@ -100,12 +100,13 @@ map works correctly on mobile without scroll-trapping.
 4. All 4 restock points appear as map markers that show name and mile marker in a popup
 5. On a real mobile device, single-finger scroll moves the page past the map without trapping the user inside it
 
-**Plans:** 3 plans in 3 waves
+**Plans:** 4 plans in 4 waves
 
 Plans:
-- [ ] 03-01-PLAN.md — Install Leaflet, create RouteMap.astro with Carto tiles + GPX polyline + gesture handling (wave 1)
-- [ ] 03-02-PLAN.md — Add sector/KOM/restock annotation overlays with popups (wave 2)
-- [ ] 03-03-PLAN.md — Dark-theme popup/control styling + mobile verification (wave 3)
+- [x] 03-01-PLAN.md — Install Leaflet, create RouteMap.astro with Carto tiles + GPX polyline + gesture handling (wave 1)
+- [x] 03-02-PLAN.md — Add sector/KOM/restock annotation overlays with popups (wave 2)
+- [x] 03-03-PLAN.md — Dark-theme popup/control styling + mobile verification (wave 3)
+- [ ] 03-04-PLAN.md — Gap closure: persistent star-rating badges at sector midpoints (wave 1)
 
 ---
 
