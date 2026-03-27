@@ -4,7 +4,7 @@
  * match-photos.js
  *
  * Combines the photo manifest (photo-manifest.js) with route-data.json to
- * produce public/data/photos.json with lat/lon positions for all 33 route photos.
+ * produce public/data/photos.json with lat/lon positions for all route photos.
  *
  * For each photo, EXIF GPS extraction is attempted first (forward-compatible
  * pattern). If no EXIF GPS is found, position is resolved via mile-marker
@@ -146,8 +146,8 @@ async function main() {
   let hasWarnings = false;
 
   // Check count
-  if (photos.length !== 33) {
-    console.warn(`WARNING: Expected 33 photos, got ${photos.length}`);
+  if (photos.length !== photoManifest.length) {
+    console.warn(`WARNING: photos.length (${photos.length}) !== manifest length (${photoManifest.length})`);
     hasWarnings = true;
   }
 
