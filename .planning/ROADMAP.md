@@ -24,8 +24,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 6: Route Info Sections** — Sector cards, KOM listings, restock listings
 - [x] **Phase 7: Hero + Event Info + CTAs** — Above-fold content, event details, donation, GPX download
 - [x] **Phase 8: Photo Gallery + Lightbox** — 33-photo grid with full-screen lightbox
-- [ ] **Phase 9: Mobile + Performance Audit** — Scroll trap, contrast, animation, Core Web Vitals
-- [ ] **Phase 10: Deployment** — Cloudflare Pages, custom domain, live preview
+- [x] **Phase 9: Mobile + Performance Audit** — Scroll trap, contrast, animation, Core Web Vitals
+- [x] **Phase 10: Deployment** — Netlify, production smoke test, live at mkultragravel.netlify.app
 
 ---
 
@@ -271,9 +271,9 @@ receive traffic and survive a viral share from the cycling community.
 **Plans:** 3 plans in 3 waves
 
 Plans:
-- [ ] 10-01-PLAN.md — Git repo hygiene (.gitignore, .node-version), commit source assets, push to GitHub (wave 1)
-- [ ] 10-02-PLAN.md — Create Cloudflare Pages project, configure build, verify first deploy (wave 2)
-- [ ] 10-03-PLAN.md — Custom domain setup + production smoke test on desktop and mobile (wave 3)
+- [x] 10-01-PLAN.md — Git repo hygiene (.gitignore, .node-version), commit source assets, push to GitHub (wave 1)
+- [x] 10-02-PLAN.md — Netlify deployment, build config, first deploy verified (wave 2)
+- [x] 10-03-PLAN.md — Production smoke test on desktop and mobile (wave 3)
 
 ---
 
@@ -294,4 +294,4 @@ Note: Phases 2 and 1 can run in parallel. Phases 6, 7, and 8 can run in parallel
 | 7. Hero + Event Info + CTAs | 3/3 | Complete | 2026-03-26 |
 | 8. Photo Gallery + Lightbox | 3/3 | Complete | 2026-03-27 |
 | 9. Mobile + Performance Audit | 4/4 | Complete | 2026-03-27 |
-| 10. Deployment | 0/3 | Not started | - |
+| 10. Deployment | 3/3 | Complete | 2026-03-27 |
