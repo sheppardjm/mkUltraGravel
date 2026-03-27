@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-26)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** Phase 5 — Photo Map Markers
+**Current focus:** Phase 6 — Photo Gallery
 
 ## Current Position
 
-Phase: 5 of 10 (Photo Map Markers) — In progress
-Plan: 2 of 2 in progress (05-02 at checkpoint)
-Status: Awaiting human mobile verification — dev server running at http://192.168.1.143:4321
+Phase: 5 of 10 (Photo Map Markers) — Complete
+Plan: 2 of 2 complete (05-02 done)
+Status: Phase 5 complete — ready for Phase 6
 
-Last activity: 2026-03-27 — Started 05-02 (mobile verification plan); dev server up, checkpoint reached
+Last activity: 2026-03-27 — Completed 05-02 (mobile verification); all 7 checks passed on real device
 
-Progress: [████░░░░░░] 27.5% (14/51 plans)
+Progress: [████░░░░░░] 29.4% (15/51 plans)
 
 ## Performance Metrics
 
@@ -32,10 +32,11 @@ Progress: [████░░░░░░] 27.5% (14/51 plans)
 | 02-scaffold-design-system | 3 | ~8 min | ~2.7 min |
 | 03-map-core | 4 | ~6 min | ~1.5 min |
 | 04-elevation-profile | 1 | ~2 min | ~2 min |
+| 05-photo-map-markers | 2 | ~9 min | ~4.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-03 (~2 min), 03-04 (~1 min), 04-01 (~2 min), 05-01 (~4 min)
-- Trend: Stable pace; markercluster photo markers complete; photo copy step established in pipeline
+- Last 5 plans: 03-04 (~1 min), 04-01 (~2 min), 05-01 (~4 min), 05-02 (~5 min)
+- Trend: Stable pace; Phase 5 complete with mobile-verified photo markers
 
 *Updated after each plan completion*
 
@@ -94,10 +95,12 @@ Recent decisions affecting current work:
 - [05-01]: addLayers() bulk add to markerClusterGroup (not addLayer() in loop) — markercluster performance best practice
 - [05-01]: img width="180" fixed in popup HTML — prevents autopan/image-load race condition (Pitfall 3 from Phase 5 research)
 - [05-01]: Photo copy step in generate-data.js: images/ -> public/images/ via fs.copyFileSync — runs on every prebuild/dev invocation
+- [05-02]: Mobile-verified: all 7 photo marker checks passed on real device — cluster render, tap-to-zoom, popup tap, thumbnail load, full-size link, pan/zoom smooth, scroll pass-through
+- [05-02]: Popup thumbnail (180px width) is functional but visually small on mobile — future improvement candidate for Phase 6 or polish pass
 
 ### Pending Todos
 
-None yet.
+- [Future] Photo popup thumbnail too small on mobile (180px) — consider increasing to 240px+ or using responsive CSS in RouteMap.astro `.photo-popup` rule
 
 ### Blockers/Concerns
 
@@ -109,5 +112,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-27
-Stopped at: 05-02 checkpoint — dev server running at http://192.168.1.143:4321, awaiting mobile verification
+Stopped at: Completed 05-02-PLAN.md (Phase 5 fully done)
 Resume file: None
