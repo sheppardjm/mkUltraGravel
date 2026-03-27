@@ -1,0 +1,146 @@
+---
+// ElevationProfile.astro — Chart.js canvas elevation profile with sector band overlays
+// Dynamic imports in <script> prevent SSR "window is undefined" errors (same pattern as RouteMap.astro)
+---
+
+<div class="elevation-wrapper">
+  <div class="elevation-container">
+    <canvas id="elevation-chart"></canvas>
+  </div>
+</div>
+
+<style>
+  .elevation-wrapper {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+
+  /* Wrapper controls height — Chart.js sizes canvas to fill it */
+  /* REQUIRED: position: relative for Chart.js responsive mode */
+  .elevation-container {
+    position: relative;
+    width: 100%;
+    height: 140px;
+  }
+
+  @media (min-width: 768px) {
+    .elevation-container {
+      height: 180px;
+    }
+  }
+</style>
+
+<script>
+  // Dynamic import avoids SSR "window is undefined" error — Chart.js requires browser globals
+  const { Chart } = await import('chart.js/auto');
+  // AnnotationPlugin must be registered BEFORE new Chart() — silent failure otherwise
+  const { default: AnnotationPlugin } = await import('chartjs-plugin-annotation');
+  Chart.register(AnnotationPlugin);
+
+  // Parallel fetch — established Promise.all pattern from RouteMap.astro
+  const [routeData, annotations] = await Promise.all([
+    fetch('/data/route-data.json').then(r => r.json()),
+    fetch('/data/annotations.json').then(r => r.json())
+  ]);
+
+  // Map to {x, y} shape required by parsing: false mode (decimation requires this)
+  const chartData = routeData.map((pt: { mi: number; ele: number }) => ({
+    x: pt.mi,
+    y: pt.ele
+  }));
+
+  // Sector band color scale — matches map's starColors
+  const starColors: Record<number, string> = {
+    1: '#888888',
+    2: '#aaaaaa',
+    3: '#f5a623',
+    4: '#e86d1f',
+    5: '#c0392b'
+  };
+
+  // Build sector band annotation boxes from annotations.json sectors
+  const annotationBoxes: Record<string, object> = {};
+  annotations.sectors.forEach((sector: { name: string; startMi: number; endMi: number; stars: number }, i: number) => {
+    annotationBoxes[`sector_${i}`] = {
+      type: 'box',
+      xMin: sector.startMi,
+      xMax: sector.endMi,
+      backgroundColor: starColors[sector.stars] + '22',  // ~13% opacity fill
+      borderColor: starColors[sector.stars] + '66',       // ~40% opacity border
+      borderWidth: 1,
+    };
+  });
+
+  // Canvas background plugin — matches --color-bg-surface (oklch dark palette)
+  const darkBgPlugin = {
+    id: 'darkBackground',
+    beforeDraw: (chart: any) => {
+      const { ctx } = chart;
+      ctx.save();
+      ctx.globalCompositeOperation = 'destination-over';
+      ctx.fillStyle = 'oklch(0.14 0.01 250)';
+      ctx.fillRect(0, 0, chart.width, chart.height);
+      ctx.restore();
+    }
+  };
+
+  // Null guard — module scripts defer until DOM is ready, but guard defensively
+  const canvas = document.getElementById('elevation-chart') as HTMLCanvasElement;
+  if (!canvas) return;
+
+  new Chart(canvas, {
+    type: 'line',
+    data: {
+      datasets: [{
+        data: chartData,
+        borderColor: 'oklch(0.55 0.01 90)',
+        borderWidth: 1.5,
+        backgroundColor: 'oklch(0.25 0.01 250 / 0.4)',
+        fill: true,
+        tension: 0,
+        pointRadius: 0,
+      }]
+    },
+    options: {
+      parsing: false,       // data is pre-parsed {x, y} — required for decimation
+      animation: false,     // static chart — no entry animation
+      responsive: true,
+      maintainAspectRatio: false,  // REQUIRED: wrapper div controls height
+      plugins: {
+        legend: { display: false },
+        decimation: {
+          enabled: true,
+          algorithm: 'lttb',   // Largest Triangle Three Bucket — preserves peaks/valleys
+          samples: 500
+        },
+        annotation: { annotations: annotationBoxes },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${Math.round((ctx.parsed.y as number) * 3.281)} ft`,
+            title: (items) => `${(items[0].parsed.x as number).toFixed(1)} mi`
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: 'linear',
+          min: 0,
+          max: 100,  // forward-compatible with 100mi route (GPX currently ends at ~98.2mi)
+          grid: { color: 'oklch(0.25 0.01 250)' },
+          ticks: {
+            color: 'oklch(0.55 0.01 90)',
+            callback: (val) => `${val}mi`
+          }
+        },
+        y: {
+          grid: { color: 'oklch(0.25 0.01 250)' },
+          ticks: {
+            color: 'oklch(0.55 0.01 90)',
+            callback: (val) => `${Math.round((val as number) * 3.281)}ft`  // meters → feet
+          }
+        }
+      }
+    },
+    plugins: [darkBgPlugin]  // registered here (Chart constructor array), not in options.plugins
+  });
+</script>
