@@ -2,6 +2,9 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import RouteMap from "../components/RouteMap.astro";
 import ElevationProfile from "../components/ElevationProfile.astro";
+import GravelSectors from "../components/GravelSectors.astro";
+import KomSegments from "../components/KomSegments.astro";
+import RestockPoints from "../components/RestockPoints.astro";
 ---
 
 <BaseLayout>
@@ -42,7 +45,18 @@ import ElevationProfile from "../components/ElevationProfile.astro";
     <section id="sectors" class="relative min-h-screen px-4 py-16 overflow-hidden border-t border-border">
       <div class="relative z-10">
         <h2 class="text-3xl md:text-5xl mb-8">Gravel Sectors</h2>
-        <p class="text-text-muted">Paris-Roubaix rated sector cards — Phase 6</p>
+        <div class="grid md:grid-cols-3 gap-8">
+          <div class="md:col-span-2">
+            <p class="text-text-muted text-xs uppercase tracking-widest mb-4">Paris-Roubaix Rated Sectors</p>
+            <GravelSectors />
+          </div>
+          <div>
+            <p class="text-text-muted text-xs uppercase tracking-widest mb-4">KOM Segments</p>
+            <KomSegments />
+            <p class="text-text-muted text-xs uppercase tracking-widest mt-8 mb-4">Restock Points</p>
+            <RestockPoints />
+          </div>
+        </div>
       </div>
     </section>
 
