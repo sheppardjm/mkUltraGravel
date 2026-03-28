@@ -242,7 +242,7 @@ const BIKEREG_URL = 'https://www.bikereg.com/mk-ultra-gravel';
         loading="lazy"
       />
       <div class="relative z-10">
-        <h2 class="text-3xl md:text-5xl mb-4">The Route</h2>
+        <h2 class="text-3xl md:text-5xl mb-4" data-reveal>The Route</h2>
         <p class="text-text-muted text-sm mb-8">
           {Math.round(routeMeta.totalMi)} miles &mdash; {routeMeta.elevationGainFt.toLocaleString()} ft elevation gain
         </p>
@@ -267,7 +267,7 @@ const BIKEREG_URL = 'https://www.bikereg.com/mk-ultra-gravel';
 
     <section id="sectors" class="relative min-h-screen px-4 py-16 overflow-hidden border-t border-border">
       <div class="relative z-10">
-        <h2 class="text-3xl md:text-5xl mb-8">Gravel Sectors</h2>
+        <h2 class="text-3xl md:text-5xl mb-8" data-reveal>Gravel Sectors</h2>
         <div class="grid md:grid-cols-3 gap-8">
           <div class="md:col-span-2">
             <p class="text-text-muted text-xs uppercase tracking-widest mb-4">Paris-Roubaix Rated Sectors</p>
@@ -291,7 +291,7 @@ const BIKEREG_URL = 'https://www.bikereg.com/mk-ultra-gravel';
         loading="lazy"
       />
       <div class="relative z-10">
-        <h2 class="text-3xl md:text-5xl mb-8">Route Photos</h2>
+        <h2 class="text-3xl md:text-5xl mb-8" data-reveal>Route Photos</h2>
         <PhotoGallery />
       </div>
     </section>
@@ -304,9 +304,49 @@ const BIKEREG_URL = 'https://www.bikereg.com/mk-ultra-gravel';
         loading="lazy"
       />
       <div class="relative z-10 max-w-2xl">
-        <h2 class="text-3xl md:text-5xl mb-8">Event Info</h2>
+        <h2 class="text-3xl md:text-5xl mb-8" data-reveal>Event Info</h2>
         <EventInfoBlock />
       </div>
     </section>
   </main>
 </BaseLayout>
+
+<script>
+  // Scroll-reveal: IntersectionObserver adds .is-visible to [data-reveal] elements
+  // Centralized in index.astro — covers all [data-reveal] elements across all components
+  function initReveal() {
+    // Mark <html> as JS-ready so CSS applies opacity: 0 initial state
+    document.documentElement.setAttribute("data-reveal-ready", "");
+
+    // Respect prefers-reduced-motion — skip observer entirely
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+
+    const revealObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            revealObserver.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        rootMargin: "0px 0px -40px 0px",
+        threshold: 0.05,
+      }
+    );
+
+    document.querySelectorAll("[data-reveal]").forEach((el) => {
+      revealObserver.observe(el);
+    });
+  }
+
+  // Support Astro View Transitions
+  document.addEventListener("astro:page-load", initReveal);
+  // Fallback for non-View-Transitions pages
+  if (!document.querySelector("[data-astro-transition]")) {
+    initReveal();
+  }
+</script>

@@ -22,8 +22,8 @@ const starColors: Record<number, string> = {
 ---
 
 <div class="space-y-4">
-  {sectors.map((sector) => (
-    <div class="classified-border bg-bg-surface overflow-hidden card-hover">
+  {sectors.map((sector, i) => (
+    <div class="classified-border bg-bg-surface overflow-hidden card-hover" data-reveal style={`animation-delay: ${i * 60}ms`}>
       {sector.coverPhoto && (
         <img
           src={`/images/cards/${sector.coverPhoto.replace(/\.(jpg|jpeg|png)$/i, '.webp')}`}
