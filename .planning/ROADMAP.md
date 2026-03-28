@@ -107,11 +107,11 @@ Plans:
   3. Clicking an interactive element (button, card, map marker) produces visible click feedback
   4. All animations are disabled when the user has prefers-reduced-motion enabled
   5. Lighthouse mobile TBT remains at 0ms after all animations are added
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 15-01: Hover + click animations on buttons and cards (CSS transition utilities, brutalist hard shifts)
-- [ ] 15-02: Scroll-reveal entrance animations on sections and card lists (IntersectionObserver + CSS keyframes, prefers-reduced-motion compliance)
+- [ ] 15-01-PLAN.md — Hover + click animations: card-hover ::after shadow trick on sector/KOM cards, active: click feedback on CTAs
+- [ ] 15-02-PLAN.md — Scroll-reveal entrance animations: IntersectionObserver + CSS keyframes, data-reveal stagger on card lists, prefers-reduced-motion compliance
 
 ## Progress
 
