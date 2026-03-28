@@ -39,6 +39,7 @@
   // AnnotationPlugin must be registered BEFORE new Chart() — silent failure otherwise
   const { default: AnnotationPlugin } = await import('chartjs-plugin-annotation');
   Chart.register(AnnotationPlugin);
+  const { getRelativePosition } = await import('chart.js/helpers');
 
   // Parallel fetch — established Promise.all pattern from RouteMap.astro
   const [routeData, annotations] = await Promise.all([
@@ -141,7 +142,7 @@
         requestAnimationFrame(() => {
           rafPending = false;
           if (!event.native) return;
-          const canvasPos = Chart.helpers.getRelativePosition(event.native, chart);
+          const canvasPos = getRelativePosition(event.native, chart);
           const mile = chart.scales.x.getValueForPixel(canvasPos.x);
           if (mile == null) return;
           const pt = findNearestTrackPoint(routeData, mile);
