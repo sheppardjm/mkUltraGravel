@@ -29,6 +29,20 @@
   --font-sans: var(--font-mono);
   --font-mono: "Space Mono", ui-monospace, monospace;
   --font-display: "Special Elite", serif;
+
+  /* Scroll-reveal entrance animation */
+  --animate-reveal: reveal 0.35s ease-out both;
+
+  @keyframes reveal {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
 
 @layer base {
@@ -232,6 +246,24 @@
     }
     .card-hover:hover::after {
       opacity: 0;
+    }
+  }
+}
+
+@layer utilities {
+  /* Scroll-reveal: hidden state only when JS has confirmed it is running.
+     The IntersectionObserver script adds data-reveal-ready to <html>.
+     Without JS, elements remain fully visible (no-JS safe). */
+  [data-reveal-ready] [data-reveal] {
+    opacity: 0;
+  }
+  [data-reveal-ready] [data-reveal].is-visible {
+    animation: var(--animate-reveal);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-reveal-ready] [data-reveal] {
+      opacity: 1 !important;
+      animation: none !important;
     }
   }
 }
