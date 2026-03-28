@@ -9,13 +9,13 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 
 ## Current Position
 
-Milestone: v2.0 SHIPPED
-Phase: 16 of 16 — all phases complete
-Plan: All complete
-Status: Ready to plan next milestone
-Last activity: 2026-03-28 — v2.0 milestone archived
+Milestone: v3.0 Escher Identity + Data Fixes + UX Polish
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-28 — Milestone v3.0 started
 
-Progress: [█████████████████████] 45/45 plans complete (v1.0: 30, v2.0: 15)
+Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 0 plans
 
 ## Performance Metrics
 

@@ -58,7 +58,15 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ### Active
 
-(None — planning next milestone)
+#### v3.0 — Escher Identity + Data Fixes + UX Polish
+
+- [ ] VIS-12: Recolor gravel sector spectrum from gray to yellow-to-red for all star ratings
+- [ ] DATA-06: Fix photo map positions — regenerate photos.json from corrected mile markers
+- [ ] UX-01: Replace elevation hover crosshair with bike icon on map
+- [ ] VIS-13: Display KOM segments on elevation profile with distinct color/pattern
+- [ ] CONT-05: Make all GLRC/Great Lakes Recovery Centers mentions clickable links
+- [ ] VIS-14: Escher/Penrose tessellation background patterns with subtle animation
+- [ ] VIS-15: Penrose triangle favicon and logo
 
 ### Out of Scope
 
@@ -120,4 +128,4 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | Strava leaderboard permanently dropped | TOS prohibits displaying user data; endpoint blocked since June 2020 | Good — avoided wasted effort |
 
 ---
-*Last updated: 2026-03-28 after v2.0 milestone*
+*Last updated: 2026-03-28 after v3.0 milestone started*
