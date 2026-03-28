@@ -1,5 +1,33 @@
 # Project Milestones: MK Ultra Gravel
 
+## v2.0 Interactivity + Polish (Shipped: 2026-03-28)
+
+**Delivered:** Elevated MK Ultra Gravel from informational to interactive — bidirectional map-elevation sync, automated photo pipeline, brutalist animations, content additions, and UAT-verified polish.
+
+**Phases completed:** 11-16 (15 plans total)
+
+**Key accomplishments:**
+
+- Complete photo pipeline — 53 photos with corrected mile markers, 9 WebP card crops, auto-generated on prebuild
+- Interactive map-elevation sync — bidirectional CustomEvent crosshair + sector zoom/highlight
+- Dynamic route content — MK Ultra explainer, BikeReg/GLRC URLs activated, live route stats from GPX
+- Brutalist animations — instant card hover shadows, scroll-reveal with stagger, :active press feedback
+- CSS architecture fixes — Tailwind v4 keyframes, PhotoSwipe layers, overflow-hidden structural pattern
+- Zero performance regression — all animations compositor-safe, TBT 0ms maintained
+
+**Stats:**
+
+- 82 files modified
+- ~2,663 lines of code (Astro/CSS/JS)
+- 6 phases, 15 plans
+- 3 days (2026-03-26 → 2026-03-28)
+
+**Git range:** `dec65d6` → `9c437d1`
+
+**What's next:** Custom domain, sponsor section when confirmed, potential v3 enhancements
+
+---
+
 ## v1.0 MK Ultra Gravel (Shipped: 2026-03-27)
 
 **Delivered:** Complete event website for MK Ultra Gravel — 80-mile gravel cycling event in Marquette, MI. Live at https://mkultragravel.netlify.app/
