@@ -36,16 +36,17 @@ Full details: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 
 </details>
 
-### Phase 16: v2.0 UAT Fixes — COMPLETE 2026-03-28
+### Phase 16: v2.0 UAT Fixes — IN PROGRESS
 
-**Goal**: Fix 7 issues found during v2.0 UAT — restore broken lightbox, card hover shadows, scroll-reveal animations, elevation crosshair sync, and update content/photos.
+**Goal**: Fix issues found during v2.0 UAT — restore broken lightbox, card hover shadows, scroll-reveal animations, elevation crosshair sync, update content/photos, and close remaining card hover + subtitle gaps.
 **Depends on**: Phase 15 (fixes applied to shipped v2.0)
-**Plans**: 3 plans
+**Plans**: 4 plans
 
 Plans:
 - [x] 16-01-PLAN.md — CSS fixes: lightbox layer ordering, card hover shadow, scroll reveal keyframes, route stats text size
 - [x] 16-02-PLAN.md — JS fix: elevation crosshair getRelativePosition import
 - [x] 16-03-PLAN.md — Content + photo: MK Ultra explainer dual meaning, Leaving Chatham KOM photo
+- [ ] 16-04-PLAN.md — Gap closure: card hover shadow overflow-hidden fix, route stats subtitle size/color
 
 ## Progress
 
@@ -66,4 +67,4 @@ Plans:
 | 13. Map-Elevation Interactivity | v2.0 | 2/2 | Complete | 2026-03-27 |
 | 14. Content | v2.0 | 2/2 | Complete | 2026-03-27 |
 | 15. Animations | v2.0 | 2/2 | Complete | 2026-03-28 |
-| 16. v2.0 UAT Fixes | v2.0 | 3/3 | Complete | 2026-03-28 |
+| 16. v2.0 UAT Fixes | v2.0 | 3/4 | In Progress | |
