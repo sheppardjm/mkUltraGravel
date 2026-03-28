@@ -9,14 +9,14 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 
 ## Current Position
 
-Milestone: v2.0 COMPLETE + UAT fixes
+Milestone: v2.0 COMPLETE + UAT fixes (gap closure)
 Phase: 16 of 16 (v2-fixes) — COMPLETE ✓
-Plan: 3 of 3 in phase — COMPLETE
-Status: Phase verified (7/7 must-haves passed)
+Plan: 4 of 4 in phase — COMPLETE
+Status: All gap closure fixes applied
 
-Last activity: 2026-03-28 — Phase 16 complete — all 7 UAT fixes verified
+Last activity: 2026-03-28 — Completed 16-04 gap closure (card hover shadow + route stats subtitle)
 
-Progress: [█████████████████████] 44/44 plans complete (v1.0 30 + v2.0 11 + fixes 3)
+Progress: [█████████████████████] 45/45 plans complete (v1.0 30 + v2.0 11 + fixes 4)
 
 ## Performance Metrics
 
@@ -89,6 +89,8 @@ Recent decisions affecting current work:
 - [16-01]: @keyframes must be top-level in Tailwind v4 — @theme only processes custom property tokens; @keyframes inside @theme are silently dropped
 - [16-03]: Leaving Chatham photo at mi 37.8 — within KOM range 37.6-37.98 — eliminates nearest-photo fallback
 - [16-03]: Mark Kransz name uses redacted-reveal treatment consistent with MKULTRA and mental fortitude reveals
+- [16-04]: overflow-hidden on same element as card-hover clips box-shadow (CSS Overflow Module Level 3 ink overflow) — fix is structural: two-div pattern (outer: card-hover, inner: overflow-hidden)
+- [16-04]: text-accent-green for route stats subtitle — accent green stands out against dark background vs text-text-muted gray
 
 ### Pending Todos
 
@@ -104,5 +106,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-28
-Stopped at: Phase 16 complete — all 3 plans executed and verified (7/7 must-haves)
+Stopped at: Completed 16-04-PLAN.md — card hover shadow + route stats subtitle gap closure
 Resume file: None
