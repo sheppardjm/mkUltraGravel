@@ -10,13 +10,13 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 ## Current Position
 
 Milestone: v2.0
-Phase: 14 of 15 (Content)
-Plan: 2 of 2 in phase
-Status: Phase complete
+Phase: 15 of 15 (Animations)
+Plan: 1 of 2 in phase
+Status: In progress
 
-Last activity: 2026-03-27 — Completed 14-02-PLAN.md (BikeReg+GLRC URLs activated, dynamic route stats in #route section)
+Last activity: 2026-03-28 — Completed 15-01-PLAN.md (brutalist hover shadow on cards, active: press feedback on CTAs)
 
-Progress: [████████████████░░░░] 39/41 plans complete (v1.0 30 + v2.0 9); Phase 15 (Animations) next
+Progress: [████████████████████] 40/41 plans complete (v1.0 30 + v2.0 10); Phase 15 Plan 02 (remaining animations) next
 
 ## Performance Metrics
 
@@ -77,6 +77,9 @@ Recent decisions affecting current work:
 - [14-01]: MkUltraExplainer placed between hero and #route — name context before map, natural reading flow
 - [14-02]: BIKEREG_URL = https://www.bikereg.com/mk-ultra-gravel (human-verified); GLRC_URL = https://www.glrc.org/donate (human-verified)
 - [14-02]: Route stats subtitle reads from route-data.json at build time — auto-updates when GPX pipeline reruns; formatted as integer miles + locale-comma elevation
+- [15-01]: ::after opacity trick for card hover shadow — compositor-safe alternative to direct box-shadow transition; z-index:-1 puts shadow behind content
+- [15-01]: step-start timing at 0ms enforces binary on/off shadow (true hard snap); transition:box-shadow 0 ease still interpolates
+- [15-01]: active: Tailwind pseudo-class gives instant press feedback without JS; no transition-transform needed since active state is binary
 
 ### Pending Todos
 
@@ -90,6 +93,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27T23:55:00Z
-Stopped at: Completed 14-02-PLAN.md — Phase 14 complete; Phase 15 (Animations) next
+Last session: 2026-03-28T00:19:50Z
+Stopped at: Completed 15-01-PLAN.md — brutalist hover/click animations; Phase 15 Plan 02 next
 Resume file: None
