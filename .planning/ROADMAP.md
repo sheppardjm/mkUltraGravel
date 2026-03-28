@@ -93,8 +93,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 14-01-PLAN.md — Build MkUltraExplainer.astro component with redaction-reveal CSS, CIA history content, FOIA citation, insert between hero and map
-- [ ] 14-02-PLAN.md — Update BikeReg/GLRC URL constants in both files, add GLRC donation anchor, display route stats from route-data.json
+- [x] 14-01-PLAN.md — Build MkUltraExplainer.astro component with redaction-reveal CSS, CIA history content, FOIA citation, insert between hero and map
+- [x] 14-02-PLAN.md — Update BikeReg/GLRC URL constants in both files, add GLRC donation anchor, display route stats from route-data.json
 
 #### Phase 15: Animations
 
@@ -130,5 +130,5 @@ Plans:
 | 11. Data Corrections | v2.0 | 2/2 | Complete | 2026-03-27 |
 | 12. Photo Pipeline + Card Photos | v2.0 | 3/3 | Complete | 2026-03-27 |
 | 13. Map-Elevation Interactivity | v2.0 | 2/2 | Complete | 2026-03-27 |
-| 14. Content | v2.0 | 0/TBD | Not started | - |
+| 14. Content | v2.0 | 2/2 | Complete | 2026-03-27 |
 | 15. Animations | v2.0 | 0/TBD | Not started | - |

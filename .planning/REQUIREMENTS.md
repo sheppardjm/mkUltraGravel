@@ -31,10 +31,10 @@
 
 ### Content
 
-- [ ] **CONT-01**: MK Ultra name explainer section with CIA program history and redaction-reveal styling
-- [ ] **CONT-02**: BikeReg registration URL updated from placeholder to correct URL
-- [ ] **CONT-03**: GLRC donation URL updated to correct link
-- [ ] **CONT-04**: Route total distance and elevation gain displayed on map section and route description
+- [x] **CONT-01**: MK Ultra name explainer section with CIA program history and redaction-reveal styling
+- [x] **CONT-02**: BikeReg registration URL updated from placeholder to correct URL
+- [x] **CONT-03**: GLRC donation URL updated to correct link
+- [x] **CONT-04**: Route total distance and elevation gain displayed on map section and route description
 
 ## Future Requirements
 
@@ -73,10 +73,10 @@
 | SYNC-02 | Phase 13 | Complete |
 | SYNC-03 | Phase 13 | Complete |
 | SYNC-04 | Phase 13 | Complete |
-| CONT-01 | Phase 14 | Pending |
-| CONT-02 | Phase 14 | Pending |
-| CONT-03 | Phase 14 | Pending |
-| CONT-04 | Phase 14 | Pending |
+| CONT-01 | Phase 14 | Complete |
+| CONT-02 | Phase 14 | Complete |
+| CONT-03 | Phase 14 | Complete |
+| CONT-04 | Phase 14 | Complete |
 | VIS-09 | Phase 15 | Pending |
 | VIS-10 | Phase 15 | Pending |
 | VIS-11 | Phase 15 | Pending |
