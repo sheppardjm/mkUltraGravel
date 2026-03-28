@@ -1,7 +1,7 @@
 /* Cascade layer order — declared FIRST, before any imports.
    Leaflet CSS (Phase 3) goes in the lowest-priority layer so
    Tailwind utilities always win. */
-@layer leaflet, photoswipe, base, components, utilities;
+@layer leaflet, base, components, utilities;
 
 /* Tailwind v4 — CSS-first config, no tailwind.config.js */
 @import "tailwindcss";
@@ -10,7 +10,7 @@
 @import "leaflet-gesture-handling/dist/leaflet-gesture-handling.css" layer(leaflet);
 @import "leaflet.markercluster/dist/MarkerCluster.css" layer(leaflet);
 @import "leaflet.markercluster/dist/MarkerCluster.Default.css" layer(leaflet);
-@import "photoswipe/style.css" layer(photoswipe);
+@import "photoswipe/style.css" layer(components);
 
 /* Design tokens — dark brutalist palette + fonts */
 @theme {
@@ -32,16 +32,16 @@
 
   /* Scroll-reveal entrance animation */
   --animate-reveal: reveal 0.35s ease-out both;
+}
 
-  @keyframes reveal {
-    from {
-      opacity: 0;
-      transform: translateY(12px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -207,10 +207,6 @@
     --pswp-icon-color: oklch(0.85 0.01 90);
     --pswp-icon-color-secondary: oklch(0.62 0.01 90);
   }
-  .pswp__img {
-    max-width: none;
-  }
-
   /* Sector star-rating badges — persistent divIcon markers at sector midpoints */
   .sector-badge {
     background: transparent !important;
@@ -224,28 +220,20 @@
     pointer-events: none;
   }
 
-  /* Card hover — brutalist hard-shift shadow via ::after opacity trick (compositor-safe) */
+  /* Card hover -- brutalist hard-shift shadow (direct box-shadow, not clipped by overflow-hidden) */
   .card-hover {
-    position: relative;
+    box-shadow: 4px 4px 0 0 transparent;
+    transition: box-shadow 0ms step-start;
   }
-  .card-hover::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
+  .card-hover:hover {
     box-shadow: 4px 4px 0 0 var(--color-accent-green);
-    opacity: 0;
-    transition: opacity 0ms step-start;
-  }
-  .card-hover:hover::after {
-    opacity: 1;
   }
   @media (prefers-reduced-motion: reduce) {
-    .card-hover::after {
+    .card-hover {
       transition: none;
     }
-    .card-hover:hover::after {
-      opacity: 0;
+    .card-hover:hover {
+      box-shadow: 4px 4px 0 0 transparent;
     }
   }
 }
