@@ -11,10 +11,10 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 
 Milestone: v2.0 COMPLETE + fixes
 Phase: 16 (v2-fixes) — In progress
-Plan: 1 of N in phase — COMPLETE (also 2 complete)
+Plan: 3 of 3 in phase — COMPLETE
 Status: In progress
 
-Last activity: 2026-03-28 — Completed 16-01-PLAN.md (CSS layer ordering, card hover shadow, scroll reveal keyframes, route stats subtitle)
+Last activity: 2026-03-28 — Completed 16-03-PLAN.md (Leaving Chatham KOM photo + MK Ultra explainer dual meaning)
 
 Progress: [█████████████████████] 41/41 plans complete (v1.0 30 + v2.0 11) — v2.0 milestone complete
 
@@ -59,7 +59,7 @@ Recent decisions affecting current work:
 - [v2.0 roadmap]: Map-elevation interactivity (Phase 13) isolated to measure Lighthouse TBT delta cleanly before animations (Phase 15) are added
 - [v2.0 roadmap]: assign-card-photos.js uses Haversine proximity matching — no new npm dependency; pure Node.js arithmetic
 - [12-01]: coverPhoto stored as filename only in annotations.json — components construct /images/cards/{basename}.webp at render time
-- [12-01]: Down Jeep and Leaving Chatham KOM use nearest-photo fallback (0 photos in range); fallback warnings logged at build time
+- [12-01]: Down Jeep KOM uses nearest-photo fallback (0 photos in range); Leaving Chatham KOM now has dedicated photo at mi 37.8 (resolved by 16-03)
 - [12-03]: Thumbnails always regenerated (stale-clear then regenerate all) — 53 photos in ~2s is acceptable; avoids dimension mismatch on future parameter changes
 - [12-03]: assign-card-photos.js runs as step 5 after generate-thumbnails and before convert-hero — pipeline fully automated in npm run prebuild
 - [v2.0 roadmap]: All animations CSS-only (transform/opacity) — protects TBT 0ms; no GSAP or motion library
@@ -87,6 +87,8 @@ Recent decisions affecting current work:
 - [16-01]: Direct box-shadow on .card-hover (not ::after) — overflow-hidden clips ::after pseudo-elements; z-index:-1 hides shadow behind opaque card background
 - [16-01]: PhotoSwipe CSS in layer(components) not layer(photoswipe) — Tailwind Preflight in base layer overrides isolated photoswipe layer; components layer is correct cascade position
 - [16-01]: @keyframes must be top-level in Tailwind v4 — @theme only processes custom property tokens; @keyframes inside @theme are silently dropped
+- [16-03]: Leaving Chatham photo at mi 37.8 — within KOM range 37.6-37.98 — eliminates nearest-photo fallback
+- [16-03]: Mark Kransz name uses redacted-reveal treatment consistent with MKULTRA and mental fortitude reveals
 
 ### Pending Todos
 
@@ -96,10 +98,11 @@ None yet.
 
 - **[Resolved - Phase 14]** BikeReg registration URL confirmed and activated — https://www.bikereg.com/mk-ultra-gravel (human-verified 2026-03-27).
 - **[Active - Phase 13]** onHover performance on mid-range Android unverified — must test with Chrome DevTools Performance tab after Phase 13 implementation, not assumed.
-- **[Resolved - Phase 12]** Photo coverage verified: C4 has 5 photos in range (mi 60-64.2). Down Jeep (mi 83.55-84.15) has 0 photos — uses nearest fallback at mi 80.2. Leaving Chatham KOM (mi 37.6-37.98) has 0 photos — uses fallback at mi 38. Fallback photos are thematically appropriate; adding specific photos is a future data correction if needed.
+- **[Resolved - Phase 16-03]** Leaving Chatham KOM now has dedicated photo (Rock River Rd, mi 37.8) — fallback eliminated.
+- **[Active]** Down Jeep (mi 83.55-84.15) still uses nearest fallback at mi 80.2 — no in-range photo available.
 
 ## Session Continuity
 
-Last session: 2026-03-28T01:27:00Z
-Stopped at: Completed 16-01-PLAN.md — CSS layer ordering, card hover shadow, scroll reveal keyframes, route stats subtitle
+Last session: 2026-03-28T05:06:11Z
+Stopped at: Completed 16-03-PLAN.md — Leaving Chatham KOM photo + MK Ultra explainer dual meaning
 Resume file: None
