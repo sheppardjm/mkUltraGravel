@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v2.0 SHIPPED — All 15 phases complete
+**Current focus:** v2.0 fixes in progress — Phase 16
 
 ## Current Position
 
-Milestone: v2.0 COMPLETE
-Phase: 15 of 15 (Animations) — COMPLETE
-Plan: 2 of 2 in phase — COMPLETE
-Status: All phases complete
+Milestone: v2.0 COMPLETE + fixes
+Phase: 16 (v2-fixes) — In progress
+Plan: 2 of N in phase — COMPLETE
+Status: In progress
 
-Last activity: 2026-03-28 — Completed 15-02-PLAN.md (scroll-reveal entrance animations, IntersectionObserver, stagger cascade)
+Last activity: 2026-03-28 — Completed 16-02-PLAN.md (getRelativePosition import fix; elevation-to-map crosshair now functional)
 
 Progress: [█████████████████████] 41/41 plans complete (v1.0 30 + v2.0 11) — v2.0 milestone complete
 
@@ -83,6 +83,7 @@ Recent decisions affecting current work:
 - [15-02]: [data-reveal-ready] no-JS safety — CSS opacity:0 scoped to [data-reveal-ready] selector; JS must explicitly set attribute before any elements hidden
 - [15-02]: 0.35s ease-out for scroll entrance animations — brutalist step-start applies only to hover/click binary states; ease-out correct for reveals
 - [15-02]: Centralized IntersectionObserver in index.astro via querySelectorAll covers all components; no per-component scripts
+- [16-02]: chart.js/auto does NOT expose Chart.helpers — import getRelativePosition from chart.js/helpers directly
 
 ### Pending Todos
 
@@ -96,6 +97,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T00:24:30Z
-Stopped at: Completed 15-02-PLAN.md — scroll-reveal animations; Phase 15 complete; v2.0 milestone complete
+Last session: 2026-03-28T05:04:32Z
+Stopped at: Completed 16-02-PLAN.md — getRelativePosition import fix; elevation chart hover crosshair now works
 Resume file: None
