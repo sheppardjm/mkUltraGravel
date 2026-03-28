@@ -47,6 +47,7 @@ const photoManifest = [
 
   // -- Chatham area (~mi 37-39): Co-Op Store landmark --
   { filename: 'LjGaTm477e8AIETL1O3YAf9TMDzETMuS6TVK0NB-bQ0-2048x1536.jpg', mi: 37.5 },
+  { filename: 'leaving-chatham-rock-river-rd.png', mi: 37.8 },
   { filename: 'mUKLtmdM0THz8jg_AB0fWRgNqy6BIZC0CHCncoTB6Tc-1536x2048.jpg', mi: 38.0 },
 
   // -- Post-Chatham: Akkala/Haavisto sector, dense hardwood forest --
