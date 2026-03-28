@@ -209,4 +209,29 @@
     text-shadow: 0 0 3px rgba(0, 0, 0, 0.9), 0 0 6px rgba(0, 0, 0, 0.7);
     pointer-events: none;
   }
+
+  /* Card hover — brutalist hard-shift shadow via ::after opacity trick (compositor-safe) */
+  .card-hover {
+    position: relative;
+  }
+  .card-hover::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    box-shadow: 4px 4px 0 0 var(--color-accent-green);
+    opacity: 0;
+    transition: opacity 0ms step-start;
+  }
+  .card-hover:hover::after {
+    opacity: 1;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .card-hover::after {
+      transition: none;
+    }
+    .card-hover:hover::after {
+      opacity: 0;
+    }
+  }
 }
