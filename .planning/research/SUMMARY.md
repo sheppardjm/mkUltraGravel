@@ -1,19 +1,19 @@
 # Project Research Summary
 
-**Project:** MK Ultra Gravel — v2.0 Interactivity + Polish Milestone
+**Project:** MK Ultra Gravel — v3.0 Escher Identity + Data Fixes + UX Polish
 **Domain:** Static gravel cycling event website (Astro 6 + Leaflet + Chart.js)
-**Researched:** 2026-03-27
+**Researched:** 2026-03-28
 **Confidence:** HIGH
 
 ---
 
 ## Executive Summary
 
-MK Ultra Gravel v2.0 is a visual polish and interactivity layer on top of a fully-shipped static site. The v1.0 foundation is strong — Lighthouse Performance 96, TBT 0ms, a working GPX pipeline, photo gallery, interactive map, and elevation profile. v2.0 should be executed as targeted surgical additions to existing components, with zero mandatory new npm dependencies. The architecture is an Astro 6 static site that uses vanilla JS `<script>` blocks for runtime behavior; all v2.0 interactivity follows this same pattern using native browser `CustomEvent` dispatch for cross-component communication.
+v3.0 is a pure implementation milestone layered onto a fully-shipped, optimized v2.0 baseline. All seven work items — Escher/Penrose tessellation backgrounds, Penrose triangle favicon, gravel sector color recolor (gray to yellow-to-red spectrum), photo map position fix, bike icon for elevation hover crosshair, KOM segments on the elevation profile, and GLRC link fixes — are achievable with zero new npm dependencies. Every required API (Leaflet `L.divIcon`, chartjs-plugin-annotation box annotations, CSS `@keyframes`) is already present and in active use in the codebase. This is the key finding from STACK research: the existing stack already provides every primitive for all four visual features.
 
-The single most consequential finding across all four research dimensions is the **Strava API constraint**: the segment leaderboard endpoint has been blocked since June 2020, and Strava's November 2024 TOS update explicitly prohibits displaying other athletes' data to public anonymous visitors. A live-fetched KOM leaderboard is permanently off the table. The correct design is manual curation via JSON in the repo, with Strava segment deep-links for live data. This is simpler, more reliable, and eliminates the most complex and risky v2.0 feature. It should free up significant development scope that can be redirected to the photo card and interactivity work.
+The recommended approach is surgical, file-by-file changes that respect the v2.0 architecture's deliberate patterns: compositor-safe CSS animations only (transform/opacity), `L.divIcon` inline SVG for all Leaflet markers (no external image assets), and the existing CustomEvent bus for map-chart synchronization. The single most important architectural constraint is the three-way duplication of `starColors` across `RouteMap.astro`, `ElevationProfile.astro`, and `GravelSectors.astro` — all three must be updated in a single coordinated commit for VIS-12, or the map, chart, and sector cards will show mismatched colors. Architecture research confirmed that DATA-06 (photo position fix) is already resolved as of 2026-03-28 and only requires verification, not implementation.
 
-The four remaining feature clusters — map-elevation interactivity, photos on cards, animations, and the MK Ultra explainer section — are all achievable with zero or one optional new dependency. Map-elevation sync uses `CustomEvent` + `window.dispatchEvent()` between `ElevationProfile.astro` and `RouteMap.astro`; Chart.js 4's `onHover` and Leaflet's `setLatLng` provide all the primitives needed. Animations should be entirely vanilla CSS (`transition`, `@keyframes`, `transform`/`opacity`) to protect the current TBT 0ms score. The explainer is a static Astro component — it is a copywriting task with minimal engineering. The key implementation risk across this milestone is the mousemove/onHover sync firing at 60Hz and degrading map performance; throttle via `requestAnimationFrame` must be built in from the first commit.
+The primary risk for this milestone is the Escher animated background breaking the TBT 0ms Lighthouse baseline. The mitigation is strict: animate only `transform` and `opacity` on the SVG element (never `stroke-dashoffset`, `fill`, `d`, or geometry attributes), gate animation behind `prefers-reduced-motion: no-preference`, and run a mobile Lighthouse trace before any visual review. Every other feature in this milestone has no TBT risk — they are string value changes, static HTML, or annotation object additions to an already-running plugin.
 
 ---
 
@@ -21,193 +21,145 @@ The four remaining feature clusters — map-elevation interactivity, photos on c
 
 ### Recommended Stack
 
-The v1.0 stack (Astro 6, Leaflet 1.9.4, Chart.js 4, chartjs-plugin-annotation 3.1.0, Sharp 0.34.5, Tailwind v4) is sufficient for all v2.0 features. **Net new mandatory dependencies: zero.** The optional `motion` library (12.x, formerly Framer Motion, rebranded 2025 for vanilla JS) may be added if scroll-triggered card entrance animations require coordinated sequencing that CSS cannot express, but vanilla CSS with `IntersectionObserver` should be the first attempt.
+All v3.0 features use exclusively the existing stack. No packages should be added. The prohibition is explicit: no animation libraries (GSAP, motion, anime.js), no Leaflet SVG plugins (`leaflet-svgicon`), no icon libraries, no chart plugins beyond the already-installed chartjs-plugin-annotation 3.1.0. The existing grain overlay in `global.css` (line 87) is an inline SVG data URI with CSS animation — this is the exact pattern for the Escher background. The existing `L.divIcon` usage for restock markers, photo markers, and sector badges is the exact pattern for the bike crosshair icon.
 
-Do not add `chartjs-plugin-crosshair` — it was last published August 2023, has 59 open issues, and addresses intra-chart crosshair visualization rather than the cross-component (chart → map) sync the site needs. Chart.js 4's native `onHover` callback is cleaner and has zero maintenance risk. Do not add any Strava API client — the TOS bars the use case. Do not use `framer-motion` (old package name, superseded by `motion` on npm in early 2025).
-
-**Core technologies (unchanged from v1.0):**
-- **Astro 6** — static site framework; `<script>` blocks compile to module scripts; inter-component communication via `window.dispatchEvent(CustomEvent)`
-- **Leaflet 1.9.4** — map; `L.circleMarker` + `setLatLng()` for elevation crosshair marker; `mouseover` events for segment hover
-- **Chart.js 4 + chartjs-plugin-annotation 3.1.0** — elevation profile; `onHover` callback for position broadcast; runtime annotation updates (`chart.update('none')`) for segment range highlight
-- **Sharp 0.34.5** — image pipeline; width 200→400px, quality 75→80 for retina gallery thumbnails; new 600×338 card photo target with `fit: 'cover'`
-- **Tailwind v4** — CSS; `transition-*` utilities for all hover animations; `@keyframes` for load and scroll animations
-
-See `/Users/Sheppardjm/Repos/mkUltraGravel/.planning/research/STACK.md` for full rationale.
+**Core technologies (unchanged from v2.0):**
+- **Astro 6**: Static site generation — no change; HTML structure edits only
+- **Leaflet 1.9.4**: Map rendering — `L.divIcon` with inline SVG replaces `L.circleMarker` for crosshair
+- **chartjs-plugin-annotation 3.1.0**: Elevation chart overlays — add KOM `box` annotations alongside existing sector boxes; already at latest version
+- **CSS `@keyframes` + `transform`**: All animation — compositor-safe, zero TBT impact; `will-change: transform` for GPU promotion on Escher overlay only
+- **Inline SVG**: Favicon, background pattern tile, bike crosshair icon — no external files, no Vite asset path issues
 
 ### Expected Features
 
 **Must have (table stakes):**
-- Visual hover feedback on all interactive cards (sector, KOM, photo) — no hover = broken feel
-- Strava segment deep-link on KOM cards — cycling audience expects this
-- Some "about the name" explanation — without it, "MK Ultra" is opaque to non-cycling-history audience
-- Data corrections (segment locations, photo positions, restock cleanup, URLs) — correctness is baseline, not polish
+- Sector colors 1-2 changed from gray to warm spectrum — gray breaks cyclist mental model; yellow-to-red is universal difficulty encoding (BikeRoll, cycle.travel, Komoot all use it)
+- KOM segments visible on elevation profile — cycling audience expects named climbs demarcated on the chart; the map already shows them; chart parity is the standard (RideWithGPS does this)
+- GLRC link fixes — two plain-text mentions in `EventInfoBlock.astro` and `index.astro` should be live links; trivial correctness issue
+- DATA-06 verification — confirm photos.json is synchronized (architecture research indicates it already is)
 
-**Should have (competitive differentiators):**
-- Chart-to-map elevation sync (hover elevation chart → crosshair marker on map) — matches what RideWithGPS and Komoot deliver; none of the comparable small event sites do this
-- Photos on sector/KOM cards — standard on pro cycling event sites (Paris-Roubaix, Belgian Waffle Ride); implicitly expected by the MK Ultra audience
-- Manual KOM/QOM leaderboard (JSON-curated, dated, Strava deep-link) — most small event sites don't curate this at all; top-3 with a "last updated" stamp is a meaningful differentiator
-- CIA document treatment for the explainer with real FOIA references — the specificity and humor are what make this shareable
-- Scroll-reveal stagger on card lists — creates cinematic quality consistent with the dark aesthetic
+**Should have (differentiators):**
+- Bike icon on elevation hover crosshair — no major platform uses a bike icon here; brand-appropriate and memorable; technically straightforward
+- Escher tessellation background with subtle animation — directly references the CIA/psychedelic identity; reinforces brand coherence; rare in cycling event sites
+- Penrose triangle favicon — replaces the placeholder "MK" text; ties favicon to visual identity; one-time file replacement
 
-**Defer to v2.1+:**
-- Map-to-chart direction sync (hover map polyline → elevation highlight) — low-value direction; chart-to-map is the primary user flow
-- Sector card click → map zoom (cross-component navigation) — high complexity relative to impact
-- Chart.js draw-on animation — re-enabling `animation: { duration: 800 }` is fine but low priority
-- Any live Strava API integration — permanently blocked by TOS and endpoint restrictions
-
-**Anti-features — do not build:**
-- Live Strava OAuth leaderboard — TOS violation as of November 2024
-- Strava embed iframe — broken in Chrome due to third-party cookie deprecation
-- Smooth ease-in-out hover curves, bounce physics — wrong aesthetic for brutalist dark design
-- Animated page transitions — incompatible with Astro's static rendering model
-- Any animation library (GSAP, Framer Motion) for "subtle" effects — bundle cost is not justified; CSS handles all cases needed for this site
-
-See `/Users/Sheppardjm/Repos/mkUltraGravel/.planning/research/FEATURES.md` for the full feature analysis and dependency map.
+**Defer (not in v3.0 scope):**
+- Bearing-aligned bike icon rotation (faces direction of travel) — MEDIUM complexity; optional enhancement after base divIcon is working
+- Header inline Penrose triangle logo with animation — design iteration cost; may not justify the effort vs the favicon alone
+- KOM-to-sector hover sync (hovering a KOM band highlights the map KOM polyline) — cross-component event wiring; second-pass feature
+- `starColors` shared module extraction — correct architecture move but not required to unblock VIS-12; defer as tech debt item
 
 ### Architecture Approach
 
-v2.0 adds two inter-component communication channels to components that currently have zero shared state. The canonical Astro pattern for this is `window.dispatchEvent()` with named `CustomEvent`s — not `window.chartInstance` global variables, not a shared module. Both `ElevationProfile.astro` and `RouteMap.astro` remain fully isolated; they share only event names and payload shapes. Both components already fetch `route-data.json` independently; the second fetch resolves from browser cache. No change to the data pipeline is required for the sync feature.
+v3.0 operates entirely within the v2.0 component structure. No new components are required (an `EscherPattern.astro` component is optional if the pattern appears in 3+ sections). The change surface is 7 files: `RouteMap.astro` (bike crosshair), `ElevationProfile.astro` (KOM annotations), `GravelSectors.astro` (star colors), `global.css` (escher pattern class + keyframes), `index.astro` (GLRC link + optional escher SVG elements), `EventInfoBlock.astro` (GLRC link), and `public/favicon.svg` (replace content). `BaseLayout.astro` is optional — only needed if Escher pattern SVG `<defs>` are declared once globally. `public/data/photos.json` requires no code change, only verification.
 
-The build-time data pipeline gains two new scripts: `assign-card-photos.js` (photo-to-sector matching by mileage proximity, Haversine formula, pure Node.js arithmetic, no new dependency) and optionally `fetch-strava.js` (build-time Strava segment metadata fetch via `GET /segments/{id}` for `xoms` KOM/QOM times; graceful skip if env vars absent).
-
-**Modified components:**
-1. **`ElevationProfile.astro`** — emits `elevation:hover` (with `mi` value) on Chart.js `onHover`; listens to `map:segmentHover` and updates annotation `borderWidth`/color; emits `elevation:leave` on canvas `mouseleave`
-2. **`RouteMap.astro`** — listens to `elevation:hover` and moves a `L.circleMarker` crosshair via binary search of `routeData`; emits `map:segmentHover` on sector polyline `mouseover`
-3. **`KomSegments.astro`** — add `coverPhoto` image; add KOM/QOM time display from `leaderboard.json`; add Strava segment deep-link
-4. **`GravelSectors.astro`** — add `coverPhoto` image; add hover CSS
-
-**New build scripts:**
-5. **`assign-card-photos.js`** — matches photos to sectors/KOMs by mileage range proximity; enriches `annotations.json` with `coverPhoto` field
-6. **`fetch-strava.js`** (optional) — build-time fetch of `xoms` data; writes `public/data/leaderboard.json`; graceful skip if `STRAVA_CLIENT_ID` not set
-
-See `/Users/Sheppardjm/Repos/mkUltraGravel/.planning/research/ARCHITECTURE.md` for the complete event flow diagrams and build order.
+**Key integration constraints:**
+1. `starColors` duplication across 3 files — must change all three simultaneously (VIS-12)
+2. Crosshair: `L.circleMarker.setStyle()` → `L.marker.setOpacity()` — API difference must be updated in both the `elevation:hover` and `elevation:hoverEnd` listeners
+3. SVG `<pattern>` IDs must be unique if the pattern appears in multiple sections — or declare once in `<defs>` and `<use>` per section
+4. Escher background z-index must be below `z-index: 9999` (grain overlay) — assign `-1` relative to positioned ancestor or `0` with `position: fixed` at root level
+5. KOM annotations: use `drawTime: 'beforeDatasetsDraw'` to separate rendering layer from sector bands (which default to `afterDatasetsDraw`) and prevent opacity stacking artifacts where KOM and sector overlap
 
 ### Critical Pitfalls
 
-1. **Strava TOS violation (Pitfalls 16 + 17)** — The November 2024 Strava API Agreement explicitly prohibits displaying other athletes' data to anonymous public visitors. The segment leaderboard endpoint has been blocked since June 2020 regardless of subscription status. Prevention: manual JSON curation only; never call `/segments/{id}/leaderboard`; never reference the client secret in static build output.
+1. **Animated SVG background breaks TBT 0ms** (Pitfall 28) — Animating `stroke-dashoffset`, `fill`, or path `d` attributes triggers CPU repaint at 60fps. Animate ONLY `transform` and `opacity`. Run DevTools Performance trace with 4x CPU throttle before shipping. If "Paint" events appear in the trace, the animation is unsafe.
 
-2. **TBT regression from mousemove or animation (Pitfalls 19 + 23)** — The current TBT 0ms is fragile. `mousemove`/`onHover` at 60Hz can block the main thread; animation libraries add script parse time; LCP candidates starting at `opacity: 0` delay LCP measurement. Prevention: throttle sync via `requestAnimationFrame`; use CSS `transition`/`@keyframes` with `transform`/`opacity` only; never start the hero or LCP image at opacity 0; run Lighthouse after every animation addition.
+2. **starColors updated in one file only** (Pitfall 31) — Three independent `starColors` constants exist: `ElevationProfile.astro:57`, `RouteMap.astro:78`, `GravelSectors.astro:15`. Update all three in one commit. Visual verification: compare a 3-star sector's polyline color, chart band color, and card star color — they must match.
 
-3. **Strava token expiry causing silent build failures (Pitfall 18)** — Access tokens expire after 6 hours; if the build script doesn't handle the 401, it writes empty JSON and Netlify reports a successful deploy with blank leaderboard data. Prevention: implement token refresh on day one; fail the build loudly (exit non-zero) on any 401; store the refresh token, not just the access token; Strava rotates refresh tokens on every use — update the stored token after each refresh.
+3. **`L.marker.setStyle()` call after divIcon replacement** (Pitfall + Anti-Pattern B in ARCHITECTURE.md) — `L.marker` does not have `setStyle()`. After replacing `L.circleMarker`, all show/hide calls must use `crosshair.setOpacity(1)` and `crosshair.setOpacity(0)`. Using `setStyle()` on an `L.marker` silently fails.
 
-4. **Event listener memory leak (Pitfall 20)** — Manually added `mousemove`/`mouseleave` listeners on the Chart.js canvas are not removed by `chart.destroy()`. Multiple re-initializations on resize accumulate leaked Chart.js and Leaflet references. Prevention: use `AbortController` with `{ signal: ac.signal }` on all manually registered listeners; call `ac.abort()` before `chart.destroy()`.
+4. **`prefers-reduced-motion` not applied to Escher animation** (Pitfall 30) — The existing global reduced-motion queries only cover `[data-reveal]` and `.redacted-reveal` selectors. Every new `@keyframes` needs its own explicit `@media (prefers-reduced-motion: reduce) { animation: none }` override in the same commit.
 
-5. **Image quality increase without measuring cumulative payload (Pitfall 22)** — Thirty-three thumbnails at 50% larger each is not a minor change. Prevention: establish a total thumbnail byte budget baseline (`du -sh public/images/thumbs/`) before quality changes; measure after; never change quality settings without a before/after comparison.
+5. **SVG favicon fill attribute specificity overrides embedded styles** (Pitfall 34) — SVG element `fill="..."` attributes have higher specificity than a `<style>` block inside the SVG. Remove `fill` attributes from path elements and use CSS classes inside the SVG `<style>` block instead. Also: Safari does not apply embedded SVG styles to favicons — provide a PNG/ICO fallback.
 
-See `/Users/Sheppardjm/Repos/mkUltraGravel/.planning/research/PITFALLS.md` for the full 12-pitfall v2.0 list plus retained v1.0 warnings.
+6. **KOM and sector annotation opacity stacking** (Pitfall 33) — If KOM box annotations use the same `drawTime` as sector boxes and overlap geographically, the overlapping opacity fills produce muddy brown artifacts. Use `drawTime: 'beforeDatasetsDraw'` for KOM boxes to separate the rendering pass.
 
 ---
 
 ## Implications for Roadmap
 
-The research strongly supports a data-first, interactivity-second, polish-last ordering. Data corrections must precede all card/photo/map work. Map-elevation interactivity is the highest-complexity item and should be built in isolation. Card photos and animations are additive and independent. Strava leaderboard ships last because it has the most external operational dependencies.
+All v3.0 features are independent of each other. There are no hard dependencies between them beyond the `starColors` three-file coordination. Ordering is driven by risk, visual impact, and verification clarity — not technical dependencies.
 
-### Phase 1: Data Foundations + Corrections
+### Phase 1: Sector Color Spectrum + GLRC Links (VIS-12, CONT-05)
 
-**Rationale:** All subsequent card, map, and photo work depends on correct underlying data. Fixing segment locations, photo positions, restock markers, and URL data now prevents rework later. This is zero-risk cleanup with no new architecture.
+**Rationale:** Lowest combined risk; highest visual impact relative to effort. Both are pure value/content changes with no runtime logic changes. The `starColors` three-file coordination makes this a single multi-file commit — doing it first establishes the new color palette that all subsequent visual review sessions will use. GLRC links are two-line fixes with zero regression risk — batch them here to clear the backlog immediately.
 
-**Delivers:** Correct `annotations.json`, `photos.json`, and segment mile markers; valid registration and donation URLs; route stats added to map/description copy.
+**Delivers:** Correct yellow-to-red sector color spectrum visible on map polylines, elevation chart bands, and sector card stars simultaneously. Two GLRC plain-text mentions converted to live links.
 
-**Addresses:** Data fixes milestone item; unblocks all card, photo, and map phases.
+**Addresses:** VIS-12, CONT-05
 
-**Avoids:** Building UI on bad data and having to revisit card positions after photo assignment completes.
+**Avoids:** starColors partial update pitfall (Pitfall 31) — commit must include all three component files
 
-**Research flag:** Standard patterns — skip research-phase. Pure data corrections in existing pipeline scripts.
+**Research flag:** No additional research needed. Standard pattern; all integration points confirmed with line numbers.
 
----
+### Phase 2: DATA-06 Verification (DATA-06)
 
-### Phase 2: Photo Pipeline + Card Photos
+**Rationale:** Architecture research indicates photos.json is already synchronized as of the 2026-03-28 pipeline re-run. This phase is a verification task, not an implementation task. It should happen early so it can be closed quickly or escalated if re-work is needed. It does not block any other v3.0 phase.
 
-**Rationale:** Photo assignment (`assign-card-photos.js`) is a prerequisite for card photo display. This phase establishes the `coverPhoto` schema extension to `annotations.json`, then wires the photos into `GravelSectors.astro` and `KomSegments.astro`. Low risk — additive change to existing static components.
+**Delivers:** Confirmed correct photo map positions, or a re-run of `node scripts/match-photos.js` if any mismatch is found. Cache purge on Netlify after deploy (Pitfall 35 prevention).
 
-**Delivers:** Photos on all sector and KOM cards. Improved thumbnail quality (400px, q80) for retina gallery. New card photo crop target (600×338, `fit: 'cover'`).
+**Addresses:** DATA-06
 
-**Addresses:** Photos on sector/KOM cards; image quality improvements; new photos processing.
+**Research flag:** No research needed. Pipeline re-run command confirmed: `node scripts/match-photos.js`. Verification method: compare 54 entries in `photo-manifest.js` against `public/data/photos.json` mile values.
 
-**Avoids:** Pitfall 22 (cumulative payload) — establish byte budget baseline before and after thumbnail quality change; delete existing thumbs directory to force regeneration at new size.
+### Phase 3: KOM Segments on Elevation Profile (VIS-13)
 
-**Research flag:** Standard patterns — skip research-phase. Haversine photo matching is well-documented; Sharp API is stable.
+**Rationale:** Confined to a single file (`ElevationProfile.astro`). No cross-component event changes. Builds directly on the already-registered `AnnotationPlugin` and the existing `annotationBoxes` object structure. Zero TBT risk. Delivers meaningful UX improvement — cyclists can now see where the named climbs fall on the elevation curve.
 
----
+**Delivers:** KOM segment bands on the elevation chart in chartreuse (#7fff00), visually consistent with the existing KOM polyline color on the map. Dashed border matches the map's `dashArray: '8, 4'`. Optional text label inside each band showing the KOM name.
 
-### Phase 3: Map-Elevation Interactivity
+**Addresses:** VIS-13
 
-**Rationale:** Highest complexity feature; build in isolation before any other runtime changes. Both components exist and initialize correctly. The custom event bus is the core new runtime architecture for v2.0 — establish it here, test both directions, measure Lighthouse before and after.
+**Avoids:** Annotation z-order conflict (Pitfall 33) — use `drawTime: 'beforeDatasetsDraw'` on KOM boxes; add `_baseColor: '#7fff00'` for forward compatibility with any future KOM hover events
 
-**Delivers:** Hover elevation chart → crosshair `L.circleMarker` appears on map at correct GPS coordinate, moves continuously with cursor. Hover sector polyline on map → corresponding mileage range highlights on elevation chart annotation. Both directions via `window.CustomEvent`. Touch support (`touchmove`) wired in same pass as `mousemove`.
+**Research flag:** No additional research needed. `borderDash`, `label.display`, and `yMin/yMax omit` all confirmed in chartjs-plugin-annotation 3.1.0 official docs. Data field confirmed: `startMi` and `lengthMi` in `annotations.json` KOM entries.
 
-**Addresses:** Map-elevation profile interactivity (crosshair sync + segment highlighting).
+### Phase 4: Bike Icon Crosshair (UX-01)
 
-**Avoids:**
-- Pitfall 19 (mousemove at 60Hz blocking main thread) — `requestAnimationFrame` throttle gate from first commit
-- Pitfall 20 (listener leak on chart re-init) — `AbortController` from first commit
-- Pitfall 24 (chartjs-plugin-crosshair version incompatibility) — do not use the plugin; use native `onHover` callback
-- Pitfall 27 (touch events not wired) — implement `touchmove` handler in same phase as `mousemove`
+**Rationale:** Medium risk due to the Leaflet API difference between `L.circleMarker.setStyle()` and `L.marker.setOpacity()`. Placing this after the simpler annotation work allows the visual review session for Phase 3 to also cover the map behavior independently. Follows the established `L.divIcon` inline SVG pattern already used for 4 other marker types in `RouteMap.astro`.
 
-**Research flag:** Patterns fully documented — skip research-phase. ARCHITECTURE.md provides the complete implementation blueprint including code examples for the event bus, `getValueForPixel` lookup, and `chart.update('none')` annotation update. Run Lighthouse after this phase to confirm TBT stays at 0ms before proceeding.
+**Delivers:** Bike SVG icon replacing the plain cyan dot on the elevation hover crosshair. Icon centered at `iconAnchor: [12, 12]` for a 24×24 icon. Show/hide via `setOpacity()`. `:global(.bike-crosshair)` CSS rule matching existing `:global(.restock-marker)` pattern.
 
----
+**Addresses:** UX-01
 
-### Phase 4: Animations
+**Avoids:** `setStyle()` called on `L.marker` (Anti-Pattern B); wrong `iconAnchor` causing zoom drift (Pitfall 32) — set `iconAnchor: [12, 12]` and verify at zoom levels 8, 12, and 16
 
-**Rationale:** Pure CSS/JS additions with no dependencies on other v2.0 phases. Placing animations after interactivity keeps the sync feature testing clean and ensures Lighthouse baseline from Phase 3 is measured before adding new visual complexity.
+**Research flag:** No additional research needed. Leaflet `L.divIcon` + `setOpacity()` API confirmed. SVG bike path source: Lucide `bicycle` icon (MIT license, 24×24 viewBox, single path) is the recommended source.
 
-**Delivers:** Hard box-shadow hover states on sector and KOM cards (brutalist aesthetic). Scroll-reveal `opacity`/`translateY` fade-in on card lists via `IntersectionObserver`. Hero text load animation via `@keyframes` with staggered `animation-delay`. Photo grayscale-to-color reveal on hover. Full `prefers-reduced-motion` compliance.
+### Phase 5: Escher/Penrose Background + Favicon (VIS-14, VIS-15)
 
-**Addresses:** Subtle animations milestone item; CIA document aesthetic polish.
+**Rationale:** Most visual iteration cost; highest creative/aesthetic risk. Placed last because it does not block any other feature and requires the most back-and-forth to get the aesthetic right. The performance gate (Lighthouse mobile trace with 4x CPU throttle) must pass before visual review. The favicon is a file replacement with no code change.
 
-**Avoids:**
-- Pitfall 23 (TBT regression) — never start LCP-candidate elements at `opacity: 0`; run Lighthouse after every animation addition, not just at the end
-- Anti-features: smooth ease-in-out curves, bounce physics, GSAP or Framer Motion bundle weight
+**Delivers:** Subtle animated Escher-style tessellation pattern (isometric cubes / hex rhombus grid, SVG `<pattern>`) as a background element below page content, above the solid dark background. Slow CSS transform drift animation (40–60s cycle) gated behind `prefers-reduced-motion: no-preference`. Penrose triangle SVG replacing the "MK" text placeholder favicon.
 
-**Research flag:** Standard patterns — skip research-phase. All approaches are CSS-only with IntersectionObserver; no library decisions required.
+**Addresses:** VIS-14, VIS-15
 
----
+**Avoids:** Non-compositor animation (Pitfall 28) — animate only `transform`; SVG favicon fill specificity trap (Pitfall 34) — use CSS classes inside `<style>`, not `fill=` attributes; wrong z-index (Pitfall 29) — z-index below 9999; omitting `prefers-reduced-motion` (Pitfall 30) — override in same commit; GPU memory over-promotion (Pitfall 37) — `will-change: transform` on animating element only
 
-### Phase 5: MK Ultra Name Explainer
+**Research flag:** MEDIUM complexity. SVG tile geometry requires authoring work. Two recommended options from research:
+- Isometric Escher cubes (three rhombuses in a hex arrangement) — the referenced `boxes.svg` CDN file uses this pattern; matches the `escharian_stairs_fb.webp` existing asset theme
+- Penrose triangle as a repeating tile — more complex geometry but highest brand fit
 
-**Rationale:** Fully independent static component — no data dependencies, no runtime JS required. Can ship at any point; placed after interactivity to keep the highest-complexity phases uncluttered. The complexity here is copywriting, not engineering.
-
-**Delivers:** New static Astro component explaining the MKULTRA connection (CIA covert program, 1953–1973, LSD, FOIA documents). CIA document aesthetic: monospace type, redaction-reveal CSS effect (click-to-uncover via CSS `width` transition on pseudo-element), real FOIA document links. Positioned between event info and map sections.
-
-**Addresses:** MK Ultra name explainer milestone item.
-
-**Avoids:** Video backgrounds (wrong medium, high bandwidth); animated page transitions (Astro static model incompatibility); over-engineering what is fundamentally a copywriting task.
-
-**Research flag:** Standard patterns — skip research-phase. Static Astro component, CSS-only interaction. Historical facts researched and documented in FEATURES.md.
-
----
-
-### Phase 6: Strava KOM Leaderboard
-
-**Rationale:** Comes last because it has the most external operational prerequisites. Can ship with fallback empty JSON if Strava setup is not ready — `KomSegments.astro` renders gracefully without leaderboard data. The manual curation approach means the phase is not blocked by Strava API access at all; the JSON can be hand-authored first and the build-time fetch layer added afterward.
-
-**Delivers:** KOM/QOM time display on KOM cards (manual JSON, dated, with Strava deep-link). Optionally: `fetch-strava.js` build-time script that fetches `xoms` from `GET /segments/{id}` and writes `public/data/leaderboard.json`. Strava segment URLs on all KOM cards.
-
-**Addresses:** Strava KOM/QOM leaderboard milestone item (manual curation approach per TOS constraint).
-
-**Avoids:**
-- Pitfall 16 (client secret in static build) — Strava credentials in Netlify env vars only, accessed from build script only, never in browser JS
-- Pitfall 17 (leaderboard endpoint blocked) — never call `/segments/{id}/leaderboard`; use `/segments/{id}` `xoms` field only
-- Pitfall 18 (token expiry / silent failure) — implement refresh token rotation on day one; exit non-zero on 401
-- Pitfall 21 (rate limit exhaustion in CI) — cache-first fetch logic with `STRAVA_FETCH_ENABLED` guard for development builds
-- Pitfall 25 (private segments) — verify each segment's privacy setting in Strava before writing any API code
-
-**Research flag:** Has operational prerequisites that must be resolved before coding begins:
-- [ ] Strava segment IDs confirmed for Billie Helmer, Leaving Chatham, Silver Creek segments
-- [ ] Each segment verified as public (not private) in Strava settings
-- [ ] Strava developer application registered at developers.strava.com
-- [ ] Initial OAuth flow completed and refresh token stored in Netlify env vars
-
----
+The animated approach (Option B in ARCHITECTURE.md: inline SVG with CSS rotation/translate) is confirmed as compositor-safe. Static fallback (no animation) is always acceptable if TBT ticks above 0ms.
 
 ### Phase Ordering Rationale
 
-- **Data first** because all card, photo, and map work has a correctness dependency on `annotations.json` and `photos.json`. Building UI on wrong data guarantees rework.
-- **Photos second** because `assign-card-photos.js` establishes the `coverPhoto` schema extension that the Strava leaderboard phase also builds on top of.
-- **Interactivity isolated** in its own phase because it is the highest complexity item and the most likely to introduce regressions. Isolating it makes Lighthouse delta measurements unambiguous.
-- **Animations after interactivity** so the TBT baseline from Phase 3 is measured cleanly before adding new visual complexity.
-- **Explainer and leaderboard last** because the explainer is fully independent and the leaderboard has external operational prerequisites. Neither blocks anything else.
+- Phases 1-2 are pure data/content changes with zero regression risk — do them first to build momentum and establish the new color palette for visual reviews
+- Phase 3 (KOM chart bands) is contained to one file and zero TBT risk — de-risks the annotation system before touching the map
+- Phase 4 (bike crosshair) has the highest Leaflet API change risk — sequence it after the annotation work to isolate concerns
+- Phase 5 (Escher + favicon) is last because it has the highest iteration cost and the only non-trivial TBT risk in the milestone
+- All five phases are independent — if Phase 5 is blocked by aesthetic iteration, Phases 1-4 can ship as a point release
+
+### Research Flags
+
+Phases that need no additional research — standard patterns, all integration points confirmed:
+- **Phase 1:** starColors value substitution; static HTML `<a>` tag additions — well-documented, direct code inspection confirmed
+- **Phase 2:** Data pipeline re-run only — command confirmed, no code change
+- **Phase 3:** chartjs-plugin-annotation box annotation additions — official docs verified, existing usage confirmed
+- **Phase 4:** Leaflet `L.divIcon` with inline SVG — official docs verified, 4 existing usages in codebase as templates
+
+Phase with moderate implementation unknowns:
+- **Phase 5:** SVG tile geometry authoring for the Escher pattern requires design iteration. The CSS/DOM integration approach is fully confirmed. The visual output depends on the tile path data, which must be authored and tuned visually. If the isometric cube SVG from the CDN reference (`boxes.svg`) can be adapted directly, complexity is LOW. If custom geometry is required, allow extra iteration time.
 
 ---
 
@@ -215,61 +167,57 @@ The research strongly supports a data-first, interactivity-second, polish-last o
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | All technology choices verified against official docs; zero mandatory new dependencies confirmed; `chartjs-plugin-crosshair` staleness confirmed via GitHub (last release August 2023, 59 open issues) |
-| Features | HIGH | Strava API constraints verified from official Strava changelog and TOS text; cycling event design patterns verified from reference sites (Paris-Roubaix, Belgian Waffle Ride); anti-feature list grounded in TOS and aesthetic constraints |
-| Architecture | HIGH | CustomEvent bus pattern is idiomatic Astro pattern confirmed in official docs; Chart.js `onHover` + `getValueForPixel` API verified; Leaflet `setLatLng`/`circleMarker` verified; one MEDIUM item: token refresh rotation is documented but real-world maintenance friction is training data |
-| Pitfalls | HIGH | Core pitfalls (TOS prohibition, token expiry, mousemove throttle, listener cleanup) verified from official documentation; image payload and crosshair plugin pitfalls verified from official + community sources |
+| Stack | HIGH | Zero new deps confirmed by verifying all 4 feature implementations against existing codebase APIs. Leaflet `L.divIcon` docs, chartjs-plugin-annotation 3.1.0 docs, and CSS `@keyframes` capabilities all verified. |
+| Features | HIGH | Feature landscape grounded in direct codebase inspection. KOM startMi/endMi field existence confirmed. starColors three-file duplication confirmed with line numbers. Cycling difficulty color conventions verified against BikeRoll, cycle.travel. |
+| Architecture | HIGH | All 7 integration points confirmed with specific file paths and line numbers via direct code inspection. DATA-06 already-resolved status confirmed by comparing photo-manifest.js (54 entries) against photos.json (54 entries, no mismatches). |
+| Pitfalls | HIGH for critical pitfalls | Pitfalls 28-31 (animated SVG TBT, starColors coordination, L.marker API, prefers-reduced-motion) are all HIGH confidence from official documentation. Pitfalls 33-35 (KOM drawTime, favicon specificity, cache) range MEDIUM-HIGH. |
 
 **Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **Strava segment IDs** — The KOM segments (Billie Helmer, Leaving Chatham, Silver Creek) need their Strava segment IDs confirmed. These may or may not exist as official public Strava segments. This must be resolved before Phase 6 can begin. If segments are not on Strava, the leaderboard is manual-only JSON with no live data component at all.
+- **oklch color values for new sector spectrum:** Specific oklch or hex values for stars 1-4 need visual QA against the dark map tiles and the CARTO dark background. Research provides a range (`oklch(0.82 0.18 85)` through `oklch(0.45 0.20 25)`) but specific values must be tuned to achieve perceptual uniformity and WCAG 4.5:1 contrast. Keep chroma below 0.2 for WCAG safety on sRGB displays (Pitfall 36).
 
-- **Photo coverage per sector** — `assign-card-photos.js` assumes photos exist within each sector's mileage range. C4 (mile 58.7–64.35) and Down Jeep (mile 83.0–83.6) may have no photos assigned. Verify against the photo manifest; if gaps exist, either expand the search radius or assign the nearest route photo manually.
+- **Escher SVG tile geometry:** The isometric cubes pattern is recommended and the CDN reference exists, but the specific `<pattern>` path data must be authored. The tile should be validated at multiple `background-size` values (100px, 150px, 200px) to find the right visual density before shipping.
 
-- **Strava token rotation maintenance burden** — The recommended approach (manual token rotation after each deploy) is appropriate for low-frequency deploys. If deploy frequency increases, this becomes a maintenance burden. The automated alternative (Netlify API to self-update the env var) is complex. Monitor and reassess during Phase 6.
+- **Bike SVG path selection:** Lucide `bicycle` is recommended as the source. The path data must be confirmed as compact (<300 bytes), render correctly at 24×24, and have the right visual weight at the map zoom levels used (8-16). Verify at both 1x and 2x DPR.
 
-- **`onHover` performance on mid-range Android** — The throttle pattern (`requestAnimationFrame`) is research-confirmed correct, but actual performance on mid-range Android should be verified with Chrome DevTools Performance tab after implementation, not assumed.
+- **DATA-06 re-verification:** Architecture research confirms photos.json was regenerated at commit `dec592a` (2026-03-28). Phase 2 should re-run the comparison programmatically (`node scripts/match-photos.js` output diff against current file) as a formal verification step rather than relying on the research finding alone.
 
 ---
 
 ## Sources
 
 ### Primary (HIGH confidence)
-
-- [Strava API Agreement November 2024](https://www.strava.com/legal/api) — Community Application definition; TOS prohibition on displaying other athletes' data to anonymous visitors
-- [Strava Changes to Segments API](https://developers.strava.com/docs/segment-changes/) — Leaderboard endpoint removal June 2020; confirmed unavailable
-- [Strava Authentication docs](https://developers.strava.com/docs/authentication/) — OAuth2 flow; 6-hour token expiry; refresh token rotation
-- [Strava Rate Limits](https://developers.strava.com/docs/rate-limits/) — 100 req/15 min non-upload, 1,000/day
-- [Strava November 2024 announcement](https://press.strava.com/articles/updates-to-stravas-api-agreement) — Context for TOS changes
-- [Astro client-side scripts docs](https://docs.astro.build/en/guides/client-side-scripts/) — CustomEvent pattern for cross-component communication
-- [Chart.js Interactions docs](https://www.chartjs.org/docs/latest/configuration/interactions.html) — `onHover` callback; `getValueForPixel` API
-- [Leaflet API reference](https://leafletjs.com/reference.html) — `setLatLng()`; `circleMarker`; polyline `mouseover` events
-- [Netlify environment variables](https://docs.netlify.com/build/configure-builds/environment-variables/) — env var scoping; build vs function scope
-- [Sharp WebP output + resize API](https://sharp.pixelplumbing.com/api-output/) — quality parameters; `fit: 'cover'` resize mode
-- [Avoid non-composited animations — Chrome Developers](https://developer.chrome.com/docs/lighthouse/performance/non-composited-animations) — `transform`/`opacity` compositor-only rule
-- [Total Blocking Time — web.dev](https://web.dev/articles/tbt) — TBT threshold; Lighthouse scoring weights
-- [prefers-reduced-motion — MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/prefers-reduced-motion) — Accessibility requirement
-- [W3C WCAG C39](https://www.w3.org/WAI/WCAG21/Techniques/css/C39) — Reduced motion technique
-- [Chart.js plugins docs](https://www.chartjs.org/docs/latest/developers/plugins.html) — `.destroy()` behavior; listener cleanup
-- [Leaflet GitHub Issue #9514](https://github.com/Leaflet/Leaflet/issues/9514) — Canvas mousemove throttle behavior confirmation
+- Leaflet custom icons guide: https://leafletjs.com/examples/custom-icons/
+- Leaflet DivIcon reference: https://leafletjs.com/reference.html#divicon-l-divicon
+- Leaflet L.marker.setOpacity: https://leafletjs.com/reference.html#marker
+- chartjs-plugin-annotation box annotations: https://www.chartjs.org/chartjs-plugin-annotation/latest/guide/types/box.html
+- chartjs-plugin-annotation GitHub releases (v3.1.0 is current): https://github.com/chartjs/chartjs-plugin-annotation/releases
+- Chrome for Developers — avoid non-composited animations: https://developer.chrome.com/docs/lighthouse/performance/non-composited-animations
+- MDN — prefers-reduced-motion: https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/prefers-reduced-motion
+- W3C WCAG 2.3.3 — Animation from Interactions: https://www.w3.org/WAI/WCAG21/Understanding/animation-from-interactions.html
+- MDN — SVG stacking context: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_positioned_layout/Understanding_z-index/Stacking_context/
+- Direct codebase inspection: RouteMap.astro, ElevationProfile.astro, GravelSectors.astro, global.css, BaseLayout.astro, index.astro, EventInfoBlock.astro, public/favicon.svg, scripts/photo-manifest.js, public/data/photos.json
 
 ### Secondary (MEDIUM confidence)
+- BikeRoll route planner color grading: https://www.cyclingabout.com/bikeroll-bike-route-planner/
+- cycle.travel elevation chart key: https://cycle.travel/post/5728
+- SVG animation encyclopedia: https://www.svgai.org/blog/research/svg-animation-encyclopedia-complete-guide
+- SVG favicon dark mode guide: https://owenconti.com/posts/supporting-dark-mode-with-svg-favicons
+- OKLCH WCAG gamut interaction: https://blog.logrocket.com/oklch-css-consistent-accessible-color-palettes
+- Optimizing SVGs in data URIs: https://codepen.io/tigt/post/optimizing-svgs-in-data-uris
+- Escher boxes SVG reference (CDN): https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/boxes.svg
+- Smashing Magazine — GPU Animation: https://www.smashingmagazine.com/2016/12/gpu-animation-doing-it-right/
+- Netlify default cache header behavior: https://docs.netlify.com/build/caching/caching-overview/
 
-- [chartjs-plugin-crosshair GitHub](https://github.com/AbelHeinsbroek/chartjs-plugin-crosshair) — Last published August 2023; 59 open issues; staleness confirmed; Chart.js v4 compatibility issue #95
-- [Strava Community Hub: KOM/QOM data](https://communityhub.strava.com/developers-api-7/accessing-kom-qom-data-for-segment-1999) — `xoms` field on `/segments/{id}` endpoint confirmed
-- [Strava Community Hub: leaderboard discussion](https://communityhub.strava.com/developers-api-7/api-segment-leaderboards-and-efforts-3031) — Community corroboration of endpoint restriction
-- [Motion (animation library) official docs](https://motion.dev/docs) — Package rename from `framer-motion` to `motion`; vanilla JS API
-- [CSS scroll animations techniques 2025](https://mroy.club/articles/scroll-animations-techniques-and-considerations-for-2025) — IntersectionObserver vs native CSS scroll-driven; browser support comparison
-- [MKUltra — Wikipedia](https://en.wikipedia.org/wiki/MKUltra) — Historical facts for explainer component
-- [CIA FOIA MK-ULTRA documents](https://www.cia.gov/readingroom/document/06760269) — Primary source documents referenced in explainer
-- [MK-Ultra Princeton Special Collections](https://specialcollections.princeton.edu/2025/10/the-cias-quest-for-mind-control-piecing-together-project-mk-ultra-and-its-princeton-connections-part-i-allen-w-dulles-class-of-1914/) — Additional historical sourcing
-- [Netlify Secrets Controller](https://docs.netlify.com/build/environment-variables/secrets-controller/) — Proactive secret scanning
-- [Paris-Roubaix official site](https://www.paris-roubaix.fr) — Per-sector photo reference pattern
-- [MapTiler elevation profile marker sync example](https://docs.maptiler.com/sdk-js/examples/elevation-profile-control-marker/) — Cross-component sync reference implementation
+### Tertiary (for implementation reference only)
+- Penrose triangle free SVG: https://freesvg.org/penrose-triangle
+- SVG Repo impossible triangle: https://www.svgrepo.com/svg/173286/impossible-triangle
+- How to favicon in 2026: https://evilmartians.com/chronicles/how-to-favicon-in-2021-six-files-that-fit-most-needs
+- Lucide bicycle icon (MIT): https://lucide.dev/icons/bicycle
 
 ---
 
-*Research completed: 2026-03-27*
+*Research completed: 2026-03-28*
 *Ready for roadmap: yes*

@@ -383,3 +383,395 @@ Mistakes that are annoying but fixable without significant rework.
 
 *Research completed: 2026-03-27*
 *Scope: v2.0 pitfalls only (Pitfalls 16–27). v1.0 pitfalls (1–15) remain in file above the --- marker.*
+
+---
+---
+
+# v3.0 Pitfall Extension
+
+**Added:** 2026-03-28
+**Scope:** Escher Identity + Data Fixes + UX Polish — animated SVG backgrounds, custom Leaflet markers, Chart.js KOM annotation layering, color scheme coordination, SVG favicon, and build data regeneration.
+
+> These pitfalls address what can go wrong when adding Escher/Penrose visual identity, KOM elevation
+> overlays, and UX refinements to an already-optimized system with TBT 0ms, Lighthouse 96, and a
+> z-index 9999 grain overlay that all new layers must respect.
+
+---
+
+## Critical Pitfalls (v3.0)
+
+---
+
+### Pitfall 28: Animated SVG Background Breaks Compositor Safety — TBT 0ms at Risk
+
+**What goes wrong:** The developer adds a Penrose/Escher tessellation SVG as a background element and animates it with CSS. The animation works visually, but animates properties other than `transform` and `opacity` — for example, `stroke-dashoffset`, `fill`, `d` path data, or `filter`. Each frame triggers a repaint on the CPU rather than a GPU composite, creating main-thread long tasks. TBT rises from 0ms to measurable values. On mobile, the animation also drains battery visibly.
+
+**Why it happens:** SVG elements have a larger set of animatable properties than regular DOM elements. `stroke-dashoffset` is a popular choice for "drawing" effects — it is visually appealing and feels relevant for a Penrose triangle. But `stroke-dashoffset` is not a compositor-safe property: it triggers paint (not just composite) on every frame. Similarly, animating `fill` color, `filter: blur()`, or path `d` data forces CPU repaint at 60fps.
+
+**The existing constraint:** The codebase already enforces compositor-safe animations (`transform`/`opacity` only) for scroll-reveal and glitch effects. The grain overlay at `z-index: 9999` is fixed and `position: fixed` — which itself creates a stacking context. Any new animated element added as `position: fixed` or with `will-change: transform` will also create stacking contexts that can interfere with the existing z-index order.
+
+**Consequences:** TBT goes nonzero, Lighthouse score drops. On mobile, the animation causes device warming and visible battery drain — directly harmful to the user profile (gravel cyclists checking the site on phones in the field). If the animated element is large (full-screen background), the GPU memory cost of promoting it to its own layer can exceed 10–20MB on mobile devices with limited VRAM.
+
+**Prevention:**
+- Animate ONLY `transform` (scale, rotate, translate) and `opacity` on SVG elements — these are compositor-safe even for SVGs
+- For Penrose triangle rotation: `animation: spin 8s linear infinite; @keyframes spin { to { transform: rotate(360deg); } }` — this is safe
+- Do NOT animate: `stroke-dashoffset`, `fill`, `stroke`, `d`, `filter`, `cx`, `cy`, `r`, or any SVG geometry attribute
+- For subtle "breathing" effects: animate `opacity` between 0.03 and 0.08 — compositor-safe and imperceptible to most users
+- Apply `will-change: transform` only to the element that actually animates — not to the wrapper or parent — and only while the animation is running
+- Avoid applying `will-change` globally or to many elements simultaneously; each promoted layer consumes additional GPU memory
+- Run Chrome DevTools Performance trace with CPU throttling at 4x before shipping any animated background
+
+**Warning signs:**
+- DevTools Performance panel shows "Paint" events during animation (not just "Composite Layers")
+- `stroke-dashoffset` or `fill` appearing in the `@keyframes` block
+- Multiple elements with `will-change: transform` in the same viewport section
+- The animated element has `position: fixed` AND the grain overlay has `position: fixed` — both create stacking contexts that must be coordinated
+
+**Phase:** VIS-14 (Escher/Penrose tessellation backgrounds). Verify compositor safety before any visual review.
+
+**Confidence:** HIGH — compositor-safe property list (transform, opacity) confirmed from [Chrome for Developers: Avoid non-composited animations](https://developer.chrome.com/docs/lighthouse/performance/non-composited-animations); SVG repaint behavior from [MDN Animation performance and frame rate](https://developer.mozilla.org/en-US/docs/Web/Performance/Guides/Animation_performance_and_frame_rate); will-change memory cost from [Smashing Magazine: GPU Animation Doing It Right](https://www.smashingmagazine.com/2016/12/gpu-animation-doing-it-right/).
+
+---
+
+### Pitfall 29: Animated Background Placed at Wrong Z-Index — Obscures Content or Sits Behind Film Grain in Wrong Order
+
+**What goes wrong:** The developer adds the Escher background element with `position: fixed` or `position: absolute` and assigns a z-index without accounting for the existing z-index: 9999 grain overlay. Two outcomes: (a) the background is placed above the grain overlay (z-index >= 9999) and the grain no longer overlays the background, breaking the psychedelic aesthetic; or (b) the background is placed below all page content at a very low z-index but uses `transform` or `opacity` which creates a new stacking context, causing other positioned elements to appear behind it unexpectedly.
+
+**The specific code constraint:** `global.css` defines `.grain-overlay` at `z-index: 9999` with `position: fixed`. The hero section uses `position: relative` with `overflow: hidden`. Any element with `transform`, `will-change`, `opacity < 1`, or `filter` creates a new stacking context — this stacking context is local, meaning z-index values inside it cannot compete with z-index values outside it.
+
+**Why it happens:** The stacking context model is counterintuitive. A developer assigns the background SVG `z-index: 0` thinking it will be "behind everything." But if the background's parent has `transform: translateZ(0)` for GPU promotion, the parent creates a stacking context, and the background's `z-index: 0` is relative to that context, not the root. The grain overlay at `z-index: 9999` on the root stacking context will not be affected — it will still layer on top — but the background may now appear above section content that has its own z-index values.
+
+**Prevention:**
+- Assign the animated background `z-index: -1` relative to its nearest positioned ancestor — this places it behind all content in that stacking context while remaining above the `<body>` background color
+- If the background is a direct child of `<body>` (no positioned ancestor), use `z-index: 0` and ensure `position: fixed` — the grain overlay at `z-index: 9999` will still layer above it correctly
+- Never assign z-index >= 9999 to the background element — the grain overlay must remain the topmost visual layer
+- Test the layer order with Chrome DevTools Layers panel: confirm grain overlay is always the topmost painted layer
+- If the animated element needs `will-change: transform`, wrap it in a dedicated container and apply `isolation: isolate` to prevent its stacking context from leaking into sibling components
+
+**Warning signs:**
+- Background element has `z-index: 10000` or higher
+- Film grain texture no longer visible over the new background
+- Existing section content (hero text, cards) appears behind the background
+- DevTools Layers panel shows the grain overlay is not the topmost layer
+
+**Phase:** VIS-14. Verify z-index ordering in DevTools Layers view before any visual polish review.
+
+**Confidence:** HIGH — stacking context rules confirmed from [MDN: Stacking context](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_positioned_layout/Understanding_z-index/Stacking_context/); grain overlay z-index constraint verified directly from `/src/styles/global.css` (z-index: 9999).
+
+---
+
+### Pitfall 30: prefers-reduced-motion Not Applied to Animated Background — Accessibility Regression
+
+**What goes wrong:** The existing codebase correctly applies `prefers-reduced-motion` to scroll-reveal animations (in `global.css` utilities layer) and card hover transitions. A new animated SVG background is added without a corresponding `prefers-reduced-motion` override. The animation runs continuously for users who have set their OS accessibility preference to reduce motion — including users with vestibular disorders, migraines, or epilepsy for whom parallax and looping animations can cause physical symptoms.
+
+**Why it happens:** The `prefers-reduced-motion` pattern is already in the codebase for discrete animations. Developers assume the existing global query covers all animations. It does not: the existing queries target `[data-reveal]` and `.redacted-reveal` and `.card-hover` specifically. A new `@keyframes` added elsewhere is not covered by those selectors.
+
+**Consequences:** Accessibility regression. The site cannot claim WCAG 2.3.3 (Animation from Interactions) compliance if looping background animations are not suppressed for users who request reduced motion. More concretely: a cyclist with vestibular sensitivity opens the site on their phone before the event; the looping Escher pattern triggers symptoms.
+
+**Prevention:**
+- For every new `@keyframes` animation, add an explicit `@media (prefers-reduced-motion: reduce)` block that sets `animation: none` or replaces it with a static state
+- The background element should have a reduced-motion fallback that shows it as a static, non-animated SVG (or hides it entirely if it adds no value without motion)
+- Pattern:
+  ```css
+  .escher-bg {
+    animation: escher-rotate 12s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .escher-bg {
+      animation: none;
+      /* optionally: opacity: 0.04; to keep subtle static texture */
+    }
+  }
+  ```
+- If the animation is driven by JavaScript (e.g., `element.animate()`), check `window.matchMedia('(prefers-reduced-motion: reduce)').matches` before starting the animation
+- Do not rely on the existing global `[data-reveal-ready] [data-reveal]` reduced-motion rule — it only covers scroll-reveal elements
+
+**Warning signs:**
+- New `@keyframes` added to a component `<style>` block without a corresponding `prefers-reduced-motion` override
+- JavaScript animation started without checking `matchMedia('(prefers-reduced-motion: reduce)')`
+- Chrome DevTools: Rendering tab → "Emulate CSS media feature prefers-reduced-motion: reduce" shows animation still running
+
+**Phase:** VIS-14. The reduced-motion override must ship in the same commit as the animation — not as a follow-up.
+
+**Confidence:** HIGH — WCAG 2.3.3 requirements confirmed from [W3C: Understanding SC 2.3.3](https://www.w3.org/WAI/WCAG21/Understanding/animation-from-interactions.html); `prefers-reduced-motion` API confirmed from [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/prefers-reduced-motion); existing codebase pattern confirmed from `/src/styles/global.css`.
+
+---
+
+### Pitfall 31: Star Color Scheme Updated in One Place — Three Other Locations Remain Stale
+
+**What goes wrong:** VIS-12 requires changing the sector star color spectrum (currently gray/gray/amber/orange/red) to a new yellow-to-red scheme. The developer updates `starColors` in `ElevationProfile.astro` and the change looks correct on the elevation chart. The map polylines, sector badge divIcons, and sector card star spans still use the old gray/amber colors. The map and chart are now visually inconsistent — the same sector shows different colors in different views.
+
+**Why it happens:** The `starColors` map is duplicated across three files without a shared constant:
+1. `src/components/ElevationProfile.astro` — `const starColors: Record<number, string>` (annotation box colors)
+2. `src/components/RouteMap.astro` — `const starColors: Record<number, string>` (polyline colors + badge span colors)
+3. `src/components/GravelSectors.astro` — `const starColors: Record<number, string>` (inline style on star span)
+
+The `PROJECT.md` key decisions section explicitly notes "Scripts self-contained" as an accepted tradeoff. This means the duplication is intentional — but it creates a coordination burden when values change.
+
+**Consequences:** Map-chart-card visual inconsistency. On mobile, a user who scrolls from the sector cards to the map sees different colors for the same sectors. This undermines the Paris-Roubaix-style rating system's visual language. The fix requires touching three separate files — missing even one causes the regression to ship.
+
+**Prevention:**
+- When implementing VIS-12, update ALL THREE locations in a single commit:
+  - `ElevationProfile.astro`: annotation box `backgroundColor` and `borderColor` hex strings
+  - `RouteMap.astro`: polyline `color` and badge span `style="color:..."` hex strings
+  - `GravelSectors.astro`: star span `style` attribute hex strings
+- Write a checklist in the phase plan that lists each file explicitly — do not rely on memory
+- After the change, visually verify: load the page and compare the sector card star color for a 3-star sector against the map polyline color for the same sector and the elevation band color for that sector — they must match
+- Consider creating a shared `/public/data/sector-colors.json` or a shared Astro utility module as a future improvement, but do not block VIS-12 on this refactor
+
+**Warning signs:**
+- Only `ElevationProfile.astro` or only `RouteMap.astro` has been modified in the VIS-12 commit
+- A 1-star sector polyline appears gray on the map but yellow on the elevation chart
+- Git diff for the VIS-12 commit touches fewer than three component files
+
+**Phase:** VIS-12. This is a coordination pitfall, not a technical complexity — the fix is straightforward once all three files are identified. The danger is missing a file.
+
+**Confidence:** HIGH — confirmed by direct code inspection of `ElevationProfile.astro`, `RouteMap.astro`, and `GravelSectors.astro` — all three contain independent `starColors` Record definitions with the same keys (1–5) and the same hex values.
+
+---
+
+## Moderate Pitfalls (v3.0)
+
+---
+
+### Pitfall 32: Custom Bike Icon Marker — divIcon Anchor Point Causes Zoom Drift
+
+**What goes wrong:** UX-01 replaces the elevation-hover crosshair `circleMarker` with a bike SVG icon using Leaflet's `L.divIcon`. The developer sets `iconSize: [24, 24]` and does not set `iconAnchor`, or sets it to `[0, 0]` (which is the top-left corner of the icon). When the map is panned or zoomed, the bike icon appears to drift — it sits offset from the actual track point it should represent. On high-DPI (retina) displays, the issue compounds: the icon renders blurry if the SVG is not sized correctly, and the anchor point calculation is off.
+
+**Why it happens:** Leaflet's `iconAnchor` specifies the pixel offset from the icon's top-left corner to the point that should be pinned to the map coordinate. For a circular crosshair, the anchor should be the center (`[width/2, height/2]`). For a bike icon pointing in a direction, the anchor should be at the bike's contact point with the ground. The existing crosshair uses `L.circleMarker` which handles its own centering — switching to `divIcon` requires explicit anchor configuration.
+
+**Existing code context:** The current crosshair is a `circleMarker` with `radius: 6` — it has no `iconAnchor` concern because Leaflet handles circle centering internally. Restock point markers use `iconAnchor: [8, 8]` (center of a 16×16 icon). The sector badge markers use `iconAnchor: [0, 0]` intentionally (they are text badges, not point markers). The bike icon replacing the crosshair must behave like the restock marker — center-anchored.
+
+**Prevention:**
+- For a 24×24 bike icon: `iconAnchor: [12, 12]` centers it on the track coordinate
+- If the icon has a visual "tip" (e.g., a bike wheel touching the ground), set the anchor to the wheel's pixel position within the icon bounds, not the center
+- Always test anchor accuracy by: (1) setting the marker at a known waypoint, (2) zooming in to maximum zoom, (3) verifying the icon stays on the track point without drift
+- For retina display support, provide both `iconUrl` (1x) and `iconRetinaUrl` (2x) if using raster icons; if using inline SVG in `html:` (the current pattern for all other divIcons), set `iconSize` to the actual rendered CSS size and the SVG viewBox will scale correctly — no separate retina URL needed
+- The existing pattern (inline SVG in `html:` field, explicit `iconSize` and `iconAnchor`) used for restock and photo markers is the correct approach — follow it exactly
+
+**Warning signs:**
+- Bike icon visually offset from the crosshair circle it replaced at the same map coordinate
+- Icon position shifts when zooming in from zoom level 8 to 14
+- Icon appears blurry on a MacBook Pro Retina display (sign that raster PNG was used instead of inline SVG)
+- `iconAnchor` not set, or set to `[0, 0]` for a center-placed indicator
+
+**Phase:** UX-01 (Replace elevation hover crosshair with bike icon). Verify anchor accuracy at zoom levels 8, 12, and 16 before marking done.
+
+**Confidence:** HIGH — Leaflet `iconAnchor` behavior confirmed from [Leaflet official custom icons tutorial](https://leafletjs.com/examples/custom-icons/) and [Leaflet reference docs](https://leafletjs.com/reference.html); existing anchor patterns confirmed from `/src/components/RouteMap.astro`.
+
+---
+
+### Pitfall 33: KOM Annotation Bands on Elevation Profile — Z-Order Conflict With Existing Sector Bands
+
+**What goes wrong:** VIS-13 adds KOM segment annotations to the elevation chart. These are visually distinct from sector bands (different color — chartreuse `#7fff00`, dashed pattern in the map) but they share the same Chart.js annotation layer. If both sector boxes and KOM annotations use the same `drawTime`, KOM bands are drawn on top of sector bands (or vice versa) in an unpredictable order determined by object key iteration. Where KOM segments overlap sector boundaries, the opacity stacking produces muddy colors that are neither the sector color nor the KOM color.
+
+**The specific scenario:** The existing sector bands use `backgroundColor: starColors[sector.stars] + '22'` (~13% opacity fill) with `drawTime` unset (inherits global, defaults to `afterDatasetsDraw`). If KOM bands are added at the same drawTime and overlap a sector, the visual result is the sector's color mixed with the KOM color at 13% + 13% opacity — a brownish artifact that matches neither intended color.
+
+**Why it happens:** Chart.js annotation boxes do not have a built-in "bring to front" mechanism. The order annotations draw is the order of object keys in the `annotations` object — a detail that is not obvious from the documentation. Additionally, if KOM annotations use `fill` patterns (dashes) which are not supported by the annotation plugin's `box` type, developers try to simulate them with repeated thin boxes or line annotations, multiplying the overlap problem.
+
+**Prevention:**
+- Use different `drawTime` values to separate layers: set sector bands to `drawTime: 'beforeDatasetsDraw'` (behind the elevation line) and KOM bands to `drawTime: 'afterDatasetsDraw'` (in front of the elevation line but below the dataset tooltip layer)
+- This separation eliminates overlap opacity stacking entirely — the two annotation types never share the same rendering pass
+- For KOM visual distinction: use `type: 'line'` annotations at the KOM start and end x-values rather than a filled box — a pair of vertical lines avoids opacity stacking with sector boxes entirely
+- If a KOM box fill is required: use a very low opacity (max `'11'` hex, ~7%) so that overlapping with a sector band produces a visually predictable result
+- Keep the KOM annotation keys clearly namespaced: `kom_0`, `kom_1`, etc. (separate from `sector_0`, `sector_1`) to avoid accidental key collisions when iterating
+
+**Warning signs:**
+- Brownish or unexpected hue where a KOM segment overlaps a gravel sector on the elevation chart
+- KOM band appears behind the elevation area fill (chart dataset) rather than in front of it
+- KOM annotations use the same `drawTime` value as sector annotations (both `afterDatasetsDraw`)
+- `Object.keys(annots)` iterates sector keys before KOM keys and a KOM is visually obscured
+
+**Phase:** VIS-13 (KOM segments on elevation profile). Test visual layering at a location where a KOM and a sector overlap before any cross-component review.
+
+**Confidence:** MEDIUM — `drawTime` layering control confirmed from [chartjs-plugin-annotation options docs](https://www.chartjs.org/chartjs-plugin-annotation/latest/guide/options.html); opacity stacking behavior inferred from SVG compositing model and Chart.js annotation rendering order — opacity stacking specifics are training-data reasoning, not officially documented.
+
+---
+
+### Pitfall 34: SVG Favicon Dark Mode — Hardcoded Fill Colors Override prefers-color-scheme Media Query
+
+**What goes wrong:** VIS-15 replaces the current favicon SVG (a simple `<rect>` with hardcoded `fill="#1a1a2e"` and a `<text fill="#b0f0b0">`) with a Penrose triangle SVG. The developer wants it to adapt to dark/light mode. They add a `<style>` block with `@media (prefers-color-scheme: dark)` inside the SVG. But they leave `fill` attributes on the path elements themselves. Because SVG attribute `fill` has higher specificity than CSS `fill` in a `<style>` block, the media query is silently ignored — the icon stays the same color in both light and dark mode.
+
+**The current favicon:** `/public/favicon.svg` uses hardcoded `fill` attributes on both elements. This is exactly the CSS specificity trap — adding a `<style>` block to this file without removing the inline `fill` attributes will not work.
+
+**Why it happens:** SVG element attribute `fill="color"` is equivalent to an inline style and has the specificity of `style=""`. A `<style>` block in SVG applies at the author stylesheet level — lower specificity than element attributes. The media query in the `<style>` block is parsed and applied, but loses to the inline `fill` attribute every time.
+
+**Additional browser support caveat:** Safari supports SVG favicons but does NOT apply embedded `<style>` blocks when rendering SVG favicons — the media query will not work in Safari regardless of specificity. For Safari dark mode favicon adaptation, a separate PNG favicon with a macOS `prefers-color-scheme` fallback is the only reliable path. Chrome and Firefox correctly apply embedded styles including media queries.
+
+**Prevention:**
+- Remove all `fill` attributes from SVG path elements — use CSS classes or tag selectors in the `<style>` block instead
+- Pattern: `<style>.icon-bg { fill: #1a1a2e; } @media (prefers-color-scheme: light) { .icon-bg { fill: #ffffff; } }</style>` then `<rect class="icon-bg" .../>` (no fill attribute)
+- For Safari: provide a PNG ICO fallback in `<link rel="icon" href="/favicon.ico" sizes="32x32">` placed before the SVG link — browsers use the most specific match
+- The current BaseLayout already has `<link rel="icon" href="/favicon.svg" type="image/svg+xml">` — this is correct; just add the ICO fallback after it
+- After implementing, verify in Chrome (SVG + media query), Firefox (SVG + media query), and Safari (ICO fallback) — do not test only in one browser
+
+**Warning signs:**
+- `fill="..."` attributes present on SVG path/rect elements alongside a `<style>` block
+- Favicon does not change color when toggling OS dark/light mode in Chrome DevTools
+- No ICO or PNG fallback link in `<head>` for Safari
+
+**Phase:** VIS-15 (Penrose triangle favicon). This is a one-time implementation detail — get it right once and it requires no future maintenance.
+
+**Confidence:** HIGH — SVG CSS specificity (attribute vs stylesheet) confirmed from MDN CSS specificity; Safari SVG favicon style limitation confirmed from [Mozilla Bug 1772632](https://bugzilla.mozilla.org/show_bug.cgi?id=1772632) and [favicon dark mode guide (2025)](https://owenconti.com/posts/supporting-dark-mode-with-svg-favicons); existing favicon confirmed from `/public/favicon.svg`.
+
+---
+
+### Pitfall 35: Photo Map Position Regeneration — Stale photos.json Served From Cache After Pipeline Update
+
+**What goes wrong:** DATA-06 requires regenerating `photos.json` from corrected mile-marker positions. The developer runs the prebuild pipeline (`npm run prebuild`), the new `photos.json` is written to `public/data/photos.json`, and the site builds correctly. However, the browser — and Netlify's CDN edge cache — has cached the old `photos.json`. After deploy, users continue seeing the old photo positions on the map for hours or until cache expiry. The developer checks their own browser and sees the new positions (because DevTools Network → Disable Cache was on), declares the fix shipped, and moves on. Users on mobile report the photos are still in the wrong place.
+
+**Why it happens:** Static JSON files served by Netlify default to long cache headers (`Cache-Control: max-age=31536000` for assets with content-hash in the filename, shorter for files without). `photos.json` has no content-hash in its name — it is served from a predictable URL. Netlify's CDN may cache it for the duration configured in `netlify.toml` or up to the browser's heuristic cache duration.
+
+**The specific concern:** The route-data, annotations, and photos JSON files are all served from `/data/*.json` — predictable URLs without cache-busting query strings. The existing prebuild pipeline regenerates them on every deploy, but CDN edge cache and browser cache may serve old versions.
+
+**Prevention:**
+- After the fix deploy, trigger a Netlify cache purge from the Netlify dashboard (Deploys → "Clear cache and deploy")
+- Alternatively, verify that `netlify.toml` sets `Cache-Control: no-cache` or short `max-age` for the `/data/` directory specifically — data files should be cache-busted on each deploy, not cached for a year
+- Test cache behavior by: opening the deployed URL in a private/incognito window (no local cache) and checking that the photo positions are updated
+- Do not use DevTools "Disable Cache" as the verification method for data that real users will fetch — it bypasses the browser cache but not CDN edge cache
+
+**Warning signs:**
+- Photo positions still incorrect in a fresh incognito window 30+ minutes after deploy
+- `curl -I https://mkultragravel.netlify.app/data/photos.json` shows a long `max-age` in the cache headers
+- Developer verified fix in a tab that had the site open during development (warm cache)
+
+**Phase:** DATA-06 (Fix photo map positions). Include a cache purge step in the verification checklist, not just visual inspection in the developer's own browser.
+
+**Confidence:** MEDIUM — Netlify default cache header behavior for non-hashed assets is a known pattern; specific `netlify.toml` cache configuration for this project not verified (no `netlify.toml` found in codebase inspection); JSON cache duration behavior is medium confidence.
+
+---
+
+### Pitfall 36: OKLCH Wide-Gamut Colors in New Color Scheme — WCAG Contrast Computed Against Wrong Color Space
+
+**What goes wrong:** VIS-12 changes the sector color spectrum. The new palette uses oklch values for design token consistency. The developer picks visually appealing colors in oklch (e.g., `oklch(0.85 0.3 90)` for 1-star) and verifies contrast using a browser DevTools color picker. The contrast appears acceptable visually and in DevTools. But WCAG 2.2 contrast ratio is defined using the sRGB relative luminance formula — oklch colors that fall outside the sRGB gamut are auto-corrected by the browser to sRGB before rendering, and that correction changes the actual lightness value. The WCAG contrast ratio computed against the pre-correction oklch value is wrong.
+
+**Why it happens:** Wide-gamut P3 or Rec2020 colors defined in oklch (high chroma, `C > 0.2`) may fall outside sRGB. When rendered on an sRGB display (most Android phones, older iPhones), the browser clips the color to the nearest sRGB value. The clipped color may have a different luminance than intended, meaning the WCAG contrast against the dark background is different from what the developer computed.
+
+**The specific risk:** The sector star colors are displayed on top of the dark background (`--color-bg-surface: oklch(0.14 0.01 250)`) and as badges on the dark map. The 1-star and 2-star colors (currently gray — low saturation, safe) are being changed to yellows. If the new yellow has a chroma outside sRGB, the perceived brightness on low-gamut phones may differ from the developer's Retina display.
+
+**Prevention:**
+- When choosing sector colors, compute WCAG contrast using the hexadecimal sRGB fallback values — not the oklch values directly
+- Use [OddContrast](https://www.oddcontrast.com/) or similar tools that compute contrast with gamut-mapping awareness
+- As a conservative rule: keep chroma `C` below 0.2 for colors that must meet WCAG contrast — above 0.2, gamut clipping risk increases significantly
+- Target 4.5:1 contrast ratio against `oklch(0.14 0.01 250)` (the surface background) for all star rating colors that appear as text or small indicators
+- Test on an actual Android device (not only a Retina Mac) — the sRGB clipping is device-dependent
+
+**Warning signs:**
+- Sector badge colors with `C > 0.25` in oklch notation
+- Contrast ratio passes on a P3-capable display but fails on a standard sRGB screen
+- New color values not cross-referenced against their sRGB hex equivalents before shipping
+
+**Phase:** VIS-12 (Recolor sector spectrum). Check every new color value against WCAG 4.5:1 before implementation.
+
+**Confidence:** MEDIUM — oklch wide-gamut WCAG interaction confirmed from [W3C WCAG discussions](https://github.com/w3c/wcag/discussions/4559) and [LogRocket OKLCH guide](https://blog.logrocket.com/oklch-css-consistent-accessible-color-palettes); sRGB gamut mapping in browsers confirmed from CSS Color Level 4 spec; specific threshold (`C > 0.2`) is an approximation based on P3 gamut boundaries.
+
+---
+
+## Minor Pitfalls (v3.0)
+
+---
+
+### Pitfall 37: Animated Background GPU Layer Over-Promotion — Mobile Memory Pressure
+
+**What goes wrong:** The developer applies `will-change: transform` to the Escher background SVG to ensure smooth animation. The background covers the full viewport. On mobile, promoting a full-viewport element to a GPU layer consumes significant additional memory — a 390×844 viewport (iPhone 14) at 2x DPR promoted to a GPU layer requires approximately 390×844×4 bytes×4 (DPR²) = ~5MB just for that one element. If other elements also have `will-change` set (from development experimentation), total GPU memory pressure increases. On devices with 2–3GB RAM, this can cause the browser to evict other pages or trigger GC pauses.
+
+**Prevention:**
+- Apply `will-change: transform` only to the specific element doing the transform, not its parent or wrapper
+- Remove `will-change` from any element that is not actively animating — it is a hint to the browser to allocate resources NOW, not lazily
+- If the Escher background is the only animated element on the page, the memory cost is acceptable — verify with Chrome DevTools Memory tab that total GPU memory does not exceed ~30MB across all promoted layers
+- A safer alternative to `will-change: transform`: use `transform: translateZ(0)` only in the animation itself (inside `@keyframes`) — this promotes the layer during animation and releases it after
+
+**Warning signs:**
+- Chrome DevTools Layers panel shows 5+ promoted composite layers
+- Multiple elements with `will-change: transform` in the DOM simultaneously
+- Memory tab shows GPU memory growing during the animation
+
+**Phase:** VIS-14. Check DevTools Layers panel before shipping.
+
+**Confidence:** MEDIUM — GPU layer memory cost calculation is training-data arithmetic; `will-change` over-promotion consequences documented in [Smashing Magazine: GPU Animation Doing It Right](https://www.smashingmagazine.com/2016/12/gpu-animation-doing-it-right/); specific memory numbers are approximations.
+
+---
+
+### Pitfall 38: Glitch Animation Uses Deprecated `clip` Property — May Break in Future Browsers
+
+**What goes wrong:** The existing `noise-anim` and `noise-anim-2` keyframe animations in `index.astro` use the CSS `clip` property (e.g., `clip: rect(96px, 9999px, 57px, 0)`). CSS `clip` has been deprecated in favor of `clip-path`. While it currently works in all major browsers, it is on a deprecation path. Adding new animations during v3.0 that depend on or extend this pattern risks building on a deprecated foundation. Additionally, if v3.0 introduces `clip-path` for the Penrose background, the inconsistency between `clip` and `clip-path` in the same animation system is a maintenance hazard.
+
+**Prevention:**
+- Do not introduce new animations using the deprecated `clip` property
+- For v3.0 animated backgrounds, use `clip-path` if clipping is needed — it is the current standard
+- The existing `noise-anim` glitch animations need not be refactored as part of v3.0 (they work and are tested), but do not extend the pattern
+
+**Phase:** VIS-14. Note that the glitch animation has this technical debt if it is ever modified.
+
+**Confidence:** MEDIUM — `clip` property deprecation confirmed from MDN; `clip-path` as replacement confirmed from CSS Masking Level 1 spec.
+
+---
+
+### Pitfall 39: CONT-05 Link Additions — Inline Style Overrides From `redacted-reveal` Pattern Do Not Apply to `<a>` Tags
+
+**What goes wrong:** CONT-05 makes GLRC/Great Lakes Recovery Centers mentions clickable links. The developer wraps the text in `<a>` tags. The existing `global.css` `a` rule sets `color: var(--color-accent-green)` — this may visually conflict with sections where the GLRC text appears in a `--color-accent-white` heading or a `--color-text-muted` paragraph. The link color is correct by the design system but may look out of place if the surrounding text has a very different color weight.
+
+**Additionally:** If any GLRC mention is currently inside a `.redacted-reveal` span, wrapping it in `<a>` creates a nested interactive element (`<a>` inside a `<button>` or a `<button>` inside `<a>`), which is invalid HTML and causes unpredictable keyboard navigation behavior.
+
+**Prevention:**
+- Audit each GLRC mention in `index.astro` before adding the link: check whether it is inside a `.redacted-reveal` span or other interactive element
+- If inside a `.redacted-reveal`, use a different pattern (e.g., make the redacted-reveal itself navigate, or expose the link only after the reveal)
+- After adding links, check link color contrast against all background colors where GLRC appears: `--color-accent-green` on `--color-bg-base` and `--color-bg-surface`
+- Run an HTML validator on the built output to catch any nested interactive element violations
+
+**Phase:** CONT-05. Simple audit before implementation prevents HTML validity issues.
+
+**Confidence:** HIGH — nested interactive element invalidity is defined in the HTML specification; link color behavior confirmed from `/src/styles/global.css`.
+
+---
+
+## v3.0 Phase-Specific Warnings
+
+| Phase Topic | Likely Pitfall | Mitigation |
+|-------------|----------------|------------|
+| VIS-12 sector color recolor | Color updated in only 1 of 3 files | Update ElevationProfile, RouteMap, AND GravelSectors in one commit; verify visually |
+| VIS-12 new oklch colors | Wide-gamut WCAG contrast failure on sRGB screens | Compute contrast against hex sRGB fallback; use OddContrast tool |
+| VIS-13 KOM elevation bands | Opacity stacking with existing sector bands | Use different drawTime for KOM vs sector; prefer line annotations over boxes |
+| VIS-14 Escher background | Non-compositor animation (stroke-dashoffset, fill) causes repaints | Animate transform/opacity only; DevTools Performance trace before review |
+| VIS-14 Escher background | Wrong z-index disrupts grain overlay at z-index:9999 | Set background z-index to -1 or 0; verify Layers panel; never >= 9999 |
+| VIS-14 Escher background | Missing prefers-reduced-motion override | Add @media (prefers-reduced-motion: reduce) in same commit as animation |
+| VIS-14 Escher background | will-change on large element causes mobile memory pressure | Apply will-change only to animating element; check DevTools Layers |
+| VIS-15 Penrose favicon | Hardcoded fill attributes override CSS media query | Remove fill attributes from elements; use CSS class selectors in style block |
+| VIS-15 Penrose favicon | No Safari fallback | Add ICO fallback link before SVG link in BaseLayout |
+| UX-01 bike icon marker | iconAnchor not set or wrong — marker drifts on zoom | Set iconAnchor: [width/2, height/2] for centered indicator; test at zoom 8/12/16 |
+| DATA-06 photo position fix | CDN cache serves old photos.json after deploy | Trigger Netlify cache purge; verify in incognito window, not DevTools-disabled cache |
+| CONT-05 GLRC links | Nested interactive element if inside redacted-reveal | Audit each mention for existing interactive wrappers before adding `<a>` |
+
+---
+
+## v3.0 Sources
+
+### HIGH confidence (verified from official documentation)
+
+- Compositor-safe animation properties (transform, opacity): [Avoid non-composited animations — Chrome for Developers](https://developer.chrome.com/docs/lighthouse/performance/non-composited-animations)
+- Animation performance and frame rate (SVG repaint behavior): [Animation performance and frame rate — MDN](https://developer.mozilla.org/en-US/docs/Web/Performance/Guides/Animation_performance_and_frame_rate)
+- will-change memory cost and layer promotion: [CSS GPU Animation: Doing It Right — Smashing Magazine](https://www.smashingmagazine.com/2016/12/gpu-animation-doing-it-right/)
+- prefers-reduced-motion CSS API: [prefers-reduced-motion — MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/prefers-reduced-motion)
+- WCAG 2.3.3 Animation from Interactions: [W3C Understanding SC 2.3.3](https://www.w3.org/WAI/WCAG21/Understanding/animation-from-interactions.html)
+- Stacking context — transform/opacity create new stacking contexts: [Stacking context — MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_positioned_layout/Understanding_z-index/Stacking_context/)
+- Leaflet custom icon anchor: [Custom Icons tutorial — Leaflet.js](https://leafletjs.com/examples/custom-icons/); [Leaflet Reference](https://leafletjs.com/reference.html)
+- SVG favicon Safari embedded style limitation: [Mozilla Bug 1772632](https://bugzilla.mozilla.org/show_bug.cgi?id=1772632)
+- SVG CSS specificity (attribute vs stylesheet): MDN CSS Specificity
+- Hardware-accelerated animations in Chromium: [Chrome for Developers: hardware-accelerated animations](https://developer.chrome.com/blog/hardware-accelerated-animations)
+
+### MEDIUM confidence (verified from official source + corroborating sources)
+
+- Chart.js annotation drawTime layering: [chartjs-plugin-annotation options — official docs](https://www.chartjs.org/chartjs-plugin-annotation/latest/guide/options.html)
+- OKLCH wide-gamut WCAG contrast: [W3C WCAG discussion #4559](https://github.com/w3c/wcag/discussions/4559); [OKLCH in CSS — LogRocket](https://blog.logrocket.com/oklch-css-consistent-accessible-color-palettes)
+- SVG favicon dark mode implementation: [Supporting Dark Mode with SVG Favicons — Owen Conti](https://owenconti.com/posts/supporting-dark-mode-with-svg-favicons); [Light & Dark Mode Favicons — Space Jelly](https://spacejelly.dev/posts/light-dark-mode-favicons)
+- Netlify CDN cache headers for non-hashed static assets: Netlify documentation + community behavior reports
+- CSS `clip` property deprecation: MDN deprecation notices
+
+### LOW confidence (WebSearch only — flag for validation)
+
+- Opacity stacking behavior when two Chart.js annotation boxes overlap at the same drawTime: inferred from SVG compositing model; not explicitly documented by chartjs-plugin-annotation
+
+---
+
+*v3.0 pitfalls added: 2026-03-28*
+*Pitfalls 28–39 address v3.0 scope: Escher identity, animated backgrounds, custom markers, KOM annotations, color scheme coordination, SVG favicon, and build data regeneration.*

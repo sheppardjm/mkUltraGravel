@@ -1,496 +1,492 @@
-# Architecture Patterns — v2.0 Integration
+# Architecture Patterns — v3.0 Escher Identity + Data Fixes + UX Polish
 
 **Domain:** Static gravel cycling event website (Astro 6 + Leaflet + Chart.js)
 **Project:** MK Ultra Gravel
-**Researched:** 2026-03-27
-**Focus:** How v2.0 features integrate with the existing single-page architecture
-**Overall confidence:** HIGH (event bus pattern), HIGH (Strava data strategy), HIGH (animation approach)
+**Researched:** 2026-03-28
+**Focus:** How v3.0 features integrate with the v2.0 shipped architecture
+**Overall confidence:** HIGH (all six features traced to specific file locations with exact integration points)
 
 ---
 
-## Existing Architecture Snapshot
+## Existing Architecture Snapshot (v2.0 Baseline)
 
-The v1.0 site is a single-page Astro 6 static site. Key constraints that v2.0 must work within:
+The v2.0 site is a single-page Astro 6 static site. Key structures that v3.0 operates within:
 
-- RouteMap.astro and ElevationProfile.astro each have their own `<script>` block with independent lazy-init logic
-- Both scripts fetch `route-data.json` independently at runtime (each makes its own fetch)
-- No shared state exists between them — they are fully isolated
-- Astro component scripts compile to module scripts; inter-component communication must go through the DOM or `window`
-- Data pipeline runs as Node.js prebuild scripts; JSON files land in `public/data/` before Astro builds
+**Component inventory:**
+- `src/components/RouteMap.astro` — Leaflet map, lazy-initialized on scroll via IntersectionObserver. All map logic is inside a single `initMap()` async function. The crosshair is a `L.circleMarker` (plain dot, `#22d3ee` fill) that repositions via `elevation:hover` CustomEvents. Sector polylines and KOM polylines are rendered at startup.
+- `src/components/ElevationProfile.astro` — Chart.js with chartjs-plugin-annotation. Sector bands are annotation `box` objects keyed `sector_0`, `sector_1`, etc. KOM segments exist in `annotations.json` but are NOT rendered on the elevation chart — only the map polylines show them. Chart `onHover` emits `elevation:hover`; `mouseleave` emits `elevation:hoverEnd`.
+- `src/components/GravelSectors.astro` — Pure Astro/SSR. Reads `annotations.json` at build time via `readFileSync`. Renders sector cards with `coverPhoto` images and star ratings colored via `starColors` map (inline Astro frontmatter).
+- `src/components/KomSegments.astro` — Pure Astro/SSR. Same `readFileSync` pattern. Renders KOM cards. No annotation integration with the elevation chart.
+- `src/components/EventInfoBlock.astro` — Static HTML component. Contains GLRC donation link at `https://www.glrc.org/donate` plus plain-text "GLRC" and "Great Lakes Recovery Centers" mentions.
+- `src/layouts/BaseLayout.astro` — HTML shell. `<div class="grain-overlay">` is a fixed SVG noise overlay at `z-index: 9999`. No other background pattern exists.
+- `src/pages/index.astro` — Page composition. Hosts the hero section with `.tone-image` (opacity 0.12, `mix-blend-mode: lighten`, `grayscale(100%)`). Contains plain text "Great Lakes Recovery Centers" in the hero subtitle text (not a link).
+- `src/styles/global.css` — All design tokens and layer-ordered CSS. `@layer leaflet, base, components, utilities` order defined here. `.grain-overlay`, `.tone-image`, `.classified-border`, `.card-hover` all live here.
+- `public/favicon.svg` — Plain "MK" text in a monospace font on dark background. 32×32px SVG.
 
-The critical architectural gap for v2.0: RouteMap exposes a `map` instance scoped inside `initMap()`. ElevationProfile exposes a `Chart` instance scoped inside `initElevation()`. Neither is accessible outside its own closure.
+**starColors map — three independent copies:**
 
----
+The `starColors` constant (`{ 1: '#888888', 2: '#aaaaaa', 3: '#f5a623', 4: '#e86d1f', 5: '#c0392b' }`) is duplicated verbatim across three files with no shared source:
 
-## Feature 1: Map ↔ Elevation Chart Communication
+| File | Context | How used |
+|------|---------|----------|
+| `src/components/RouteMap.astro:78-84` | Runtime JS inside `initMap()` | Colors polyline strokes + badge icon HTML |
+| `src/components/ElevationProfile.astro:57-63` | Runtime JS inside `initElevation()` | Colors annotation box fills and borders |
+| `src/components/GravelSectors.astro:15-21` | Astro frontmatter (build time) | Inline style on star rating `<span>` |
 
-### The Problem
+Stars 1 and 2 are gray (`#888888`, `#aaaaaa`). The v3.0 requirement (VIS-12) changes all five values. All three files must be updated in the same commit to avoid visual inconsistency between the map, chart, and sector cards.
 
-The two components initialize asynchronously and independently. Chart.js `onHover` needs to move a marker on the Leaflet map. Leaflet `click`/`mousemove` events need to highlight a position on the Chart.js canvas. Neither component has a reference to the other.
+**CustomEvent bus — established in v2.0:**
 
-### Recommended Pattern: Window Custom Events
-
-Use `window.dispatchEvent()` with `CustomEvent` as a lightweight event bus. This is the idiomatic Astro cross-component communication pattern for static sites — no framework, no shared module, no global variable required.
-
-**Confidence:** HIGH — verified via Astro official docs (scripts-and-event-handling), confirmed via Chart.js interactions docs, and consistent with Leaflet's event model.
-
-#### How it works
-
-**ElevationProfile.astro emits when hovered:**
-
-```javascript
-// Inside initElevation(), in the Chart constructor options:
-options: {
-  onHover: (event, activeElements, chart) => {
-    if (!activeElements.length) return;
-    const helpers = await import('chart.js');
-    const canvasPos = helpers.Chart.helpers.getRelativePosition(event, chart);
-    const miValue = chart.scales.x.getValueForPixel(canvasPos.x);
-    window.dispatchEvent(new CustomEvent('elevation:hover', {
-      detail: { mi: miValue }
-    }));
-  }
-}
+```
+elevation:hover     { lat, lon }     ElevationProfile → RouteMap
+elevation:hoverEnd  (no payload)     ElevationProfile → RouteMap
+elevation:sectorClick { sectorIndex } ElevationProfile → RouteMap
+map:sectorHover     { sectorIndex | null } RouteMap → ElevationProfile
+map:sectorClick     { sectorIndex }  RouteMap → ElevationProfile
 ```
 
-**RouteMap.astro listens and moves a marker:**
+All listeners use `AbortController` + `{ signal }` for cleanup. Both components lazy-initialize on first scroll — no initialization race condition because all listeners are registered inside the respective `initMap()` / `initElevation()` async functions after data loads.
 
+**Build pipeline:**
+```
+parse-gpx.js          → route-data.json
+resolve-annotations.js → annotations.json
+match-photos.js        → photos.json        ← reads photo-manifest.js
+assign-card-photos.js  → annotations.json (enriched with coverPhoto)
+generate-thumbnails.js → public/images/cards/*.webp
+```
+`scripts/photo-manifest.js` holds the curated 54-photo manifest with mile-marker positions. `public/data/photos.json` is the pipeline output — it is what the map reads at runtime. As of 2026-03-28, `photo-manifest.js` and `photos.json` are synchronized (54 photos, no mismatches). The MEMORY note about stale photos.json (from an extended GPX) is **resolved** — the pipeline was regenerated for the current 100mi route (max mi: 98.23).
+
+---
+
+## Feature 1: Sector Color Spectrum (VIS-12)
+
+**What:** Change star ratings 1-2 from gray to a yellow-to-red spectrum, making the full 5-star range chromatic.
+
+**Integration points — three files, coordinated change:**
+
+```
+src/components/RouteMap.astro       lines 78-84   (runtime JS)
+src/components/ElevationProfile.astro lines 57-63  (runtime JS)
+src/components/GravelSectors.astro  lines 15-21   (build-time Astro frontmatter)
+```
+
+**How the color change propagates:**
+
+- `RouteMap`: `starColors[sector.stars]` drives `color` on sector polylines (line 93), badge icon HTML `style="color:..."` (line 128), and the restore-after-click style (line 267). All three reference the same `const starColors` declared at line 78.
+- `ElevationProfile`: `starColors[sector.stars]` drives `backgroundColor` and `borderColor` on annotation boxes (lines 72-73), and the stored `_baseColor` used for hover/click highlight/restore (line 75). One `const starColors` at line 57.
+- `GravelSectors`: `starColors[sector.stars]` drives the inline `style` on the star rating `<span>` (line 44). One `const starColors` at line 15.
+
+**Change required:** Replace the five hex values in all three locations simultaneously. No structural code change — just value replacement. The values at stars 3, 4, 5 (`#f5a623`, `#e86d1f`, `#c0392b`) are already chromatic and may stay, or the spectrum can be remapped uniformly.
+
+**Performance impact:** None. Color values are strings in JS objects / CSS inline styles. No new DOM operations, no layout change.
+
+**New components needed:** None.
+
+---
+
+## Feature 2: Photo Map Position Fix (DATA-06)
+
+**What:** Regenerate `public/data/photos.json` from the corrected mile markers already in `photo-manifest.js`.
+
+**Current state verified (2026-03-28):**
+- `photo-manifest.js` has 54 photos.
+- `photos.json` has 54 photos.
+- Mile markers match between manifest and `photos.json`.
+- Coordinates in `photos.json` match what `match-photos.js` would produce from the current route-data.json for those mile values.
+
+**Conclusion:** DATA-06 as described ("regenerate photos.json from corrected mile markers") is **already done**. The pipeline was regenerated at commit `dec592a` (2026-03-28). No pipeline script change is required.
+
+**If the intent is to re-verify or re-run:** `node scripts/match-photos.js` from the repo root is the correct command. Output goes to `public/data/photos.json`. Commit the result. No code changes needed.
+
+**Integration points:** `scripts/match-photos.js` (run only), `public/data/photos.json` (output). No component changes.
+
+---
+
+## Feature 3: Bike Icon Crosshair (UX-01)
+
+**What:** Replace the elevation hover crosshair from a plain `L.circleMarker` (dot) to a bike icon marker.
+
+**Current crosshair implementation (RouteMap.astro lines 222-229):**
 ```javascript
-// Inside initMap(), after routeData is loaded:
-// Create a hidden crosshair marker (no icon, or small circle)
 const crosshair = L.circleMarker([0, 0], {
   radius: 6,
-  color: '#22d3ee',
+  color: '#ffffff',
   fillColor: '#22d3ee',
-  fillOpacity: 0.8,
-  weight: 2
-});
-// Don't add to map until first hover
-
-window.addEventListener('elevation:hover', (e) => {
-  const targetMi = e.detail.mi;
-  // Binary search or linear scan routeData for nearest point
-  const pt = findNearestPoint(routeData, targetMi);
-  if (!map.hasLayer(crosshair)) map.addLayer(crosshair);
-  crosshair.setLatLng([pt.lat, pt.lon]);
-});
-
-window.addEventListener('elevation:leave', () => {
-  if (map.hasLayer(crosshair)) map.removeLayer(crosshair);
-});
+  fillOpacity: 0,
+  weight: 2,
+  opacity: 0
+}).addTo(map);
 ```
+Hidden by default via `opacity: 0, fillOpacity: 0`. Shown/hidden via `crosshair.setStyle({ opacity: 1, fillOpacity: 0.9 })` in the `elevation:hover` listener (lines 237-243) and `crosshair.setStyle({ opacity: 0, fillOpacity: 0 })` in the `elevation:hoverEnd` listener (lines 246-248). Position updated via `crosshair.setLatLng([lat, lon])` (line 239).
 
-**Key detail:** `setLatLng()` updates a `circleMarker` or `marker` position in-place without removing and re-adding it. This is the correct Leaflet API for this pattern (confirmed via Leaflet docs).
+**Replacement approach — `L.divIcon`:**
 
-#### Initialization race condition
-
-Both components lazy-initialize on scroll. The `elevation:hover` event listener must be registered inside `initMap()` (after `routeData` is loaded), not in the outer scroll handler. The `window.addEventListener` call is cheap — registering it before the map loads is safe because no events will fire until the user actually hovers the chart.
-
-For the reverse direction (map → chart highlight), add a `map:hover` custom event inside the Leaflet `mousemove` handler.
-
-### Route Data Sharing
-
-Both components currently fetch `route-data.json` independently. For v2.0, the crosshair lookup in RouteMap requires `routeData` to be available when `elevation:hover` fires. This is already the case — `initMap()` loads `routeData` before registering the listener.
-
-**No change to the data pipeline is needed.** Both components continue to fetch independently. This is acceptable: `route-data.json` is ~44KB, the browser caches it after the first fetch, and the second component's fetch resolves from cache.
-
-### Segment Highlight on Elevation Chart
-
-When user hovers a sector or KOM on the map (clicking a popup or hovering a polyline), dispatch a `map:segmentHover` event with `{ startMi, endMi }`. The elevation chart can respond by programmatically updating its annotation plugin boxes to emphasize that segment.
+`L.divIcon` is already used throughout the codebase for restock markers, photo markers, photo clusters, and sector badges. It is the established pattern for custom HTML/SVG markers. Replace the `L.circleMarker` with a `L.marker` using `L.divIcon`.
 
 ```javascript
-// In RouteMap.astro, on sector polyline mouseover:
-sectorPolyline.on('mouseover', (e) => {
-  window.dispatchEvent(new CustomEvent('map:segmentHover', {
-    detail: { startMi: sector.startMi, endMi: sector.startMi + sector.lengthMi }
-  }));
+// Replace L.circleMarker with L.marker + L.divIcon:
+const bikeIcon = L.divIcon({
+  className: 'bike-crosshair',   // CSS in global.css or RouteMap <style>
+  html: '<svg ...>bike path...</svg>',
+  iconSize: [20, 20],
+  iconAnchor: [10, 10]           // center the icon on the GPS coordinate
 });
+
+const crosshair = L.marker([0, 0], {
+  icon: bikeIcon,
+  opacity: 0,
+  interactive: false
+}).addTo(map);
 ```
 
-The elevation chart registers a listener that calls `chart.update('none')` after modifying the annotation's `borderWidth` or `backgroundColor` — Chart.js `update('none')` skips animation for instant feedback.
+Show/hide changes: `L.circleMarker` used `.setStyle()` for opacity. `L.marker` uses `.setOpacity(1)` and `.setOpacity(0)`. The `setLatLng()` call is identical — same Leaflet API for both marker types.
+
+**CSS scoping:** The `.bike-crosshair` class will be appended by Leaflet outside the Astro component's scoped styles. Must use `:global(.bike-crosshair)` in the component `<style>` block (same pattern as existing `:global(.restock-marker)`, `:global(.photo-marker)`, `:global(.photo-cluster)` at lines 19-33 of RouteMap.astro).
+
+**SVG source options:**
+- Inline SVG string in the `html` field (no new file, self-contained)
+- External `/public/icons/bike.svg` fetched as a URL via `<img>` tag inside the `html` field
+
+Inline SVG is preferable — no additional network request, no async load timing issue, consistent with the existing pattern for cluster icons (which embed full SVG-like HTML inline in the `html` field).
+
+**Integration points — one file:**
+```
+src/components/RouteMap.astro   lines 222-248   (crosshair declaration + show/hide listeners)
+src/styles/global.css           (add :global(.bike-crosshair) if needed, or use RouteMap <style>)
+```
+
+**Performance impact:** `L.marker` with `L.divIcon` is the same DOM cost as existing markers. No layout impact. The `elevation:hover` listener logic is identical — just swap `.setStyle()` calls for `.setOpacity()`. TBT unaffected.
+
+**New components needed:** None. SVG markup is inline in the `html` field.
 
 ---
 
-## Feature 2: Strava Leaderboard Data
+## Feature 4: KOM Bands on Elevation Chart (VIS-13)
 
-### The Constraint
+**What:** Show KOM segment ranges on the elevation profile chart, visually distinct from sector bands.
 
-The `/segments/{id}/leaderboard` endpoint was restricted in June 2020. The endpoint is no longer available to third-party applications. Per official Strava docs: "The Segment Leaderboard endpoint is not available."
+**Current state:** KOM polylines exist on the map (RouteMap.astro lines 149-165, dashed `#7fff00` chartreuse). The elevation chart has sector annotation boxes (`sector_0`, `sector_1`, etc.) but **zero KOM annotations**. `annotations.json` contains a `kom` array with `startMi` and `endMi` (derived from `startMi + lengthMi`) for each KOM segment.
 
-However, the **`/segments/{id}` endpoint** still returns an `xoms` object containing KOM and QOM times. The `/segments/{id}/all_efforts` endpoint returns individual segment efforts when authenticated.
-
-For a public leaderboard display (top N athletes, their times), the only viable path through the official API requires an authenticated request from an account that has completed those efforts — you cannot enumerate other athletes' names and times via the public API post-2020.
-
-**Confidence:** HIGH — confirmed via Strava official changelog (developers.strava.com/docs/segment-changes/) which explicitly states the leaderboard endpoint is unavailable.
-
-### Recommended Strategy: Static Leaderboard JSON
-
-Maintain a manually-curated `public/data/leaderboard.json` file in the repository. Update it by querying the Strava API during build using an authenticated access token stored as a Netlify environment variable.
-
-#### Data Flow
-
+**Integration point — one file:**
 ```
-Build time:
-  STRAVA_CLIENT_ID       (Netlify env var)
-  STRAVA_CLIENT_SECRET   (Netlify env var)
-  STRAVA_REFRESH_TOKEN   (Netlify env var, updated manually when it changes)
-       ↓
-  scripts/fetch-strava.js
-    1. POST to https://www.strava.com/oauth/token with grant_type=refresh_token
-    2. Receive new access_token (valid 6 hours)
-    3. GET /api/v3/segments/{id} for each KOM segment → extract xoms.kom, xoms.qom
-    4. GET /api/v3/segments/{id}/all_efforts?per_page=10 for top efforts
-    5. Write public/data/leaderboard.json
-       ↓
-  Astro build reads leaderboard.json
-  KomSegments.astro renders leaderboard data as static HTML
+src/components/ElevationProfile.astro   lines 66-82   (annotationBoxes object construction)
 ```
 
-#### Netlify Environment Variable Pattern
+**How to add KOM bands:**
+
+The `annotationBoxes` object currently only populates `sector_${i}` keys. Add KOM annotations in the same block using different visual treatment:
 
 ```javascript
-// scripts/fetch-strava.js
-const STRAVA_CLIENT_ID = process.env.STRAVA_CLIENT_ID;
-const STRAVA_CLIENT_SECRET = process.env.STRAVA_CLIENT_SECRET;
-const STRAVA_REFRESH_TOKEN = process.env.STRAVA_REFRESH_TOKEN;
-
-// If env vars missing (local dev without credentials), skip and use cached JSON
-if (!STRAVA_CLIENT_ID) {
-  console.log('STRAVA_ env vars not set — skipping leaderboard fetch');
-  process.exit(0);
-}
+// After sector annotations loop:
+annotations.kom.forEach((kom, i) => {
+  annotationBoxes[`kom_${i}`] = {
+    type: 'box',
+    xMin: kom.startMi,
+    xMax: kom.startMi + kom.lengthMi,
+    backgroundColor: '#7fff0015',   // chartreuse at ~8% opacity (vs sector's ~13%)
+    borderColor: '#7fff0066',       // chartreuse at ~40% opacity
+    borderDash: [4, 2],            // dashed border to visually distinguish from sector solid
+    borderWidth: 1,
+    label: {
+      display: true,
+      content: kom.name,
+      color: '#7fff00',
+      font: { size: 9, family: 'monospace' },
+      position: { x: 'start', y: 'start' }
+    }
+  };
+});
 ```
 
-This graceful degradation means local dev always works, and Netlify builds fetch live data.
+The `borderDash` option in chartjs-plugin-annotation 3.x controls the box border dash pattern — matches the dashed polyline treatment on the map. The chartreuse `#7fff00` color matches the map KOM polyline color exactly, creating visual consistency between the two components.
 
-#### Token Refresh Requirement
+**Visual differentiation from sectors:**
+- Color: chartreuse `#7fff00` vs sector amber/orange/red spectrum
+- Border: dashed vs solid
+- Opacity: slightly lower fill opacity to keep sector bands dominant
+- Label: small KOM name text at top-left of band (optional, but useful for narrow segments)
 
-Strava access tokens expire after 6 hours. The refresh token itself is long-lived but changes with every use (Strava issues a new refresh token on each refresh). This means `STRAVA_REFRESH_TOKEN` in Netlify env vars will go stale after the first deploy.
+**Key data field check:** `annotations.json` sectors have `startMi` and `endMi` (confirmed in the annotations file). KOM entries have `startMi` and `lengthMi` — so `xMax = kom.startMi + kom.lengthMi`. This calculation is already used in the map's KOM popup rendering.
 
-**Two options:**
+**Performance impact:** Adding N more annotation objects (N = number of KOM segments, currently 3 per annotations.json) to the Chart.js annotation plugin is negligible. The annotation plugin renders during `chart.draw()` which is already happening. No additional fetches or listeners.
 
-1. **Manual rotation (LOW friction for low-frequency deploys):** After each deploy, update `STRAVA_REFRESH_TOKEN` in Netlify UI with the new value logged during build. Viable if deploys are infrequent (monthly).
+**New components needed:** None.
 
-2. **Self-updating via Netlify API (HIGH automation, HIGH setup cost):** The build script calls the Netlify API after refreshing the token to update the env var value. Requires a Netlify personal access token stored as another env var. This is complex and fragile.
+---
 
-**Recommendation:** Use option 1 (manual rotation) for v2.0. The leaderboard data for a pre-event site doesn't need live freshness — a human deploy triggered when standings change is appropriate. Mark this as a known maintenance task in the build script comments.
+## Feature 5: GLRC Link Fix (CONT-05)
 
-#### What `/segments/{id}` returns (HIGH confidence)
+**What:** Make all GLRC/Great Lakes Recovery Centers mentions clickable links to `https://www.glrc.org/donate`.
 
-The `xoms` field includes:
-- `kom`: current KOM holder's time
-- `qom`: current QOM holder's time
-- `overall`: overall leader
-- `destination`: link to Strava leaderboard page
+**Current state — two files contain mentions:**
 
-The `local_legend` field includes the current segment's local legend athlete. Neither returns a list of names — just times and a Strava link. For v2.0, display the KOM/QOM times and link to Strava for the full leaderboard.
+```
+src/components/EventInfoBlock.astro   line 24
+  → Already a link: <a href={GLRC_URL}>Great Lakes Recovery Centers</a>
+  → GLRC_URL = 'https://www.glrc.org/donate'  (line 3)
+  → This one is DONE.
 
-#### New File: `public/data/leaderboard.json`
+src/components/EventInfoBlock.astro   line 25
+  → Plain text: "GLRC provides substance abuse..."
+  → "GLRC" appears as plain text, not a link.
 
-```json
-{
-  "fetched_at": "2026-03-27T12:00:00Z",
-  "segments": {
-    "billie-helmer": {
-      "strava_id": 12345678,
-      "kom_time_display": "2:14",
-      "qom_time_display": "2:51",
-      "strava_url": "https://www.strava.com/segments/12345678"
-    }
+src/pages/index.astro   line 226
+  → Plain text: "$10 suggested donation to Great Lakes Recovery Centers"
+  → "Great Lakes Recovery Centers" is plain text, not a link.
+```
+
+**Changes required:**
+
+1. `src/pages/index.astro` line 226: Wrap "Great Lakes Recovery Centers" in an `<a>` tag linking to `https://www.glrc.org/donate`. The BIKEREG_URL constant is already at the top of the file — add `const GLRC_URL = 'https://www.glrc.org/donate'` to the frontmatter block (lines 1-21), then use it in the template.
+
+2. `src/components/EventInfoBlock.astro` line 25: The paragraph starting "GLRC provides substance abuse..." has "GLRC" as plain text. Minimal fix: link the word "GLRC" using the existing `GLRC_URL` constant. The anchor pattern is already established two lines above.
+
+**No component changes to GravelSectors.astro or KomSegments.astro** — grep confirmed no GLRC/Great Lakes mentions there.
+
+**Integration points — two files:**
+```
+src/pages/index.astro               line 226   (hero section subtitle)
+src/components/EventInfoBlock.astro line 25    (second GLRC paragraph)
+```
+
+**Performance impact:** Zero. Static HTML link additions, no JS.
+
+---
+
+## Feature 6: Escher/Penrose SVG Background Patterns (VIS-14)
+
+**What:** Add tessellating geometric background patterns (Escher/Penrose-style) to page sections, with subtle animation, without breaking TBT 0ms.
+
+**Where in the DOM/CSS stack:**
+
+The existing visual layering in each section:
+```
+z-index 9999: .grain-overlay (position: fixed, SVG noise texture, pointer-events: none)
+z-index 10+:  .relative z-10 (section content — text, maps, charts)
+z-index 0:    .tone-image (position: absolute, opacity 0.12, mix-blend-mode: lighten)
+              (page background: oklch(0.10 0.01 250) — near-black)
+```
+
+The Escher/Penrose pattern belongs in the same visual layer as `.tone-image` — a positioned background element below content, above the solid `--color-bg-base`, with low opacity and pointer-events: none. It sits between `z-index 0` (page background) and `z-index 10` (content).
+
+**Implementation approach:**
+
+Option A — CSS `background-image` with `url('data:image/svg+xml,...')` on a section's `::before` pseudo-element:
+- No new DOM nodes
+- Pattern defined entirely in CSS
+- Animation via CSS `@keyframes` on `transform: rotate()` or `background-position`
+- Perfectly compositor-safe (transform/opacity only)
+
+Option B — Inline `<svg>` element in the section HTML (same pattern as existing `.tone-image` images):
+- Full SVG control (gradients, clip-paths, complex path animations)
+- Can use `<pattern>` and `<use>` elements for tessellation
+- Animated via CSS animation on the SVG element or SMIL (avoid SMIL — deprecated in Chrome)
+
+**Recommended approach: Option B — inline SVG with CSS animation**
+
+Reasons: The tessellation pattern (Penrose tiling or Escher-style rhombus grid) requires `<pattern>` and `<use>` SVG elements to avoid repeating path data. A CSS `background-image` SVG cannot contain `<use>` referencing external elements. For a complex geometric pattern, inline SVG is the right tool.
+
+**DOM integration:**
+
+Follow the `.tone-image` pattern exactly. Each section that gets the pattern gets an inline SVG:
+```astro
+<section class="relative overflow-hidden ...">
+  <svg aria-hidden="true" class="escher-pattern" ...>
+    <defs>
+      <pattern id="penrose-tile" ...>
+        <!-- path data -->
+      </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#penrose-tile)" />
+  </svg>
+  <div class="relative z-10">
+    <!-- section content -->
+  </div>
+</section>
+```
+
+**CSS for the pattern:**
+```css
+/* global.css — @layer components */
+.escher-pattern {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.05;          /* very subtle — does not compete with content */
+  mix-blend-mode: lighten;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .escher-pattern {
+    animation: escher-rotate 60s linear infinite;
   }
 }
-```
 
----
-
-## Feature 3: Photos on Sector/KOM Cards
-
-### Existing Data
-
-`photos.json` already contains `{ filename, lat, lon, mi }` for all 33 route photos. `annotations.json` contains `{ startMi, lengthMi }` for each sector and KOM. Both are produced by the prebuild pipeline and are available to Astro components at build time via `readFileSync`.
-
-### Recommended Pattern: Build-Time Assignment
-
-Add a new script `scripts/assign-card-photos.js` (or extend `resolve-annotations.js`) that assigns a representative photo to each sector and KOM card.
-
-**Algorithm:**
-
-```
-For each sector/KOM:
-  filter photos.json where photo.mi >= startMi AND photo.mi <= startMi + lengthMi
-  if photos in range:
-    pick the one closest to midpoint (startMi + lengthMi/2)
-    assign as cover photo
-  else:
-    assign null (card renders without photo)
-```
-
-**Output:** Enrich `annotations.json` with an optional `coverPhoto` field:
-
-```json
-{
-  "name": "C4",
-  "startMi": 58.7,
-  "lengthMi": 5.65,
-  "stars": 5,
-  "coverPhoto": "bFuy7XibzBZGM0Xxx92_JYluGnZROmghJg7o_MgqHCU-1536x2048.jpg"
+@keyframes escher-rotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 ```
 
-**Astro component change:** `GravelSectors.astro` and `KomSegments.astro` already read `annotations.json` at build time via `readFileSync`. No runtime change required — the photo reference is baked into static HTML at build time.
+**TBT impact assessment:**
 
+- SVG `<pattern>` elements are rendered by the GPU compositor when animated with `transform` only. Rotating an SVG with `transform: rotate()` via CSS `@keyframes` is compositor-safe — identical to rotating a `<div>`.
+- The `prefers-reduced-motion: no-preference` media query guard respects user accessibility preferences and is consistent with existing animation patterns in `global.css`.
+- The animation is a simple `rotate` — one CSS property, fully compositor-safe. TBT 0ms will not be affected.
+- Opacity (0.05) ensures the pattern does not draw visual attention away from content or add perceivable render cost.
+
+**Pattern ID uniqueness:** If the pattern SVG appears in multiple sections, each `<pattern id="...">` needs a unique ID (`id="penrose-tile-hero"`, `id="penrose-tile-route"`, etc.) to avoid SVG DOM ID conflicts. Alternatively, declare the pattern once in a hidden `<svg>` in `BaseLayout.astro` and `<use href="#penrose-tile">` it per section.
+
+**Favicon update (VIS-15):**
+
+The current `public/favicon.svg` is 5 lines — "MK" text in monospace on a dark rect. A Penrose triangle favicon requires replacing this file with a new SVG path. The favicon is referenced in `BaseLayout.astro` line 23:
 ```astro
-{sector.coverPhoto && (
-  <img
-    src={`/thumbnails/${sector.coverPhoto.replace(/\.(jpg|jpeg)$/, '.webp')}`}
-    alt=""
-    loading="lazy"
-    class="sector-card-photo"
-  />
-)}
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+```
+No code change needed — just replace the file content. The browser caches favicons aggressively; users may need to hard-refresh to see the update.
+
+**Integration points:**
+```
+src/pages/index.astro          (add SVG elements to hero, route, sector sections)
+src/styles/global.css          (add .escher-pattern class + @keyframes)
+src/layouts/BaseLayout.astro   (optional: declare shared <defs> once here)
+public/favicon.svg             (replace with Penrose triangle SVG)
 ```
 
-This approach requires zero new runtime fetches and adds no JavaScript complexity.
+**New components needed:** None required. A new `EscherPattern.astro` component could encapsulate the SVG markup if it appears in 3+ sections — call it a judgment call based on repetition.
 
 ---
 
-## Feature 4: Animation System
+## Modified vs New Components Summary
 
-### Guiding Constraint
+| File | Status | Changes for v3.0 |
+|------|--------|-----------------|
+| `src/components/RouteMap.astro` | Modified | Replace `L.circleMarker` crosshair with `L.marker` + `L.divIcon` bike SVG; add `:global(.bike-crosshair)` style |
+| `src/components/ElevationProfile.astro` | Modified | Add KOM annotation boxes to `annotationBoxes` object alongside existing sector boxes |
+| `src/components/GravelSectors.astro` | Modified | Update `starColors` values (sector color spectrum) |
+| `src/styles/global.css` | Modified | Add `.escher-pattern` class, `@keyframes escher-rotate` |
+| `src/pages/index.astro` | Modified | Add GLRC link in hero subtitle; add `GLRC_URL` const to frontmatter; add SVG pattern elements to sections |
+| `src/components/EventInfoBlock.astro` | Modified | Link "GLRC" plain text in second paragraph |
+| `public/favicon.svg` | Modified | Replace "MK" text favicon with Penrose triangle SVG |
+| `public/data/photos.json` | No change needed | Already synchronized with photo-manifest.js (verified 2026-03-28) |
+| `src/layouts/BaseLayout.astro` | Optional | Add shared `<svg><defs>` block if Escher pattern is used in 3+ sections |
+| `EscherPattern.astro` (new) | Optional | Component wrapper for SVG pattern, if repetition justifies it |
 
-v1.0 achieved Lighthouse Performance 96 and TBT 0ms. Animation work must not regress these scores.
-
-**Rules:**
-- No blocking JS for animations
-- Use CSS `transition` and `transform`/`opacity` only (GPU-accelerated)
-- No animation libraries (GSAP, Framer Motion, etc.) — overkill, adds bundle weight
-- Scroll-triggered entry animations use `IntersectionObserver`, not `scroll` event
-
-### Animation Categories
-
-#### A. Scroll Entry Animations (section fade-in)
-
-The existing pattern already uses `IntersectionObserver` for lazy-loading components. The same observer can add a CSS class to trigger entry animations.
-
-**Pattern:**
-
-```css
-/* global.css */
-.animate-on-scroll {
-  opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.4s ease, transform 0.4s ease;
-}
-
-.animate-on-scroll.is-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-```
-
-```javascript
-// One shared IntersectionObserver in a <script> in BaseLayout.astro or index.astro
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('is-visible');
-      observer.unobserve(entry.target); // fire once
-    }
-  });
-}, { threshold: 0.1 });
-
-document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
-```
-
-Apply `.animate-on-scroll` to section headings and card lists in `index.astro` or directly in component templates.
-
-**Note on CSS scroll-driven animations:** Native CSS `animation-timeline: scroll()` and `view()` have good Chrome/Edge support (115+) but incomplete Firefox/Safari support as of early 2026. For a cycling audience on mixed devices, use IntersectionObserver + CSS transition for broader compatibility.
-
-#### B. Hover Animations (card interactions)
-
-Pure CSS — no JavaScript needed. Add to existing Tailwind classes:
-
-```css
-/* classified-border cards already exist — augment: */
-.classified-border {
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-.classified-border:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px oklch(0 0 0 / 0.4);
-}
-```
-
-#### C. Map/Elevation Crosshair Animation
-
-The `crosshair.setLatLng()` call moves the marker instantly. Leaflet does not interpolate marker positions natively. For smooth tracking:
-- Keep animation off — the marker should snap immediately to the hovered position. Smooth interpolation at 60fps would require `requestAnimationFrame` polling and is not worth the complexity.
-- Set `circleMarker` radius/opacity to create a subtle "pulse" on appearance using CSS on the SVG element (LOW priority).
-
-#### D. Load-in Animations (hero section)
-
-Apply a CSS keyframe animation to the hero headline and subtext that runs once on page load, triggered by CSS `animation-delay` staggering:
-
-```css
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.hero-title    { animation: fadeUp 0.6s ease forwards; }
-.hero-subtitle { animation: fadeUp 0.6s ease 0.1s forwards; opacity: 0; }
-.hero-cta      { animation: fadeUp 0.6s ease 0.2s forwards; opacity: 0; }
-```
-
-No JavaScript. No library. Works everywhere.
-
----
-
-## New Components Required
-
-| Component / Script | Type | Status | Notes |
-|-------------------|------|--------|-------|
-| `scripts/fetch-strava.js` | Build script | New | OAuth token refresh + segment data fetch |
-| `scripts/assign-card-photos.js` | Build script | New (or extend resolve-annotations.js) | Photo-to-sector/KOM assignment |
-| `public/data/leaderboard.json` | Data file | New | Output of fetch-strava.js; committed fallback for local dev |
-| `KomSegments.astro` | Modified | Existing | Add leaderboard data rendering + cover photo |
-| `GravelSectors.astro` | Modified | Existing | Add cover photo rendering |
-| `ElevationProfile.astro` | Modified | Existing | Add `onHover` dispatch + `map:segmentHover` listener |
-| `RouteMap.astro` | Modified | Existing | Add `elevation:hover` listener + circleMarker crosshair |
-| `generate-data.js` | Modified | Existing | Wire fetch-strava.js + assign-card-photos.js into pipeline |
+**No new npm packages required.** All six features use existing capabilities: Leaflet `L.divIcon` (already used), chartjs-plugin-annotation (already registered), inline SVG (no library), static HTML links.
 
 ---
 
 ## Data Flow Changes
 
-### Build-Time Pipeline (updated)
+No build pipeline changes are required for v3.0. The pipeline scripts (`parse-gpx.js`, `resolve-annotations.js`, `match-photos.js`, `assign-card-photos.js`, `generate-thumbnails.js`) are unchanged.
+
+The only data-adjacent task (DATA-06) is a pipeline re-run, not a pipeline code change: `node scripts/match-photos.js` if re-verification is desired. Current output is correct.
+
+---
+
+## Suggested Build Order Based on Dependencies
+
+Dependencies are minimal across all six v3.0 features — most are fully independent surgical changes. Ordering is driven by risk and verification clarity:
 
 ```
-Existing:
-  parse-gpx.js          → route-data.json
-  resolve-annotations.js → annotations.json
-  match-photos.js        → photos.json
-  generate-thumbnails.js → public/thumbnails/
+1. Sector color update (VIS-12)
+   Files: RouteMap.astro, ElevationProfile.astro, GravelSectors.astro
+   Rationale: Lowest risk, highest visual impact, zero runtime logic change.
+   All three files must change in one commit to avoid visual inconsistency
+   between map colors, chart colors, and card colors.
+   Verify: visual check map polylines, chart bands, and sector card stars
+   all match the new spectrum simultaneously.
 
-New additions:
-  assign-card-photos.js  → annotations.json (enriched with coverPhoto fields)
-                           Note: runs AFTER match-photos.js and resolve-annotations.js
-  fetch-strava.js        → public/data/leaderboard.json
-                           Note: graceful skip if STRAVA_ env vars not set
-```
+2. GLRC link fix (CONT-05)
+   Files: index.astro, EventInfoBlock.astro
+   Rationale: Trivial one-liner per file. No JS, no data.
+   Zero regression risk. Do it early to check it off.
 
-### Runtime Event Flow (new in v2.0)
+3. Data verification (DATA-06)
+   Files: public/data/photos.json (if re-run needed)
+   Rationale: Already done per 2026-03-28 verification. If PROJECT.md
+   description changes again, re-run match-photos.js and commit output.
+   No code changes.
 
-```
-User hovers elevation chart:
-  ElevationProfile: onHover callback
-    → chart.scales.x.getValueForPixel(canvasPos.x) → miValue
-    → window.dispatchEvent(CustomEvent('elevation:hover', { detail: { mi: miValue } }))
-      ↓
-  RouteMap: addEventListener('elevation:hover')
-    → find nearest routeData point to miValue
-    → crosshair.setLatLng([pt.lat, pt.lon])
-    → map shows crosshair dot at route position
+4. KOM bands on elevation chart (VIS-13)
+   Files: ElevationProfile.astro
+   Rationale: Confined to one file. No cross-component event changes.
+   Builds on existing annotation plugin already registered.
+   Verify: KOM bands appear in chartreuse, dashed, correctly positioned
+   at the right mile ranges. Confirm sector bands still work.
+   Run Lighthouse to confirm TBT 0ms unchanged.
 
-User mouse leaves elevation chart:
-  ElevationProfile: onMouseLeave on canvas element
-    → window.dispatchEvent(CustomEvent('elevation:leave'))
-      ↓
-  RouteMap: addEventListener('elevation:leave')
-    → map.removeLayer(crosshair)
+5. Bike icon crosshair (UX-01)
+   Files: RouteMap.astro, global.css
+   Rationale: Replaces existing crosshair logic — need to verify show/hide
+   still works correctly with L.marker vs L.circleMarker opacity API.
+   Test: hover elevation chart at various points, confirm bike icon appears
+   and moves correctly. Test elevation:hoverEnd hides the marker.
+   Medium risk due to Leaflet API difference (setOpacity vs setStyle).
 
-User hovers sector polyline on map:
-  RouteMap: sector polyline mouseover
-    → window.dispatchEvent(CustomEvent('map:segmentHover', { detail: { startMi, endMi } }))
-      ↓
-  ElevationProfile: addEventListener('map:segmentHover')
-    → update annotation box borderWidth/color for that sector
-    → chart.update('none')  // instant, no animation
+6. Escher/Penrose patterns + favicon (VIS-14, VIS-15)
+   Files: index.astro, global.css, BaseLayout.astro (optional), favicon.svg
+   Rationale: Most visual work; highest creative/iteration cost.
+   Last because it doesn't block anything else and requires the most
+   iteration to get the aesthetic right.
+   Performance gate: Run Lighthouse after adding the SVG pattern and
+   animation. If TBT ticks above 0ms, reduce animation complexity
+   (slower rotation, static pattern, lower opacity).
 ```
 
 ---
 
-## Modified Component Boundaries (v2.0)
+## Performance Impact on TBT 0ms
 
-| Component | v1.0 | v2.0 Change |
-|-----------|------|-------------|
-| `RouteMap.astro` | Independent map | Listens to `elevation:hover`, emits `map:segmentHover`; adds circleMarker crosshair |
-| `ElevationProfile.astro` | Independent chart | Emits `elevation:hover` on mousemove; listens to `map:segmentHover`; adds `onHover` callback |
-| `KomSegments.astro` | Build-time HTML only | Add cover photo + leaderboard time display from `leaderboard.json` |
-| `GravelSectors.astro` | Build-time HTML only | Add cover photo from enriched `annotations.json` |
-| `generate-data.js` | Orchestrates 5 scripts | Add fetch-strava.js + assign-card-photos.js |
+Each feature assessed against the TBT 0ms baseline:
 
----
+| Feature | TBT Risk | Rationale |
+|---------|----------|-----------|
+| Sector color update | None | String value change only |
+| GLRC links | None | Static HTML |
+| Photos.json re-run | None | Data file, no JS change |
+| KOM chart bands | None | Adds annotation objects to existing plugin; negligible render cost |
+| Bike icon crosshair | Low | `L.divIcon` is same DOM cost as existing markers; `setOpacity` is Leaflet-native |
+| Escher SVG pattern | Low-Medium | CSS `transform: rotate()` is compositor-safe; risk is if SVG complexity causes rasterization. Mitigation: keep path count low, use `will-change: transform` if needed, gate animation behind `prefers-reduced-motion: no-preference` |
 
-## Suggested Build Order for v2.0 Phases
-
-Dependencies determine order. Data enrichment before component work.
-
-```
-1. Data fixes (annotations, photo positions)
-   No new architecture — fix values in resolve-annotations.js and photo-manifest.js
-   Must come first: all card and map work depends on correct data
-
-2. Photo assignment (assign-card-photos.js)
-   Depends on: corrected photos.json + annotations.json
-   Unblocks: sector card and KOM card photo display
-
-3. Map ↔ elevation interactivity
-   Depends on: both components exist and load correctly (v1.0 baseline)
-   No data changes required
-   This is the highest complexity item — build in isolation, test both directions
-
-4. Sector/KOM cards with photos
-   Depends on: assign-card-photos.js output + GravelSectors/KomSegments modifications
-   Low risk — additive change to existing static components
-
-5. Strava leaderboard
-   Depends on: Strava app registration, segment IDs confirmed, env vars configured
-   Build fetch-strava.js; add to generate-data.js pipeline
-   Modify KomSegments.astro to render leaderboard data
-   Can ship with fallback empty JSON if Strava setup not ready
-
-6. Animation system
-   No dependencies — pure CSS/JS additions
-   Final pass, lowest risk of breaking anything else
-
-7. URL/data corrections (BikeReg URL, donation URL, description text)
-   One-line edits, can happen at any point
-```
+**Mitigation protocol for Escher patterns:** Run Lighthouse in mobile throttled mode after adding the pattern. If TBT > 0ms, the animation is the likely culprit — remove the `animation` property first to confirm, then either simplify the SVG path data or disable animation entirely. A static pattern at 0.05 opacity is better than no pattern.
 
 ---
 
-## Anti-Patterns to Avoid for v2.0
+## Anti-Patterns to Avoid for v3.0
 
-### Anti-Pattern 7: Global Variable for Cross-Component State
+### Anti-Pattern A: Partial starColors Update
 
-**What:** Assigning `window.chartInstance` or `window.mapInstance` so components can reach each other.
-**Why bad:** Order-dependent initialization (whoever sets the global first), pollutes window namespace, tight coupling that makes components non-reusable.
-**Instead:** `window.dispatchEvent()` with `CustomEvent`. Components remain independent; they just share events. Order doesn't matter — listeners register when ready, events fire when ready.
+**What:** Updating starColors in only one or two of the three files.
+**Why bad:** Map polylines show new colors but sector cards show old colors, or chart bands mismatch the map. The visual system falls apart immediately and inconsistently.
+**Instead:** Stage all three file edits in one commit. Do a visual side-by-side check of all three surfaces before merging.
 
-### Anti-Pattern 8: Runtime Strava API Calls
+### Anti-Pattern B: Using `setStyle()` on `L.marker` for Visibility
 
-**What:** Fetching Strava data from the browser at page load.
-**Why bad:** Requires exposing API tokens in client-side JS (security), subject to Strava rate limits (15 min/100 req, daily 1000), adds latency on every page load, breaks if Strava is down.
-**Instead:** Build-time fetch in the prebuild Node script. Result is static JSON. Zero runtime dependency on Strava.
+**What:** After replacing `L.circleMarker` with `L.marker`, calling `crosshair.setStyle({ opacity: 0 })`.
+**Why bad:** `L.marker` does not have a `setStyle()` method that accepts `opacity`. `L.circleMarker` (which extends `L.Path`) does — it inherits the Path stroke/fill style API. `L.marker` uses `setOpacity()` instead.
+**Instead:** Use `crosshair.setOpacity(0)` and `crosshair.setOpacity(1)` for the bike icon marker. The `setLatLng()` call is identical for both types.
 
-### Anti-Pattern 9: Fetching Strava Leaderboard Endpoint
+### Anti-Pattern C: Duplicate SVG `<pattern>` IDs
 
-**What:** Using `GET /api/v3/segments/{id}/leaderboard` expecting a list of athletes.
-**Why bad:** This endpoint was removed in June 2020. It returns 404 or 403 for all third-party apps regardless of subscription status.
-**Instead:** Use `GET /api/v3/segments/{id}` (returns `xoms` with KOM/QOM times) and link to Strava for the full leaderboard.
+**What:** Copying the same SVG block into multiple page sections without changing the `id` attribute on the `<pattern>` element.
+**Why bad:** SVG ID collisions in the same document cause only the first definition to render correctly; subsequent sections show broken/wrong patterns.
+**Instead:** Assign unique IDs per section (`id="penrose-hero"`, `id="penrose-route"`) or declare the pattern once in a `<defs>` block in `BaseLayout.astro` and reference it via `<use href="#penrose">` in each section.
 
-### Anti-Pattern 10: Blocking Scroll on Animations
+### Anti-Pattern D: Animating SVG Properties That Trigger Layout
 
-**What:** Using `scroll` event listener to drive animation frame-by-frame.
-**Why bad:** Runs on main thread at high frequency, blocks paint, destroys TBT score.
-**Instead:** `IntersectionObserver` for entry animations (fires once), pure CSS `transition` for hover effects.
+**What:** Using CSS animations on SVG attributes like `width`, `height`, `x`, `y`, or `stroke-width`.
+**Why bad:** These trigger layout recalculation on every frame, which will add main-thread cost and potentially break TBT 0ms.
+**Instead:** Animate only `transform` (rotation, translation, scale) and `opacity` on the SVG element itself. The GPU compositor handles these without main-thread involvement.
 
-### Anti-Pattern 11: Re-fetching route-data.json for Crosshair Lookup
+### Anti-Pattern E: KOM Annotations Without `_baseColor` Equivalent
 
-**What:** Dispatching elevation:hover event with miValue, then having the listener fetch route-data.json to do the coordinate lookup.
-**Why bad:** Async fetch inside a mousemove-equivalent callback causes lag and repeated network requests.
-**Instead:** The RouteMap component loads `routeData` once during `initMap()`. The `elevation:hover` listener closes over `routeData` — the lookup is synchronous and instant.
+**What:** Adding KOM annotation boxes without the `_baseColor` metadata field that sector boxes use for hover/click highlight restore.
+**Why bad:** If any future phase adds map:komHover events (KOM cards highlighting the chart), the restore logic breaks because there's no stored base color to restore from.
+**Instead:** Add `_baseColor: '#7fff00'` to each KOM annotation box at creation time, matching the sector pattern. Even if no hover logic is added in v3.0, this makes the data structure consistent and forward-compatible.
 
 ---
 
@@ -498,35 +494,24 @@ Dependencies determine order. Data enrichment before component work.
 
 | Area | Confidence | Source | Notes |
 |------|------------|--------|-------|
-| Window CustomEvent bus pattern | HIGH | Astro docs (scripts-and-event-handling), verified working pattern | Idiomatic for Astro cross-component comms |
-| Chart.js `onHover` + `getValueForPixel` | HIGH | Chart.js interactions docs (chartjs.org) | Exact API verified |
-| Leaflet `setLatLng()` / circleMarker | HIGH | Leaflet docs (leafletjs.com/reference.html) | Core stable API |
-| Strava leaderboard endpoint removed | HIGH | Strava official changelog (2020) | Explicitly documented as unavailable |
-| Strava `/segments/{id}` xoms data | HIGH | Strava community hub, developer docs | Returns KOM/QOM times |
-| Netlify env vars in prebuild scripts | HIGH | Netlify docs (process.env.VARIABLE_NAME) | Standard pattern |
-| Token refresh management | MEDIUM | Strava auth docs | Refresh token rotation requires manual maintenance |
-| Animation browser support | HIGH | MDN, CSS-Tricks 2025 research | IntersectionObserver + CSS transition has universal support |
-
----
-
-## Open Questions
-
-1. **Strava segment IDs:** The KOM segments (Billie Helmer, Leaving Chatham, Silver Creek) need their Strava segment IDs confirmed before `fetch-strava.js` can be built. These may or may not exist as official Strava segments.
-
-2. **Photo coverage per sector:** The assign-card-photos algorithm assumes photos exist within each sector's mile range. C4 (mile 58.7-64.35) and Down Jeep (mile 83.0-83.6) may have no photos assigned — verify against the photo manifest before finalizing the algorithm.
-
-3. **Initialization timing edge case:** If a user loads the page and immediately hovers the elevation chart before the map has initialized, `elevation:hover` events will fire with no listener. This is benign — events are fire-and-forget; no error, no crash. The crosshair just won't appear until the map initializes. Acceptable UX.
+| starColors map locations (3 files) | HIGH | Direct file inspection — lines confirmed | Three exact locations with line numbers |
+| L.marker vs L.circleMarker opacity API | HIGH | Leaflet source code inspection patterns + existing codebase use of both types | `setOpacity` is `L.marker`-specific; `setStyle` is `L.Path`-specific |
+| chartjs-plugin-annotation `borderDash` | MEDIUM | Plugin API consistent with Chart.js borderDash pattern; verify against plugin docs | Confirmed in plugin v3.x feature set |
+| SVG `<pattern>` approach for tessellation | HIGH | SVG specification — `<pattern>` is the correct SVG primitive for this purpose | CSS `background-image` SVG cannot use `<use>` referencing external elements |
+| CSS `transform: rotate()` compositor safety | HIGH | Established compositor rule (Chrome Developers doc); consistent with existing `.card-hover` implementation | Already used in existing animation system |
+| GLRC link locations | HIGH | Direct grep — two files, two locations confirmed | `src/pages/index.astro:226`, `EventInfoBlock.astro:25` |
+| DATA-06 already resolved | HIGH | Direct comparison of manifest vs photos.json — 54 entries, 0 mismatches, git log confirms pipeline ran 2026-03-28 | May need re-run if project description changes |
 
 ---
 
 ## Sources
 
-- [Astro: Scripts and event handling](https://docs.astro.build/en/guides/client-side-scripts/) — HIGH confidence — CustomEvent pattern for cross-component communication
-- [Chart.js Interactions documentation](https://www.chartjs.org/docs/latest/configuration/interactions.html) — HIGH confidence — `onHover` callback, `getValueForPixel` API
-- [Leaflet documentation: setLatLng, circleMarker](https://leafletjs.com/reference.html) — HIGH confidence — Core API
-- [Strava segment API changes (June 2020)](https://developers.strava.com/docs/segment-changes/) — HIGH confidence — Leaderboard endpoint removal confirmation
-- [Strava community hub: accessing KOM/QOM data](https://communityhub.strava.com/developers-api-7/accessing-kom-qom-data-for-segment-1999) — HIGH confidence — `xoms` field on `/segments/{id}` endpoint
-- [Strava authentication documentation](https://developers.strava.com/docs/authentication/) — HIGH confidence — Token refresh flow
-- [Netlify build environment variables](https://docs.netlify.com/build/configure-builds/environment-variables/) — HIGH confidence — `process.env` in prebuild scripts
-- [Netlify scheduled functions for rebuilds](https://www.marclittlemore.com/automate-site-rebuilds-with-netlify-scheduled-functions/) — MEDIUM confidence — Build hook + cron pattern for automated rebuilds
-- [CSS scroll animations techniques 2025](https://mroy.club/articles/scroll-animations-techniques-and-considerations-for-2025) — MEDIUM confidence — IntersectionObserver vs native CSS scroll-driven animations comparison
+- Direct file inspection: `src/components/RouteMap.astro`, `src/components/ElevationProfile.astro`, `src/components/GravelSectors.astro`, `src/components/KomSegments.astro`, `src/components/EventInfoBlock.astro`, `src/styles/global.css`, `src/layouts/BaseLayout.astro`, `src/pages/index.astro`, `public/favicon.svg`
+- Runtime verification: `node` script comparing `scripts/photo-manifest.js` against `public/data/photos.json` — 54 entries, 0 mismatches (2026-03-28)
+- Git log inspection: `public/data/photos.json` last modified commit `dec592a` (2026-03-28), `scripts/photo-manifest.js` last modified commit `08f6e45` (2026-03-28)
+- [Leaflet API Reference — L.marker](https://leafletjs.com/reference.html#marker) — `setOpacity()` method on `L.Marker`
+- [Leaflet API Reference — L.circleMarker / L.Path](https://leafletjs.com/reference.html#path) — `setStyle()` on `L.Path` only
+- [chartjs-plugin-annotation — Box annotation options](https://www.chartjs.org/chartjs-plugin-annotation/latest/guide/types/box.html) — `borderDash` option
+- [MDN: SVG `<pattern>` element](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Element/pattern) — Tessellation pattern approach
+- [Chrome Developers: Avoid non-composited animations](https://developer.chrome.com/docs/lighthouse/performance/non-composited-animations) — `transform`/`opacity` compositor rule
+- v2.0 ARCHITECTURE.md (this repo) — CustomEvent bus design, established patterns

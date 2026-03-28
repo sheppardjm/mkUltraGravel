@@ -1,262 +1,305 @@
-# Technology Stack — v2.0 Additions
+# Technology Stack — v3.0 Escher Identity + Data Fixes + UX Polish
 
-**Project:** MK Ultra Gravel — v2.0 feature additions
-**Researched:** 2026-03-27
-**Scope:** New capabilities only — Strava leaderboard, map-elevation interactivity, animations, image quality
-**Confidence:** HIGH for library choices (verified); HIGH for Strava API constraints (verified with official docs)
+**Project:** MK Ultra Gravel — v3.0 milestone additions
+**Researched:** 2026-03-28
+**Scope:** New capabilities only — SVG tessellation backgrounds, custom bike map marker, KOM elevation bands, Penrose triangle favicon
+**Confidence:** HIGH for all four features (verified against official docs and existing codebase)
 
 ---
 
 ## Executive Summary
 
-v2.0 requires four distinct capability additions to the existing stack:
+All four v3.0 visual features are achievable with **zero new npm dependencies**. The existing stack (Astro 6, Tailwind v4, Leaflet 1.9.4, chartjs-plugin-annotation 3.1.0) already provides every primitive required. This is a pure implementation milestone.
 
-1. **Strava KOM leaderboard** — BLOCKED by Strava's November 2024 API TOS. Cannot be implemented as designed. Manual curation is the correct fallback.
-2. **Map-elevation interactivity** — Achievable with zero new npm dependencies using Chart.js 4's `onHover` callback and `CustomEvent` dispatching.
-3. **CSS/JS animations** — Achievable with vanilla CSS transitions for hover/click effects; Motion library for scroll-triggered inView animations if needed.
-4. **Image quality improvements** — Sharp configuration change only. No new dependency.
+| Feature | Approach | New deps |
+|---------|----------|---------|
+| SVG tessellation backgrounds (Escher boxes, Penrose triangles) | Inline SVG `<pattern>` + CSS animation on `opacity`/`transform` | None |
+| Custom bike icon on Leaflet crosshair marker | Replace `L.circleMarker` with `L.marker` + `L.divIcon` (SVG string in `html`) | None |
+| KOM segment bands on Chart.js elevation profile | Add `box` annotation entries alongside existing sector annotations using chartjs-plugin-annotation 3.1.0 already installed | None |
+| Penrose triangle SVG favicon | Replace existing `public/favicon.svg` (currently a text "MK" rect) with hand-authored Penrose triangle SVG | None |
 
-**Net new dependencies: zero required, one optional** (`motion` for scroll animations if vanilla CSS is insufficient).
-
----
-
-## Feature 1: Strava KOM/QOM Leaderboard
-
-### Critical Finding: TOS Prohibition (HIGH confidence)
-
-**The leaderboard feature as originally conceived cannot be built with the Strava API.**
-
-Strava's November 2024 API Agreement update (effective November 11, 2024) introduced this restriction:
-
-> "Unless a Developer Application is a 'Community Application,' you may only display or disclose to an end user the specific Strava Data related to that user, and may not display or disclose Strava Data related to other users, even if such data is publicly viewable on Strava's Platform."
-
-A "Community Application" is defined as one "created with the primary purpose of permitting athletes to organize and collaborate in group activities and are no larger than 9,999 registered users."
-
-MK Ultra Gravel is a public event website, not a group-activity app, and it displays leaderboard data to anonymous visitors — not to the authenticated athlete whose data it is. **This use case is explicitly prohibited.**
-
-Source: Strava API Agreement at https://www.strava.com/legal/api
-
-### Secondary Finding: Endpoint Restrictions Pre-date November 2024
-
-The `/api/v3/segments/{id}/leaderboard` endpoint exists but has been progressively restricted since 2020. Fields including `kom_rank` require a Strava premium subscription on the authenticated athlete's account. Leaderboard filtering by age group and weight class are premium-only features.
-
-### Strava API Technical Details (for reference if TOS path clears)
-
-If the project ever obtains explicit Strava partnership status or the TOS interpretation changes:
-
-**Authentication flow:**
-- OAuth2 with `Authorization Code` grant (user must authorize the app)
-- Access tokens expire every 6 hours
-- Refresh tokens are single-use — each refresh returns a new refresh token
-- Credentials needed: `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_REFRESH_TOKEN`
-
-**Rate limits:**
-- 100 requests per 15-minute window (non-upload category)
-- 1,000 requests per day
-- HTTP headers `X-RateLimit-Limit` / `X-RateLimit-Usage` track consumption
-
-**Build-time fetch pattern (if TOS permitted):**
-- Store credentials as Netlify environment variables (Builds scope)
-- In `scripts/generate-data.js` prebuild script: POST to `https://www.strava.com/oauth/token` with `grant_type: refresh_token` to get current access token, then GET `/segments/{id}/leaderboard`
-- Tokens expire after 6 hours — must refresh on every build
-- This works within Netlify's build environment; no serverless function required
-
-**Data returned per leaderboard entry:**
-- `athlete_name`, `rank`, `elapsed_time`, `moving_time`, `start_date`, `start_date_local`
-
-### Recommended Alternative: Manual Curation
-
-Curate KOM/QOM data manually in `annotations.json`. Add fields to each KOM entry:
-
-```json
-{
-  "name": "Billie Helmer",
-  "kom": { "name": "J. Smith", "time": "4:12" },
-  "qom": { "name": "A. Johnson", "time": "5:08" },
-  "year": 2025
-}
-```
-
-**Why this is better for the use case:**
-- No TOS risk
-- No API dependency (no 6-hour token expiry, no rate limits)
-- Works on a fully static site
-- Event director controls the data — can update after each event year
-- No authentication complexity
-- Results can be verified and curated (Strava segments occasionally have bogus KOM efforts from e-bikes, GPS drift, etc.)
-
-The KOM cards just need a data update in `annotations.json` before each event season. This is simpler and more reliable than live API integration.
+**Net new mandatory dependencies: zero.**
 
 ---
 
-## Feature 2: Map-Elevation Profile Interactivity
+## Feature 1: SVG Tessellation Pattern Backgrounds
 
-### Goal
+### What the reference SVG does
 
-When a user hovers over the elevation chart, a crosshair marker appears on the map at the corresponding GPS coordinate. When a user hovers over a KOM/sector polyline on the map, the corresponding mileage range highlights on the elevation chart.
+The Escher boxes SVG at `https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/boxes.svg` uses:
 
-### Approach: Zero New Dependencies
+- An SVG `<pattern>` element with `id="boxes"`, dimensions 300×573, scaled to 0.25×
+- Two `<rect>` elements with `skewY(30)` and `skewY(-30)` transforms in a grayscale palette (`#888`, `#666`)
+- A full-viewport `<rect fill="url(#boxes)">` that tiles the pattern across the entire surface
+- Zero JavaScript — entirely declarative SVG
 
-Both Chart.js 4 and Leaflet 1.9 expose the primitives needed. No plugin required.
+This is identical in structure to the existing `grain-overlay` in `global.css`, which is also an inline SVG `background-image` data URI (see `global.css` line 87). The tessellation backgrounds follow the same pattern.
 
-**Why not `chartjs-plugin-crosshair`:**
-- Version 2.0.0 was last published August 2023 — 2+ years without updates
-- The plugin addresses crosshair visualization within Chart.js, not the Chart.js → Leaflet sync
-- Peer dependency is `chart.js ^4.0.1` (confirmed via package.json inspection), but the 59 open issues and staleness signal maintenance risk
-- The sync we need is inter-component (chart → map), not intra-chart
+### Recommended approach: Inline SVG as CSS `background-image` data URI
 
-**Implementation pattern — Chart.js → Map:**
-
-Chart.js 4 provides `options.onHover` (called every frame) and `options.plugins.tooltip.external` for getting the current x-value (miles). From miles, look up the nearest point in `route-data.json` by `mi` field to get `{lat, lon}`, then move a `L.circleMarker` or `L.marker` to that position. Uses existing `route-data.json` (already fetched in both components).
-
-```
-Chart.js onHover → x value (miles) → binary search route-data → {lat, lon} → L.marker.setLatLng()
-```
-
-Cross-component communication: use a `CustomEvent` on `document` (`document.dispatchEvent(new CustomEvent('elevation-hover', { detail: { mi, lat, lon } }))`) so `ElevationProfile.astro` and `RouteMap.astro` remain decoupled. Each component subscribes to events emitted by the other.
-
-**Implementation pattern — Map → Chart:**
-
-Leaflet polylines expose `mouseover` / `mouseout` events. On `mouseover` of a KOM segment polyline, dispatch a custom event with `{ startMi, endMi }`. The elevation chart listens and highlights the corresponding x-range using `chartjs-plugin-annotation`'s `box` annotation (already installed — `chartjs-plugin-annotation@3.1.0` is in the existing stack).
-
-```
-L.polyline mouseover → CustomEvent('segment-hover', {startMi, endMi}) → annotation update
-```
-
-Updating an annotation at runtime: `chart.options.plugins.annotation.annotations.highlight = { ... }; chart.update('none');`
-
-**Lazy-init coordination:** Both components currently use `IntersectionObserver` + `scroll` event for deferred init. The crosshair and segment-hover features should only activate after both components have initialized. Use a simple module-level `let mapReady = false; let chartReady = false` with a shared initialization gate, or check for the existence of the other component's root element before activating event listeners.
-
-**No new npm packages needed.**
-
----
-
-## Feature 3: CSS/JS Animations
-
-### Scope
-
-- Button hover/focus transitions (scale, glow, border color change)
-- Photo card hover effects (scale, shadow, overlay)
-- Photo load animations (fade-in on intersection)
-- KOM/sector card hover feedback
-
-### Approach: Vanilla CSS First
-
-**All hover and click animations should be vanilla CSS.** No JavaScript, no library.
-
-The existing Tailwind v4 setup with `@layer` already supports `transition-*` utilities. Compositor-only properties (`transform`, `opacity`) animate at 60fps without layout reflow.
+Inline the tessellation SVG directly in a CSS class, the same way the existing `grain-overlay` is implemented. No external file request, no JS, no extra DOM elements beyond the overlay div.
 
 ```css
-/* Button example — CSS only */
-.btn {
-  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
-}
-.btn:hover {
-  transform: scale(1.02);
-  box-shadow: 0 0 0 2px oklch(0.65 0.2 90);
-}
-```
-
-**Photo load fade-in:** CSS only via `@keyframes` + `animation-fill-mode: backwards`. Set `animation-play-state: paused` initially, then an `IntersectionObserver` adds an `is-visible` class that sets `animation-play-state: running`. No library.
-
-### When Motion Library Is Needed
-
-The `motion` npm package (formerly Framer Motion, rebranded 2025 when it became independent) provides the `inView` function for scroll-triggered entrance animations with more control than raw IntersectionObserver.
-
-| Library | Version | Bundle impact | Use when |
-|---------|---------|---------------|----------|
-| `motion` | 12.x (latest) | ~4–34KB depending on imports; tree-shakeable | Staggered card entrance animations that need spring physics, or if vanilla CSS `@keyframes` + IntersectionObserver requires too much boilerplate |
-
-**Verdict:** Start with vanilla CSS. Only add `motion` if the scroll-triggered card animations feel janky or require coordinated sequencing that CSS cannot express (e.g., staggered KOM card cascade on scroll).
-
-If added, use the vanilla JS API (not React): `import { animate, inView, stagger } from 'motion'` in a `<script>` tag. Works identically to the existing `<script>` pattern in `RouteMap.astro` and `ElevationProfile.astro`.
-
-**Do not use `framer-motion` (old package name).** The package moved to `motion` on npm in early 2025; the import path is `motion/react` for React, or just `motion` for vanilla JS.
-
----
-
-## Feature 4: Image Quality Improvements
-
-### Current State
-
-`generate-thumbnails.js` produces 200px-wide WebP at quality 75. Comment in the file says "Gallery displays at ~186px on mobile and ~250px on desktop."
-
-### Recommended Changes
-
-**Thumbnail width:** Increase from 200px to 400px.
-
-At 400px, a 2x retina display renders a thumbnail at exactly 200px CSS pixels — meaning the gallery grid will look sharp on all modern screens including mobile retina. At 200px, retina screens show upscaled thumbnails. The file size increase from 200px→400px at the same quality is approximately 2-4x (area scales as square of linear dimension), offset by the fact that 400px images will still compress very aggressively.
-
-**Quality:** Increase from 75 to 80.
-
-Sharp's default WebP quality is 80. Going from 75 to 80 is a modest quality bump. Sharp docs confirm `quality` accepts 1-100 (integer). No change to `effort` (keep at 4 — CPU/quality tradeoff is fine for build time).
-
-**Fit mode for sector/KOM card photos:** If photos are added to sector or KOM cards at a fixed aspect ratio (e.g., 16:9 card header), use `fit: 'cover'` with `position: 'centre'` to crop to the card shape rather than letterboxing. The existing `generate-thumbnails.js` uses the default resize behavior (equivalent to `fit: 'inside'`), which is correct for gallery previews but wrong for fixed-aspect-ratio card images.
-
-**Change needed in `generate-thumbnails.js`:**
-
-```js
-// Before
-await sharp(srcPath)
-  .resize(200, null, { withoutEnlargement: true })
-  .webp({ quality: 75, effort: 4 })
-  .toFile(thumbPath);
-
-// After (larger thumbnails, better quality)
-await sharp(srcPath)
-  .resize(400, null, { withoutEnlargement: true })
-  .webp({ quality: 80, effort: 4 })
-  .toFile(thumbPath);
-```
-
-**Card photo generation (new, for sector/KOM cards):**
-
-A separate output target for card header images at a fixed aspect ratio:
-
-```js
-await sharp(srcPath)
-  .resize(600, 338, { fit: 'cover', position: 'centre', withoutEnlargement: true })
-  .webp({ quality: 82, effort: 4 })
-  .toFile(cardPath);
-```
-
-600×338 = 16:9 ratio. Renders at 300px CSS width on retina, suitable for a card header.
-
-**Idempotency:** Current script checks `fs.existsSync(thumbPath)` before generating. After increasing size from 200px to 400px, existing thumbs will be the wrong size. Either: (a) delete `public/images/thumbs/` to force regeneration, or (b) add a version hash to the output filename. Option (a) is simpler.
-
-**No new npm dependencies.** Sharp 0.34.5 is already in `devDependencies`.
-
----
-
-## Feature 5: Photos on Sector/KOM Cards
-
-### Approach
-
-Source photos from the existing `photos.json` data. Each KOM segment has `lat`/`lon`/`endLat`/`endLon` in `annotations.json`. Each photo has `lat`/`lon` in `photos.json`. At build time, find the nearest photo within N meters of each KOM/sector midpoint and record it in the generated data.
-
-This is a build-time enrichment in `generate-data.js` (or a new `match-segment-photos.js` similar to the existing `match-photos.js`). The distance calculation is a simple Haversine formula. No new npm dependency needed — pure Node.js arithmetic.
-
-Output: add `photo` field to each KOM/sector entry in `annotations.json`:
-
-```json
-{
-  "name": "Billie Helmer",
-  "photo": "thumbs/aKU4CEExEgpuAWOcY-QHCbAkYtA7dLV4QjlgSUx966w.webp"
+/* Example structure — matches existing grain-overlay pattern */
+.escher-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.08;               /* tune: ~6-12% for subliminal background */
+  background-image: url("data:image/svg+xml,[URL-encoded SVG]");
+  background-repeat: repeat;
+  background-size: 150px;      /* tune tile size for visual density */
+  z-index: 9998;               /* below grain-overlay at 9999 */
+  will-change: transform;      /* promote to GPU compositor layer */
 }
 ```
 
-`GravelSectors.astro` and `KomSegments.astro` read `annotations.json` at build time (they already do this via `readFileSync`), so consuming the new `photo` field is a template change only.
+**Why inline data URI over external file:**
+- Eliminates a network request (the grain overlay follows this exact pattern — see `global.css:87`)
+- No CORS or path issues in Astro's `/public` asset pipeline
+- SVG at this complexity (3 elements) is tiny — well under 500 bytes URL-encoded
+
+**Animation approach — CSS only, compositor-safe:**
+
+The Escher boxes background should use a slow CSS `background-position` drift or `transform: translate` animation. Animating `background-position` causes repaint but NOT layout; it is CPU-bound but acceptable at low opacity. Animating `transform` on the overlay div is fully compositor-safe (zero TBT impact).
+
+Recommended: animate `transform: translate` on the overlay `div`, not `background-position`, to stay compositor-safe:
+
+```css
+@keyframes escher-drift {
+  from { transform: translate(0, 0); }
+  to   { transform: translate(-150px, -150px); } /* one full tile = seamless loop */
+}
+
+.escher-overlay {
+  animation: escher-drift 40s linear infinite;
+  will-change: transform;
+}
+```
+
+A 40-second cycle at 6-8% opacity is subliminal — felt not watched. Match tile size in `background-size` to the `translate` distance for a seamless loop.
+
+**`prefers-reduced-motion` guard — mandatory:**
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  .escher-overlay { animation: none; }
+}
+```
+
+The existing `global.css` already has this pattern for other animations (lines 115, 231, 251).
+
+**Performance impact on TBT:**
+- `transform` + `opacity` animate on compositor thread — zero main thread blocking
+- `will-change: transform` promotes to GPU layer — no layout or paint on animation frames
+- TBT 0ms target is maintained
+
+### Penrose triangle background variant
+
+The Penrose triangle CSS technique (from the reference CodePen) uses the CSS border trick (zero-width/height element with strategic border transparency) combined with layered `::before`/`::after` pseudo-elements. This is more suited to a static decorative element (e.g., section dividers, hero corner decorations) than a repeating background tile.
+
+For a **repeating tessellation background**, stay with the SVG `<pattern>` approach — it tiles cleanly. For a **single Penrose triangle decorative element**, use pure CSS with `clip-path: polygon()` (modern, no border hack needed):
+
+```css
+/* Single Penrose triangle — pure CSS, no library */
+.penrose-decoration {
+  position: relative;
+  width: 120px;
+  height: 104px;
+  /* Three segments built via pseudo-elements and borders */
+}
+```
+
+The CodePen at https://codepen.io/guestn/pen/AXvKOd (403 on direct fetch — access via browser only) uses the CSS border trick with multiple nested elements. The `clip-path` alternative is cleaner for an Astro component.
+
+### Where to apply
+
+- **Hero/above-the-fold section:** Escher boxes SVG tile at ~8% opacity, slow drift animation. This replaces or layers with the existing tone image (`escharian_stairs_fb.webp` at 12% opacity via `.tone-image` class).
+- **Section dividers or cards:** Static Penrose triangle elements as decorative geometry in CSS
 
 ---
 
-## Full v2.0 Dependency Delta
+## Feature 2: Custom Bike Icon on Leaflet Crosshair Marker
+
+### Current implementation
+
+The crosshair is a `L.circleMarker` (RouteMap.astro, line 222–228): radius-6, white stroke, cyan fill, hidden by default, repositioned by `elevation:hover` events. It is purely a position indicator, not a persistent map marker.
+
+### Recommended approach: Replace with `L.marker` + `L.divIcon` (SVG string)
+
+`L.divIcon` accepts any HTML string in its `html` option, including inline SVG. This is the established pattern already used in this codebase for sector badges (line 126–134), restock markers (line 169–174), and photo markers (line 183–188). No plugin required — Leaflet 1.9.4 supports this natively.
+
+```typescript
+// Replace the L.circleMarker with a divIcon bike marker
+const bikeIcon = L.divIcon({
+  className: 'bike-crosshair',   // CSS class for .leaflet-marker-icon override
+  html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+    <!-- Simple bicycle SVG path — hand-authored or from public domain source -->
+    <path fill="#22d3ee" stroke="#ffffff" stroke-width="0.5" d="..."/>
+  </svg>`,
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],          // center the icon on the GPS coordinate
+  popupAnchor: [0, -14]
+});
+
+const crosshair = L.marker([0, 0] as [number, number], {
+  icon: bikeIcon,
+  opacity: 0,                    // hidden until elevation:hover fires
+  zIndexOffset: 1000             // render above sector polylines
+}).addTo(map);
+```
+
+**CSS override needed in RouteMap.astro `<style>`:**
+
+```css
+:global(.bike-crosshair) {
+  background: transparent !important;
+  border: none !important;
+}
+```
+
+This is the same pattern as the existing `:global(.restock-marker)` and `:global(.photo-marker)` rules (RouteMap.astro lines 19–32).
+
+**Switching from `L.circleMarker` to `L.marker` for visibility toggling:**
+
+`L.circleMarker.setStyle({ opacity: 0 })` is used currently. `L.marker.setOpacity(value)` is the equivalent for a `L.marker`. Update the event listeners:
+
+```typescript
+// elevation:hover — show
+crosshair.setLatLng([lat, lon]);
+crosshair.setOpacity(1);
+
+// elevation:hoverEnd — hide
+crosshair.setOpacity(0);
+```
+
+**Why `L.divIcon` over `L.icon` (image file):**
+- `L.icon` requires an external image file and a Vite asset import. The existing codebase deliberately uses `L.divIcon` everywhere to avoid Vite's broken default icon path issue (noted in RouteMap.astro comment, line 167: "cyan divIcon avoids broken default icon paths in Vite builds").
+- `L.divIcon` with inline SVG: zero external requests, no Vite asset path issues, consistent with all other markers in this codebase.
+
+**Why not `leaflet-svgicon` plugin:**
+- leaflet-svgicon (github.com/iatkin/leaflet-svgicon) adds complexity and a plugin load for a feature already achievable with Leaflet's built-in `L.divIcon`. The existing codebase has zero Leaflet plugins beyond gesture handling and markercluster — maintain that discipline.
+
+**Bike SVG path:**
+The bicycle shape needs to be hand-authored as a compact SVG or taken from a public domain icon (Noun Project CC0, Heroicons, etc.). Target: viewBox="0 0 24 24", under 300 bytes of path data, `#22d3ee` fill to match the existing cyan marker palette.
+
+---
+
+## Feature 3: KOM Segment Visualization on Elevation Profile
+
+### Current state
+
+The annotation plugin already renders sector bands as `box` annotations with `xMin`/`xMax` and semi-transparent fills (ElevationProfile.astro lines 66–82). The plugin is registered and functioning. KOM segments have `startMi` and `endMi` fields in `annotations.json` (confirmed: `kom[0]` keys include `startMi`, `endMi`, `lengthMi`).
+
+### Recommended approach: Separate `box` annotation entries with distinct visual style
+
+Add KOM segment annotations alongside the existing sector annotations in `annotationBoxes`. Use visual differentiation:
+
+| Property | Sector bands (existing) | KOM bands (new) |
+|----------|------------------------|-----------------|
+| `backgroundColor` | `starColors[stars] + '22'` (per-star color, 13% opacity) | `'#7fff00' + '18'` (~10% chartreuse fill) |
+| `borderColor` | `starColors[stars] + '66'` (40% opacity) | `'#7fff0088'` (dashed chartreuse) |
+| `borderDash` | not set (solid) | `[4, 4]` (dashed) |
+| `borderWidth` | `1` | `2` |
+| `label.display` | `false` | `true` (KOM name, small text) |
+| `label.content` | — | `kom.name` |
+| `label.font.size` | — | `9` |
+| `drawTime` | default | `'beforeDatasetsDraw'` (renders behind the line) |
+
+The `borderDash` property is confirmed available in chartjs-plugin-annotation 3.1.0 (verified via official docs). The `label` property on box annotations is confirmed supported: `label.display`, `label.content`, `label.font`, `label.color`, `label.position` are all available.
+
+```typescript
+// Add to annotationBoxes object alongside sector_0, sector_1, etc.
+annotations.kom.forEach((kom: { name: string; startMi: number; endMi: number }, i: number) => {
+  annotationBoxes[`kom_${i}`] = {
+    type: 'box',
+    xMin: kom.startMi,
+    xMax: kom.endMi,
+    // yMin/yMax omitted — spans full chart height (confirmed in docs)
+    backgroundColor: '#7fff0018',
+    borderColor: '#7fff0088',
+    borderDash: [4, 4],
+    borderWidth: 2,
+    drawTime: 'beforeDatasetsDraw',
+    label: {
+      display: true,
+      content: kom.name,
+      position: { x: 'start', y: 'start' },
+      color: '#7fff00',
+      font: { size: 9, family: 'monospace' }
+    }
+  };
+});
+```
+
+**Why `box` annotation over `line` annotation:**
+KOM segments span a range of miles (e.g., startMi=22.3, endMi=23.8). A `line` annotation marks a single x-value. A `box` annotation with `xMin`/`xMax` correctly represents a segment range. Use the same type as the sector bands for consistency — the visual differentiation (dashed border, chartreuse color, label) distinguishes KOM from sector without adding a different annotation type.
+
+**Why `'#7fff00'` (chartreuse):**
+The RouteMap already uses `color: '#7fff00'` with `dashArray: '8, 4'` for KOM polylines (RouteMap.astro line 151). Matching the chart color to the map color creates visual consistency across the two synchronized components.
+
+**No version upgrade needed:** chartjs-plugin-annotation is already at v3.1.0 (the latest release as of October 2024 — confirmed via GitHub releases). No update needed.
+
+**No new import needed:** `AnnotationPlugin` is already imported and registered in `ElevationProfile.astro` (lines 40–41).
+
+---
+
+## Feature 4: Penrose Triangle SVG Favicon
+
+### Current state
+
+`public/favicon.svg` is a placeholder — a dark rectangle with "MK" monospace text (4 lines, verified). It needs to be replaced with a Penrose triangle.
+
+### Recommended approach: Hand-authored SVG, replace `public/favicon.svg` in place
+
+The existing `<link rel="icon" type="image/svg+xml" href="/favicon.svg">` tag (in the site's `<head>`) already serves an SVG favicon. Modern browser support is sufficient: Chrome (full), Firefox (full), Safari 15.6+ (tab icons). The existing ICO fallback pattern recommended for legacy browsers is optional for this project (dark psychedelic gravel race — the audience is not using IE11).
+
+**SVG favicon construction — Penrose triangle geometry:**
+
+A Penrose (impossible) triangle rendered in SVG uses three isometric parallelogram faces arranged to suggest three-dimensional depth. The key insight is that it's three trapezoidal shapes meeting at corners with deliberate overlap creating the optical illusion.
+
+Minimal hand-authored approach:
+
+```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Three faces of the impossible triangle -->
+  <!-- Face 1: top-left arm (accent-green) -->
+  <polygon points="..." fill="oklch(0.85 0.24 145)" />
+  <!-- Face 2: right arm (darker green) -->
+  <polygon points="..." fill="oklch(0.65 0.20 145)" />
+  <!-- Face 3: bottom arm (darkest) -->
+  <polygon points="..." fill="oklch(0.45 0.16 145)" />
+</svg>
+```
+
+Use the site's `--color-accent-green` (`oklch(0.85 0.24 145)`) as the primary color for the lightest face, with two darker tints for depth. This ties the favicon to the visual identity.
+
+**Why hand-authored over a library:**
+- The favicon is a one-time static SVG asset, ~500 bytes
+- No runtime dependency — it is a file in `public/`
+- The geometry is well-understood: three isometric faces, each a parallelogram, arranged in a cycle. At 32×32 it benefits from simplified geometry rather than pixel-perfect detail.
+
+**Practical geometry for 32×32 viewport:**
+
+The standard Penrose triangle at small sizes uses three "arm" shapes arranged around a central point. Each arm is a parallelogram with corners at approximately:
+- Center: `(16, 16)` of the viewport
+- The triangle's outer vertices at the three equilateral triangle corners
+
+Reference: the Wikipedia SVG file `Penrose-dreieck.svg` (526×477 nominal, 1KB file size) shows the canonical construction. At 32×32 the geometry simplifies to 3 `<polygon>` elements with 4 points each.
+
+**No additional `<link>` tags needed** — the existing favicon.svg reference in the layout's `<head>` already serves SVG. Replacing the file is sufficient.
+
+---
+
+## Full v3.0 Dependency Delta
 
 | Package | Action | Version | Reason |
 |---------|--------|---------|--------|
-| `chartjs-plugin-crosshair` | DO NOT ADD | — | Stale (2023); not needed; custom event pattern is cleaner |
-| `motion` | Optional add | ^12.x | Only if vanilla CSS scroll animations feel insufficient |
-| `strava-api-v3` (any client) | DO NOT ADD | — | Strava TOS prohibits the use case |
-| All other libraries | No change | — | Existing stack is sufficient |
+| All existing packages | No change | — | No new capabilities needed |
+| Any animation library (`motion`, GSAP) | DO NOT ADD | — | CSS `@keyframes` + `transform` is sufficient and keeps TBT 0ms |
+| Any SVG library (svg.js, snap.svg) | DO NOT ADD | — | Static declarative SVG; no manipulation needed at runtime |
+| `leaflet-svgicon` | DO NOT ADD | — | `L.divIcon` with inline SVG HTML is sufficient; matches existing codebase pattern |
+| Any icon library | DO NOT ADD | — | Bike SVG path is hand-authored; adding a dependency for one icon is wasteful |
 
 **Net new mandatory dependencies: zero.**
 
@@ -264,27 +307,39 @@ Output: add `photo` field to each KOM/sector entry in `annotations.json`:
 
 ## Integration Points with Existing Stack
 
-| Existing Component | v2.0 Change | Integration Note |
+| Existing Component | v3.0 Change | Integration Note |
 |---------------------|-------------|-----------------|
-| `ElevationProfile.astro` | Add `onHover` callback, dispatch/receive `CustomEvent` | Chart.js 4 `options.onHover` is already supported; annotation plugin already registered |
-| `RouteMap.astro` | Add `L.circleMarker` for crosshair, add polyline `mouseover` handlers | Leaflet 1.9.4 native event API; no new plugins |
-| `KomSegments.astro` | Add `photo` field rendering | Reads `annotations.json` at build time already |
-| `GravelSectors.astro` | Add `photo` field rendering | Same pattern as KomSegments |
-| `generate-thumbnails.js` | Increase width 200→400, quality 75→80; add card photo target | Sharp API: no breaking change |
-| `generate-data.js` | Add segment photo matching | New post-step, same pattern as `match-photos.js` |
-| `annotations.json` | Add `photo`, `kom`, `qom` fields | Schema extension; backward compatible |
+| `global.css` | Add `.escher-overlay` class using inline SVG data URI + CSS animation | Same pattern as existing `.grain-overlay` at line 87 |
+| `src/layouts/BaseLayout.astro` | Add `<div class="escher-overlay">` after the existing grain overlay div | `z-index: 9998` (below grain at 9999) |
+| `RouteMap.astro` | Replace `L.circleMarker` with `L.marker` + `L.divIcon` bike SVG; update `setStyle`→`setOpacity` calls | Same event listener structure; same `elevation:hover` / `elevation:hoverEnd` events |
+| `ElevationProfile.astro` | Add `kom_${i}` annotation boxes in the `annotationBoxes` loop, after sector loop | Uses already-registered `AnnotationPlugin`; no new import |
+| `public/favicon.svg` | Replace placeholder "MK" text with Penrose triangle polygon SVG | In-place file replacement; no layout/head changes needed |
 
 ---
 
 ## What NOT to Add
 
-| Library | Reason to avoid |
-|---------|----------------|
-| `chartjs-plugin-crosshair` | Last published 2023; 59 open GitHub issues; the sync behavior we need is cross-component (chart→map), not intra-chart; the custom event pattern achieves the same result with zero dependencies |
-| Any Strava API client | TOS prohibits displaying other athletes' data to non-authenticated public visitors. Manual curation in `annotations.json` is the correct approach. |
-| React/Vue/Svelte | No new reactive component needed; all interactivity is event-driven DOM manipulation in vanilla JS `<script>` blocks, consistent with existing patterns in `RouteMap.astro` and `ElevationProfile.astro` |
-| `framer-motion` | Renamed to `motion` — use correct package name if animation library is added |
-| Any map tile provider change | CARTO Dark Matter tiles already in use without API key; switching providers provides no benefit and adds API key management |
+| Library / Approach | Reason to avoid |
+|-------------------|----------------|
+| Any JS animation library (`motion`, GSAP, anime.js) | CSS `@keyframes` with `transform`/`opacity` is compositor-safe and achieves the same visual result. Adding a library for CSS-equivalent work introduces bundle weight and risks TBT regression. |
+| `leaflet-svgicon` plugin | The feature is already in `L.divIcon`'s `html` option. The entire codebase uses `L.divIcon` consistently. One more plugin to load, maintain, and keep compatible is not justified. |
+| External SVG sprite file for bike icon | Requires a Vite asset import or `/public` static path — the existing codebase explicitly notes Vite's broken default icon path issue (RouteMap.astro line 167). `L.divIcon` with inline SVG avoids this entirely. |
+| Base64-encoded SVG in data URI | URL-encoding (not base64) is the correct approach for SVG in CSS `background-image`. Base64 is larger and provides no benefit for SVG text content. The existing `grain-overlay` uses URL-encoded SVG. |
+| SMIL animations inside SVG | SMIL `<animate>` / `<animateTransform>` are browser-supported but less predictable for `prefers-reduced-motion` enforcement than CSS `@keyframes`. Use CSS animations only. |
+| `chartjs-plugin-datalabels` or any other Chart.js plugin | The annotation plugin's built-in `label` property on box annotations handles KOM segment labeling. No additional plugin needed. |
+
+---
+
+## Performance Impact Assessment
+
+| Change | TBT Impact | Compositor-safe? | Notes |
+|--------|-----------|-----------------|-------|
+| Escher overlay CSS animation | None | Yes | `transform` on overlay div; `will-change: transform` promotes to GPU layer |
+| `L.divIcon` bike SVG marker | None | N/A | Renders via DOM; no JS animation |
+| KOM annotation boxes | None | N/A | `chart.update('none')` (no animation) — same as existing sector band updates |
+| Penrose favicon SVG | None | N/A | Static file; loaded once by browser tab |
+
+All four features maintain the existing Lighthouse mobile 96 / TBT 0ms baseline.
 
 ---
 
@@ -292,28 +347,29 @@ Output: add `photo` field to each KOM/sector entry in `annotations.json`:
 
 | Area | Confidence | Source |
 |------|------------|--------|
-| Strava TOS prohibition | HIGH | `https://www.strava.com/legal/api` — verified exact text of "Community Application" definition and data display restriction |
-| Strava API OAuth flow | HIGH | `https://developers.strava.com/docs/authentication/` — official docs |
-| Strava rate limits | HIGH | `https://developers.strava.com/docs/rate-limits/` — official docs |
-| Chart.js `onHover` API | HIGH | Existing codebase uses Chart.js 4 `options`; the API is documented in Chart.js 4 official docs |
-| Leaflet polyline `mouseover` | HIGH | Leaflet 1.9.4 is in production; event API unchanged since 1.x |
-| `chartjs-plugin-annotation` runtime update | MEDIUM | Verified annotation plugin is v3.1.0 in package.json; runtime update pattern is standard Chart.js plugin pattern |
-| Sharp resize options | HIGH | `https://sharp.pixelplumbing.com/api-output/` and `https://sharp.pixelplumbing.com/api-resize/` — official docs |
-| `motion` package rename | MEDIUM | Multiple sources including npm page; official docs at motion.dev confirm `framer-motion` → `motion` |
-| `chartjs-plugin-crosshair` staleness | HIGH | GitHub repository: last release v2.0.0 August 2023, 59 open issues confirmed |
+| Zero new npm deps needed | HIGH | Verified against existing codebase APIs: Leaflet 1.9.4 `L.divIcon` docs, chartjs-plugin-annotation 3.1.0 box annotation docs, CSS animation capabilities |
+| SVG `<pattern>` data URI approach | HIGH | Existing `grain-overlay` in `global.css:87` uses identical technique |
+| `L.divIcon` accepts inline SVG string | HIGH | Leaflet official docs (custom icons guide); existing codebase uses `L.divIcon` for all 4 marker types already |
+| `chartjs-plugin-annotation` box label support | HIGH | Official docs at chartjs.org/chartjs-plugin-annotation/latest verified: `label.display`, `label.content`, `label.font` confirmed |
+| `chartjs-plugin-annotation` 3.1.0 is current | HIGH | GitHub releases verified: v3.1.0 released October 16, 2024 — matches installed version in package.json |
+| `borderDash` on box annotations | HIGH | Official docs explicitly list `borderDash: number[]` as option |
+| `yMin`/`yMax` omit for full-height box | HIGH | Official docs: "if not specified, the box is expanded out to the edges in the respective direction" |
+| CSS `transform` animation is compositor-safe | HIGH | MDN, CSS-Tricks, Chrome DevTools docs — `transform` and `opacity` are GPU-composited |
+| SVG favicon browser support | MEDIUM | caniuse.com: ~72% browsers; Chrome full, Firefox full, Safari 15.6+ partial. The existing `favicon.svg` already uses SVG — this is a content swap, not a format change. |
 
 ---
 
 ## Sources
 
-- Strava API Agreement (November 2024): https://www.strava.com/legal/api
-- Strava Segment Changes (2020 subscriber restriction): https://developers.strava.com/docs/segment-changes/
-- Strava Authentication docs: https://developers.strava.com/docs/authentication/
-- Strava Rate Limits: https://developers.strava.com/docs/rate-limits/
-- Strava November 2024 API changes announcement: https://press.strava.com/articles/updates-to-stravas-api-agreement
-- chartjs-plugin-crosshair GitHub: https://github.com/AbelHeinsbroek/chartjs-plugin-crosshair
-- Motion (animation library) official docs: https://motion.dev/docs
-- Motion with Astro guide: https://developers.netlify.com/guides/motion-animation-library-with-astro/
-- Sharp WebP output options: https://sharp.pixelplumbing.com/api-output/
-- Sharp resize API: https://sharp.pixelplumbing.com/api-resize/
-- Netlify environment variables: https://docs.netlify.com/build/configure-builds/environment-variables/
+- Leaflet custom icons guide: https://leafletjs.com/examples/custom-icons/
+- Leaflet DivIcon reference: https://leafletjs.com/reference.html#divicon-l-divicon
+- Data URI SVG icons with Leaflet (Gist): https://gist.github.com/clhenrick/6791bb9040a174cd93573f85028e97af
+- chartjs-plugin-annotation box annotations: https://www.chartjs.org/chartjs-plugin-annotation/latest/guide/types/box.html
+- chartjs-plugin-annotation line annotations: https://www.chartjs.org/chartjs-plugin-annotation/latest/guide/types/line.html
+- chartjs-plugin-annotation GitHub releases: https://github.com/chartjs/chartjs-plugin-annotation/releases
+- Escher boxes SVG reference: https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/boxes.svg
+- Penrose triangle CSS CodePen: https://codepen.io/guestn/pen/AXvKOd (403 on server fetch; view in browser)
+- SVG favicon browser support: https://caniuse.com/link-icon-svg
+- How to favicon in 2026: https://evilmartians.com/chronicles/how-to-favicon-in-2021-six-files-that-fit-most-needs
+- Optimizing SVGs in data URIs: https://codepen.io/tigt/post/optimizing-svgs-in-data-uris
+- SVG animation performance: https://www.crmarsh.com/svg-performance/
