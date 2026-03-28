@@ -1,16 +1,24 @@
 ---
 phase: 16-v2-fixes
-verified: 2026-03-28T05:09:26Z
+verified: 2026-03-28T20:19:50Z
 status: passed
-score: 7/7 must-haves verified
+score: 9/9 must-haves verified
+re_verification:
+  previous_status: passed
+  previous_score: 7/7
+  gaps_closed:
+    - "Card hover shadow now visible — overflow-hidden separated from card-hover on GravelSectors + KomSegments outer divs"
+    - "Route stats subtitle upgraded to text-accent-green text-xl md:text-2xl for visual prominence"
+  gaps_remaining: []
+  regressions: []
 ---
 
 # Phase 16: v2 Fixes Verification Report
 
-**Phase Goal:** Fix 7 issues found during v2.0 UAT — restore broken lightbox, card hover shadows, scroll-reveal animations, elevation crosshair sync, and update content/photos.
-**Verified:** 2026-03-28T05:09:26Z
+**Phase Goal:** Fix issues found during v2.0 UAT — restore broken lightbox, card hover shadows, scroll-reveal animations, elevation crosshair sync, update content/photos, and close remaining card hover + subtitle gaps.
+**Verified:** 2026-03-28T20:19:50Z
 **Status:** passed
-**Re-verification:** No — initial verification
+**Re-verification:** Yes — after gap closure (plans 01-04 complete; previous verification covered plans 01-03 only)
 
 ## Goal Achievement
 
@@ -18,69 +26,109 @@ score: 7/7 must-haves verified
 
 | # | Truth | Status | Evidence |
 |---|-------|--------|----------|
-| 1 | PhotoSwipe lightbox opens when gallery thumbnails are clicked | VERIFIED | `@layer leaflet, base, components, utilities` (no 'photoswipe' layer); `@import "photoswipe/style.css" layer(components)` at line 13; `layer(photoswipe)` pattern returns 0 results |
-| 2 | Hovering a sector or KOM card produces an instant green box-shadow | VERIFIED | `.card-hover` uses direct `box-shadow: 4px 4px 0 0 transparent` with `:hover` state at line 228; no `::after` pseudo-element card rules exist |
-| 3 | Section headings and card lists fade and slide into view on scroll | VERIFIED | `@keyframes reveal` is a top-level rule at line 37, outside the `@theme {}` block which closes at line 35; token `--animate-reveal` remains inside `@theme` |
-| 4 | Route stats subtitle has clear visual hierarchy relative to section heading | VERIFIED | Line 246 of `src/pages/index.astro`: `<p class="text-text-muted text-lg mb-8">` contains the route miles/elevation expression |
-| 5 | Hovering over the elevation chart shows a crosshair marker on the map at the corresponding GPS location | VERIFIED | `ElevationProfile.astro` line 42: `const { getRelativePosition } = await import('chart.js/helpers');` — named import from `chart.js/helpers`, not `Chart.helpers.getRelativePosition` |
-| 6 | Leaving Chatham KOM card displays a photo of Rock River Rd terrain | VERIFIED | File exists at `public/images/leaving-chatham-rock-river-rd.png`; `scripts/photo-manifest.js` line 50 has entry `{ filename: 'leaving-chatham-rock-river-rd.png', mi: 37.8 }` |
-| 7 | MK Ultra explainer explains dual meaning — CIA program AND route creator Mark Kransz's initials | VERIFIED | `MkUltraExplainer.astro` line 31: `route creator <span class="redacted-reveal">Mark Kransz</span>, whose initials gave the ride its name` |
+| 1 | PhotoSwipe lightbox opens when gallery thumbnails are clicked | VERIFIED | `@layer leaflet, base, components, utilities` (line 4); `@import "photoswipe/style.css" layer(components)` (line 13); no dedicated photoswipe layer to conflict |
+| 2 | Hovering a sector or KOM card produces an instant green box-shadow | VERIFIED | `.card-hover` outer div has no `overflow-hidden` (confirmed in GravelSectors.astro line 26, KomSegments.astro line 19); `global.css` lines 224-229 define direct box-shadow with `step-start` |
+| 3 | Section headings and card lists fade and slide into view on scroll | VERIFIED | `@keyframes reveal` at line 37 (top-level, outside `@theme` which closes at line 35); `--animate-reveal` token in `@theme` |
+| 4 | Route stats subtitle is visually prominent — accent green, larger than body text | VERIFIED | `src/pages/index.astro` line 246: `class="text-accent-green text-xl md:text-2xl mb-8"` |
+| 5 | Elevation chart crosshair syncs to map on hover | VERIFIED | `ElevationProfile.astro` line 42: named import `const { getRelativePosition } = await import('chart.js/helpers')`; used at line 145 |
+| 6 | Leaving Chatham KOM card displays a photo of Rock River Rd terrain | VERIFIED | `public/images/leaving-chatham-rock-river-rd.png` exists; `scripts/photo-manifest.js` line 50 has entry at `mi: 37.8` |
+| 7 | MK Ultra explainer explains dual meaning — CIA program AND Mark Kransz's initials | VERIFIED | `MkUltraExplainer.astro` line 31: names `Mark Kransz` with `redacted-reveal` span and explains initials |
+| 8 | Sector cards have card-hover on outer div, overflow-hidden on inner div | VERIFIED | `GravelSectors.astro` line 26 outer div: `classified-border bg-bg-surface card-hover`; line 27 inner div: `overflow-hidden` only |
+| 9 | KOM cards have card-hover on outer div, overflow-hidden on inner div | VERIFIED | `KomSegments.astro` line 19 outer div: `classified-border bg-bg-surface card-hover`; line 20 inner div: `overflow-hidden` only |
 
-**Score:** 7/7 truths verified
+**Score:** 9/9 truths verified
 
 ### Required Artifacts
 
 | Artifact | Expected | Status | Details |
 |----------|----------|--------|---------|
-| `src/styles/global.css` | Fixed CSS layer ordering, card hover, scroll reveal keyframes | VERIFIED | 255 lines; no stub patterns; layer order correct; `@keyframes reveal` at top level line 37; `.card-hover` direct box-shadow at line 224 |
-| `src/pages/index.astro` | Larger route stats subtitle text | VERIFIED | Route stats paragraph at line 246 has `text-lg` class |
-| `src/components/ElevationProfile.astro` | `getRelativePosition` from chart.js/helpers | VERIFIED | Named import at line 42 from `chart.js/helpers` |
-| `public/images/leaving-chatham-rock-river-rd.png` | Photo of Rock River Rd terrain | VERIFIED | File exists in public/images/ |
+| `src/styles/global.css` | Fixed CSS layer ordering, card hover, scroll reveal keyframes | VERIFIED | Layer order line 4 (no photoswipe layer); `@keyframes reveal` at line 37 top-level; `.card-hover` direct box-shadow at lines 224-229 |
+| `src/pages/index.astro` | Route stats subtitle text-accent-green text-xl/2xl | VERIFIED | Line 246: `class="text-accent-green text-xl md:text-2xl mb-8"` |
+| `src/components/ElevationProfile.astro` | `getRelativePosition` named import from chart.js/helpers | VERIFIED | Line 42: `const { getRelativePosition } = await import('chart.js/helpers')` |
+| `src/components/GravelSectors.astro` | Outer div: card-hover without overflow-hidden; inner div: overflow-hidden | VERIFIED | Two-div pattern confirmed; no element has both classes |
+| `src/components/KomSegments.astro` | Outer div: card-hover without overflow-hidden; inner div: overflow-hidden | VERIFIED | Two-div pattern confirmed; no element has both classes |
+| `src/components/MkUltraExplainer.astro` | Mentions Mark Kransz and his initials | VERIFIED | Line 31 names Mark Kransz with explanation |
+| `public/images/leaving-chatham-rock-river-rd.png` | Photo of Rock River Rd terrain | VERIFIED | File exists |
 | `scripts/photo-manifest.js` | Entry at mi 37.8 for leaving-chatham image | VERIFIED | Line 50: `{ filename: 'leaving-chatham-rock-river-rd.png', mi: 37.8 }` |
-| `src/components/MkUltraExplainer.astro` | Mentions Mark Kransz | VERIFIED | Line 31 names Mark Kransz and explains his initials |
 
 ### Key Link Verification
 
 | From | To | Via | Status | Details |
 |------|----|-----|--------|---------|
-| `global.css @layer declaration` | PhotoSwipe CSS import | `layer(components)` | WIRED | `@layer` line 4 has no 'photoswipe'; import line 13 uses `layer(components)` |
-| `global.css @keyframes reveal` | scroll-reveal animation | top-level outside `@theme` | WIRED | `@keyframes reveal` at line 37; `@theme` closes at line 35 |
-| `ElevationProfile.astro` | chart.js helpers | `import('chart.js/helpers')` | WIRED | Named import at line 42; used at line 145 via `getRelativePosition(event.native, chart)` |
-| `photo-manifest.js` | `leaving-chatham-rock-river-rd.png` | `mi: 37.8` entry | WIRED | Manifest entry links the image file to mile marker 37.8 |
+| `global.css @layer` declaration | PhotoSwipe CSS import | `layer(components)` — no dedicated photoswipe layer to conflict | WIRED | Line 4 declares only leaflet/base/components/utilities; line 13 imports photoswipe into components |
+| `global.css @keyframes reveal` | Scroll-reveal animation | Top-level outside `@theme` block | WIRED | `@keyframes reveal` at line 37; `@theme` closes at line 35 |
+| `.card-hover` in global.css | GravelSectors.astro outer div | `card-hover` class only on outer div; no `overflow-hidden` on same element | WIRED | Outer div line 26 has `card-hover`; inner div line 27 has `overflow-hidden` |
+| `.card-hover` in global.css | KomSegments.astro outer div | `card-hover` class only on outer div; no `overflow-hidden` on same element | WIRED | Outer div line 19 has `card-hover`; inner div line 20 has `overflow-hidden` |
+| `ElevationProfile.astro` | chart.js helpers | Named import `getRelativePosition` from `chart.js/helpers` | WIRED | Import at line 42; invoked at line 145 |
+| `photo-manifest.js` | `leaving-chatham-rock-river-rd.png` | `mi: 37.8` manifest entry | WIRED | File present in public/images; manifest links it to mile 37.8 |
+
+### Requirements Coverage
+
+All UAT issues from `16-UAT.md` are covered:
+
+| Issue | Status | Fixed By |
+|-------|--------|----------|
+| Lightbox z-index conflict (PhotoSwipe behind Leaflet) | SATISFIED | 16-01: CSS layer ordering |
+| Card hover shadow invisible | SATISFIED | 16-01: direct box-shadow; 16-04: separated overflow-hidden |
+| Scroll-reveal keyframes outside @theme | SATISFIED | 16-01: moved @keyframes reveal to top-level |
+| Route stats subtitle too small/muted | SATISFIED | 16-04: text-accent-green text-xl md:text-2xl |
+| Elevation crosshair getRelativePosition import error | SATISFIED | 16-02: named import from chart.js/helpers |
+| Leaving Chatham KOM photo missing | SATISFIED | 16-03: photo added + manifest entry |
+| MK Ultra explainer no dual meaning | SATISFIED | 16-03: Mark Kransz + initials explanation added |
 
 ### Anti-Patterns Found
 
-None. No TODO/FIXME comments, placeholder text, empty handlers, or console-only implementations found in modified files.
+None. No TODO/FIXME, placeholder text, empty handlers, or console-only implementations found in any modified files.
 
 ### Human Verification Required
 
 The following behaviors are structurally sound but require a browser to confirm visually:
 
-1. **PhotoSwipe lightbox opens on click**
-   - Test: Click any photo thumbnail in the gallery section
-   - Expected: Full-screen PhotoSwipe lightbox opens with dark theme and navigation arrows
-   - Why human: CSS layer correctness can be verified statically, but rendering requires a browser
+#### 1. PhotoSwipe lightbox opens on click
 
-2. **Card hover shadow appears instantly**
-   - Test: Hover over a sector card or KOM card
-   - Expected: 4px offset green box-shadow appears with no animation delay
-   - Why human: The `step-start` transition timing and visual appearance require browser rendering
+**Test:** Click any photo thumbnail in the gallery section
+**Expected:** Full-screen PhotoSwipe lightbox opens with dark theme and navigation arrows
+**Why human:** CSS layer correctness verified statically; rendering and z-index stacking require a browser
 
-3. **Scroll-reveal animations play**
-   - Test: Scroll down the page from the top on a fresh load
-   - Expected: Section headings and card grids fade and slide up into view as they enter the viewport
-   - Why human: `IntersectionObserver` behavior and `is-visible` class toggling requires browser execution
+#### 2. Card hover shadow appears instantly
 
-4. **Elevation chart crosshair syncs to map**
-   - Test: Hover over the elevation profile chart; move cursor across it
-   - Expected: A crosshair marker appears on the route map at the corresponding GPS point and moves as cursor moves
-   - Why human: `getRelativePosition` integration with Chart.js mouse events requires browser execution
+**Test:** Hover over a sector card or KOM card
+**Expected:** 4px offset green box-shadow appears with no animation delay; shadow is not clipped by the card boundary
+**Why human:** The two-div separation and `step-start` transition timing require browser rendering to confirm shadow visibility
+
+#### 3. Scroll-reveal animations play
+
+**Test:** Scroll down the page from the top on a fresh load
+**Expected:** Section headings and card grids fade and slide up into view as they enter the viewport
+**Why human:** `IntersectionObserver` behavior and `is-visible` class toggling require browser execution
+
+#### 4. Elevation chart crosshair syncs to map
+
+**Test:** Hover over the elevation profile chart; move cursor across it
+**Expected:** A crosshair marker appears on the route map at the corresponding GPS point and moves as cursor moves
+**Why human:** Chart.js mouse event integration requires browser execution
+
+#### 5. Route stats subtitle is visually prominent
+
+**Test:** View the "The Route" section heading and the miles/elevation line below it
+**Expected:** The miles/elevation subtitle renders in accent green at a noticeably larger size than body text, creating clear hierarchy below the section heading
+**Why human:** `text-accent-green text-xl md:text-2xl` is confirmed in source but visual prominence requires browser rendering
 
 ### Gaps Summary
 
-No gaps. All 7 must-haves are verified at all three levels (exists, substantive, wired). The phase goal is structurally achieved. The 4 human verification items above are the remaining step to confirm behavior in browser.
+No gaps. All 9 must-haves are verified at all three levels (exists, substantive, wired). The phase goal is fully achieved:
+
+- Lightbox layer ordering is correct (no photoswipe layer in `@layer` declaration)
+- Card hover shadow is structurally unblocked (`card-hover` on outer div, `overflow-hidden` on inner div, direct box-shadow in CSS)
+- Scroll-reveal keyframes exist at top-level scope outside `@theme`
+- Elevation crosshair uses named import from `chart.js/helpers`
+- Leaving Chatham photo exists and is in the manifest
+- MK Ultra explainer names Mark Kransz
+- Route stats subtitle is `text-accent-green text-xl md:text-2xl`
+
+The 5 human verification items above are the remaining step to confirm behavior in browser.
 
 ---
 
-_Verified: 2026-03-28T05:09:26Z_
+_Verified: 2026-03-28T20:19:50Z_
 _Verifier: Claude (gsd-verifier)_
