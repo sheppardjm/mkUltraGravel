@@ -25,9 +25,9 @@
 - [x] **VIS-06**: Each sector card displays a representative photo
 - [x] **VIS-07**: Each KOM card displays a representative photo
 - [x] **VIS-08**: Gallery thumbnails increased from 200px to 400px width with improved WebP quality
-- [ ] **VIS-09**: Subtle hover animations on buttons and cards (brutalist-appropriate: hard shifts, not smooth easing)
-- [ ] **VIS-10**: Subtle load/entrance animations on sections as they scroll into view
-- [ ] **VIS-11**: Click feedback animations on interactive elements
+- [x] **VIS-09**: Subtle hover animations on buttons and cards (brutalist-appropriate: hard shifts, not smooth easing)
+- [x] **VIS-10**: Subtle load/entrance animations on sections as they scroll into view
+- [x] **VIS-11**: Click feedback animations on interactive elements
 
 ### Content
 
@@ -77,9 +77,9 @@
 | CONT-02 | Phase 14 | Complete |
 | CONT-03 | Phase 14 | Complete |
 | CONT-04 | Phase 14 | Complete |
-| VIS-09 | Phase 15 | Pending |
-| VIS-10 | Phase 15 | Pending |
-| VIS-11 | Phase 15 | Pending |
+| VIS-09 | Phase 15 | Complete |
+| VIS-10 | Phase 15 | Complete |
+| VIS-11 | Phase 15 | Complete |
 
 **Coverage:**
 - v2.0 requirements: 19 total
@@ -88,4 +88,4 @@
 
 ---
 *Requirements defined: 2026-03-27*
-*Last updated: 2026-03-27 — traceability mapped to Phases 11-15*
+*Last updated: 2026-03-28 — all v2.0 requirements complete*

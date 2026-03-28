@@ -3,7 +3,7 @@
 ## Milestones
 
 - SHIPPED **v1.0 MK Ultra Gravel** — Phases 1-10 (shipped 2026-03-27)
-- **v2.0 Interactivity + Polish** — Phases 11-15 (in progress)
+- SHIPPED **v2.0 Interactivity + Polish** — Phases 11-15 (shipped 2026-03-28)
 
 ## Phases
 
@@ -25,7 +25,7 @@ Full details: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 
 </details>
 
-### v2.0 Interactivity + Polish (In Progress)
+### v2.0 Interactivity + Polish (SHIPPED 2026-03-28)
 
 **Milestone Goal:** Elevate the site from informational to interactive — correct underlying data, add map-elevation sync, put photos on cards, explain the MK Ultra name, and polish with animations.
 
@@ -110,8 +110,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 15-01-PLAN.md — Hover + click animations: card-hover ::after shadow trick on sector/KOM cards, active: click feedback on CTAs
-- [ ] 15-02-PLAN.md — Scroll-reveal entrance animations: IntersectionObserver + CSS keyframes, data-reveal stagger on card lists, prefers-reduced-motion compliance
+- [x] 15-01-PLAN.md — Hover + click animations: card-hover ::after shadow trick on sector/KOM cards, active: click feedback on CTAs
+- [x] 15-02-PLAN.md — Scroll-reveal entrance animations: IntersectionObserver + CSS keyframes, data-reveal stagger on card lists, prefers-reduced-motion compliance
 
 ## Progress
 
@@ -131,4 +131,4 @@ Plans:
 | 12. Photo Pipeline + Card Photos | v2.0 | 3/3 | Complete | 2026-03-27 |
 | 13. Map-Elevation Interactivity | v2.0 | 2/2 | Complete | 2026-03-27 |
 | 14. Content | v2.0 | 2/2 | Complete | 2026-03-27 |
-| 15. Animations | v2.0 | 0/TBD | Not started | - |
+| 15. Animations | v2.0 | 2/2 | Complete | 2026-03-28 |
