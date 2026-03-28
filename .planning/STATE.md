@@ -11,10 +11,10 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 
 Milestone: v2.0 COMPLETE + fixes
 Phase: 16 (v2-fixes) — In progress
-Plan: 2 of N in phase — COMPLETE
+Plan: 1 of N in phase — COMPLETE (also 2 complete)
 Status: In progress
 
-Last activity: 2026-03-28 — Completed 16-02-PLAN.md (getRelativePosition import fix; elevation-to-map crosshair now functional)
+Last activity: 2026-03-28 — Completed 16-01-PLAN.md (CSS layer ordering, card hover shadow, scroll reveal keyframes, route stats subtitle)
 
 Progress: [█████████████████████] 41/41 plans complete (v1.0 30 + v2.0 11) — v2.0 milestone complete
 
@@ -84,6 +84,9 @@ Recent decisions affecting current work:
 - [15-02]: 0.35s ease-out for scroll entrance animations — brutalist step-start applies only to hover/click binary states; ease-out correct for reveals
 - [15-02]: Centralized IntersectionObserver in index.astro via querySelectorAll covers all components; no per-component scripts
 - [16-02]: chart.js/auto does NOT expose Chart.helpers — import getRelativePosition from chart.js/helpers directly
+- [16-01]: Direct box-shadow on .card-hover (not ::after) — overflow-hidden clips ::after pseudo-elements; z-index:-1 hides shadow behind opaque card background
+- [16-01]: PhotoSwipe CSS in layer(components) not layer(photoswipe) — Tailwind Preflight in base layer overrides isolated photoswipe layer; components layer is correct cascade position
+- [16-01]: @keyframes must be top-level in Tailwind v4 — @theme only processes custom property tokens; @keyframes inside @theme are silently dropped
 
 ### Pending Todos
 
@@ -97,6 +100,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T05:04:32Z
-Stopped at: Completed 16-02-PLAN.md — getRelativePosition import fix; elevation chart hover crosshair now works
+Last session: 2026-03-28T01:27:00Z
+Stopped at: Completed 16-01-PLAN.md — CSS layer ordering, card hover shadow, scroll reveal keyframes, route stats subtitle
 Resume file: None
