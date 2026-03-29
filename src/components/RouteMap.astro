@@ -30,6 +30,11 @@
     background: transparent !important;
     border: none !important;
   }
+
+  :global(.bike-crosshair) {
+    background: transparent !important;
+    border: none !important;
+  }
 </style>
 
 <script>
@@ -217,15 +222,20 @@
   photoCluster.addLayers(photoMarkers);
   map.addLayer(photoCluster);
 
-  // Crosshair circleMarker — repositioned by elevation:hover events, hidden by default
-  // #22d3ee matches existing restock/photo marker cyan color
-  const crosshair = L.circleMarker([0, 0] as [number, number], {
-    radius: 6,
-    color: '#ffffff',
-    fillColor: '#22d3ee',
-    fillOpacity: 0,
-    weight: 2,
-    opacity: 0
+  // Bike icon crosshair — repositioned by elevation:hover events, hidden by default
+  // Inline SVG bicycle icon (Lucide-derived, MIT) — #22d3ee matches existing marker cyan
+  const bikeIcon = L.divIcon({
+    className: 'bike-crosshair',
+    html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></svg>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12]
+  });
+
+  const crosshair = L.marker([0, 0] as [number, number], {
+    icon: bikeIcon,
+    opacity: 0,
+    interactive: false,
+    zIndexOffset: 1000
   }).addTo(map);
 
   // AbortController for cleanup — removes window listeners when page unloads
@@ -237,14 +247,12 @@
   window.addEventListener('elevation:hover', ((e: Event) => {
     const { lat, lon } = (e as CustomEvent<{lat: number; lon: number}>).detail;
     crosshair.setLatLng([lat, lon]);
-    if ((crosshair.options as any).opacity === 0) {
-      crosshair.setStyle({ opacity: 1, fillOpacity: 0.9 });
-    }
+    crosshair.setOpacity(1);
   }) as EventListener, { signal });
 
   // Listen for elevation hover end — hide crosshair
   window.addEventListener('elevation:hoverEnd', (() => {
-    crosshair.setStyle({ opacity: 0, fillOpacity: 0 });
+    crosshair.setOpacity(0);
   }) as EventListener, { signal });
 
   // Listen for elevation:sectorClick — zoom map to sector bounds and briefly highlight the polyline
