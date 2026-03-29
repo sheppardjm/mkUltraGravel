@@ -102,7 +102,7 @@ Plans:
 **Plans:** 1 plan (RouteMap.astro L.circleMarker → L.divIcon replacement + show/hide API update)
 
 Plans:
-- [ ] 20-01: Replace elevation crosshair circleMarker with bike divIcon
+- [x] 20-01: Replace elevation crosshair circleMarker with bike divIcon
 
 #### Phase 21: Escher Background + Penrose Favicon
 
@@ -144,5 +144,5 @@ Plans:
 | 17. Sector Colors + GLRC Links | v3.0 | 1/1 | Complete | 2026-03-28 |
 | 18. Photo Position Verification | v3.0 | 1/1 | Complete | 2026-03-29 |
 | 19. KOM Segments on Elevation | v3.0 | 1/1 | Complete | 2026-03-29 |
-| 20. Bike Icon Crosshair | v3.0 | 0/1 | Not started | - |
+| 20. Bike Icon Crosshair | v3.0 | 1/1 | Complete | 2026-03-29 |
 | 21. Escher Background + Favicon | v3.0 | 0/2 | Not started | - |

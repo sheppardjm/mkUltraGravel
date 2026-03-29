@@ -56,7 +56,7 @@ Deferred to later milestones.
 | CONT-05 | Phase 17 | Complete |
 | DATA-06 | Phase 18 | Complete |
 | VIS-13 | Phase 19 | Complete |
-| UX-01 | Phase 20 | Pending |
+| UX-01 | Phase 20 | Complete |
 | VIS-14 | Phase 21 | Pending |
 | VIS-15 | Phase 21 | Pending |
 
