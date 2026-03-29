@@ -15,8 +15,8 @@ Requirements for v4.0 — Route Update + UX Overhaul. Each maps to roadmap phase
 
 ### Photos
 
-- [ ] **PHOTO-01**: Down Jeep photo added to manifest, processed through pipeline, visible on map and in gallery
-- [ ] **PHOTO-02**: Billie Helmer B&W photo added to manifest, processed through pipeline, visible on map and in gallery
+- [x] **PHOTO-01**: Down Jeep photo added to manifest, processed through pipeline, visible on map and in gallery
+- [x] **PHOTO-02**: Billie Helmer B&W photo added to manifest, processed through pipeline, visible on map and in gallery
 
 ### Map UX
 
@@ -58,8 +58,8 @@ Deferred to later milestones.
 | ROUTE-04 | Phase 22 | Complete |
 | ROUTE-05 | Phase 22 | Complete |
 | ROUTE-06 | Phase 22 | Complete |
-| PHOTO-01 | Phase 23 | Pending |
-| PHOTO-02 | Phase 23 | Pending |
+| PHOTO-01 | Phase 23 | Complete |
+| PHOTO-02 | Phase 23 | Complete |
 | MAP-09 | Phase 25 | Pending |
 | MAP-10 | Phase 24 | Pending |
 | MAP-11 | Phase 26 | Pending |
@@ -75,4 +75,4 @@ Deferred to later milestones.
 
 ---
 *Requirements defined: 2026-03-29*
-*Last updated: 2026-03-29 after Phase 22 completion*
+*Last updated: 2026-03-29 after Phase 23 completion*

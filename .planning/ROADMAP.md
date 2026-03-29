@@ -11,7 +11,7 @@ Update the route from 80mi to 100mi (cascading through the entire data pipeline)
 ## Phases
 
 - [x] **Phase 22: GPX Route Replacement** - Replace 80mi GPX with 100mi, re-run pipeline, verify all data
-- [ ] **Phase 23: New Photos** - Process Down Jeep + Billie Helmer B&W through pipeline
+- [x] **Phase 23: New Photos** - Process Down Jeep + Billie Helmer B&W through pipeline
 - [ ] **Phase 24: CSS + Layout + Content** - Zoom controls, card sizing, Penrose hero, Grinduro explainer
 - [ ] **Phase 25: Map Reset** - Reset button restores map + elevation chart to default state
 - [ ] **Phase 26: Photo Lightbox from Map** - Larger thumbnails + PhotoSwipe lightbox from map markers
@@ -46,7 +46,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 23-01-PLAN.md -- Add AVIF support, manifest entries, and run pipeline for Down Jeep + Billie Helmer photos
+- [x] 23-01-PLAN.md -- Add AVIF support, manifest entries, and run pipeline for Down Jeep + Billie Helmer photos
 
 ### Phase 24: CSS + Layout + Content
 **Goal**: Four independent visual and content improvements ship together -- larger touch-friendly zoom controls, equalized card sizes, Penrose triangle branding in the hero, and a Grinduro format explainer for first-time visitors.
@@ -101,7 +101,7 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 22. GPX Route Replacement | v4.0 | 1/1 | ✓ Complete | 2026-03-29 |
-| 23. New Photos | v4.0 | 0/1 | Not started | - |
+| 23. New Photos | v4.0 | 1/1 | ✓ Complete | 2026-03-29 |
 | 24. CSS + Layout + Content | v4.0 | 0/TBD | Not started | - |
 | 25. Map Reset | v4.0 | 0/TBD | Not started | - |
 | 26. Photo Lightbox from Map | v4.0 | 0/TBD | Not started | - |
