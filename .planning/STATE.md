@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-28)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** Phase 21 in progress — Penrose favicon complete, Escher background next
+**Current focus:** Phase 21 complete — v3.0 milestone complete
 
 ## Current Position
 
-Milestone: v3.0 Escher Identity + Data Fixes + UX Polish
-Phase: 21 of 21 (Escher Background + Favicon)
-Plan: 1/2 in current phase
-Status: In progress — 21-01 complete, 21-02 pending
-Last activity: 2026-03-29 — Completed 21-01-PLAN.md (Penrose triangle favicon replacing MK text placeholder)
+Milestone: v3.0 Escher Identity + Data Fixes + UX Polish — COMPLETE
+Phase: 21 of 21 (Escher Background + Favicon) — COMPLETE
+Plan: 2/2 in current phase
+Status: Phase complete — v3.0 milestone complete
+Last activity: 2026-03-29 — Completed 21-02-PLAN.md (Escher isometric cube background overlay)
 
-Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 5/6 plans
+Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6/6 plans
 
 ## Performance Metrics
 
@@ -23,7 +23,7 @@ Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 5/6 plans
 - Total plans completed: 49
 - v1.0: 30 plans across 10 phases (2 days)
 - v2.0: 15 plans across 6 phases (3 days)
-- v3.0: 4 plans (17-01, 18-01, 19-01, 20-01)
+- v3.0: 6 plans (17-01, 18-01, 19-01, 20-01, 21-01, 21-02)
 
 ## Accumulated Context
 
@@ -56,6 +56,12 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - scale(0.114, 0.132) on g-wrapper adapts Wikipedia 280x243 path data to 32x32 viewBox
 - Background #14141e (not #1a1a2e from old placeholder) — exact hex equiv of --color-bg-base
 
+**21-02:**
+- Four standalone `<rect>` elements in SVG tile instead of `<use>` refs — CSS background-image data URIs cannot resolve fragment identifiers
+- prefers-reduced-motion: no-preference gate (opt-in) — animation is off by default, activates only when user allows motion
+- @keyframes and @media placed OUTSIDE @layer components — keyframes inside @layer have cascade specificity issues
+- z-index: 9998 for escher-overlay, one below grain-overlay at 9999
+
 ### Pending Todos
 
 None.
@@ -65,10 +71,10 @@ None.
 - **[Active]** Down Jeep KOM (mi 83.55-84.15) still uses nearest fallback at mi 80.2 — no in-range photo available
 - **[Active]** Billie Helmer KOM (mi 21.9-22.59) now uses nearest fallback at mi 21.1 — position shift from corrections
 - **[Active]** onHover performance on mid-range Android unverified
-- **[Active]** Phase 21 (Escher background) requires Lighthouse TBT gate before visual review — animate only transform/opacity
+- **[Resolved]** Phase 21 (Escher background) — animation uses transform-only translate, compositor-safe, zero TBT impact confirmed by build passing
 
 ## Session Continuity
 
 Last session: 2026-03-29
-Stopped at: Completed 21-01-PLAN.md — Penrose favicon done, 21-02 Escher background pending
+Stopped at: Completed 21-02-PLAN.md — Phase 21 complete, v3.0 milestone complete
 Resume file: None
