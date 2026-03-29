@@ -29,10 +29,10 @@ Update the route from 80mi to 100mi (cascading through the entire data pipeline)
   3. Elevation profile x-axis spans the full route distance (no clipping)
   4. Every "80 mile" / "80-mile" text reference across the site reads "100 miles" or "100-mile"
   5. GPX download link serves the new 100mi file
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 22-01: TBD
+- [ ] 22-01-PLAN.md -- Swap GPX source, regenerate pipeline, fix display rounding, verify route
 
 ### Phase 23: New Photos
 **Goal**: Two new photos (Down Jeep + Billie Helmer B&W) are fully integrated -- visible on the map, in the gallery, and assigned to cards where applicable.
@@ -100,7 +100,7 @@ Plans:
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 22. GPX Route Replacement | v4.0 | 0/TBD | Not started | - |
+| 22. GPX Route Replacement | v4.0 | 0/1 | Planned | - |
 | 23. New Photos | v4.0 | 0/TBD | Not started | - |
 | 24. CSS + Layout + Content | v4.0 | 0/TBD | Not started | - |
 | 25. Map Reset | v4.0 | 0/TBD | Not started | - |
