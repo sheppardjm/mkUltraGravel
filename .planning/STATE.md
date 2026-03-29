@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-28)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** Phase 20 complete — ready for Phase 21
+**Current focus:** Phase 21 in progress — Penrose favicon complete, Escher background next
 
 ## Current Position
 
 Milestone: v3.0 Escher Identity + Data Fixes + UX Polish
-Phase: 20 of 21 (Bike Icon Crosshair) — COMPLETE
-Plan: 1/1 in current phase
-Status: Phase complete — ready for Phase 21
-Last activity: 2026-03-29 — Completed 20-01-PLAN.md (bike SVG divIcon crosshair on elevation hover)
+Phase: 21 of 21 (Escher Background + Favicon)
+Plan: 1/2 in current phase
+Status: In progress — 21-01 complete, 21-02 pending
+Last activity: 2026-03-29 — Completed 21-01-PLAN.md (Penrose triangle favicon replacing MK text placeholder)
 
-Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 4/6 plans
+Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 5/6 plans
 
 ## Performance Metrics
 
@@ -51,6 +51,11 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - setOpacity(1/0) for show/hide — L.marker has no setStyle(); setStyle() is path/circleMarker-only
 - interactive: false prevents bike icon from capturing mouse events intended for sector polylines
 
+**21-01:**
+- Hex fills (#a3f0a0, #6db86a, #3d7a3a) used in favicon.svg instead of oklch() — SVG fill attribute oklch support inconsistent
+- scale(0.114, 0.132) on g-wrapper adapts Wikipedia 280x243 path data to 32x32 viewBox
+- Background #14141e (not #1a1a2e from old placeholder) — exact hex equiv of --color-bg-base
+
 ### Pending Todos
 
 None.
@@ -65,5 +70,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-29
-Stopped at: Completed 20-01-PLAN.md — Phase 20 complete
+Stopped at: Completed 21-01-PLAN.md — Penrose favicon done, 21-02 Escher background pending
 Resume file: None
