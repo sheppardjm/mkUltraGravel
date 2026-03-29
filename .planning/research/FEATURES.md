@@ -1,634 +1,718 @@
-# Feature Landscape — v3.0
+# Feature Landscape — v4.0 Route Update + UX Overhaul
 
-**Domain:** Gravel cycling event website — Escher identity, data fixes, UX polish
-**Researched:** 2026-03-28
-**Project:** MK Ultra Gravel — v3.0 features layered onto shipped v2.0
+**Domain:** Gravel cycling event website — route update, UX improvements, visual polish
+**Researched:** 2026-03-29
+**Project:** MK Ultra Gravel — v4.0 features layered onto shipped v3.0
 
 ---
 
 ## Context: What This Research Covers
 
-v2.0 shipped map/elevation sync, sector photos, brutalist animations, and the MK Ultra
-explainer. This research covers the five v3.0 feature categories:
+v3.0 shipped Escher tessellation background, Penrose favicon, yellow-to-red sector spectrum, corrected photo positions, bike icon crosshair, and KOM elevation bands. This research covers the v4.0 feature categories:
 
-1. Escher/Penrose tessellation backgrounds with subtle animation
-2. Bike icon replacing elevation hover crosshair on map
-3. KOM segments on elevation profile (distinct color/pattern)
-4. Gravel sector color spectrum: full yellow-to-red (replacing gray for stars 1-2)
-5. Penrose triangle favicon and logo
+1. **Map reset/home button** — reset map + elevation to default view
+2. **Photo lightbox from map** — map photo markers open in lightbox (replace new-tab)
+3. **Larger map zoom controls** — accessibility and mobile usability
+4. **Card layout equalization** — sector cards match KOM card sizing
+5. **Grinduro format explainer** — describe the hybrid race format
+6. **Penrose triangle in header** — brand element above page title
+7. **GPX route update** — swap to 100mi route, cascade data changes
 
 ---
 
-## Feature 1: Gravel Sector Color Spectrum (Yellow-to-Red)
+## Feature 1: Map Reset / Home Button
 
 ### Current State
 
-Stars 1-2 use gray (#888888, #aaaaaa). Stars 3-5 already use warm colors.
-The `starColors` map is **duplicated in three files**:
-- `src/components/RouteMap.astro` (JS, used for map polylines and sector badges)
-- `src/components/GravelSectors.astro` (JS frontmatter, used for card star color)
-- `src/components/ElevationProfile.astro` (JS, used for annotation box colors)
+After a user zooms into a sector (via click), explores photo clusters, or pans the map manually, there is **no way to return to the default view** without reloading the page. The elevation chart similarly has no "reset" concept — it always shows the full route, but the map can be in any zoom/pan state.
 
-No shared constant exists. Changing the spectrum requires the same edit in three places.
+The map initializes with `map.fitBounds(routeLine.getBounds(), { padding: [20, 20] })` — this is the "home" state.
 
 ### Expected Behavior (Industry Standard)
 
-**Cycling difficulty heat maps use yellow-to-red universally.** Evidence:
+**How cycling and outdoor sites handle map reset:**
 
-- BikeRoll uses yellow (6-12% gradient) → red (12-48%) progression
-- cycle.travel uses orange (>3.5% avg grade) → red (>7%) → maroon (>10.5%)
-- SAS/VWO heat map theory: "warmer colors (yellow, orange, red) represent higher
-  intensity" — the YLORRD ramp is the standard sequential color scheme
-- Komoot shows gradient color grading on elevation maps using green-to-red
+- **RideWithGPS:** Provides a "fit to route" button that zooms the map to show the entire route. This is the standard pattern for route-centric cycling maps.
+- **Leaflet.zoomhome** (established plugin): Adds a home button between +/- zoom controls. Stores initial bounds via `setHomeBounds()`. Uses a home icon (typically Font Awesome `fa-home`). Tooltip text explains the function.
+- **Leaflet.ResetView** (alternative plugin): Provides a reset view control that returns to original location and zoom level.
+- **Google Maps / Mapbox:** "Zoom to fit" or "Reset" is typically available as a button with a compass or home icon.
 
-For a Paris-Roubaix reference event, using gray for easy sectors diverges from what
-cyclists see everywhere else. Yellow-to-red is the universal encoding.
+**Consensus:** The universal pattern is a button with a home/globe/compass icon that calls `fitBounds()` on the stored initial bounds. It resets zoom and pan simultaneously.
 
-**Recommendation for 5-star spectrum:**
+### What View State to Reset
 
-| Stars | Current | Recommended | Reading |
-|-------|---------|-------------|---------|
-| 1 | #888888 (gray) | #ffd700 (gold/yellow) | Easy gravel — rideable |
-| 2 | #aaaaaa (lighter gray) | #f5a623 (amber) | Moderate — attention needed |
-| 3 | #f5a623 (amber) | #e8761f (deep amber) | Hard — rough surface |
-| 4 | #e86d1f (orange) | #d4420f (red-orange) | Very hard — punishing |
-| 5 | #c0392b (red) | #c0392b (keep) | Brutal — Paris-Roubaix level |
+The button should reset:
+1. **Map view** — `map.flyToBounds(routeLine.getBounds(), { padding: [20, 20] })` (animated return to initial bounds)
+2. **Sector highlights** — any highlighted sector polylines return to default styles
+3. **Elevation chart** — any highlighted annotation bands return to default opacity
 
-This shifts stars 1-2 from gray to warm yellow/amber, keeps the warm-to-hot
-progression for 3-5, and retains the existing star-5 red. The perceptual gradient
-reads more naturally on the dark CARTO map tiles.
+The reset is a CustomEvent (`map:reset`) on the window — both RouteMap and ElevationProfile listen and restore defaults. This follows the existing CustomEvent bus architecture.
 
-**Alternative spectrum using oklch (consistent with project's color space):**
+### Implementation Approach
 
-```
-1: oklch(0.82 0.18 85)   — bright yellow
-2: oklch(0.72 0.18 65)   — amber
-3: oklch(0.65 0.19 55)   — deep amber
-4: oklch(0.55 0.20 40)   — orange-red
-5: oklch(0.45 0.20 25)   — red (close to current #c0392b)
+**Recommended: Custom HTML button below the map (not a Leaflet control inside the map).**
+
+Rationale: The milestone spec says "map reset button below map." Placing it outside the Leaflet container avoids z-index conflicts with tiles, doesn't compete visually with zoom controls, and is more discoverable on mobile where the map is touch-interactive.
+
+```html
+<button id="map-reset" class="...brutalist styles...">
+  Reset Map View
+</button>
 ```
 
-oklch values are perceptually uniform: equal lightness steps produce equal visual
-contrast at each star level. Confidence: MEDIUM (oklch is the project's color space;
-specific values need visual QA against dark map tiles).
+On click: dispatch `window.dispatchEvent(new CustomEvent('map:reset'))`.
 
-### Scope of Change
+RouteMap.astro listens and calls `map.flyToBounds(initialBounds)`.
+ElevationProfile.astro listens and restores all annotation opacities to defaults.
 
-This is a data fix + constant extraction, not a feature build:
-
-1. Extract `starColors` into a shared module (e.g., `src/lib/sectorColors.ts`)
-   — eliminates the three-way duplication
-2. Update the 5 color values
-3. Verify map polylines, elevation chart bands, sector card stars, sector badges
-   all pick up the new values
-4. Export as both HEX (Leaflet, Chart.js consume HEX) and CSS custom properties
-   (for use in Astro component styles if needed)
+**Alternative considered:** Using `leaflet.zoomhome` plugin. Rejected because: (a) adds a dependency for one button, (b) places the button inside the map container (spec says "below map"), (c) uses Font Awesome icon (project uses no icon fonts).
 
 ### Table Stakes vs Differentiator
 
-- Warm color for hard sectors (stars 3-5): **TABLE STAKES** (already exists)
-- Warm color for easy sectors (stars 1-2): **TABLE STAKES for the target audience**
-  (cyclists expect yellow-to-red difficulty encoding; gray breaks that mental model)
-- Full yellow-to-red 5-step spectrum: **DIFFERENTIATOR** (most small event sites
-  don't achieve perceptually uniform color ramps)
-- Anti-feature: gray for easy gravel — signals "unfinished" to experienced cyclists
+| Aspect | Category | Notes |
+|--------|----------|-------|
+| Ability to return to default map view | **TABLE STAKES** | Users expect this after any zoom/pan interaction |
+| Button below map (outside container) | **TABLE STAKES** | More discoverable than tiny icon in map corner |
+| Animated flyToBounds transition | **DIFFERENTIATOR** | Smooth return vs jarring snap; low effort |
+| Resets both map AND elevation highlights | **DIFFERENTIATOR** | Cross-component reset via CustomEvent bus |
 
-### Complexity
+### Anti-Features
 
-**LOW.** Mostly constant extraction and value substitution. The main risk is visual
-regression across three separate rendering contexts (map, elevation chart, sector
-cards) that must all stay in sync. Extracting to a shared module eliminates future
-divergence risk.
+| Anti-Feature | Why Avoid |
+|--------------|-----------|
+| Plugin dependency for reset button | One-button function doesn't justify a new npm package |
+| Reset button inside map container | Competes with zoom controls; less discoverable on mobile |
+| Reset that reloads the page | Destroys lazy-loaded state; slow and disorienting |
+
+### Complexity: **LOW**
+
+Dependencies on existing features:
+- CustomEvent bus (built in v2.0)
+- `routeLine.getBounds()` already computed at map init
+- Annotation opacity restore pattern already exists in `map:sectorHover` handler
+
+### Confidence: HIGH
+
+Standard Leaflet pattern verified via official docs. Implementation requires ~20 lines.
 
 ---
 
-## Feature 2: Bike Icon on Elevation Hover (Map Cursor)
+## Feature 2: Photo Lightbox from Map Markers
 
 ### Current State
 
-When the user hovers the elevation chart, a `CustomEvent('elevation:hover')` fires
-with `{lat, lon}`. RouteMap.astro listens and moves a `L.circleMarker` to that
-position. The circleMarker is a small cyan dot — functional but generic.
+Photo map markers use `bindPopup()` with an `<a href="/images/${photo.filename}" target="_blank">` wrapping a 260px `<img>`. Clicking a photo marker opens a popup with a small image preview. Clicking the image opens it in a **new browser tab** at full resolution. There is no lightbox integration — the existing PhotoSwipe instance in PhotoGallery.astro is entirely separate.
+
+The photo markers are 10x10px cyan squares — functional but hard to identify as "photos" at a glance. Markers use `L.markerClusterGroup` for clustering.
 
 ### Expected Behavior (Industry Standard)
 
-RideWithGPS: a circular blue dot tracks position on the map during elevation hover —
-matches the existing implementation.
+**How map-based photo browsers work:**
 
-Komoot: a dot on the route tracks elevation hover — also matches existing.
+1. **Thumbnail in popup:** When the user clicks a photo marker on the map, a popup opens showing a thumbnail-sized preview (typically 200-300px wide). This is what the site currently does.
 
-Strava route pages: vertical crosshair on chart only, no map tracking.
+2. **Lightbox on click:** When the user clicks the thumbnail in the popup, a full-screen lightbox opens showing the high-resolution image. This is what Google Maps, Flickr maps, and Komoot do.
 
-**None of the major platforms use a bike icon** for the elevation hover tracker.
-The bike icon is a creative/brand differentiation choice, not an industry standard.
-It fits the MK Ultra brand identity and is technically straightforward with L.divIcon.
+3. **Bidirectional navigation** (advanced): The lightbox can navigate to other photos, and the map can highlight the currently-viewed photo's marker. The Leaflet-PhotoSwipe integration article demonstrates this pattern using state management.
+
+**The key UX expectation:** Clicking a thumbnail in a map popup should NOT open a new tab. It should open in-context (lightbox). Opening a new tab is a jarring navigation that breaks the user's spatial context.
 
 ### Implementation Pattern
 
-**L.divIcon with inline SVG is the correct approach** (HIGH confidence, verified via
-Leaflet docs). The pattern:
+**Approach A: Programmatic PhotoSwipe `loadAndOpen()` (RECOMMENDED)**
+
+PhotoSwipe's `loadAndOpen(index, dataSource)` method opens the lightbox at a specific image index. The approach:
+
+1. Store the PhotoSwipe lightbox instance as a module-scoped variable accessible to both components
+2. In the map popup HTML, add a click handler on the thumbnail that calls `lightbox.loadAndOpen(photoIndex)`
+3. The lightbox opens showing the clicked photo at full resolution
+
+**Technical challenge:** RouteMap.astro and PhotoGallery.astro are separate Astro `<script>` blocks. They don't share module scope. The solution is the same CustomEvent bus already in use:
 
 ```javascript
-const bikeIcon = L.divIcon({
-  html: `<svg viewBox="0 0 24 24" width="24" height="24" ...>
-    [bike path data]
-  </svg>`,
-  iconSize: [24, 24],
-  iconAnchor: [12, 12],   // centered — bike sits on the route point
-  className: ''            // IMPORTANT: empty string removes Leaflet's white box default
-});
+// In RouteMap.astro popup click handler:
+window.dispatchEvent(new CustomEvent('photo:openLightbox', {
+  detail: { index: photoIndex }
+}));
 
-const hoverMarker = L.marker([lat, lon], { icon: bikeIcon, interactive: false });
+// In PhotoGallery.astro (or a new script):
+window.addEventListener('photo:openLightbox', (e) => {
+  lightbox.loadAndOpen(e.detail.index);
+});
 ```
 
-On `elevation:hover` event, call `hoverMarker.setLatLng([lat, lon])` and add/show
-it. On `elevation:hoverEnd`, remove/hide it.
+This maintains the decoupled architecture. No shared imports across components.
 
-**SVG bike icon source options:**
+**Approach B: Separate PhotoSwipe instance per popup (AVOID)**
 
-1. **Inline SVG path from Lucide icons** (bicycle icon, MIT license) — no file
-   dependency, renders crisply at any DPI. Lucide `bicycle` is 24x24 viewBox,
-   single path. This is the recommended approach.
+Creating a new PhotoSwipeLightbox for each popup would duplicate initialization, waste memory, and create inconsistent UI state between map lightbox and gallery lightbox.
 
-2. **Material Symbols / FontAwesome** — requires font load; unnecessary overhead
-   for a single icon.
+### Thumbnail Size in Popup
 
-3. **Custom drawn SVG** — highest brand fit but requires design work.
+The current popup shows a 260px-wide full-resolution image loaded via `<img src="/images/${photo.filename}">`. This is wasteful — full-res images can be 1-2MB each. The project already has WebP thumbnails at `/images/thumbs/`.
 
-**Rotation to match route bearing:** At each track point, bearing to the next point
-can be computed (standard haversine bearing formula). Applying `transform: rotate(Xdeg)`
-to the SVG preserves GPU-layer compositing and doesn't trigger layout. This makes the
-bike "face the direction of travel." Complexity: MEDIUM (bearing calculation is ~10
-lines; JS transform application is trivial). Optional enhancement, not required for
-first pass.
+**Recommendation:** Use the existing 400px WebP thumbnail in the popup instead of the full-resolution image. Change popup HTML to reference the thumbnail path. This reduces popup load from ~1MB to ~30KB per image.
 
-### Performance Note
+### Larger Photo Markers
 
-Moving a marker on every hover rAF is the same pattern already in use. Adding an SVG
-divIcon vs a circleMarker is negligible overhead — SVG renders in the same Leaflet
-pane. No new perf concern. Confidence: HIGH (same rAF pattern already proven at
-Lighthouse 96).
+The current 10x10px cyan square markers are hard to identify as "photos." Options:
 
-### Accessibility
+1. **Thumbnail markers** (divIcon with actual image) — Show a small ~40x40px crop of the photo as the marker itself. High visual impact but increases tile-level DOM complexity for 53+ markers. With clustering, only ~10-15 markers are visible at most zoom levels.
 
-The hover marker is `interactive: false`. Screen readers don't encounter it. No
-accessibility concern beyond existing implementation.
+2. **Camera icon markers** — Replace the cyan square with a small camera SVG icon (similar to the bike crosshair pattern). Clear semantic meaning. Low complexity.
+
+3. **Larger cyan squares/circles** — Scale the existing 10px marker to 16-20px. Minimal change, some improvement.
+
+**Recommendation:** Option 2 (camera icon) for the marker itself. Increase from 10x10 to 16x16px. Keep the cluster icon as-is (already 32x32px with count).
+
+### Photo Index Mapping
+
+To call `loadAndOpen(index)`, the map marker click handler needs to know which index the photo occupies in the PhotoSwipe gallery. Since both components load from the same `photos.json`, the array index is consistent. Store the index as a `data-photo-index` attribute on each marker, or pass it through the CustomEvent.
 
 ### Table Stakes vs Differentiator
 
-- Moving dot tracker on elevation hover: **TABLE STAKES** (already exists via circleMarker)
-- Bike icon instead of dot: **DIFFERENTIATOR** — brand-appropriate, memorable,
-  consistent with Escher/psychedelic cycling identity
-- Bearing-aligned rotation: **DIFFERENTIATOR** — reinforces "riding the route" mental model
-- Anti-feature: complex 3D bike icon — heavy SVG would flicker during rAF updates;
-  keep icon simple and flat
+| Aspect | Category | Notes |
+|--------|----------|-------|
+| Thumbnail in popup | **TABLE STAKES** | Already exists |
+| Click thumbnail opens lightbox (not new tab) | **TABLE STAKES** | New-tab behavior is a UX regression; users expect in-context viewing |
+| WebP thumbnails in popup (not full-res) | **TABLE STAKES** | Performance; 1MB per popup image is unacceptable on mobile |
+| Larger/camera-icon markers | **DIFFERENTIATOR** | Visual clarity; most small event sites use default markers |
+| Bidirectional map-gallery sync | **ANTI-FEATURE for v4.0** | High complexity (state management); defer to v5+ if ever needed |
 
-### Complexity
+### Anti-Features
 
-Replacing circleMarker with divIcon: **LOW**.
-Adding bearing rotation: **MEDIUM** (bearing math + CSS transform on move).
+| Anti-Feature | Why Avoid |
+|--------------|-----------|
+| New-tab behavior on thumbnail click | Breaks spatial context; mobile creates tab sprawl |
+| Full-resolution images in popup | 1MB per popup on mobile is a performance failure |
+| Separate PhotoSwipe instance per popup | Memory waste; inconsistent UI |
+| Bidirectional map-gallery navigation | Requires state management layer; overengineered for 53 photos |
+
+### Complexity: **MEDIUM**
+
+This is the most architecturally complex v4.0 feature because it bridges two independent components (RouteMap and PhotoGallery) through the event bus. Key risks:
+- Ensuring photo index consistency between map markers and gallery order
+- PhotoSwipe lightbox must be initialized before map popup click can trigger it
+- Popup DOM is created dynamically by Leaflet — event delegation needed for click handlers inside popups
+
+Dependencies on existing features:
+- PhotoSwipe already initialized in PhotoGallery.astro
+- Photos.json loaded by both RouteMap and PhotoGallery
+- CustomEvent bus architecture (built in v2.0)
+
+### Confidence: HIGH
+
+PhotoSwipe `loadAndOpen()` API verified via official docs. CustomEvent pattern proven in v2.0.
 
 ---
 
-## Feature 3: KOM Segments on Elevation Profile
+## Feature 3: Larger Map Zoom Controls
 
 ### Current State
 
-KOM segments are shown on the **map** as dashed chartreuse-green polylines. They are
-**not represented on the elevation profile at all.** The elevation chart shows only
-gravel sector band overlays (box annotations).
+Leaflet's default zoom controls are small: the +/- buttons are approximately 26x26px. They use the project's dark theme overrides (dark background, light text, dark border). The controls are in the default `topleft` position.
 
-KOM data in annotations.json has `startMi` and `endMi` fields — exactly the same
-structure as gravel sectors. The annotation plugin already renders box annotations
-from those fields.
+### Expected Behavior (Accessibility Standards)
+
+**WCAG 2.5.5 (AAA):** Interactive targets should be at least **44x44 CSS pixels**. This is the practical standard for mobile-first design. Apple HIG recommends 44pt; Google Material Design recommends 48dp.
+
+**WCAG 2.5.8 (AA):** Interactive targets must be at least **24x24 CSS pixels** OR have 24px spacing around them. The default Leaflet controls meet AA but fall short of AAA.
+
+**The cycling audience skews mobile.** Riders exploring a route are often on phones. Fat-finger errors on tiny zoom buttons are frustrating. Most cycling map sites (RideWithGPS, Komoot) use larger-than-default controls.
+
+### Implementation Approach
+
+**CSS-only override (RECOMMENDED).** The Leaflet zoom control elements have well-known class names (`.leaflet-control-zoom-in`, `.leaflet-control-zoom-out`). Override their dimensions in global.css:
+
+```css
+.leaflet-control-zoom a {
+  width: 44px !important;
+  height: 44px !important;
+  line-height: 44px !important;
+  font-size: 22px !important;
+}
+```
+
+This meets WCAG 2.5.5 AAA target size without any JavaScript changes, new plugins, or custom controls. The existing dark theme overrides in global.css already target `.leaflet-control-zoom a` — the size overrides go in the same rule.
+
+**Alternative considered:** Custom L.Control.Zoom extension. Rejected because CSS achieves the same result with zero JavaScript.
+
+**Alternative considered:** Zoom slider plugin. Rejected because it adds complexity and the +/- pattern is universally understood.
+
+### Table Stakes vs Differentiator
+
+| Aspect | Category | Notes |
+|--------|----------|-------|
+| Zoom controls visible and functional | **TABLE STAKES** | Already exists |
+| 44x44px touch targets (WCAG AAA) | **TABLE STAKES** | Accessibility requirement; mobile cycling audience |
+| Dark-themed controls matching site design | **TABLE STAKES** | Already exists via global.css overrides |
+
+### Anti-Features
+
+| Anti-Feature | Why Avoid |
+|--------------|-----------|
+| Custom zoom control plugin | Adds dependency for CSS-achievable result |
+| Removing zoom controls entirely | Some mobile users lack pinch-zoom familiarity |
+| Zoom slider | Unfamiliar interaction pattern; adds complexity |
+
+### Complexity: **VERY LOW**
+
+Three CSS properties on an existing selector. No JavaScript changes. No new dependencies.
+
+Dependencies on existing features:
+- `.leaflet-control-zoom a` already styled in global.css
+
+### Confidence: HIGH
+
+CSS override approach verified via Leaflet community and documentation. Standard pattern.
+
+---
+
+## Feature 4: Card Layout Equalization
+
+### Current State
+
+Sector cards and KOM cards use the same visual structure (`.classified-border`, cover photo, metadata). However, they appear in **different grid columns** in the page layout:
+
+```html
+<div class="grid md:grid-cols-3 gap-8">
+  <div class="md:col-span-2">  <!-- Sectors: 2/3 width -->
+    <GravelSectors />
+  </div>
+  <div>                         <!-- KOM + Restock: 1/3 width -->
+    <KomSegments />
+    <RestockPoints />
+  </div>
+</div>
+```
+
+Sectors get 2/3 width; KOM cards get 1/3. This means sector cards are wider than KOM cards. The milestone spec says "gravel sector cards resized to match KOM cards" — this implies equalizing the card sizes, likely by changing the grid layout.
 
 ### Expected Behavior (Industry Standard)
 
-**RideWithGPS** (verified via search): Clicking a segment result highlights it on
-both the map track and elevation profile. Climb distance highlights that portion on
-the trip on both map and elevation profile. Segment overlay appears as a colored band.
+**Card grids in cycling/event sites:**
 
-**Komoot**: Color-graded elevation shows climb gradients — different from segments,
-but the principle of "differentiated zones on the elevation chart" is standard.
+Responsive card grids using CSS Grid with `auto-fill` or `auto-fit` and `minmax()` are the standard approach. Equal-height cards happen automatically with CSS Grid when items are in the same row (`grid-auto-rows: 1fr` or `align-items: stretch`).
 
-**Strava**: Starred segments appear as markers/flags on the elevation profile timeline
-when viewing a route or activity.
+The common pattern for mixed content types (sectors + KOMs) is either:
+1. **Unified grid** — all cards in the same grid with equal column widths
+2. **Section-separated** — sectors and KOMs in separate sections, each with their own grid
 
-The cycling audience expects segments (especially named KOM climbs) to be visually
-demarcated on the elevation profile.
+Since sectors (6 cards) and KOM segments (3 cards) have different content structures and quantities, the current two-column layout makes sense conceptually. The issue is the width disparity.
 
-### Visual Treatment Options
+### Implementation Options
 
-**Option A: Box annotation with chartreuse-green fill (matches map color)**
-- `backgroundColor: '#7fff00' + '22'` (13% opacity) — matches existing map polyline
-- `borderColor: '#7fff00' + '66'` — matches map opacity style
-- Visually consistent: same color, same transparency pattern as sectors
-- Drawback: box annotation visually merges with sector band if they overlap
-- Confidence: HIGH (same API as existing sector boxes)
+**Option A: Equal-width columns**
 
-**Option B: Hatched/striped pattern annotation**
-- chartjs-plugin-annotation does not natively support hatched fills
-- Canvas `CanvasPattern` can create hatches but requires a custom plugin hook
-  drawing into the same canvas context
-- The `beforeDatasetsDraw` lifecycle hook can draw arbitrary canvas operations
-- Complexity: HIGH — requires a custom canvas pattern plugin, not standard annotation
-- Not recommended unless sector-KOM overlap is a documented issue
-
-**Option C: Line annotations at `startMi` and `endMi` (vertical flags)**
-- Two vertical line annotations per KOM: start flag and end flag
-- `type: 'line'`, `scaleID: 'x'`, `value: startMi`, with label showing KOM name
-- Clear and readable; no fill — no overlap concern
-- Matches the "flag on timeline" pattern Strava uses
-- Complexity: LOW (same API, different annotation type)
-
-**Option D: Box annotation with distinct color (non-chartreuse)**
-- Use a separate color not in the sector palette
-- Candidates: electric blue (#00bfff), magenta (#ff00ff), chartreuse (#7fff00)
-- The existing map already uses chartreuse for KOM polylines — reusing it here
-  maintains visual consistency between map and elevation chart
-- Recommended: chartreuse green (#7fff00) at reduced opacity (Option A),
-  combined with a KOM label text inside the box
-
-**Recommendation: Option A (box) with a text label**
-
-KOM segments are short (0.5–1.5 mi each, based on annotations.json data). They will
-appear as narrow vertical slices on the elevation chart. A box with chartreuse fill
-and a text label showing the KOM name achieves:
-- Visual parity with the map treatment
-- Clear segment demarcation
-- No new color vocabulary to learn
-
-Label configuration in chartjs-plugin-annotation:
-
-```javascript
-annotationBoxes[`kom_${i}`] = {
-  type: 'box',
-  xMin: kom.startMi,
-  xMax: kom.endMi,
-  backgroundColor: '#7fff00' + '22',
-  borderColor: '#7fff00' + '88',
-  borderWidth: 1.5,
-  borderDash: [4, 2],   // dashed border — matches map's dashArray: '8, 4'
-  label: {
-    content: kom.name,
-    display: true,
-    color: '#7fff00',
-    font: { size: 9, family: 'Space Mono' }
-  }
-};
-```
-
-The `borderDash` connects the elevation chart's visual language to the map's dashed
-KOM polyline — a consistent cross-component visual signal.
-
-### Chart Annotation Update Pattern
-
-The existing code already demonstrates runtime annotation mutation at `chart.update('none')`
-via the `map:sectorHover` handler. The KOM boxes use the exact same mechanism.
-Confidence: HIGH (pattern verified in existing codebase).
-
-### Table Stakes vs Differentiator
-
-- KOM segments visible on map: **TABLE STAKES** (already exists)
-- KOM segments visible on elevation chart: **DIFFERENTIATOR** — allows users to
-  see exactly where climbs fall on the elevation profile, connecting geography to
-  effort; this is what the cycling community expects from a pro-grade route site
-- KOM-to-sector hover sync (hovering a KOM band highlights map KOM polyline):
-  **DIFFERENTIATOR** — cross-component consistency; optional second-pass feature
-
-### Complexity
-
-Adding KOM box annotations to existing annotation initialization: **LOW**.
-KOM label text inside box: **LOW** (annotation label config).
-Dashed border on KOM boxes (to match map): **LOW** (annotation `borderDash` option).
-
----
-
-## Feature 4: Escher/Penrose Tessellation Backgrounds
-
-### Domain Research
-
-**What Escher tessellations are:** M.C. Escher's tessellations tile interlocking shapes
-(birds, fish, lizards) that fill a plane with zero gaps. The "Penrose" connection is
-separate — Penrose tilings use two aperiodic tile shapes (kite + dart) that tile
-infinitely without repeating. The "Escherian Stairs" (Penrose stairs) are a different
-concept — the impossible staircase, not a tessellation.
-
-The project already uses an `escharian_stairs_fb.webp` asset — this is a background
-image, not a live-rendered pattern.
-
-**What the user is asking for (VIS-14):** Tessellation patterns as backgrounds with
-subtle animation — i.e., geometric repeating patterns inspired by Escher/Penrose
-aesthetics, rendered via CSS/SVG (not actual procedural tessellation algorithms).
-
-### Implementation Approaches
-
-**Approach A: CSS `background-image` with SVG pattern (RECOMMENDED)**
-
-An inline SVG `<pattern>` element, embedded in a CSS `background-image` data URI.
-No animation — the texture appears as a subtle static pattern.
-
-```css
-.escher-bg {
-  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'
-    width='60' height='60'><polygon points='...' fill='none' stroke='oklch(0.25 0.01 250)'
-    stroke-width='0.5' opacity='0.3'/></svg>");
-}
-```
-
-Complexity: LOW. Performance: zero runtime cost (CSS background, no animation).
-The pattern scales perfectly and renders at device resolution.
-
-**Approach B: Animated SVG pattern with CSS `@keyframes` on `transform`**
-
-A `<svg>` element with a `<pattern>` tile, animated via `transform: translate()` to
-create a slow drift or rotation effect.
-
-```css
-@keyframes tessellate-drift {
-  from { transform: translate(0, 0); }
-  to   { transform: translate(60px, 60px); }
-}
-
-.escher-bg svg {
-  animation: tessellate-drift 12s linear infinite;
-  will-change: transform;
-}
-```
-
-**Performance verdict (HIGH confidence from SVG animation research):**
-- Animating only `transform` keeps the animation on the compositor thread
-- "CSS transform achieves 60fps on desktop and 55fps on mobile"
-- Do NOT animate `fill`, `stroke`, path `d` attributes, or `opacity` from 0
-- The `will-change: transform` hint promotes to GPU layer
-- This is safe for LCP: a background tessellation is not the LCP element, and
-  starting from non-zero opacity prevents LCP capture issues
-- `prefers-reduced-motion: reduce` must disable the drift; static pattern remains
-
-**Approach C: CSS `@keyframes` on `background-position` (pattern scroll)**
-
-Animate `background-position` on a CSS background SVG pattern — creates the
-appearance of the pattern sliding.
-
-```css
-@keyframes pattern-slide {
-  to { background-position: 60px 60px; }
-}
-```
-
-This animates `background-position`, which is NOT a compositor-safe property —
-it triggers paint (not just composite). On mobile, this will consume CPU.
-**Not recommended** for a site that currently achieves Lighthouse 96 mobile.
-
-**Approach D: Canvas-rendered tessellation (AVOID)**
-
-JavaScript procedurally generates Penrose tiling on a `<canvas>` element. High
-complexity, introduces JS execution on the main thread, requires significant CPU
-on mobile, and adds bundle weight. Not aligned with the project's zero-TBT goal.
-
-**Recommendation: Start with Approach A (static SVG pattern), add Approach B
-(transform drift) only inside `@media (prefers-reduced-motion: no-preference)`.**
-
-This matches the project's existing animation philosophy: no GSAP, CSS-only, TBT 0ms.
-
-### Pattern Geometry Options
-
-**For an Escher/psychedelic aesthetic, these geometric patterns work on dark backgrounds:**
-
-1. **Penrose kite-and-dart tiling** — aperiodic, visually complex, high brand fit.
-   Hard to generate procedurally, but a single tile period can be hand-coded as SVG
-   polygons. No widely available CSS-only implementation exists (MEDIUM confidence:
-   no authoritative source found for pure-CSS Penrose kite-dart).
-
-2. **Islamic geometric star pattern** — radially symmetric 8-pointed or 12-pointed
-   stars tiled on a grid. These are `<polygon>` elements in SVG patterns. Low
-   complexity. High visual impact against dark backgrounds.
-
-3. **Triangular/impossible-object grid** — overlapping triangles suggesting Penrose
-   triangles. Can be drawn with SVG `<path>` and `<polygon>` elements. Fits the
-   "impossible geometry" theme.
-
-4. **Hex grid with isometric perspective** — the Escher "cubes" pattern (referenced
-   in the user's Escher box SVG link). This is three rhombuses arranged around a
-   center point, repeating on a hex grid. Clean, geometric, dark-palette friendly.
-   The referenced CDN SVG (`boxes.svg` from s3-us-west-2 cdpn.io) uses this pattern.
-
-**Recommendation: The Escher cubes (hex/isometric box) pattern**
-
-It's the most directly relevant to the VIS-05 "Escher motifs" requirement already
-in the design. It tiles predictably (unlike Penrose kite-dart). It can be implemented
-as a pure SVG `<pattern>` without procedural generation.
-
-### Placement Strategy
-
-Not all sections should use the tessellation. Recommended placement:
-
-| Section | Treatment | Rationale |
-|---------|-----------|-----------|
-| Hero/above-fold | Subtle tessellation at 3-5% opacity | Background texture, not foreground |
-| MK Ultra Explainer | More visible at 8-10% opacity | Section benefits most from Escher motif |
-| Between-section dividers | Thin band with pattern | Visual rhythm |
-| Map/chart sections | None | Complex data viz — pattern competes |
-
-### Accessibility and Motion
-
-```css
-/* Static pattern: always visible */
-.escher-bg {
-  background-image: url("data:image/svg+xml,...");
-  background-size: 60px 60px;
-}
-
-/* Drift animation: only for users who accept motion */
-@media (prefers-reduced-motion: no-preference) {
-  .escher-bg {
-    animation: escher-drift 20s linear infinite;
-  }
-}
-```
-
-This is the no-animation-first pattern — cleaner than wrapping motion in `reduce`.
-Confidence: HIGH (standard WCAG-aligned pattern, multiple authoritative sources).
-
-### LCP Safety
-
-The tessellation background will not be the LCP element (it's a decorative background).
-The Approach B transform-only animation will not affect LCP mechanics. Starting
-opacity should be non-zero (even 0.03) to avoid theoretical LCP capture edge cases
-documented by DebugBear. Confidence: MEDIUM (background pattern shouldn't be LCP
-candidate; opacity 0 risk applies to content elements).
-
-### Table Stakes vs Differentiator
-
-- Any geometric background pattern: **TABLE STAKES** for dark brutalist aesthetic
-  (the existing film-grain and tone-image patterns already fill this role)
-- Escher/Penrose tessellation specifically: **DIFFERENTIATOR** — directly references
-  the CIA/psychedelic identity, reinforces brand coherence
-- Subtle animated drift: **DIFFERENTIATOR** — adds life without distraction;
-  rare in cycling event sites
-- Anti-feature: Canvas-rendered procedural Penrose tiling — wrong complexity budget
-  for the aesthetic gain; would break zero-TBT
-- Anti-feature: High-opacity pattern behind map/chart — would reduce readability
-  of primary navigation content
-
-### Complexity
-
-Static SVG pattern as CSS data URI: **LOW**.
-Animated transform drift (CSS only): **LOW**.
-Custom Escher cubes SVG geometry: **MEDIUM** (requires SVG path authoring for the tile).
-
----
-
-## Feature 5: Penrose Triangle Favicon and Logo
-
-### Expected Behavior
-
-A favicon is 32x32 (or 48x48 on Windows); modern practice adds a 180x180 `apple-touch-icon`
-and an SVG favicon for scalable display. The Penrose (impossible) triangle is a
-well-recognized optical illusion — culturally adjacent to psychedelia and impossible
-geometry, which fits the MK Ultra brand directly.
-
-### Source Availability
-
-Penrose triangle SVG assets are freely available from multiple sources (Noun Project,
-SVG Repo, Vecteezy, freesvg.org, Pixabay). Some are CC0 (public domain), some require
-attribution. For a non-commercial event site, many CC-licensed options exist.
-
-The CodePen reference (codepen.io/guestn/pen/AXvKOd) was inaccessible (403), but
-based on the project context it implements a Penrose triangle in CSS — this suggests
-the triangle could be constructed purely in CSS without an SVG asset.
-
-**CSS Penrose triangle construction** uses the three-nested-div or three-border-triangle
-technique with careful border-color assignment to create the optical illusion of an
-impossible 3D triangle. This is well-documented on CodePen and CSS-Tricks.
-
-### Favicon Implementation
-
-Modern favicon best practice (MEDIUM confidence, widely cited):
+Change `md:grid-cols-3` with `md:col-span-2` to a simpler layout where both columns are equal width:
 
 ```html
-<!-- SVG favicon — scales to any size, supports dark mode -->
-<link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<!-- PNG fallback for older browsers -->
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
-<!-- Apple Touch Icon -->
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<div class="grid md:grid-cols-2 gap-8">
+  <div>  <!-- Sectors -->
+  <div>  <!-- KOM + Restock -->
 ```
 
-The SVG favicon should use the Penrose triangle on a dark background matching
-`--color-bg-base` (the site's background color). At 32px, fine detail is lost —
-the triangle needs to be a bold, high-contrast shape with minimal detail.
+This gives each column 50% width. Cards in both columns will be similar widths.
 
-### Logo vs Favicon Distinction
+**Option B: Full-width unified grid**
 
-The "logo" referred to in VIS-15 most likely means: a header logo or hero element,
-not a separate brand identity system. For a single-event site, a header Penrose
-triangle (SVG inline or `<img>`) serves as both visual anchor and brand mark.
+Remove the two-column split entirely. Place all cards (sectors, KOMs, restock) in a single responsive grid:
 
-If the triangle is animated in the header (slow rotation or color-cycle on the
-three sides), it reinforces the psychedelic theme. Animating only `transform: rotate`
-is compositor-safe.
+```html
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  <!-- All sector cards -->
+  <!-- All KOM cards -->
+  <!-- Restock cards -->
+</div>
+```
 
-**Recommendation:**
-- SVG favicon: Penrose triangle, dark background, bold stroke (no fill trick or CSS)
-- Header logo: Inline SVG Penrose triangle with optional `transform: rotate` on
-  `prefers-reduced-motion: no-preference`
-- Both assets should be created as actual SVG files (not CSS-only tricks), since
-  favicons cannot be CSS
+With `grid-auto-rows: 1fr`, all cards in the same row will have equal heights. This is the most robust equalization approach.
+
+**Option C: Match card internal layout only**
+
+Keep the 2/3 + 1/3 column split but ensure the card internal structure (photo aspect ratio, padding, font sizes) is identical. The cards themselves would be "equal" in proportion even though their container widths differ.
+
+**Recommendation: Option A (equal-width columns).**
+
+It's the simplest change that achieves the spec requirement ("sector cards resized to match KOM cards"). The 2-column layout preserves the sector/KOM conceptual grouping while equalizing widths. The Grinduro format explainer (Feature 5) can be placed above or below the sector cards in the same column, or as a full-width element above the grid.
 
 ### Table Stakes vs Differentiator
 
-- Having a favicon at all: **TABLE STAKES** (missing favicon shows broken default)
-- A Penrose triangle favicon: **DIFFERENTIATOR** — directly references the design
-  identity; most event sites use basic geometric or letter marks
-- An animated logo in the header: **DIFFERENTIATOR** — cinematic, psychedelic, on-brand
-- Anti-feature: complex multi-step animated favicon — favicons animate inconsistently
-  across OSes; keep favicon static, animate only the inline header SVG
+| Aspect | Category | Notes |
+|--------|----------|-------|
+| Cards readable and well-formatted | **TABLE STAKES** | Already exists |
+| Equal-width cards across sections | **TABLE STAKES** | Visual consistency; unequal widths look unfinished |
+| Auto-equal-height rows (CSS Grid) | **DIFFERENTIATOR** | Polished presentation; most small event sites don't achieve this |
 
-### Complexity
+### Anti-Features
 
-Static SVG favicon creation: **LOW** (SVG path from public domain source or manual draw).
-Header inline SVG with CSS rotation: **LOW**.
-CSS-only Penrose triangle (no SVG file): **MEDIUM** — achieves the visual but requires
-precise CSS border manipulation; fragile at non-standard sizes.
+| Anti-Feature | Why Avoid |
+|--------------|-----------|
+| JavaScript-based height equalization | CSS Grid handles this natively; JS adds complexity and flash of unstyled content |
+| Fixed pixel heights on cards | Fragile; breaks when content length varies |
+| Removing the sector/KOM grouping | Conceptual grouping aids comprehension; mixing card types is confusing |
+
+### Complexity: **LOW**
+
+CSS grid class changes in index.astro. No JavaScript. No new dependencies.
+
+Dependencies on existing features:
+- Existing grid layout in index.astro (#sectors section)
+- GravelSectors.astro and KomSegments.astro card structure
+
+### Confidence: HIGH
+
+CSS Grid equalization is standard practice, verified via MDN and CSS-Tricks.
 
 ---
 
-## Feature Dependency Map (v3.0)
+## Feature 5: Grinduro Format Explainer
+
+### Current State
+
+The site describes MK Ultra Gravel as having "timed gravel sectors and KOM/QOM segments" but doesn't explain what this means. The Grinduro format is niche — even experienced cyclists may not know how it works. There is no "how the race works" section.
+
+### How Grinduro Describes Their Format
+
+From the official Grinduro website (verified via direct fetch):
+
+> "Gravel Road Race + Mountain Bike-Style Enduro = one long loop of pavement and dirt, where finishing times aren't based on overall loop time, but four timed segments."
+
+Key language patterns Grinduro uses:
+- **"Timed segments"** — consistent term for the competitive portions
+- **"Gran Fondo-style mass start"** — the non-competitive beginning
+- **"Overall time doesn't matter"** — the critical differentiator from a normal race
+- **"Reward the most well-rounded of rouleurs"** — segments test different skills
+- **"Not just a bike race"** but **"a celebration of cycling"** — festival framing
+
+Grinduro's segments are typically 5-15 minutes long and test different skills: dirt road climb, dirt road roller, dirt road descent, singletrack descent.
+
+### Content Recommendations
+
+The explainer should answer three questions:
+
+1. **What is it?** Mass start, ride the full route at your own pace, but specific sectors are timed.
+2. **How does timing work?** Only your sector times count. You can cruise/socialize between sectors.
+3. **What does it reward?** The most well-rounded rider — sectors test climbing, descending, and technical skill.
+
+**Recommended placement:** In the #sectors section, above the sector cards. This gives context before the user sees the sector-by-sector breakdown.
+
+**Recommended tone:** Match the existing MK Ultra voice — brutalist, direct, slightly conspiratorial. Not corporate marketing copy.
+
+**Example structure:**
 
 ```
-VIS-12: Sector color spectrum (yellow-to-red)
-  └── Requires: Extract starColors to shared module (eliminates 3-way duplication)
-  └── Touches: RouteMap.astro, GravelSectors.astro, ElevationProfile.astro
-  └── INDEPENDENT of: all other v3.0 features
+## How It Works
 
-UX-01: Bike icon on elevation hover
-  └── Depends on: existing elevation:hover CustomEvent bus (BUILT in v2.0)
-  └── Requires: L.divIcon with SVG bike path (replaces existing circleMarker)
-  └── Optional enhancement: bearing calculation for rotation
-  └── INDEPENDENT of: color changes, KOM elevation, tessellation
+Mass start. 100 miles. Six timed gravel sectors.
 
-VIS-13: KOM segments on elevation profile
-  └── Depends on: chartjs-plugin-annotation already registered (BUILT in v2.0)
-  └── Depends on: KOM startMi/endMi fields in annotations.json (EXIST already)
-  └── Requires: Add kom annotation boxes to ElevationProfile.astro init
-  └── INDEPENDENT of: color changes, bike icon, tessellation
+Your finishing time doesn't matter. Only your sector times count. Ride
+the full route at whatever pace you want — then turn it up to eleven
+when you hit the timed sectors.
 
-VIS-14: Escher/Penrose tessellation backgrounds
-  └── Requires: SVG pattern tile authoring (design work)
-  └── Requires: New CSS in global.css or per-component <style>
-  └── INDEPENDENT of: all data/map/chart changes
+Each sector tests something different: technical descents, grinding
+climbs, fast rollers. The most well-rounded rider wins.
 
-VIS-15: Penrose triangle favicon + logo
-  └── Requires: SVG asset creation (design work)
-  └── Requires: <link rel="icon"> update in BaseLayout or head
-  └── INDEPENDENT of: all data/map/chart changes
-
-DATA-06: Fix photo map positions
-  └── Requires: Corrected mile markers in source data
-  └── Requires: Regenerate photos.json from prebuild pipeline
-  └── INDEPENDENT of: all visual features
-  └── Dependent on: Corrected photo mile markers (data entry work)
-
-CONT-05: GLRC links
-  └── Requires: Find all GLRC text occurrences, wrap in <a> tags
-  └── INDEPENDENT of: all other v3.0 features
-  └── Complexity: VERY LOW
+Think Grinduro meets Paris-Roubaix. With less singletrack and more
+gravel.
 ```
 
+### Content from Grinduro to Adapt (Not Copy)
+
+The site should explain the format in MK Ultra's voice, not quote Grinduro directly. Key concepts to adapt:
+- "Overall time doesn't matter" → MK Ultra version
+- "Timed segments" → "Timed sectors" (the site already uses "sectors" language)
+- "Reward the most well-rounded" → align with Paris-Roubaix difficulty framing
+- Festival/fun emphasis → align with MK Ultra's counterculture identity
+
+### Table Stakes vs Differentiator
+
+| Aspect | Category | Notes |
+|--------|----------|-------|
+| Explaining the race format somewhere on the page | **TABLE STAKES** | Most riders won't know what Grinduro-style means |
+| Placed in context above sector cards | **TABLE STAKES** | Context before detail is standard information architecture |
+| Voice-matched to MK Ultra brand | **DIFFERENTIATOR** | Most event sites use generic marketing copy |
+| Connecting format to Paris-Roubaix sector tradition | **DIFFERENTIATOR** | Bridges two cycling traditions the audience knows |
+
+### Anti-Features
+
+| Anti-Feature | Why Avoid |
+|--------------|-----------|
+| Quoting Grinduro website directly | Copyright concern; the site should have its own voice |
+| Multi-paragraph essay on race formats | Brevity is the brand; 3-5 short sentences max |
+| Comparing to other specific events by name | Could imply affiliation; keep it conceptual |
+| FAQ-style expandable sections | Overengineered for ~50 words of content |
+
+### Complexity: **VERY LOW**
+
+HTML content addition to index.astro in the #sectors section. No JavaScript. No new dependencies. Matches existing `MkUltraExplainer.astro` pattern.
+
+Dependencies on existing features:
+- #sectors section layout in index.astro
+
+### Confidence: HIGH
+
+Grinduro format verified directly from official website. Content structure is editorial, not technical.
+
 ---
 
-## Anti-Features for v3.0
+## Feature 6: Penrose Triangle in Header
 
-| Anti-Feature | Why Avoid | What to Do Instead |
-|--------------|-----------|-------------------|
-| Procedural Penrose kite-dart tiling in canvas | High JS complexity, breaks zero-TBT, no visual payoff vs SVG pattern | Static SVG pattern with isometric Escher cubes |
-| `background-position` animation for pattern scroll | Non-compositor property, triggers paint, tanks mobile Lighthouse | CSS `transform: translate` animation on SVG element |
-| Animated favicon | Inconsistent behavior across OSes; broken on Windows | Static SVG favicon; animate only header inline SVG |
-| Full-opacity tessellation behind map/chart | Obscures primary data visualization content | 3-5% opacity; remove pattern from map/chart sections entirely |
-| Separate starColors constant per-file going forward | Three-way duplication is the root of "I changed it in one place" bugs | Extract to shared module on first touch |
-| CSS-only Penrose triangle for favicon | Favicons require actual image/SVG file, not CSS | SVG file from public domain source |
-| Bike icon with detailed/heavy SVG path | Heavy SVG flickers at 60fps rAF update rate; causes Leaflet DOM thrash | Simple 24x24 flat icon (Lucide bicycle or equivalent) |
+### Current State
+
+The hero section contains:
+1. CIA document background image
+2. "Classification: Ultra" stamp
+3. "MK Ultra Gravel" glitch-animated h1
+4. Event details (date, location, distance)
+5. Countdown timer
+6. Register CTA button
+7. Donation link
+
+There is no brand icon or logo above the title. The Penrose triangle exists only as the favicon (shipped in v3.0).
+
+### Expected Behavior (Industry Standard)
+
+**Hero section branding patterns:**
+
+The "icon above title" pattern is well-established:
+- Brand mark or logo icon sits centered above the main heading
+- Typically 60-120px in size
+- Serves as a visual anchor that draws the eye down to the title
+- Common in event sites, landing pages, and product pages
+
+**For cycling events specifically:** Most use their logo above the event name. The Penrose triangle would serve as MK Ultra Gravel's logo mark.
+
+### Implementation
+
+The existing Penrose triangle SVG from the favicon can be reused at larger scale. The favicon uses hex fills for browser compatibility, but an inline SVG in the hero can use the full oklch color space.
+
+**Placement:** Centered above the h1, below the "Classification: Ultra" stamp. Approximate sizing: 60-80px width.
+
+**Animation:** The milestone spec says "subtle animation." Options:
+1. **Slow rotation** — `transform: rotate(360deg)` over 20-30s. Compositor-safe. Fits the psychedelic theme. Simple.
+2. **Color cycling** — animate the three triangle faces through different hues. Requires animating `fill`, which is NOT compositor-safe. Avoid.
+3. **Pulse/breathe** — `transform: scale(1) → scale(1.05)` oscillation. Compositor-safe. Subtle.
+4. **Floating** — `transform: translateY(0) → translateY(-8px)` oscillation. Compositor-safe.
+
+**Recommendation:** Slow rotation (option 1). It directly evokes the "impossible" nature of the Penrose triangle — it appears to rotate in a way that shouldn't be possible. Gated behind `prefers-reduced-motion: no-preference` per existing project pattern.
+
+```css
+@keyframes penrose-rotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .penrose-hero {
+    animation: penrose-rotate 25s linear infinite;
+  }
+}
+```
+
+### Table Stakes vs Differentiator
+
+| Aspect | Category | Notes |
+|--------|----------|-------|
+| Having a visual brand mark on the page | **TABLE STAKES** | Event sites need visual identity beyond text |
+| Penrose triangle specifically | **DIFFERENTIATOR** | Unique, on-brand impossible geometry |
+| Subtle rotation animation | **DIFFERENTIATOR** | Adds dynamism; rare in cycling event sites |
+| prefers-reduced-motion gate | **TABLE STAKES** | Accessibility requirement; matches existing pattern |
+
+### Anti-Features
+
+| Anti-Feature | Why Avoid |
+|--------------|-----------|
+| Animating fill/stroke color | Not compositor-safe; causes paint on every frame |
+| Large (>120px) hero icon | Competes with h1 for visual hierarchy; pushes content below fold |
+| Complex multi-step animation | Distracting; the hero already has glitch text animation |
+| Canvas-rendered triangle | Breaks zero-TBT; unnecessary for a single SVG element |
+
+### Complexity: **LOW**
+
+Inline SVG in index.astro hero section. CSS animation in global.css or component style. No JavaScript. No new dependencies.
+
+Dependencies on existing features:
+- Penrose triangle SVG design (created in v3.0 as favicon)
+- Hero section structure in index.astro
+
+### Confidence: HIGH
+
+SVG inline + CSS animation is a standard, proven pattern.
 
 ---
 
-## MVP Recommendation for v3.0
+## Feature 7: GPX Route Update (80mi to 100mi)
 
-Ordered by impact-to-effort ratio:
+### Current State
 
-**Tier 1 — High impact, low effort (ship first):**
-1. Sector color spectrum (VIS-12) — extract constant + update 5 hex values
-2. KOM segments on elevation profile (VIS-13) — add annotation boxes, same API
-3. GLRC links (CONT-05) — text-to-link conversion in a few components
-4. Penrose triangle favicon (VIS-15 partial) — SVG from public domain source
+The site uses an 80mi GPX file (`MK_Ultra.gpx` or `MK Ultra.gpx` in repo root). The prebuild pipeline processes this into:
+- `public/data/route-data.json` — track points with lat, lon, ele, mi
+- `public/data/annotations.json` — sectors, KOMs, restock points with track arrays
+- `public/data/photos.json` — 53 photos with lat, lon, mi positions
+- Route metadata (totalMi, elevationGainFt) displayed on the page
 
-**Tier 2 — High impact, medium effort:**
-5. Bike icon replacing circleMarker (UX-01) — divIcon swap + optional bearing
-6. Escher tessellation background (VIS-14) — SVG pattern authoring + CSS
+The elevation chart x-axis is already set to `max: 100` (forward-compatible from v3.0).
 
-**Tier 3 — Data work, separate from visual features:**
-7. Fix photo positions (DATA-06) — data entry + pipeline regeneration
-8. Header Penrose triangle logo (VIS-15 full) — design + inline SVG implementation
+### What Changes When a Cycling Route Is Updated
+
+When replacing a GPX file for a cycling event, a cascade of dependent data must be verified or updated:
+
+1. **Total distance** — route-data.json `meta.totalMi` changes
+2. **Total elevation gain** — `meta.elevationGainFt` changes
+3. **Sector positions** — `startMi`, `endMi`, and `track` arrays in annotations.json. If the route changed significantly, sectors may start/end at different mile markers even if the physical location didn't change (because mile markers shift when the route changes).
+4. **KOM positions** — same as sectors: `startMi`, `endMi`, track arrays
+5. **Restock point positions** — lat/lon may stay the same but `mi` values shift
+6. **Photo positions** — lat/lon are fixed (photos are geolocated) but `mi` values shift
+7. **Page content** — any hardcoded distance references ("80 miles" becomes "100 miles")
+8. **Map bounds** — initial fitBounds changes to encompass the longer route
+9. **Elevation profile** — new data renders automatically; x-axis max already 100
+
+### Pipeline Re-run
+
+The existing prebuild pipeline (`scripts/` directory) should handle most of this automatically when the new GPX file is placed in the repo. The pipeline:
+1. Parses GPX to generate route-data.json
+2. Maps sector/KOM annotations to track points (snaps to nearest route point)
+3. Assigns photo mile markers by lat/lon proximity (haversine calculation)
+
+**Critical verification needed:** If the route changed significantly (not just extended at the end), all sector/KOM start/end positions in annotations.json need manual verification. The pipeline auto-generates track arrays from mile-marker ranges, but the mile markers themselves may need updating.
+
+### New Photos
+
+The milestone spec mentions two new photos: "Down Jeep" and "Billie Helmer B&W." These need:
+1. Placed in `/images/` directory
+2. Mile-marker positions assigned in the photo data
+3. Pipeline run to generate WebP thumbnails
+4. Card crop photos generated if assigned to a sector/KOM
+
+### Content References to Update
+
+Hardcoded distance references in the codebase:
+
+| Location | Current | Needs Update |
+|----------|---------|--------------|
+| `index.astro` hero subtitle | "100 miles" | Already correct (updated in v3.0) |
+| `BaseLayout.astro` meta description | "100 miles" | Already correct |
+| Elevation chart x-axis | `max: 100` | Already correct |
+| Route stats display | Dynamic from `routeMeta` | Auto-updates |
+| PROJECT.md | "100-mile" | Already correct |
+
+The main content references appear to already say "100 miles" from earlier updates. The actual route data will change when the GPX file is swapped.
+
+### Table Stakes vs Differentiator
+
+| Aspect | Category | Notes |
+|--------|----------|-------|
+| Route data matches actual event route | **TABLE STAKES** | Inaccurate route data destroys site credibility |
+| Pipeline auto-regeneration | **TABLE STAKES** | Already built; ensures consistency |
+| Manual verification of sector/KOM positions | **TABLE STAKES** | Pipeline can't verify semantic correctness |
+| New photos integrated | **TABLE STAKES** | Fresh content for updated route |
+
+### Anti-Features
+
+| Anti-Feature | Why Avoid |
+|--------------|-----------|
+| Manually editing route-data.json | The pipeline exists for a reason; manual edits bypass validation |
+| Skipping sector position verification | Shifted mile markers = wrong sector annotations on map |
+| Deploying without visual QA | Route shape changes could cause unexpected map rendering |
+
+### Complexity: **MEDIUM**
+
+The GPX swap itself is trivial, but the cascade of verification work is significant:
+- Sector and KOM mile-marker verification (6 sectors + 3 KOMs)
+- Photo mile-marker positions (53 photos)
+- Visual QA of map rendering with new route
+- Two new photos through the pipeline
+
+The pipeline handles the mechanical work, but human verification is needed for semantic correctness.
+
+Dependencies on existing features:
+- Prebuild pipeline scripts (built in v1.0, refined in v2.0)
+- annotations.json sector/KOM data
+- photos.json positioning data
+
+### Confidence: MEDIUM
+
+Pipeline reliability is HIGH (proven across v1-v3). But the **new GPX file is not yet available** (per memory: "awaiting updated GPX from Strava before Phase 1 verification can pass"). This is a blocking external dependency.
+
+---
+
+## Feature Dependency Map (v4.0)
+
+```
+GPX Route Update (Feature 7) — BLOCKING DEPENDENCY: new GPX file from Strava
+  |
+  +-- triggers pipeline re-run
+  |     +-- regenerates route-data.json (distances, elevation)
+  |     +-- regenerates annotations.json (sector/KOM track arrays)
+  |     +-- regenerates photos.json (mile markers shift)
+  |
+  +-- requires manual verification of sector/KOM positions
+  +-- requires visual QA
+
+Map Reset Button (Feature 1) — INDEPENDENT
+  +-- depends on: map init bounds (will update with new GPX automatically)
+  +-- depends on: CustomEvent bus (exists)
+
+Photo Lightbox from Map (Feature 2) — INDEPENDENT
+  +-- depends on: PhotoSwipe initialized (exists)
+  +-- depends on: photos.json (shared data source)
+  +-- depends on: CustomEvent bus (exists)
+
+Larger Zoom Controls (Feature 3) — INDEPENDENT
+  +-- depends on: global.css Leaflet overrides (exists)
+
+Card Layout Equalization (Feature 4) — INDEPENDENT
+  +-- depends on: grid layout in index.astro (exists)
+
+Grinduro Format Explainer (Feature 5) — INDEPENDENT
+  +-- depends on: #sectors section in index.astro (exists)
+
+Penrose Header Triangle (Feature 6) — INDEPENDENT
+  +-- depends on: hero section in index.astro (exists)
+  +-- depends on: Penrose SVG from favicon (exists, v3.0)
+```
+
+**All features except Feature 7 (GPX update) are fully independent and can be built in any order.** Feature 7 has an external dependency (new GPX file) and should be scheduled first if the file is available, or deferred if not.
+
+---
+
+## Phase Ordering Recommendation
+
+**Phase 1: GPX Route Update** (if GPX available)
+- Swap GPX file, run pipeline, verify all sector/KOM/photo positions
+- Process two new photos
+- Rationale: All other features render on top of the route data; get the foundation right first
+
+**Phase 2: Quick UX Wins** (parallel-safe)
+- Larger zoom controls (Feature 3) — 5 minutes, CSS only
+- Grinduro format explainer (Feature 5) — 15 minutes, HTML only
+- Penrose header triangle (Feature 6) — 20 minutes, SVG + CSS
+- Card layout equalization (Feature 4) — 10 minutes, CSS only
+- Rationale: All are low-complexity, zero-dependency, high-visibility improvements
+
+**Phase 3: Map Reset Button** (Feature 1)
+- CustomEvent integration with both map and elevation chart
+- Rationale: Simple but touches two components; test after route data is finalized
+
+**Phase 4: Photo Lightbox from Map** (Feature 2)
+- Most architecturally complex feature: bridges RouteMap and PhotoGallery
+- Rationale: Needs photo index consistency, which depends on finalized photos.json
+
+---
+
+## MVP Recommendation
+
+All seven features are scoped for v4.0 and all should ship. None are deferrable — they represent the minimum bar for the route update milestone.
+
+Priority if time-constrained:
+1. GPX route update (Feature 7) — **must ship** (route accuracy is existential)
+2. Photo lightbox from map (Feature 2) — **must ship** (new-tab behavior is a UX bug)
+3. Map reset button (Feature 1) — **must ship** (no way to recover from zoom is broken UX)
+4. Grinduro explainer (Feature 5) — **should ship** (format confusion hurts registration)
+5. Card equalization (Feature 4) — **should ship** (visual polish)
+6. Zoom controls (Feature 3) — **should ship** (accessibility)
+7. Penrose header (Feature 6) — **nice to have** (brand polish)
 
 ---
 
@@ -636,36 +720,35 @@ Ordered by impact-to-effort ratio:
 
 | Finding | Confidence | Source |
 |---------|------------|--------|
-| starColors is duplicated in 3 files | HIGH | Direct code inspection |
-| KOM startMi/endMi available in annotations.json | HIGH | Direct data inspection |
-| chartjs-plugin-annotation box annotation API | HIGH | Official docs + existing usage in codebase |
-| Cycling difficulty yellow-to-red color convention | HIGH | BikeRoll, cycle.travel, SAS heat map theory |
-| L.divIcon with inline SVG is valid Leaflet pattern | HIGH | Leaflet official docs + multiple 2024 sources |
-| SVG transform animation is compositor-safe (60fps) | HIGH | SVG animation encyclopedia + MDN + DebugBear |
-| background-position animation causes paint (avoid) | HIGH | MDN + performance guidance |
-| Escher cubes pattern tileable as SVG `<pattern>` | MEDIUM | Referenced CDN SVG exists; CodePen AXvKOd returned 403 |
-| oklch color values for specific star ratings | MEDIUM | oklch is the project's color space; specific perceptual values need visual QA |
-| bearing rotation for bike icon alignment | MEDIUM | Haversine bearing formula is standard; CSS transform rotation is safe; combination not tested |
-| Penrose CC0 SVG availability | MEDIUM | Multiple sources listed; license terms need verification per asset |
-| prefers-reduced-motion no-animation-first pattern | HIGH | W3C WCAG, MDN, multiple authoritative sources |
+| Leaflet fitBounds for map reset | HIGH | Leaflet official docs |
+| PhotoSwipe loadAndOpen(index) API | HIGH | PhotoSwipe official docs (photoswipe.com/methods/) |
+| CustomEvent bus for cross-component communication | HIGH | Proven in existing codebase (v2.0+) |
+| WCAG 2.5.5 44x44px touch target for zoom | HIGH | W3C WCAG 2.1 official spec |
+| CSS Grid auto-equalization of card heights | HIGH | MDN, CSS-Tricks, ModernCSS.dev |
+| Grinduro format description and language | HIGH | Direct fetch of grinduro.com/about/ and grinduro.com/california/ |
+| Penrose SVG rotation is compositor-safe | HIGH | Standard CSS transform animation; same pattern as Escher drift |
+| GPX pipeline regeneration reliability | HIGH | Proven across v1-v3 (3 milestone cycles) |
+| New GPX file availability | LOW | External dependency; "awaiting updated GPX from Strava" per memory |
+| Photo index consistency between components | MEDIUM | Both load from photos.json; ordering verified by inspection but not tested across lightbox trigger |
 
 ---
 
 ## Sources
 
+- [Leaflet.zoomhome — GitHub](https://github.com/torfsen/leaflet.zoomhome)
+- [Leaflet.ResetView — GitHub](https://github.com/drustack/Leaflet.ResetView)
+- [Leaflet issue #2498 — Reset view control](https://github.com/Leaflet/Leaflet/issues/2498)
+- [PhotoSwipe Methods — photoswipe.com](https://photoswipe.com/methods/)
+- [PhotoSwipe Data Sources — photoswipe.com](https://photoswipe.com/data-sources/)
+- [Leaflet-PhotoSwipe integration — DEV Community](https://dev.to/trincadev/from-leaflet-popup-marker-to-photo-gallery-image-and-back-2f6k)
+- [WCAG 2.5.5 Target Size — W3C](https://www.w3.org/WAI/WCAG21/Understanding/target-size.html)
+- [WCAG 2.5.8 Target Size Minimum — AllAccessible](https://www.allaccessible.org/blog/wcag-258-target-size-minimum-implementation-guide)
+- [Equal Height Elements: Flexbox vs Grid — ModernCSS.dev](https://moderncss.dev/equal-height-elements-flexbox-vs-grid/)
+- [CSS Grid Best Practices — MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Grid_layout/Common_grid_layouts)
+- [Grinduro About Page — grinduro.com](https://grinduro.com/about/)
+- [Grinduro California — grinduro.com](https://grinduro.com/california/)
 - [Leaflet Custom Icons — leafletjs.com](https://leafletjs.com/examples/custom-icons/)
-- [L.divIcon reference — leafletjs.com](https://leafletjs.com/reference.html#divicon)
-- [chartjs-plugin-annotation Box Annotations — chartjs.org](https://www.chartjs.org/chartjs-plugin-annotation/master/guide/types/box.html)
-- [chartjs-plugin-annotation Getting Started — chartjs.org](https://www.chartjs.org/chartjs-plugin-annotation/latest/guide/)
-- [RideWithGPS Elevation Profile on Web — support.ridewithgps.com](https://support.ridewithgps.com/hc/en-us/articles/4419005868315-The-Elevation-Profile-on-Web)
-- [SVG Animation Encyclopedia — svgai.org](https://www.svgai.org/blog/research/svg-animation-encyclopedia-complete-guide)
-- [How Opacity Animations Can Delay LCP — debugbear.com](https://www.debugbear.com/blog/opacity-animation-poor-lcp)
-- [Optimize SVG Animations for Performance — zigpoll.com](https://www.zigpoll.com/content/how-can-i-optimize-svg-animations-to-run-smoothly-on-both-desktop-and-mobile-browsers-without-significant-performance-loss)
-- [prefers-reduced-motion — css-tricks.com](https://css-tricks.com/almanac/rules/m/media/prefers-reduced-motion/)
-- [SVG Tessellations on CodePen — codepen.io/zapplebee](https://codepen.io/zapplebee/post/svg-tessellations)
-- [VeloViewer Gradient Colour Mapping — blog.veloviewer.com](https://blog.veloviewer.com/mapped-gradient-colours-and-google-street-view-for-your-strava-activities-routes-segments/)
-- [BikeRoll Route Planner (color grading) — cyclingabout.com](https://www.cyclingabout.com/bikeroll-bike-route-planner/)
-- [cycle.travel Elevation Chart Key — cycle.travel](https://cycle.travel/post/5728)
-- [How to Choose Colors for Heat Maps — sas.com](https://blogs.sas.com/content/iml/2014/10/01/colors-for-heat-maps.html)
-- [Penrose Triangle Free SVG — freesvg.org](https://freesvg.org/penrose-triangle)
-- [SVG Repo Impossible Triangle — svgrepo.com](https://www.svgrepo.com/svg/173286/impossible-triangle)
+- [L.DivIcon reference — leafletjs.com](https://leafletjs.com/reference.html#divicon)
+- [Extending Leaflet Controls — leafletjs.com](https://leafletjs.com/examples/extending/extending-3-controls.html)
+- [RideWithGPS Elevation Profile — support.ridewithgps.com](https://support.ridewithgps.com/hc/en-us/articles/4419005868315-The-Elevation-Profile-on-Web)
+- [Leaflet Zoom Control CSS — Google Groups](https://groups.google.com/g/leaflet-js/c/smRL1O8PCuY)

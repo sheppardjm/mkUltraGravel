@@ -1,375 +1,457 @@
-# Technology Stack — v3.0 Escher Identity + Data Fixes + UX Polish
+# Technology Stack — v4.0 Route Update + UX Overhaul
 
-**Project:** MK Ultra Gravel — v3.0 milestone additions
-**Researched:** 2026-03-28
-**Scope:** New capabilities only — SVG tessellation backgrounds, custom bike map marker, KOM elevation bands, Penrose triangle favicon
-**Confidence:** HIGH for all four features (verified against official docs and existing codebase)
+**Project:** MK Ultra Gravel — v4.0 milestone
+**Researched:** 2026-03-29
+**Scope:** Stack additions/changes for 8 new features: map reset button, photo map thumbnails with PhotoSwipe lightbox, larger zoom controls, card size equalization, Grinduro-style explainer, Penrose title animation, 100mi GPX replacement, new photo pipeline processing
+**Confidence:** HIGH — all verified against Leaflet 1.9.4 official docs, PhotoSwipe 5.4.4 official docs, and existing codebase patterns
 
 ---
 
 ## Executive Summary
 
-All four v3.0 visual features are achievable with **zero new npm dependencies**. The existing stack (Astro 6, Tailwind v4, Leaflet 1.9.4, chartjs-plugin-annotation 3.1.0) already provides every primitive required. This is a pure implementation milestone.
+All v4.0 features are achievable with **zero new npm dependencies**. The existing stack (Leaflet 1.9.4, PhotoSwipe 5.4.4, Chart.js 4.5.1, Tailwind v4, sharp 0.34.5) already provides every API primitive required. Three features are CSS-only, two are Leaflet API (`L.Control.extend`, `L.DomEvent`), one bridges Leaflet and PhotoSwipe via `loadAndOpen()` with a `dataSource` array, and two are pipeline re-runs with no code changes.
 
 | Feature | Approach | New deps |
-|---------|----------|---------|
-| SVG tessellation backgrounds (Escher boxes, Penrose triangles) | Inline SVG `<pattern>` + CSS animation on `opacity`/`transform` | None |
-| Custom bike icon on Leaflet crosshair marker | Replace `L.circleMarker` with `L.marker` + `L.divIcon` (SVG string in `html`) | None |
-| KOM segment bands on Chart.js elevation profile | Add `box` annotation entries alongside existing sector annotations using chartjs-plugin-annotation 3.1.0 already installed | None |
-| Penrose triangle SVG favicon | Replace existing `public/favicon.svg` (currently a text "MK" rect) with hand-authored Penrose triangle SVG | None |
+|---------|----------|----------|
+| Map reset button | Custom `L.Control.extend()` calling `map.fitBounds(routeLine.getBounds())` | None |
+| Photo map thumbnails + PhotoSwipe lightbox | Replace divIcon with thumbnail `<img>`, open PhotoSwipe via `loadAndOpen(index, dataSource)` | None |
+| Larger zoom controls | CSS overrides on `.leaflet-control-zoom-in`, `.leaflet-control-zoom-out` | None |
+| Gravel sector card resize | CSS grid equalization, match KOM card structure | None |
+| Grinduro-style explainer | Static Astro component, Tailwind + existing design tokens | None |
+| Penrose triangle above title | CSS `@keyframes` animation on existing inline SVG, compositor-safe (`transform`, `opacity`) | None |
+| 100mi GPX replacement | Drop new `.gpx` file, re-run `npm run data` pipeline | None |
+| Two new photos | Drop in `images/`, pipeline auto-processes via sharp | None |
 
 **Net new mandatory dependencies: zero.**
 
 ---
 
-## Feature 1: SVG Tessellation Pattern Backgrounds
+## Feature 1: Map Reset Button (Custom Leaflet Control)
 
-### What the reference SVG does
+### Why not leaflet.zoomhome
 
-The Escher boxes SVG at `https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/boxes.svg` uses:
+The [leaflet.zoomhome](https://github.com/torfsen/leaflet.zoomhome) plugin adds a "Home" button to the zoom control. However, it:
 
-- An SVG `<pattern>` element with `id="boxes"`, dimensions 300×573, scaled to 0.25×
-- Two `<rect>` elements with `skewY(30)` and `skewY(-30)` transforms in a grayscale palette (`#888`, `#666`)
-- A full-viewport `<rect fill="url(#boxes)">` that tiles the pattern across the entire surface
-- Zero JavaScript — entirely declarative SVG
+- **Requires Font Awesome 4.x** as a peer dependency (the project uses zero icon libraries)
+- **Has no ESM build** (distributed as minified UMD from 2020)
+- **Last committed September 2020** — 6 years stale
+- **Does more than needed** — replaces the entire zoom control with a 3-button variant
 
-This is identical in structure to the existing `grain-overlay` in `global.css`, which is also an inline SVG `background-image` data URI (see `global.css` line 87). The tessellation backgrounds follow the same pattern.
+For a single button calling `map.fitBounds()`, a custom control is 15-20 lines of code with zero dependencies.
 
-### Recommended approach: Inline SVG as CSS `background-image` data URI
+### Recommended approach: Custom `L.Control.extend()`
 
-Inline the tessellation SVG directly in a CSS class, the same way the existing `grain-overlay` is implemented. No external file request, no JS, no extra DOM elements beyond the overlay div.
+Leaflet's official [Extending Controls tutorial](https://leafletjs.com/examples/extending/extending-3-controls.html) documents this pattern. The API:
+
+```javascript
+const ResetControl = L.Control.extend({
+  options: { position: 'topleft' },
+
+  onAdd(map) {
+    const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+    const button = L.DomUtil.create('a', 'leaflet-control-reset', container);
+    button.href = '#';
+    button.title = 'Reset view';
+    button.setAttribute('role', 'button');
+    button.setAttribute('aria-label', 'Reset map to full route view');
+    button.innerHTML = '&#8634;'; // Unicode reset arrow, or inline SVG
+
+    L.DomEvent.disableClickPropagation(container);
+    L.DomEvent.on(button, 'click', (e) => {
+      L.DomEvent.preventDefault(e);
+      map.fitBounds(routeLine.getBounds(), { padding: [20, 20] });
+      // Also dispatch CustomEvent to reset elevation profile if needed
+      window.dispatchEvent(new CustomEvent('map:resetView'));
+    });
+
+    return container;
+  }
+});
+
+new ResetControl().addTo(map);
+```
+
+**Key implementation details:**
+
+| Concern | Solution |
+|---------|----------|
+| Position | `'topleft'` — adjacent to existing zoom control |
+| Styling | Add `leaflet-bar` class to get Leaflet's default button styling, then override in `global.css` to match dark theme (already done for `.leaflet-control-zoom a`) |
+| Click propagation | `L.DomEvent.disableClickPropagation(container)` prevents map click-through |
+| Reset scope | Call `map.fitBounds(routeLine.getBounds(), { padding: [20, 20] })` — same as initial fit on line 80 of RouteMap.astro |
+| Elevation sync | Dispatch `map:resetView` CustomEvent; ElevationProfile listens and resets x-axis scale to full range |
+| Icon | Unicode `&#8634;` (clockwise open circle arrow) or inline SVG — no icon library needed |
+| Accessibility | `role="button"`, `aria-label`, `title` attributes |
+
+**Confidence: HIGH** — `L.Control.extend()` is the documented first-party pattern. The existing codebase already uses `L.DomEvent` for sector hover/click handling.
+
+### Sources
+
+- [Leaflet Extending Controls tutorial](https://leafletjs.com/examples/extending/extending-3-controls.html)
+- [Leaflet L.Control reference](https://leafletjs.com/reference.html#control)
+
+---
+
+## Feature 2: Photo Map Thumbnails + PhotoSwipe Lightbox
+
+### Current state
+
+Photo markers in `RouteMap.astro` (lines 188-204) use a 10x10px cyan square `L.divIcon`. Clicking opens a popup with an `<img>` linking to the full image in a new tab (`target="_blank"`).
+
+### Target state
+
+Photo markers should show a small thumbnail preview (e.g., 48x48 or 64x64). Clicking opens the image in the existing PhotoSwipe lightbox instead of a new tab.
+
+### Recommended approach: Two-part implementation
+
+#### Part A: Thumbnail marker icons
+
+Replace the cyan square divIcon with a thumbnail-bearing divIcon:
+
+```javascript
+const photoIcon = L.divIcon({
+  className: 'photo-marker',
+  html: `<img src="/images/thumbs/${thumbFilename}"
+              width="48" height="48"
+              style="object-fit:cover;border:2px solid #22d3ee;border-radius:2px;"
+              loading="lazy" alt="">`,
+  iconSize: [48, 48],
+  iconAnchor: [24, 24],
+  popupAnchor: [0, -28]
+});
+```
+
+The thumbnail WebP files already exist in `public/images/thumbs/` (generated by `generate-thumbnails.js` at 400px width). The 48px display is well within that budget.
+
+**Cluster icon**: The existing `markerClusterGroup` `iconCreateFunction` stays as-is (shows count badge). No change needed.
+
+#### Part B: Open PhotoSwipe instead of new tab
+
+PhotoSwipe 5.4.4 supports [programmatic opening via `loadAndOpen(index, dataSource)`](https://photoswipe.com/methods/). Instead of binding popups, bind click handlers that open PhotoSwipe with a `dataSource` array:
+
+```javascript
+// Build dataSource array from photos.json (already fetched in RouteMap.astro)
+const photoDataSource = photos.map(photo => ({
+  src: `/images/${photo.filename}`,
+  width: photo.width,
+  height: photo.height,
+  alt: `Route photo at mile ${photo.mi}`
+}));
+
+// Initialize PhotoSwipe lightbox with array data source
+const mapLightbox = new PhotoSwipeLightbox({
+  dataSource: photoDataSource,
+  pswpModule: () => import('photoswipe'),
+  bgOpacity: 0.95,
+});
+
+// Use thumbEl filter for zoom animation from map thumbnail
+mapLightbox.addFilter('thumbEl', (thumbEl, data, index) => {
+  const marker = photoMarkers[index];
+  if (marker) {
+    const el = marker.getElement();
+    const img = el?.querySelector('img');
+    if (img) return img;
+  }
+  return thumbEl;
+});
+
+mapLightbox.init();
+
+// Bind click to each photo marker
+photoMarkers.forEach((marker, i) => {
+  marker.on('click', () => {
+    mapLightbox.loadAndOpen(i);
+  });
+});
+```
+
+**Key implementation details:**
+
+| Concern | Solution |
+|---------|----------|
+| Data source | `photos.json` already has `width` and `height` fields (added by `generate-thumbnails.js`) |
+| Opening animation | PhotoSwipe `thumbEl` filter finds the marker's thumbnail `<img>` for zoom-from-thumbnail transition. Falls back to fade if marker is clustered/hidden. |
+| Popup removal | Remove `.bindPopup()` calls from photo markers — click now opens lightbox directly |
+| Gallery coexistence | This is a separate `PhotoSwipeLightbox` instance from the PhotoGallery component's instance. PhotoSwipe 5 supports [multiple independent instances](https://photoswipe.com/getting-started/). |
+| Dynamic import | `pswpModule: () => import('photoswipe')` — same lazy-load pattern as existing PhotoGallery component |
+| Cluster handling | When a cluster is clicked, `markerClusterGroup` with `zoomToBoundsOnClick: true` zooms in. Individual marker click fires only on unclustered markers. No conflict. |
+
+**Confidence: HIGH** — `loadAndOpen(index, dataSource)` is the [documented API](https://photoswipe.com/methods/). The `thumbEl` filter is documented on the [data sources page](https://photoswipe.com/data-sources/). PhotoSwipe 5.4.4 is already in `package.json`.
+
+### Sources
+
+- [PhotoSwipe Methods: loadAndOpen](https://photoswipe.com/methods/)
+- [PhotoSwipe Data Sources: Separate DOM and data](https://photoswipe.com/data-sources/)
+- [PhotoSwipe Opening Transition](https://photoswipe.com/opening-or-closing-transition/)
+- [PhotoSwipe GitHub Issue #1848: Open from external button](https://github.com/dimsemenov/PhotoSwipe/issues/1848)
+
+---
+
+## Feature 3: Larger Map Zoom Controls
+
+### Current state
+
+Leaflet's default zoom control buttons are ~26x26px (Leaflet's default). The project already overrides their colors in `global.css` (lines 200-207) for the dark theme.
+
+### Recommended approach: CSS-only resize
+
+Extend the existing `.leaflet-control-zoom a` overrides in `global.css`:
 
 ```css
-/* Example structure — matches existing grain-overlay pattern */
-.escher-overlay {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.08;               /* tune: ~6-12% for subliminal background */
-  background-image: url("data:image/svg+xml,[URL-encoded SVG]");
-  background-repeat: repeat;
-  background-size: 150px;      /* tune tile size for visual density */
-  z-index: 9998;               /* below grain-overlay at 9999 */
-  will-change: transform;      /* promote to GPU compositor layer */
+.leaflet-control-zoom a {
+  width: 36px !important;
+  height: 36px !important;
+  line-height: 36px !important;
+  font-size: 18px !important;
+  /* existing dark theme overrides remain */
+  background: oklch(0.18 0.01 250) !important;
+  color: oklch(0.85 0.01 90) !important;
+  border-color: oklch(0.25 0.01 250) !important;
+}
+.leaflet-control-zoom a:hover {
+  background: oklch(0.25 0.01 250) !important;
 }
 ```
 
-**Why inline data URI over external file:**
-- Eliminates a network request (the grain overlay follows this exact pattern — see `global.css:87`)
-- No CORS or path issues in Astro's `/public` asset pipeline
-- SVG at this complexity (3 elements) is tiny — well under 500 bytes URL-encoded
+The `!important` declarations are already used in the existing overrides (Leaflet CSS is in the lowest `@layer leaflet` priority, but these selectors have equal specificity, so `!important` is the established pattern).
 
-**Animation approach — CSS only, compositor-safe:**
+**Size rationale:** 36px is a comfortable touch target (Apple HIG recommends 44pt minimum; 36px on a high-DPI display is close). Going larger risks overlapping the reset button or attribution. 40px is an option if testing shows 36px feels small.
 
-The Escher boxes background should use a slow CSS `background-position` drift or `transform: translate` animation. Animating `background-position` causes repaint but NOT layout; it is CPU-bound but acceptable at low opacity. Animating `transform` on the overlay div is fully compositor-safe (zero TBT impact).
+**Confidence: HIGH** — Pure CSS, no API surface. The existing dark theme overrides prove this pattern works.
 
-Recommended: animate `transform: translate` on the overlay `div`, not `background-position`, to stay compositor-safe:
+---
 
-```css
-@keyframes escher-drift {
-  from { transform: translate(0, 0); }
-  to   { transform: translate(-150px, -150px); } /* one full tile = seamless loop */
-}
+## Feature 4: Gravel Sector Cards Resized to Match KOM Cards
 
-.escher-overlay {
-  animation: escher-drift 40s linear infinite;
-  will-change: transform;
-}
+### Current state analysis
+
+Both card components (`GravelSectors.astro` and `KomSegments.astro`) use identical outer structure:
+
+- `classified-border bg-bg-surface card-hover` wrapper
+- Optional `coverPhoto` image at `aspect-video` (16:9)
+- `p-4` content area
+
+The visual difference: GravelSectors cards are in a `md:col-span-2` column (wider), while KomSegments cards are in a single column. Within the card content, GravelSectors uses a flex row for title + stars, while KomSegments uses a 2-column grid for stats.
+
+### Recommended approach: Unify card inner structure
+
+**Option A (recommended): Harmonize the content layout**
+
+Make GravelSectors cards use the same `grid grid-cols-2` stat layout as KomSegments:
+
+```astro
+<div class="p-4">
+  <h3 class="text-accent-white text-lg">{sector.name}</h3>
+  <div class="grid grid-cols-2 gap-x-6 gap-y-1 text-text-muted text-sm mt-1">
+    <span style={`color: ${starColors[sector.stars]}`}>
+      {"★".repeat(sector.stars)}{"☆".repeat(5 - sector.stars)}
+    </span>
+    <span>{sector.lengthMi.toFixed(1)} mi</span>
+    <span>Mile {sector.startMi}</span>
+    <span>&nbsp;</span>
+  </div>
+</div>
 ```
 
-A 40-second cycle at 6-8% opacity is subliminal — felt not watched. Match tile size in `background-size` to the `translate` distance for a seamless loop.
+**Option B: CSS subgrid for cross-card alignment**
 
-**`prefers-reduced-motion` guard — mandatory:**
+CSS subgrid (97%+ browser support as of 2025) allows child elements of grid items to align across siblings. However, this is overkill here because:
+
+- Sector cards and KOM cards are in different grid columns (not siblings in the same grid row)
+- The goal is visual consistency, not pixel-aligned cross-card rows
+- Tailwind v4 supports `subgrid` via `grid-rows-subgrid` / `grid-cols-subgrid` if needed later
+
+**Recommendation: Option A.** Harmonize the HTML structure and let the shared CSS classes (`classified-border`, `card-hover`, `aspect-video`, `p-4`) do the work. No CSS framework features needed.
+
+**Confidence: HIGH** — This is a markup refactor using existing Tailwind utilities.
+
+---
+
+## Feature 5: Grinduro-Style Event Format Explainer
+
+### Current state
+
+The site has `MkUltraExplainer.astro` — a static content component explaining the MK Ultra name. The Grinduro explainer follows the same pattern: static content component with the project's brutalist design tokens.
+
+### Recommended approach: Static Astro component
+
+Create `GrinduroExplainer.astro` using existing design primitives:
+
+- `classified-border` wrapper with `p-6 md:p-8`
+- `stamp` for decorative labels
+- `text-text-body`, `text-text-muted` for body text
+- `tone-image` for background texture
+
+No new CSS patterns, no new libraries. The existing `MkUltraExplainer.astro` is the template.
+
+**Content structure for Grinduro format:** The Grinduro event format (mixed timed segments within a larger ride) maps naturally to a "how it works" section with numbered steps or a comparison table.
+
+**Confidence: HIGH** — Copy-paste of an existing component pattern.
+
+---
+
+## Feature 6: Penrose Triangle Above Page Title with Animation
+
+### Current state
+
+The Penrose triangle SVG already exists as the favicon (`public/favicon.svg`). The Escher tessellation uses CSS `@keyframes` animation (`escher-drift` in `global.css`, lines 253-263). The hero section has the glitch text animation.
+
+### Recommended approach: Inline SVG with CSS animation
+
+Place the Penrose triangle SVG inline above the `<h1>` in the hero section. Animate with compositor-safe properties only (`transform`, `opacity`) to maintain TBT 0ms:
 
 ```css
+@keyframes penrose-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-8px) rotate(3deg); }
+}
+
+.penrose-hero {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1.5rem;
+  animation: penrose-float 6s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .escher-overlay { animation: none; }
+  .penrose-hero { animation: none; }
 }
 ```
 
-The existing `global.css` already has this pattern for other animations (lines 115, 231, 251).
+**Key details:**
 
-**Performance impact on TBT:**
-- `transform` + `opacity` animate on compositor thread — zero main thread blocking
-- `will-change: transform` promotes to GPU layer — no layout or paint on animation frames
-- TBT 0ms target is maintained
+| Concern | Solution |
+|---------|----------|
+| Performance | `transform` + `opacity` are compositor-only — no layout/paint, TBT stays 0ms |
+| Reduced motion | `prefers-reduced-motion: reduce` disables animation (matches existing pattern in `global.css`) |
+| SVG source | Copy from `public/favicon.svg`, adjust `viewBox` and colors for hero display size |
+| Sizing | 80px on mobile, could scale up via `md:w-24 md:h-24` for desktop |
 
-### Penrose triangle background variant
-
-The Penrose triangle CSS technique (from the reference CodePen) uses the CSS border trick (zero-width/height element with strategic border transparency) combined with layered `::before`/`::after` pseudo-elements. This is more suited to a static decorative element (e.g., section dividers, hero corner decorations) than a repeating background tile.
-
-For a **repeating tessellation background**, stay with the SVG `<pattern>` approach — it tiles cleanly. For a **single Penrose triangle decorative element**, use pure CSS with `clip-path: polygon()` (modern, no border hack needed):
-
-```css
-/* Single Penrose triangle — pure CSS, no library */
-.penrose-decoration {
-  position: relative;
-  width: 120px;
-  height: 104px;
-  /* Three segments built via pseudo-elements and borders */
-}
-```
-
-The CodePen at https://codepen.io/guestn/pen/AXvKOd (403 on direct fetch — access via browser only) uses the CSS border trick with multiple nested elements. The `clip-path` alternative is cleaner for an Astro component.
-
-### Where to apply
-
-- **Hero/above-the-fold section:** Escher boxes SVG tile at ~8% opacity, slow drift animation. This replaces or layers with the existing tone image (`escharian_stairs_fb.webp` at 12% opacity via `.tone-image` class).
-- **Section dividers or cards:** Static Penrose triangle elements as decorative geometry in CSS
+**Confidence: HIGH** — Same CSS animation pattern as existing `escher-drift` and `card-hover`.
 
 ---
 
-## Feature 2: Custom Bike Icon on Leaflet Crosshair Marker
-
-### Current implementation
-
-The crosshair is a `L.circleMarker` (RouteMap.astro, line 222–228): radius-6, white stroke, cyan fill, hidden by default, repositioned by `elevation:hover` events. It is purely a position indicator, not a persistent map marker.
-
-### Recommended approach: Replace with `L.marker` + `L.divIcon` (SVG string)
-
-`L.divIcon` accepts any HTML string in its `html` option, including inline SVG. This is the established pattern already used in this codebase for sector badges (line 126–134), restock markers (line 169–174), and photo markers (line 183–188). No plugin required — Leaflet 1.9.4 supports this natively.
-
-```typescript
-// Replace the L.circleMarker with a divIcon bike marker
-const bikeIcon = L.divIcon({
-  className: 'bike-crosshair',   // CSS class for .leaflet-marker-icon override
-  html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-    <!-- Simple bicycle SVG path — hand-authored or from public domain source -->
-    <path fill="#22d3ee" stroke="#ffffff" stroke-width="0.5" d="..."/>
-  </svg>`,
-  iconSize: [24, 24],
-  iconAnchor: [12, 12],          // center the icon on the GPS coordinate
-  popupAnchor: [0, -14]
-});
-
-const crosshair = L.marker([0, 0] as [number, number], {
-  icon: bikeIcon,
-  opacity: 0,                    // hidden until elevation:hover fires
-  zIndexOffset: 1000             // render above sector polylines
-}).addTo(map);
-```
-
-**CSS override needed in RouteMap.astro `<style>`:**
-
-```css
-:global(.bike-crosshair) {
-  background: transparent !important;
-  border: none !important;
-}
-```
-
-This is the same pattern as the existing `:global(.restock-marker)` and `:global(.photo-marker)` rules (RouteMap.astro lines 19–32).
-
-**Switching from `L.circleMarker` to `L.marker` for visibility toggling:**
-
-`L.circleMarker.setStyle({ opacity: 0 })` is used currently. `L.marker.setOpacity(value)` is the equivalent for a `L.marker`. Update the event listeners:
-
-```typescript
-// elevation:hover — show
-crosshair.setLatLng([lat, lon]);
-crosshair.setOpacity(1);
-
-// elevation:hoverEnd — hide
-crosshair.setOpacity(0);
-```
-
-**Why `L.divIcon` over `L.icon` (image file):**
-- `L.icon` requires an external image file and a Vite asset import. The existing codebase deliberately uses `L.divIcon` everywhere to avoid Vite's broken default icon path issue (noted in RouteMap.astro comment, line 167: "cyan divIcon avoids broken default icon paths in Vite builds").
-- `L.divIcon` with inline SVG: zero external requests, no Vite asset path issues, consistent with all other markers in this codebase.
-
-**Why not `leaflet-svgicon` plugin:**
-- leaflet-svgicon (github.com/iatkin/leaflet-svgicon) adds complexity and a plugin load for a feature already achievable with Leaflet's built-in `L.divIcon`. The existing codebase has zero Leaflet plugins beyond gesture handling and markercluster — maintain that discipline.
-
-**Bike SVG path:**
-The bicycle shape needs to be hand-authored as a compact SVG or taken from a public domain icon (Noun Project CC0, Heroicons, etc.). Target: viewBox="0 0 24 24", under 300 bytes of path data, `#22d3ee` fill to match the existing cyan marker palette.
-
----
-
-## Feature 3: KOM Segment Visualization on Elevation Profile
+## Feature 7: 100mi GPX Route Replacement
 
 ### Current state
 
-The annotation plugin already renders sector bands as `box` annotations with `xMin`/`xMax` and semi-transparent fills (ElevationProfile.astro lines 66–82). The plugin is registered and functioning. KOM segments have `startMi` and `endMi` fields in `annotations.json` (confirmed: `kom[0]` keys include `startMi`, `endMi`, `lengthMi`).
+The prebuild pipeline (`scripts/generate-data.js`) runs:
+1. `parse-gpx.js` — reads `*.gpx` from project root, outputs `public/data/route-data.json`
+2. `resolve-annotations.js` — reads annotations config, outputs `public/data/annotations.json`
+3. `match-photos.js` — matches photo EXIF GPS to route, outputs `public/data/photos.json`
+4. `generate-thumbnails.js` — creates WebP thumbs in `public/images/thumbs/`
+5. `assign-card-photos.js` — assigns nearest photos to sector/KOM cards, generates card crops
 
-### Recommended approach: Separate `box` annotation entries with distinct visual style
+### Recommended approach: Drop-in replacement
 
-Add KOM segment annotations alongside the existing sector annotations in `annotationBoxes`. Use visual differentiation:
+1. Replace the existing `.gpx` file in the project root with the new 100mi GPX from Strava
+2. Run `npm run data` to re-process the entire pipeline
+3. Verify `route-data.json` has `meta.totalMi` near 100
+4. Verify `annotations.json` sector/KOM mile markers still resolve correctly
 
-| Property | Sector bands (existing) | KOM bands (new) |
-|----------|------------------------|-----------------|
-| `backgroundColor` | `starColors[stars] + '22'` (per-star color, 13% opacity) | `'#7fff00' + '18'` (~10% chartreuse fill) |
-| `borderColor` | `starColors[stars] + '66'` (40% opacity) | `'#7fff0088'` (dashed chartreuse) |
-| `borderDash` | not set (solid) | `[4, 4]` (dashed) |
-| `borderWidth` | `1` | `2` |
-| `label.display` | `false` | `true` (KOM name, small text) |
-| `label.content` | — | `kom.name` |
-| `label.font.size` | — | `9` |
-| `drawTime` | default | `'beforeDatasetsDraw'` (renders behind the line) |
+**Pipeline code changes:** Likely none. The `parse-gpx.js` script is GPX-agnostic. The elevation profile x-axis already has `max: 100` (line 196 in ElevationProfile.astro), which was future-proofed for the 100mi route.
 
-The `borderDash` property is confirmed available in chartjs-plugin-annotation 3.1.0 (verified via official docs). The `label` property on box annotations is confirmed supported: `label.display`, `label.content`, `label.font`, `label.color`, `label.position` are all available.
+**Risk:** Annotation `startMi`/`endMi` values in the annotations config may need updating if sector positions shifted in the new route. This is a data concern, not a stack concern.
 
-```typescript
-// Add to annotationBoxes object alongside sector_0, sector_1, etc.
-annotations.kom.forEach((kom: { name: string; startMi: number; endMi: number }, i: number) => {
-  annotationBoxes[`kom_${i}`] = {
-    type: 'box',
-    xMin: kom.startMi,
-    xMax: kom.endMi,
-    // yMin/yMax omitted — spans full chart height (confirmed in docs)
-    backgroundColor: '#7fff0018',
-    borderColor: '#7fff0088',
-    borderDash: [4, 4],
-    borderWidth: 2,
-    drawTime: 'beforeDatasetsDraw',
-    label: {
-      display: true,
-      content: kom.name,
-      position: { x: 'start', y: 'start' },
-      color: '#7fff00',
-      font: { size: 9, family: 'monospace' }
-    }
-  };
-});
-```
-
-**Why `box` annotation over `line` annotation:**
-KOM segments span a range of miles (e.g., startMi=22.3, endMi=23.8). A `line` annotation marks a single x-value. A `box` annotation with `xMin`/`xMax` correctly represents a segment range. Use the same type as the sector bands for consistency — the visual differentiation (dashed border, chartreuse color, label) distinguishes KOM from sector without adding a different annotation type.
-
-**Why `'#7fff00'` (chartreuse):**
-The RouteMap already uses `color: '#7fff00'` with `dashArray: '8, 4'` for KOM polylines (RouteMap.astro line 151). Matching the chart color to the map color creates visual consistency across the two synchronized components.
-
-**No version upgrade needed:** chartjs-plugin-annotation is already at v3.1.0 (the latest release as of October 2024 — confirmed via GitHub releases). No update needed.
-
-**No new import needed:** `AnnotationPlugin` is already imported and registered in `ElevationProfile.astro` (lines 40–41).
+**Confidence: HIGH** — Pipeline designed for GPX swap. See memory note: "Route extended to 100mi; awaiting updated GPX from Strava."
 
 ---
 
-## Feature 4: Penrose Triangle SVG Favicon
+## Feature 8: Two New Photos Processed Through Pipeline
 
 ### Current state
 
-`public/favicon.svg` is a placeholder — a dark rectangle with "MK" monospace text (4 lines, verified). It needs to be replaced with a Penrose triangle.
+The pipeline auto-discovers images in `images/` directory, reads EXIF GPS data via `exifr`, matches to route points, generates thumbnails via `sharp`, and assigns card crops.
 
-### Recommended approach: Hand-authored SVG, replace `public/favicon.svg` in place
+### Recommended approach: Drop-in
 
-The existing `<link rel="icon" type="image/svg+xml" href="/favicon.svg">` tag (in the site's `<head>`) already serves an SVG favicon. Modern browser support is sufficient: Chrome (full), Firefox (full), Safari 15.6+ (tab icons). The existing ICO fallback pattern recommended for legacy browsers is optional for this project (dark psychedelic gravel race — the audience is not using IE11).
+1. Add the two new `.jpg` files to `images/` directory
+2. Run `npm run data`
+3. Pipeline auto-generates:
+   - `public/images/thumbs/*.webp` (400px width thumbnails)
+   - Updated `public/data/photos.json` with GPS coordinates and dimensions
+   - Updated `public/data/annotations.json` if photos are nearer to sectors/KOMs than existing covers
 
-**SVG favicon construction — Penrose triangle geometry:**
+**Prerequisite:** New photos must have EXIF GPS tags. If shot with a phone, they almost certainly do. If not, `match-photos.js` will skip them with a warning.
 
-A Penrose (impossible) triangle rendered in SVG uses three isometric parallelogram faces arranged to suggest three-dimensional depth. The key insight is that it's three trapezoidal shapes meeting at corners with deliberate overlap creating the optical illusion.
+**Confidence: HIGH** — Existing pipeline, no changes needed.
 
-Minimal hand-authored approach:
+---
 
-```svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- Three faces of the impossible triangle -->
-  <!-- Face 1: top-left arm (accent-green) -->
-  <polygon points="..." fill="oklch(0.85 0.24 145)" />
-  <!-- Face 2: right arm (darker green) -->
-  <polygon points="..." fill="oklch(0.65 0.20 145)" />
-  <!-- Face 3: bottom arm (darkest) -->
-  <polygon points="..." fill="oklch(0.45 0.16 145)" />
-</svg>
+## What NOT to Add (And Why)
+
+| Temptation | Why Not |
+|------------|---------|
+| **leaflet.zoomhome** plugin | Requires Font Awesome 4.x, no ESM build, last updated 2020. Custom `L.Control.extend()` is 15 lines with zero deps. |
+| **Leaflet.EasyButton** plugin | Another abstraction over `L.Control.extend()`. Adds a dependency for something that's trivial in vanilla Leaflet. |
+| **Icon library** (Font Awesome, Lucide, Heroicons) | Unicode symbols and inline SVG cover all needs. The project already uses inline SVG for the bike crosshair (Lucide-derived, MIT). No bundle cost. |
+| **CSS subgrid** for card equalization | Overkill — cards aren't siblings in the same grid row. Harmonizing HTML structure with existing Tailwind utilities is simpler and more maintainable. |
+| **Leaflet popup plugin** for photo preview | Replacing popups entirely with PhotoSwipe lightbox is cleaner than enhancing popups. |
+| **Additional thumbnail sizes** | The existing 400px WebP thumbnails serve both the gallery and the 48px map markers. Generating a separate 48px size would save ~2KB per image but adds pipeline complexity for negligible gain. |
+
+---
+
+## Stack Summary Table
+
+| Layer | Technology | Version | Status |
+|-------|-----------|---------|--------|
+| Framework | Astro | ^6.1.1 | No change |
+| CSS | Tailwind v4 | ^4.2.2 | No change |
+| Map | Leaflet | ^1.9.4 | No change (use existing `L.Control.extend` API) |
+| Map plugins | leaflet-gesture-handling | ^1.2.2 | No change |
+| Map plugins | leaflet.markercluster | ^1.5.3 | No change |
+| Charts | Chart.js | ^4.5.1 | No change |
+| Charts | chartjs-plugin-annotation | ^3.1.0 | No change |
+| Lightbox | PhotoSwipe | ^5.4.4 | No change (use existing `loadAndOpen` + `dataSource` API) |
+| Image processing | sharp | ^0.34.5 | No change |
+| EXIF | exifr | ^7.1.3 | No change |
+| GPX | gpxparser | ^3.0.8 | No change |
+
+**Total new packages: 0**
+**Total bundle size change: 0 bytes**
+**TBT impact: 0ms** (all animations compositor-safe, all new code is in existing lazy-loaded chunks)
+
+---
+
+## Integration Points Between Features
+
+These features have cross-cutting concerns that should be implemented together:
+
+```
+Map Reset Button ──> dispatches map:resetView
+                          │
+Elevation Profile ──> listens for map:resetView, resets x-axis scale
+                          │
+Photo Thumbnails ──> use same photos.json data as PhotoGallery
+                          │
+PhotoSwipe Map ───> separate instance from PhotoGallery lightbox
+                          │
+GPX Replacement ──> triggers re-run of full pipeline
+                          │
+New Photos ────────> pipeline auto-includes in photos.json
 ```
 
-Use the site's `--color-accent-green` (`oklch(0.85 0.24 145)`) as the primary color for the lightest face, with two darker tints for depth. This ties the favicon to the visual identity.
-
-**Why hand-authored over a library:**
-- The favicon is a one-time static SVG asset, ~500 bytes
-- No runtime dependency — it is a file in `public/`
-- The geometry is well-understood: three isometric faces, each a parallelogram, arranged in a cycle. At 32×32 it benefits from simplified geometry rather than pixel-perfect detail.
-
-**Practical geometry for 32×32 viewport:**
-
-The standard Penrose triangle at small sizes uses three "arm" shapes arranged around a central point. Each arm is a parallelogram with corners at approximately:
-- Center: `(16, 16)` of the viewport
-- The triangle's outer vertices at the three equilateral triangle corners
-
-Reference: the Wikipedia SVG file `Penrose-dreieck.svg` (526×477 nominal, 1KB file size) shows the canonical construction. At 32×32 the geometry simplifies to 3 `<polygon>` elements with 4 points each.
-
-**No additional `<link>` tags needed** — the existing favicon.svg reference in the layout's `<head>` already serves SVG. Replacing the file is sufficient.
-
----
-
-## Full v3.0 Dependency Delta
-
-| Package | Action | Version | Reason |
-|---------|--------|---------|--------|
-| All existing packages | No change | — | No new capabilities needed |
-| Any animation library (`motion`, GSAP) | DO NOT ADD | — | CSS `@keyframes` + `transform` is sufficient and keeps TBT 0ms |
-| Any SVG library (svg.js, snap.svg) | DO NOT ADD | — | Static declarative SVG; no manipulation needed at runtime |
-| `leaflet-svgicon` | DO NOT ADD | — | `L.divIcon` with inline SVG HTML is sufficient; matches existing codebase pattern |
-| Any icon library | DO NOT ADD | — | Bike SVG path is hand-authored; adding a dependency for one icon is wasteful |
-
-**Net new mandatory dependencies: zero.**
-
----
-
-## Integration Points with Existing Stack
-
-| Existing Component | v3.0 Change | Integration Note |
-|---------------------|-------------|-----------------|
-| `global.css` | Add `.escher-overlay` class using inline SVG data URI + CSS animation | Same pattern as existing `.grain-overlay` at line 87 |
-| `src/layouts/BaseLayout.astro` | Add `<div class="escher-overlay">` after the existing grain overlay div | `z-index: 9998` (below grain at 9999) |
-| `RouteMap.astro` | Replace `L.circleMarker` with `L.marker` + `L.divIcon` bike SVG; update `setStyle`→`setOpacity` calls | Same event listener structure; same `elevation:hover` / `elevation:hoverEnd` events |
-| `ElevationProfile.astro` | Add `kom_${i}` annotation boxes in the `annotationBoxes` loop, after sector loop | Uses already-registered `AnnotationPlugin`; no new import |
-| `public/favicon.svg` | Replace placeholder "MK" text with Penrose triangle polygon SVG | In-place file replacement; no layout/head changes needed |
-
----
-
-## What NOT to Add
-
-| Library / Approach | Reason to avoid |
-|-------------------|----------------|
-| Any JS animation library (`motion`, GSAP, anime.js) | CSS `@keyframes` with `transform`/`opacity` is compositor-safe and achieves the same visual result. Adding a library for CSS-equivalent work introduces bundle weight and risks TBT regression. |
-| `leaflet-svgicon` plugin | The feature is already in `L.divIcon`'s `html` option. The entire codebase uses `L.divIcon` consistently. One more plugin to load, maintain, and keep compatible is not justified. |
-| External SVG sprite file for bike icon | Requires a Vite asset import or `/public` static path — the existing codebase explicitly notes Vite's broken default icon path issue (RouteMap.astro line 167). `L.divIcon` with inline SVG avoids this entirely. |
-| Base64-encoded SVG in data URI | URL-encoding (not base64) is the correct approach for SVG in CSS `background-image`. Base64 is larger and provides no benefit for SVG text content. The existing `grain-overlay` uses URL-encoded SVG. |
-| SMIL animations inside SVG | SMIL `<animate>` / `<animateTransform>` are browser-supported but less predictable for `prefers-reduced-motion` enforcement than CSS `@keyframes`. Use CSS animations only. |
-| `chartjs-plugin-datalabels` or any other Chart.js plugin | The annotation plugin's built-in `label` property on box annotations handles KOM segment labeling. No additional plugin needed. |
-
----
-
-## Performance Impact Assessment
-
-| Change | TBT Impact | Compositor-safe? | Notes |
-|--------|-----------|-----------------|-------|
-| Escher overlay CSS animation | None | Yes | `transform` on overlay div; `will-change: transform` promotes to GPU layer |
-| `L.divIcon` bike SVG marker | None | N/A | Renders via DOM; no JS animation |
-| KOM annotation boxes | None | N/A | `chart.update('none')` (no animation) — same as existing sector band updates |
-| Penrose favicon SVG | None | N/A | Static file; loaded once by browser tab |
-
-All four features maintain the existing Lighthouse mobile 96 / TBT 0ms baseline.
-
----
-
-## Confidence Assessment
-
-| Area | Confidence | Source |
-|------|------------|--------|
-| Zero new npm deps needed | HIGH | Verified against existing codebase APIs: Leaflet 1.9.4 `L.divIcon` docs, chartjs-plugin-annotation 3.1.0 box annotation docs, CSS animation capabilities |
-| SVG `<pattern>` data URI approach | HIGH | Existing `grain-overlay` in `global.css:87` uses identical technique |
-| `L.divIcon` accepts inline SVG string | HIGH | Leaflet official docs (custom icons guide); existing codebase uses `L.divIcon` for all 4 marker types already |
-| `chartjs-plugin-annotation` box label support | HIGH | Official docs at chartjs.org/chartjs-plugin-annotation/latest verified: `label.display`, `label.content`, `label.font` confirmed |
-| `chartjs-plugin-annotation` 3.1.0 is current | HIGH | GitHub releases verified: v3.1.0 released October 16, 2024 — matches installed version in package.json |
-| `borderDash` on box annotations | HIGH | Official docs explicitly list `borderDash: number[]` as option |
-| `yMin`/`yMax` omit for full-height box | HIGH | Official docs: "if not specified, the box is expanded out to the edges in the respective direction" |
-| CSS `transform` animation is compositor-safe | HIGH | MDN, CSS-Tricks, Chrome DevTools docs — `transform` and `opacity` are GPU-composited |
-| SVG favicon browser support | MEDIUM | caniuse.com: ~72% browsers; Chrome full, Firefox full, Safari 15.6+ partial. The existing `favicon.svg` already uses SVG — this is a content swap, not a format change. |
+**Critical ordering:** GPX replacement and new photos must happen first (pipeline produces data), then UI features can be built against the new data.
 
 ---
 
 ## Sources
 
-- Leaflet custom icons guide: https://leafletjs.com/examples/custom-icons/
-- Leaflet DivIcon reference: https://leafletjs.com/reference.html#divicon-l-divicon
-- Data URI SVG icons with Leaflet (Gist): https://gist.github.com/clhenrick/6791bb9040a174cd93573f85028e97af
-- chartjs-plugin-annotation box annotations: https://www.chartjs.org/chartjs-plugin-annotation/latest/guide/types/box.html
-- chartjs-plugin-annotation line annotations: https://www.chartjs.org/chartjs-plugin-annotation/latest/guide/types/line.html
-- chartjs-plugin-annotation GitHub releases: https://github.com/chartjs/chartjs-plugin-annotation/releases
-- Escher boxes SVG reference: https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/boxes.svg
-- Penrose triangle CSS CodePen: https://codepen.io/guestn/pen/AXvKOd (403 on server fetch; view in browser)
-- SVG favicon browser support: https://caniuse.com/link-icon-svg
-- How to favicon in 2026: https://evilmartians.com/chronicles/how-to-favicon-in-2021-six-files-that-fit-most-needs
-- Optimizing SVGs in data URIs: https://codepen.io/tigt/post/optimizing-svgs-in-data-uris
-- SVG animation performance: https://www.crmarsh.com/svg-performance/
+### Leaflet (HIGH confidence — official docs)
+- [Extending Controls tutorial](https://leafletjs.com/examples/extending/extending-3-controls.html)
+- [L.Control reference](https://leafletjs.com/reference.html#control)
+- [L.DomEvent reference](https://leafletjs.com/reference.html#domevent)
+- [map.fitBounds reference](https://leafletjs.com/reference.html#map-fitbounds)
+
+### PhotoSwipe (HIGH confidence — official docs)
+- [Methods: loadAndOpen](https://photoswipe.com/methods/)
+- [Data Sources: Separate DOM and data](https://photoswipe.com/data-sources/)
+- [Opening/closing transition](https://photoswipe.com/opening-or-closing-transition/)
+
+### Leaflet Zoom Control Styling (MEDIUM confidence — community patterns verified against existing codebase)
+- [Styling Leaflet zoom controls (CodePen)](https://codepen.io/leemark/pen/dGgqLZ)
+- [Leaflet zoom control customization (Sooi)](https://sooi.pk/2024/05/24/how-to-customize-the-appearance-of-the-zoom-control-leaflet-js-code-examples/)
+
+### CSS Subgrid (HIGH confidence — MDN, not recommended for this use case)
+- [CSS Subgrid browser support 2025](https://www.frontendtools.tech/blog/mastering-css-grid-2025)
