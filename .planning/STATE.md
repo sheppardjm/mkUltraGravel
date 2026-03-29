@@ -5,25 +5,25 @@
 See: .planning/PROJECT.md (updated 2026-03-28)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** Phase 18 complete — ready for Phase 19
+**Current focus:** Phase 19 complete — ready for Phase 20
 
 ## Current Position
 
 Milestone: v3.0 Escher Identity + Data Fixes + UX Polish
-Phase: 18 of 21 (Photo Position Verification) — COMPLETE
+Phase: 19 of 21 (KOM Elevation Profile) — COMPLETE
 Plan: 1/1 in current phase
-Status: Phase complete — ready for Phase 19
-Last activity: 2026-03-29 — Completed 18-01-PLAN.md (photo position verification)
+Status: Phase complete — ready for Phase 20
+Last activity: 2026-03-29 — Completed 19-01-PLAN.md (KOM elevation chart bands)
 
-Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 2/6 plans
+Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 3/6 plans
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 47
+- Total plans completed: 48
 - v1.0: 30 plans across 10 phases (2 days)
 - v2.0: 15 plans across 6 phases (3 days)
-- v3.0: 2 plans (17-01, 18-01)
+- v3.0: 3 plans (17-01, 18-01, 19-01)
 
 ## Accumulated Context
 
@@ -40,6 +40,11 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - No photos exist for first ~19 miles of route (earliest at mi 19.6)
 - Manifest count is 53, not 54 as originally estimated in roadmap
 
+**19-01:**
+- drawTime: beforeDatasetsDraw renders KOM bands beneath elevation line (sectors use default afterDatasetsDraw)
+- No _baseColor on KOM annotations — isolates them from sector hover/click event handlers via _baseColor presence check
+- borderDash: [6, 3] echoes map KOM polyline dashArray: 8,4 for visual language consistency
+
 ### Pending Todos
 
 None.
@@ -54,5 +59,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-29
-Stopped at: Completed 18-01-PLAN.md — Phase 18 complete
+Stopped at: Completed 19-01-PLAN.md — Phase 19 complete
 Resume file: None
