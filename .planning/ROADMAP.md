@@ -43,10 +43,10 @@ Plans:
   2. Billie Helmer B&W photo appears as a map marker at the correct mile position and displays in the gallery
   3. Gallery shows 55 photos total (up from 53)
   4. Card cover photo assignments are correct (Down Jeep photo fills the coverage gap at mi 83-84 if in range)
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 23-01: TBD
+- [ ] 23-01-PLAN.md -- Add AVIF support, manifest entries, and run pipeline for Down Jeep + Billie Helmer photos
 
 ### Phase 24: CSS + Layout + Content
 **Goal**: Four independent visual and content improvements ship together -- larger touch-friendly zoom controls, equalized card sizes, Penrose triangle branding in the hero, and a Grinduro format explainer for first-time visitors.
@@ -101,7 +101,7 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 22. GPX Route Replacement | v4.0 | 1/1 | ✓ Complete | 2026-03-29 |
-| 23. New Photos | v4.0 | 0/TBD | Not started | - |
+| 23. New Photos | v4.0 | 0/1 | Not started | - |
 | 24. CSS + Layout + Content | v4.0 | 0/TBD | Not started | - |
 | 25. Map Reset | v4.0 | 0/TBD | Not started | - |
 | 26. Photo Lightbox from Map | v4.0 | 0/TBD | Not started | - |
