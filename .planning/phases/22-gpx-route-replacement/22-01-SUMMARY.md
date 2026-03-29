@@ -81,7 +81,7 @@ Each task was committed atomically:
 1. **Task 1: Swap GPX source and regenerate pipeline data** - `f03aea5` (feat)
 2. **Task 2: Fix elevation profile x-axis and route distance display** - `2fca22f` (feat)
 
-**Plan metadata:** (pending final commit)
+**Plan metadata:** `5bd05b2` (docs: complete plan — awaiting checkpoint) + `[final]` (docs: mark checkpoint approved)
 
 ## Files Created/Modified
 - `scripts/parse-gpx.js` - GPX_SOURCE changed from 'MK Ultra.gpx' to 'MK_Ultra.gpx'
@@ -115,7 +115,8 @@ None - no external service configuration required.
 - All pipeline data regenerated with 100mi source
 - Dev server at http://localhost:4321 ready for visual verification
 - Checkpoint: user should verify route polyline, distance display, elevation profile x-axis, sector/KOM overlays, and GPX download
-- After checkpoint approval, Phase 22 plan 01 is complete
+- Checkpoint approved by user 2026-03-29 — Phase 22 plan 01 complete
+- Phase 23 (KOM/sector content) and Phase 24 (CSS + Layout + Content) ready to proceed
 
 ---
 *Phase: 22-gpx-route-replacement*
