@@ -81,6 +81,27 @@
     };
   });
 
+  // Build KOM segment annotation boxes — chartreuse to match map KOM polylines (#7fff00)
+  annotations.kom.forEach((kom: { name: string; startMi: number; endMi: number }, i: number) => {
+    annotationBoxes[`kom_${i}`] = {
+      type: 'box',
+      drawTime: 'beforeDatasetsDraw',
+      xMin: kom.startMi,
+      xMax: kom.endMi,
+      backgroundColor: '#7fff0018',   // chartreuse ~9% opacity — subtle beneath line
+      borderColor: '#7fff0055',       // chartreuse ~33% opacity border
+      borderWidth: 1,
+      borderDash: [6, 3],             // dashed border — matches map KOM dashArray style
+      label: {
+        display: true,
+        content: kom.name,
+        color: '#7fff00cc',           // chartreuse ~80% opacity text
+        font: { size: 9, family: 'Space Mono, monospace' },
+        position: 'start',
+      },
+    };
+  });
+
   // Canvas background plugin — matches --color-bg-surface (oklch dark palette)
   const darkBgPlugin = {
     id: 'darkBackground',
