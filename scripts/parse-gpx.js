@@ -26,7 +26,7 @@ if (typeof global.DOMParser === 'undefined') {
 }
 
 const ROOT = path.resolve(__dirname, '..');
-const GPX_SOURCE = path.join(ROOT, 'MK Ultra.gpx');
+const GPX_SOURCE = path.join(ROOT, 'MK_Ultra.gpx');
 const GPX_DEST = path.join(ROOT, 'public', 'mk-ultra.gpx');
 const OUTPUT_DIR = path.join(ROOT, 'public', 'data');
 const OUTPUT_FILE = path.join(OUTPUT_DIR, 'route-data.json');
