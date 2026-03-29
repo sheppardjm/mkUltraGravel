@@ -1,5 +1,32 @@
 # Project Milestones: MK Ultra Gravel
 
+## v3.0 Escher Identity + Data Fixes + UX Polish (Shipped: 2026-03-29)
+
+**Delivered:** Refined visual identity with Escher tessellation background, Penrose triangle favicon, yellow-to-red sector spectrum, corrected photo positions, bike icon crosshair, and KOM elevation bands — all 7 requirements shipped with zero new dependencies and TBT 0ms maintained.
+
+**Phases completed:** 17-21 (6 plans total)
+
+**Key accomplishments:**
+
+- Yellow-to-red difficulty spectrum replaces gray tones across map polylines, elevation bands, and sector cards
+- 33 of 53 photo mile markers corrected via custom verification tool built during execution
+- KOM segment bands on elevation chart as dashed chartreuse box annotations with layer isolation
+- Bike SVG divIcon crosshair replaces plain circleMarker dot on elevation hover
+- Penrose impossible triangle favicon with tonal green hex fills
+- Escher tessellation background overlay with 50s compositor-safe drift animation and reduced-motion gate
+
+**Stats:**
+
+- 11 source files modified (+338/-298 lines)
+- 5 phases, 6 plans, ~9 tasks
+- 2 days (2026-03-28 → 2026-03-29)
+
+**Git range:** `c640868` → `666c5de`
+
+**What's next:** Custom domain, Billie Helmer photo replacement when available, Android onHover performance verification
+
+---
+
 ## v2.0 Interactivity + Polish (Shipped: 2026-03-28)
 
 **Delivered:** Elevated MK Ultra Gravel from informational to interactive — bidirectional map-elevation sync, automated photo pipeline, brutalist animations, content additions, and UAT-verified polish.

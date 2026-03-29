@@ -55,18 +55,17 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 - CONT-02: BikeReg URL activated — v2.0
 - CONT-03: GLRC donation URL activated — v2.0
 - CONT-04: Route stats displayed on map + description — v2.0
+- VIS-12: Sector color spectrum yellow-to-red for all star ratings — v3.0
+- DATA-06: Photo map positions verified and corrected (33/53 mile markers) — v3.0
+- UX-01: Elevation hover crosshair replaced with bike SVG icon — v3.0
+- VIS-13: KOM segments displayed on elevation profile as dashed chartreuse bands — v3.0
+- CONT-05: All GLRC/Great Lakes Recovery Centers mentions clickable donation links — v3.0
+- VIS-14: Escher tessellation background with drift animation and reduced-motion gate — v3.0
+- VIS-15: Penrose triangle SVG favicon — v3.0
 
 ### Active
 
-#### v3.0 — Escher Identity + Data Fixes + UX Polish
-
-- [ ] VIS-12: Recolor gravel sector spectrum from gray to yellow-to-red for all star ratings
-- [ ] DATA-06: Fix photo map positions — regenerate photos.json from corrected mile markers
-- [ ] UX-01: Replace elevation hover crosshair with bike icon on map
-- [ ] VIS-13: Display KOM segments on elevation profile with distinct color/pattern
-- [ ] CONT-05: Make all GLRC/Great Lakes Recovery Centers mentions clickable links
-- [ ] VIS-14: Escher/Penrose tessellation background patterns with subtle animation
-- [ ] VIS-15: Penrose triangle favicon and logo
+(No active milestone — run `/gsd:new-milestone` to define next)
 
 ### Out of Scope
 
@@ -84,13 +83,13 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ## Context
 
-**Shipped v2.0** with ~2,663 LOC across Astro/CSS/JS source files and build scripts.
+**Shipped v3.0** with ~2,703 LOC across Astro/CSS/JS source files and build scripts.
 
 **Tech stack:** Astro 6, Tailwind v4, Leaflet 1.9.4, Chart.js, PhotoSwipe, sharp (thumbnails)
 
 **Deployment:** Netlify with git-triggered CI/CD from GitHub. Prebuild pipeline generates route-data.json, annotations.json, photos.json, thumbnails, card crops, and hero WebP on every deploy.
 
-**Performance:** Lighthouse mobile Performance 96, LCP 2.48s, CLS 0.054, TBT 0ms. All Core Web Vitals green. All v2.0 animations compositor-safe (transform/opacity only).
+**Performance:** Lighthouse mobile Performance 96, LCP 2.48s, CLS 0.054, TBT 0ms. All Core Web Vitals green. All animations compositor-safe (transform/opacity only). v3.0 Escher drift animation gated behind prefers-reduced-motion.
 
 **Event Details:**
 - Date: June 7, 2026
@@ -127,5 +126,9 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | Two-div pattern for card-hover + overflow-hidden | CSS Overflow Module Level 3 clips box-shadow; structural fix | Good |
 | Strava leaderboard permanently dropped | TOS prohibits displaying user data; endpoint blocked since June 2020 | Good — avoided wasted effort |
 
+| Four `<rect>` in SVG tile, no `<use>` | Data URI can't resolve fragment identifiers | Good |
+| KOM annotations omit _baseColor | Isolates KOM from sector hover/click handlers | Good |
+| Hex fills in favicon SVG | oklch in SVG fill attribute has inconsistent browser support | Good |
+
 ---
-*Last updated: 2026-03-28 after v3.0 milestone started*
+*Last updated: 2026-03-29 after v3.0 milestone complete*
