@@ -55,24 +55,24 @@ Deferred to later milestones.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ROUTE-04 | — | Pending |
-| ROUTE-05 | — | Pending |
-| ROUTE-06 | — | Pending |
-| PHOTO-01 | — | Pending |
-| PHOTO-02 | — | Pending |
-| MAP-09 | — | Pending |
-| MAP-10 | — | Pending |
-| MAP-11 | — | Pending |
-| MAP-12 | — | Pending |
-| LAYOUT-01 | — | Pending |
-| LAYOUT-02 | — | Pending |
-| CONT-06 | — | Pending |
+| ROUTE-04 | Phase 22 | Pending |
+| ROUTE-05 | Phase 22 | Pending |
+| ROUTE-06 | Phase 22 | Pending |
+| PHOTO-01 | Phase 23 | Pending |
+| PHOTO-02 | Phase 23 | Pending |
+| MAP-09 | Phase 25 | Pending |
+| MAP-10 | Phase 24 | Pending |
+| MAP-11 | Phase 26 | Pending |
+| MAP-12 | Phase 26 | Pending |
+| LAYOUT-01 | Phase 24 | Pending |
+| LAYOUT-02 | Phase 24 | Pending |
+| CONT-06 | Phase 24 | Pending |
 
 **Coverage:**
 - v4.0 requirements: 12 total
-- Mapped to phases: 0
-- Unmapped: 12 ⚠️
+- Mapped to phases: 12
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-29*
-*Last updated: 2026-03-29 after initial definition*
+*Last updated: 2026-03-29 after roadmap creation*
