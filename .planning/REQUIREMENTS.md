@@ -9,9 +9,9 @@ Requirements for v4.0 — Route Update + UX Overhaul. Each maps to roadmap phase
 
 ### Route Data
 
-- [ ] **ROUTE-04**: 100mi GPX replaces 80mi GPX and pipeline regenerates all data (route-data.json, annotations.json, photos.json)
-- [ ] **ROUTE-05**: All "80 mile" / "80-mile" references updated to 100 miles across site content
-- [ ] **ROUTE-06**: Sector and KOM mile markers verified correct against new 100mi track
+- [x] **ROUTE-04**: 100mi GPX replaces 80mi GPX and pipeline regenerates all data (route-data.json, annotations.json, photos.json)
+- [x] **ROUTE-05**: All "80 mile" / "80-mile" references updated to 100 miles across site content
+- [x] **ROUTE-06**: Sector and KOM mile markers verified correct against new 100mi track
 
 ### Photos
 
@@ -55,9 +55,9 @@ Deferred to later milestones.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ROUTE-04 | Phase 22 | Pending |
-| ROUTE-05 | Phase 22 | Pending |
-| ROUTE-06 | Phase 22 | Pending |
+| ROUTE-04 | Phase 22 | Complete |
+| ROUTE-05 | Phase 22 | Complete |
+| ROUTE-06 | Phase 22 | Complete |
 | PHOTO-01 | Phase 23 | Pending |
 | PHOTO-02 | Phase 23 | Pending |
 | MAP-09 | Phase 25 | Pending |
@@ -75,4 +75,4 @@ Deferred to later milestones.
 
 ---
 *Requirements defined: 2026-03-29*
-*Last updated: 2026-03-29 after roadmap creation*
+*Last updated: 2026-03-29 after Phase 22 completion*

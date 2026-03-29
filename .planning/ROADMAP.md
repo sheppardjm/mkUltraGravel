@@ -10,7 +10,7 @@ Update the route from 80mi to 100mi (cascading through the entire data pipeline)
 
 ## Phases
 
-- [ ] **Phase 22: GPX Route Replacement** - Replace 80mi GPX with 100mi, re-run pipeline, verify all data
+- [x] **Phase 22: GPX Route Replacement** - Replace 80mi GPX with 100mi, re-run pipeline, verify all data
 - [ ] **Phase 23: New Photos** - Process Down Jeep + Billie Helmer B&W through pipeline
 - [ ] **Phase 24: CSS + Layout + Content** - Zoom controls, card sizing, Penrose hero, Grinduro explainer
 - [ ] **Phase 25: Map Reset** - Reset button restores map + elevation chart to default state
@@ -32,7 +32,7 @@ Update the route from 80mi to 100mi (cascading through the entire data pipeline)
 **Plans**: 1 plan
 
 Plans:
-- [ ] 22-01-PLAN.md -- Swap GPX source, regenerate pipeline, fix display rounding, verify route
+- [x] 22-01-PLAN.md -- Swap GPX source, regenerate pipeline, fix display rounding, verify route
 
 ### Phase 23: New Photos
 **Goal**: Two new photos (Down Jeep + Billie Helmer B&W) are fully integrated -- visible on the map, in the gallery, and assigned to cards where applicable.
@@ -100,7 +100,7 @@ Plans:
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 22. GPX Route Replacement | v4.0 | 0/1 | Planned | - |
+| 22. GPX Route Replacement | v4.0 | 1/1 | ✓ Complete | 2026-03-29 |
 | 23. New Photos | v4.0 | 0/TBD | Not started | - |
 | 24. CSS + Layout + Content | v4.0 | 0/TBD | Not started | - |
 | 25. Map Reset | v4.0 | 0/TBD | Not started | - |
