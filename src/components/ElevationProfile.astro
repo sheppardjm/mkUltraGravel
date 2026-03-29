@@ -42,10 +42,12 @@
   const { getRelativePosition } = await import('chart.js/helpers');
 
   // Parallel fetch — established Promise.all pattern from RouteMap.astro
-  const [routeData, annotations] = await Promise.all([
-    fetch('/data/route-data.json').then(r => r.json()).then(d => d.track ?? d),
+  const [routeJson, annotations] = await Promise.all([
+    fetch('/data/route-data.json').then(r => r.json()),
     fetch('/data/annotations.json').then(r => r.json())
   ]);
+  const routeData = routeJson.track ?? routeJson;
+  const totalMi = routeJson.meta?.totalMi ?? routeData[routeData.length - 1]?.mi ?? 110;
 
   // Map to {x, y} shape required by parsing: false mode (decimation requires this)
   const chartData = routeData.map((pt: { mi: number; ele: number }) => ({
@@ -193,7 +195,7 @@
         x: {
           type: 'linear',
           min: 0,
-          max: 100,  // forward-compatible with 100mi route (GPX currently ends at ~98.2mi)
+          max: Math.ceil(totalMi),
           grid: { color: 'oklch(0.25 0.01 250)' },
           ticks: {
             color: 'oklch(0.55 0.01 90)',

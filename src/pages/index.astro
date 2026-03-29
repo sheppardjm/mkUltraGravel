@@ -245,7 +245,7 @@ const GLRC_URL = 'https://www.glrc.org/donate';
       <div class="relative z-10">
         <h2 class="text-3xl md:text-5xl mb-4" data-reveal>The Route</h2>
         <p class="text-accent-green text-xl md:text-2xl mb-8">
-          {Math.round(routeMeta.totalMi)} miles &mdash; {routeMeta.elevationGainFt.toLocaleString()} ft elevation gain
+          {Math.floor(routeMeta.totalMi)} miles &mdash; {routeMeta.elevationGainFt.toLocaleString()} ft elevation gain
         </p>
         <RouteMap />
         <ElevationProfile />
