@@ -52,19 +52,19 @@ Deferred to later milestones.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| VIS-12 | — | Pending |
-| VIS-13 | — | Pending |
-| VIS-14 | — | Pending |
-| VIS-15 | — | Pending |
-| DATA-06 | — | Pending |
-| UX-01 | — | Pending |
-| CONT-05 | — | Pending |
+| VIS-12 | Phase 17 | Pending |
+| CONT-05 | Phase 17 | Pending |
+| DATA-06 | Phase 18 | Pending |
+| VIS-13 | Phase 19 | Pending |
+| UX-01 | Phase 20 | Pending |
+| VIS-14 | Phase 21 | Pending |
+| VIS-15 | Phase 21 | Pending |
 
 **Coverage:**
 - v3.0 requirements: 7 total
-- Mapped to phases: 0
-- Unmapped: 7 ⚠️
+- Mapped to phases: 7
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-28*
-*Last updated: 2026-03-28 after initial definition*
+*Last updated: 2026-03-28 after v3.0 roadmap created*

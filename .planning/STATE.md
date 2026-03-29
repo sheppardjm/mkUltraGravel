@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-28)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** Planning next milestone
+**Current focus:** Phase 17 — Sector Colors + GLRC Links
 
 ## Current Position
 
 Milestone: v3.0 Escher Identity + Data Fixes + UX Polish
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-03-28 — Milestone v3.0 started
+Phase: 17 of 21 (Sector Colors + GLRC Links)
+Plan: 0/1 in current phase
+Status: Ready to plan
+Last activity: 2026-03-28 — v3.0 roadmap created (phases 17-21)
 
-Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 0 plans
+Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 0/6 plans
 
 ## Performance Metrics
 
@@ -38,9 +38,10 @@ None.
 
 - **[Active]** Down Jeep KOM (mi 83.55-84.15) still uses nearest fallback at mi 80.2 — no in-range photo available
 - **[Active]** onHover performance on mid-range Android unverified
+- **[Active]** Phase 21 (Escher background) requires Lighthouse TBT gate before visual review — animate only transform/opacity
 
 ## Session Continuity
 
 Last session: 2026-03-28
-Stopped at: v2.0 milestone archived
+Stopped at: v3.0 roadmap created — ready to plan Phase 17
 Resume file: None
