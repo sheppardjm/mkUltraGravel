@@ -16,7 +16,7 @@ Requirements for Escher Identity + Data Fixes + UX Polish milestone.
 
 ### Data Accuracy
 
-- [ ] **DATA-06**: Photo map positions verified correct — photos.json regenerated from corrected mile markers if stale
+- [x] **DATA-06**: Photo map positions verified correct — photos.json regenerated from corrected mile markers if stale
 
 ### Map UX
 
@@ -54,7 +54,7 @@ Deferred to later milestones.
 |-------------|-------|--------|
 | VIS-12 | Phase 17 | Complete |
 | CONT-05 | Phase 17 | Complete |
-| DATA-06 | Phase 18 | Pending |
+| DATA-06 | Phase 18 | Complete |
 | VIS-13 | Phase 19 | Pending |
 | UX-01 | Phase 20 | Pending |
 | VIS-14 | Phase 21 | Pending |

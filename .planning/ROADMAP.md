@@ -72,7 +72,7 @@ Plans:
 **Plans:** 1 plan (verification script run + diff check + conditional regeneration)
 
 Plans:
-- [ ] 18-01: Verify photos.json against photo-manifest.js; regenerate if stale
+- [x] 18-01: Verify photos.json against photo-manifest.js; regenerate if stale
 
 #### Phase 19: KOM Segments on Elevation Profile
 
@@ -142,7 +142,7 @@ Plans:
 | 15. Animations | v2.0 | 2/2 | Complete | 2026-03-28 |
 | 16. v2.0 UAT Fixes | v2.0 | 4/4 | Complete | 2026-03-28 |
 | 17. Sector Colors + GLRC Links | v3.0 | 1/1 | Complete | 2026-03-28 |
-| 18. Photo Position Verification | v3.0 | 0/1 | Not started | - |
+| 18. Photo Position Verification | v3.0 | 1/1 | Complete | 2026-03-29 |
 | 19. KOM Segments on Elevation | v3.0 | 0/1 | Not started | - |
 | 20. Bike Icon Crosshair | v3.0 | 0/1 | Not started | - |
 | 21. Escher Background + Favicon | v3.0 | 0/2 | Not started | - |
