@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-28)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** Phase 19 complete — ready for Phase 20
+**Current focus:** Phase 20 complete — ready for Phase 21
 
 ## Current Position
 
 Milestone: v3.0 Escher Identity + Data Fixes + UX Polish
-Phase: 19 of 21 (KOM Elevation Profile) — COMPLETE
+Phase: 20 of 21 (Bike Icon Crosshair) — COMPLETE
 Plan: 1/1 in current phase
-Status: Phase complete — ready for Phase 20
-Last activity: 2026-03-29 — Completed 19-01-PLAN.md (KOM elevation chart bands)
+Status: Phase complete — ready for Phase 21
+Last activity: 2026-03-29 — Completed 20-01-PLAN.md (bike SVG divIcon crosshair on elevation hover)
 
-Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 3/6 plans
+Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 4/6 plans
 
 ## Performance Metrics
 
@@ -45,6 +45,12 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - No _baseColor on KOM annotations — isolates them from sector hover/click event handlers via _baseColor presence check
 - borderDash: [6, 3] echoes map KOM polyline dashArray: 8,4 for visual language consistency
 
+**20-01:**
+- L.marker + L.divIcon replaces L.circleMarker for SVG-capable crosshair icon
+- iconAnchor: [12, 12] on 24x24 icon centers bike on GPS coordinate at all zoom levels
+- setOpacity(1/0) for show/hide — L.marker has no setStyle(); setStyle() is path/circleMarker-only
+- interactive: false prevents bike icon from capturing mouse events intended for sector polylines
+
 ### Pending Todos
 
 None.
@@ -59,5 +65,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-29
-Stopped at: Completed 19-01-PLAN.md — Phase 19 complete
+Stopped at: Completed 20-01-PLAN.md — Phase 20 complete
 Resume file: None
