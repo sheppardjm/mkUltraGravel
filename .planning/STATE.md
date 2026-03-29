@@ -5,15 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** Planning next milestone
+**Current focus:** v4.0 — Route Update + UX Overhaul
 
 ## Current Position
 
-Milestone: v3.0 complete — planning next milestone
-Phase: None active
-Plan: None active
-Status: Ready for `/gsd:new-milestone`
-Last activity: 2026-03-29 — v3.0 milestone archived
+Milestone: v4.0 — Route Update + UX Overhaul
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-29 — Milestone v4.0 started
 
 Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | Total: 51 plans across 21 phases
 

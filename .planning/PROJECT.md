@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A website for MK Ultra Gravel — an 80-mile gravel cycling event through Marquette County, Michigan on June 7, 2026. Named after the CIA's infamous LSD experiments, the ride features rowdy, technical gravel sectors rated Paris-Roubaix style (1-5 stars). The site showcases the route with an interactive map synced to an elevation profile, photo-rich sector and KOM cards, a full gallery, brutalist animations, and event details — driving registration through BikeReg.
+A website for MK Ultra Gravel — a 100-mile gravel cycling event through Marquette County, Michigan on June 7, 2026. Named after the CIA's infamous LSD experiments, the ride features rowdy, technical gravel sectors rated Paris-Roubaix style (1-5 stars) with timed Grinduro-style sectors and KOM/QOM segments. The site showcases the route with an interactive map synced to an elevation profile, photo-rich sector and KOM cards, a full gallery, brutalist animations, and event details — driving registration through BikeReg.
 
 Live at: https://mkultragravel.netlify.app/
 
@@ -65,7 +65,19 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ### Active
 
-(No active milestone — run `/gsd:new-milestone` to define next)
+**Current Milestone: v4.0 — Route Update + UX Overhaul**
+
+**Goal:** Update to the 100mi route, add new photos, improve map/gallery UX, refine card layout and content, and add header Penrose triangle.
+
+**Target features:**
+- 100mi GPX route replacement + data pipeline re-run + reference updates
+- Two new photos (Down Jeep + Billie Helmer B&W) processed through pipeline
+- Map reset button below map (resets map + elevation to default view)
+- Photo map thumbnails larger + lightbox on click (replace new-tab behavior)
+- Gravel sector cards resized to match KOM cards
+- Grinduro-style event format explainer in sector section
+- Larger map zoom controls
+- Penrose triangle above page title with subtle animation
 
 ### Out of Scope
 
@@ -93,17 +105,17 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 **Event Details:**
 - Date: June 7, 2026
-- Distance: 80 miles
+- Distance: 100 miles
 - Start: Marquette Fire Bell, Marquette, MI
 - Cost: Free. $10 suggested donation to Great Lakes Recovery Centers
-- Format: Mass start, not a race
+- Format: Mass start with Grinduro-style timed gravel sectors and KOM/QOM segments
 - Registration: BikeReg (https://www.bikereg.com/mk-ultra-gravel)
 
 ## Constraints
 
 - **Tech stack**: Static site — no backend needed, content is fixed
 - **External dependency**: BikeReg handles registration, site links out
-- **Assets**: GPX file and 53 route photos in repo; photos use manual mile-marker positioning (no EXIF GPS)
+- **Assets**: GPX file (100mi route) and 55 route photos in repo; photos use manual mile-marker positioning (no EXIF GPS)
 - **Timeline**: Site needs to be live well before June 7, 2026
 
 ## Key Decisions
@@ -131,4 +143,4 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | Hex fills in favicon SVG | oklch in SVG fill attribute has inconsistent browser support | Good |
 
 ---
-*Last updated: 2026-03-29 after v3.0 milestone complete*
+*Last updated: 2026-03-29 after v4.0 milestone started*
