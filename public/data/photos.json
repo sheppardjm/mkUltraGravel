@@ -1,63 +1,9 @@
 [
   {
-    "filename": "__aLw1cc4B-Afog5HsRoufSHIxiJO-0sjKRRIhcc0Hc-1536x2048.jpg",
-    "lat": 46.49795,
-    "lon": -87.35148000000001,
-    "mi": 4,
-    "source": "manual",
-    "width": 1200,
-    "height": 1600
-  },
-  {
-    "filename": "hdzn_qyMQhfF6S1FxmymwdiRJkHy46EoGqKZQHD0AKM-1536x2048.jpg",
-    "lat": 46.48484014143163,
-    "lon": -87.28078316084859,
-    "mi": 7.5,
-    "source": "manual",
-    "width": 1200,
-    "height": 1599
-  },
-  {
-    "filename": "18paMdZ5GTI7zq7ecq_GXbbkzfodQVhQ0ymvt-_DuXk-1536x2048.jpg",
-    "lat": 46.48412602602721,
-    "lon": -87.20800199934821,
-    "mi": 11,
-    "source": "manual",
-    "width": 1200,
-    "height": 1600
-  },
-  {
-    "filename": "kCnGlazdroEOqyuZbLm-IV-0tygCJqxQisOFw-BuZyg-1536x2048.jpg",
-    "lat": 46.48725,
-    "lon": -87.13835,
-    "mi": 14.5,
-    "source": "manual",
-    "width": 1200,
-    "height": 1599
-  },
-  {
-    "filename": "24ZVzxK3JpEal6NaW52VpTtD5ERGPbp3R3fprBteYVg-1536x2048.jpg",
-    "lat": 46.489610000000006,
-    "lon": -87.08785,
-    "mi": 17,
-    "source": "manual",
-    "width": 1200,
-    "height": 1600
-  },
-  {
-    "filename": "jjKDqzzlsz4tP617dCOtswkB5VlW8sXfeZiz965RXjE-1536x2048.jpg",
-    "lat": 46.47943002501731,
-    "lon": -87.06117327300703,
-    "mi": 18.5,
-    "source": "manual",
-    "width": 1200,
-    "height": 1600
-  },
-  {
-    "filename": "m5jUx7ttRsxQkAXQ1mJMtFRwJwkIzcg6xaQgNfH8NHg-1536x2048.jpg",
-    "lat": 46.474470000000004,
-    "lon": -87.03629000000001,
-    "mi": 20,
+    "filename": "ipimpW4SR0M8AGHKeltyECQ-YyKS4i5Hkjx9rnpCRKU-1536x2048.jpg",
+    "lat": 46.47377,
+    "lon": -87.0446,
+    "mi": 19.6,
     "source": "manual",
     "width": 1200,
     "height": 1600
@@ -72,22 +18,13 @@
     "height": 1600
   },
   {
-    "filename": "Wrp9cErN8YEogpvno-NEqJvzqUGWdmesit--gZmK3jg-1536x2048.jpg",
-    "lat": 46.47006500014565,
-    "lon": -86.99611499551501,
-    "mi": 22,
+    "filename": "eU0XZxNsbPxjjIaHRdggS_6hf4hiHO5W4zXxgABMZfA-2048x1536.jpg",
+    "lat": 46.43237667036505,
+    "lon": -86.96748665126259,
+    "mi": 25.5,
     "source": "manual",
-    "width": 1200,
-    "height": 1600
-  },
-  {
-    "filename": "ipimpW4SR0M8AGHKeltyECQ-YyKS4i5Hkjx9rnpCRKU-1536x2048.jpg",
-    "lat": 46.45872000000001,
-    "lon": -86.98716,
-    "mi": 23,
-    "source": "manual",
-    "width": 1200,
-    "height": 1600
+    "width": 1600,
+    "height": 1200
   },
   {
     "filename": "ocbHm30HWGIBDMhMARec4eQ86L5Bw_yNG1Sa1NtkfW0-2048x1536.jpg",
@@ -99,15 +36,6 @@
     "height": 1536
   },
   {
-    "filename": "ie1actFmAd8fKAzmMQuMmMUAQYGW_DI7e1S8khWCFbE-1536x2048.jpg",
-    "lat": 46.409766689274555,
-    "lon": -86.94363994020111,
-    "mi": 27.5,
-    "source": "manual",
-    "width": 1200,
-    "height": 1599
-  },
-  {
     "filename": "B3H7XrP6re-qBv1nmYna8FUVtMi99oS2COcbWqy9jUM-1536x2048.jpg",
     "lat": 46.404156672152446,
     "lon": -86.93647830099663,
@@ -115,6 +43,15 @@
     "source": "manual",
     "width": 1536,
     "height": 2048
+  },
+  {
+    "filename": "dBsqoFt8DrIh62Kl-ipHqPcLOcPX_1hTDh3P2wF1ito-1536x2048.jpg",
+    "lat": 46.38942,
+    "lon": -86.91472,
+    "mi": 29.6,
+    "source": "manual",
+    "width": 1200,
+    "height": 1599
   },
   {
     "filename": "9LPmnV_B2upQWPNXL8f-E-kQejlR9D8dB020l9sBABE-2048x1536.jpg",
@@ -126,10 +63,10 @@
     "height": 1200
   },
   {
-    "filename": "U0F71UsLJeVsU698DTo3pP3HmH4PtQRyAhJmAL3jFPQ-1536x2048.jpg",
-    "lat": 46.38906,
-    "lon": -86.90704000000001,
-    "mi": 30,
+    "filename": "7VxxcsJbDUoTUahckfY3vON_pJ1p8VKFtGgR_OGC628-1536x2048.jpg",
+    "lat": 46.38445,
+    "lon": -86.89663,
+    "mi": 30.6,
     "source": "manual",
     "width": 1200,
     "height": 1600
@@ -144,10 +81,28 @@
     "height": 2048
   },
   {
-    "filename": "ToF21A9tWe_viEKnKg2Pw74nB43rGnE666fONrfwuPk-1536x2048.jpg",
-    "lat": 46.358990000000006,
-    "lon": -86.88763,
-    "mi": 33.5,
+    "filename": "wjtbDIGN8S-Zv9OlnOrdAQXdmkWIaCDSylTq3SuXr80-1536x2048.jpg",
+    "lat": 46.37739250006325,
+    "lon": -86.87682000325934,
+    "mi": 32,
+    "source": "manual",
+    "width": 1200,
+    "height": 1599
+  },
+  {
+    "filename": "vt4-1cfgZEie4a6LYVgSTR6QW8oGnFXWxdJweXlwmk8-2048x1536.jpg",
+    "lat": 46.37485,
+    "lon": -86.87703,
+    "mi": 32.2,
+    "source": "manual",
+    "width": 1599,
+    "height": 1200
+  },
+  {
+    "filename": "XDYCDB6mW1v7JQcNRAwMe6q6Y9Q3TJ6p3iTv8JCAzT8-1536x2048.jpg",
+    "lat": 46.34741,
+    "lon": -86.88719,
+    "mi": 34.3,
     "source": "manual",
     "width": 1200,
     "height": 1600
@@ -162,13 +117,31 @@
     "height": 2048
   },
   {
-    "filename": "0O-2vb6d64dIb8BoPPOv70_h0KpKTEkMYjNkfOJJ6xQ-1536x2048.jpg",
-    "lat": 46.347470025105146,
-    "lon": -86.9011699996056,
-    "mi": 35,
+    "filename": "__aLw1cc4B-Afog5HsRoufSHIxiJO-0sjKRRIhcc0Hc-1536x2048.jpg",
+    "lat": 46.34013,
+    "lon": -86.90836,
+    "mi": 35.9,
+    "source": "manual",
+    "width": 1200,
+    "height": 1600
+  },
+  {
+    "filename": "hdzn_qyMQhfF6S1FxmymwdiRJkHy46EoGqKZQHD0AKM-1536x2048.jpg",
+    "lat": 46.3402533396331,
+    "lon": -86.90920999617674,
+    "mi": 35.95,
     "source": "manual",
     "width": 1200,
     "height": 1599
+  },
+  {
+    "filename": "18paMdZ5GTI7zq7ecq_GXbbkzfodQVhQ0ymvt-_DuXk-1536x2048.jpg",
+    "lat": 46.34037667296812,
+    "lon": -86.91005999618827,
+    "mi": 36,
+    "source": "manual",
+    "width": 1200,
+    "height": 1600
   },
   {
     "filename": "nz816x4qLeaL5hOWCNFb0U_zN-_wXFOK9Wg3UN9Qw7Y-1536x2048.jpg",
@@ -180,28 +153,46 @@
     "height": 2016
   },
   {
+    "filename": "kCnGlazdroEOqyuZbLm-IV-0tygCJqxQisOFw-BuZyg-1536x2048.jpg",
+    "lat": 46.34232399999119,
+    "lon": -86.91839,
+    "mi": 36.5,
+    "source": "manual",
+    "width": 1200,
+    "height": 1599
+  },
+  {
     "filename": "LjGaTm477e8AIETL1O3YAf9TMDzETMuS6TVK0NB-bQ0-2048x1536.jpg",
-    "lat": 46.34947666657094,
-    "lon": -86.92891,
-    "mi": 37.5,
+    "lat": 46.34754005509221,
+    "lon": -86.92668142848339,
+    "mi": 37.3,
     "source": "manual",
     "width": 1600,
     "height": 1200
   },
   {
+    "filename": "mUKLtmdM0THz8jg_AB0fWRgNqy6BIZC0CHCncoTB6Tc-1536x2048.jpg",
+    "lat": 46.34754,
+    "lon": -86.92893000000001,
+    "mi": 37.4,
+    "source": "manual",
+    "width": 1200,
+    "height": 1600
+  },
+  {
     "filename": "leaving-chatham-rock-river-rd.png",
-    "lat": 46.35384500002127,
-    "lon": -86.92894999972108,
-    "mi": 37.8,
+    "lat": 46.350640000000006,
+    "lon": -86.92891,
+    "mi": 37.6,
     "source": "manual",
     "width": 3236,
     "height": 2002
   },
   {
-    "filename": "mUKLtmdM0THz8jg_AB0fWRgNqy6BIZC0CHCncoTB6Tc-1536x2048.jpg",
-    "lat": 46.35536629747998,
-    "lon": -86.93020750059253,
-    "mi": 38,
+    "filename": "jjKDqzzlsz4tP617dCOtswkB5VlW8sXfeZiz965RXjE-1536x2048.jpg",
+    "lat": 46.35566000000442,
+    "lon": -86.96032666692896,
+    "mi": 39.5,
     "source": "manual",
     "width": 1200,
     "height": 1600
@@ -225,10 +216,28 @@
     "height": 2016
   },
   {
-    "filename": "82txNy7A7Q5B19GMEoM5aWOTj_ruZCMQ_bomK9AJyz8-1536x2048.jpg",
-    "lat": 46.36929000272004,
-    "lon": -86.9610799998427,
-    "mi": 40.5,
+    "filename": "ie1actFmAd8fKAzmMQuMmMUAQYGW_DI7e1S8khWCFbE-1536x2048.jpg",
+    "lat": 46.36552222223057,
+    "lon": -86.9602866673491,
+    "mi": 40.2,
+    "source": "manual",
+    "width": 1200,
+    "height": 1599
+  },
+  {
+    "filename": "ToF21A9tWe_viEKnKg2Pw74nB43rGnE666fONrfwuPk-1536x2048.jpg",
+    "lat": 46.36552222223057,
+    "lon": -86.9602866673491,
+    "mi": 40.2,
+    "source": "manual",
+    "width": 1200,
+    "height": 1600
+  },
+  {
+    "filename": "CRb2b5VYN7bB1wBuxb5fA6BmXAsP5_IIADulrcgBBBM-1536x2048.jpg",
+    "lat": 46.36552222223057,
+    "lon": -86.9602866673491,
+    "mi": 40.2,
     "source": "manual",
     "width": 1200,
     "height": 1600
@@ -243,10 +252,37 @@
     "height": 2016
   },
   {
-    "filename": "CRb2b5VYN7bB1wBuxb5fA6BmXAsP5_IIADulrcgBBBM-1536x2048.jpg",
-    "lat": 46.37097166666984,
-    "lon": -87.0222200007339,
-    "mi": 43.5,
+    "filename": "82txNy7A7Q5B19GMEoM5aWOTj_ruZCMQ_bomK9AJyz8-1536x2048.jpg",
+    "lat": 46.36927000000001,
+    "lon": -86.99093,
+    "mi": 41.9,
+    "source": "manual",
+    "width": 1200,
+    "height": 1600
+  },
+  {
+    "filename": "0O-2vb6d64dIb8BoPPOv70_h0KpKTEkMYjNkfOJJ6xQ-1536x2048.jpg",
+    "lat": 46.369260000000004,
+    "lon": -87.01854,
+    "mi": 43.2,
+    "source": "manual",
+    "width": 1200,
+    "height": 1599
+  },
+  {
+    "filename": "m5jUx7ttRsxQkAXQ1mJMtFRwJwkIzcg6xaQgNfH8NHg-1536x2048.jpg",
+    "lat": 46.36924667880391,
+    "lon": -87.01972000056412,
+    "mi": 43.3,
+    "source": "manual",
+    "width": 1200,
+    "height": 1600
+  },
+  {
+    "filename": "U0F71UsLJeVsU698DTo3pP3HmH4PtQRyAhJmAL3jFPQ-1536x2048.jpg",
+    "lat": 46.36923,
+    "lon": -87.02217,
+    "mi": 43.4,
     "source": "manual",
     "width": 1200,
     "height": 1600
@@ -261,40 +297,31 @@
     "height": 2016
   },
   {
-    "filename": "e19A9TZckQueVTGwoeVD8wQJRdcXPSdWODGR3O1Bvmc-1536x2048.jpg",
-    "lat": 46.36757454546765,
-    "lon": -87.03270091277147,
-    "mi": 45,
+    "filename": "24ZVzxK3JpEal6NaW52VpTtD5ERGPbp3R3fprBteYVg-1536x2048.jpg",
+    "lat": 46.376560000000005,
+    "lon": -87.02221,
+    "mi": 43.9,
     "source": "manual",
     "width": 1200,
     "height": 1600
   },
   {
-    "filename": "eU0XZxNsbPxjjIaHRdggS_6hf4hiHO5W4zXxgABMZfA-2048x1536.jpg",
-    "lat": 46.34788,
-    "lon": -87.0353,
-    "mi": 46.5,
+    "filename": "poXUtdA0jHLpvSodpn46b3VlPB6mIIv5F-6VhVpvF68-1536x2048.jpg",
+    "lat": 46.34939833324036,
+    "lon": -87.03283333452215,
+    "mi": 46.3,
     "source": "manual",
-    "width": 1600,
-    "height": 1200
+    "width": 1200,
+    "height": 1600
   },
   {
     "filename": "fr1HxZ42VZCq0LV-cLhYYRB-J861FXOd8QrUfxFaeVA-1536x2048.jpg",
-    "lat": 46.34758602552514,
-    "lon": -87.09440999965754,
-    "mi": 49.5,
+    "lat": 46.346430000000005,
+    "lon": -87.04408000000001,
+    "mi": 46.9,
     "source": "manual",
     "width": 1200,
     "height": 1600
-  },
-  {
-    "filename": "dBsqoFt8DrIh62Kl-ipHqPcLOcPX_1hTDh3P2wF1ito-1536x2048.jpg",
-    "lat": 46.35383714285067,
-    "lon": -87.11632856825008,
-    "mi": 51,
-    "source": "manual",
-    "width": 1200,
-    "height": 1599
   },
   {
     "filename": "rl6DSEakuHOMSH3G24F_jiISBErA_BuNhNCG2JGsBEM-1536x2048.jpg",
@@ -306,22 +333,22 @@
     "height": 2016
   },
   {
-    "filename": "jpWZNe0Tkg0C-kgPVTDNnHCqQWJ8Iv_xfxT7EHsYO-o-1536x2048.jpg",
-    "lat": 46.36307,
-    "lon": -87.14542,
-    "mi": 53,
+    "filename": "93pdx3un8hBTW6j5ysd4maNkPSRl8-955AYo2vtQOLU-1536x2048.jpg",
+    "lat": 46.362,
+    "lon": -87.13124,
+    "mi": 52.2,
     "source": "manual",
     "width": 1200,
     "height": 1600
   },
   {
-    "filename": "wjtbDIGN8S-Zv9OlnOrdAQXdmkWIaCDSylTq3SuXr80-1536x2048.jpg",
+    "filename": "OQ3xED3f5T_KBXMhgpt-LZGU-yhIu36wFcap6uUT_is-1536x2048.jpg",
     "lat": 46.38445500200927,
     "lon": -87.15364000269706,
     "mi": 55,
     "source": "manual",
     "width": 1200,
-    "height": 1599
+    "height": 1600
   },
   {
     "filename": "w8IxOx5OtF7iGypDYfHPOeRsw091XR3m3LYD4a4-dJw-1536x2048.jpg",
@@ -351,6 +378,24 @@
     "height": 2048
   },
   {
+    "filename": "qwE6YRMOqapn-OPmvXZUE6ABlxAp-GYCDG0kYmxomXY-2048x1536.jpg",
+    "lat": 46.390390000000004,
+    "lon": -87.15838000000001,
+    "mi": 55.6,
+    "source": "manual",
+    "width": 1600,
+    "height": 1200
+  },
+  {
+    "filename": "jpWZNe0Tkg0C-kgPVTDNnHCqQWJ8Iv_xfxT7EHsYO-o-1536x2048.jpg",
+    "lat": 46.39144,
+    "lon": -87.1586,
+    "mi": 55.7,
+    "source": "manual",
+    "width": 1200,
+    "height": 1600
+  },
+  {
     "filename": "bFuy7XibzBZGM0Xxx92_JYluGnZROmghJg7o_MgqHCU-1536x2048.jpg",
     "lat": 46.39839500146432,
     "lon": -87.17143999664852,
@@ -360,37 +405,19 @@
     "height": 2048
   },
   {
-    "filename": "vt4-1cfgZEie4a6LYVgSTR6QW8oGnFXWxdJweXlwmk8-2048x1536.jpg",
-    "lat": 46.40578001442511,
-    "lon": -87.187023331722,
-    "mi": 57.5,
-    "source": "manual",
-    "width": 1599,
-    "height": 1200
-  },
-  {
     "filename": "lDc_WSD8-6oaxGXmegCxWJMRguK9jSqULQiuN2zZy6U-1536x2048.jpg",
-    "lat": 46.40585002396457,
-    "lon": -87.2083449978241,
-    "mi": 58.5,
+    "lat": 46.42121000759245,
+    "lon": -87.21582667659571,
+    "mi": 60,
     "source": "manual",
     "width": 1200,
     "height": 1599
   },
   {
     "filename": "2hX2RzHWb2HBzkd1bc68hqeTn0zJuV_pMnXDyFDKZOM-1536x2048.jpg",
-    "lat": 46.42121000759245,
-    "lon": -87.21582667659571,
-    "mi": 60,
-    "source": "manual",
-    "width": 1200,
-    "height": 1600
-  },
-  {
-    "filename": "MvYek6iGTxbVXGtLxnR2BybaDFvgOg24w5w0c68qMxI-1536x2048.jpg",
-    "lat": 46.43375,
-    "lon": -87.1911,
-    "mi": 61.5,
+    "lat": 46.42179,
+    "lon": -87.21396,
+    "mi": 60.1,
     "source": "manual",
     "width": 1200,
     "height": 1600
@@ -405,10 +432,10 @@
     "height": 2048
   },
   {
-    "filename": "OQ3xED3f5T_KBXMhgpt-LZGU-yhIu36wFcap6uUT_is-1536x2048.jpg",
-    "lat": 46.454260000000005,
-    "lon": -87.16969,
-    "mi": 63.5,
+    "filename": "e19A9TZckQueVTGwoeVD8wQJRdcXPSdWODGR3O1Bvmc-1536x2048.jpg",
+    "lat": 46.45665,
+    "lon": -87.16183000000001,
+    "mi": 63.9,
     "source": "manual",
     "width": 1200,
     "height": 1600
@@ -423,46 +450,10 @@
     "height": 2048
   },
   {
-    "filename": "93pdx3un8hBTW6j5ysd4maNkPSRl8-955AYo2vtQOLU-1536x2048.jpg",
-    "lat": 46.4637,
-    "lon": -87.1829,
-    "mi": 66,
-    "source": "manual",
-    "width": 1200,
-    "height": 1600
-  },
-  {
-    "filename": "7VxxcsJbDUoTUahckfY3vON_pJ1p8VKFtGgR_OGC628-1536x2048.jpg",
-    "lat": 46.47914,
-    "lon": -87.22446000000001,
-    "mi": 69,
-    "source": "manual",
-    "width": 1200,
-    "height": 1600
-  },
-  {
-    "filename": "XDYCDB6mW1v7JQcNRAwMe6q6Y9Q3TJ6p3iTv8JCAzT8-1536x2048.jpg",
-    "lat": 46.48493014223308,
-    "lon": -87.28956412735648,
-    "mi": 72.5,
-    "source": "manual",
-    "width": 1200,
-    "height": 1600
-  },
-  {
-    "filename": "qwE6YRMOqapn-OPmvXZUE6ABlxAp-GYCDG0kYmxomXY-2048x1536.jpg",
-    "lat": 46.489146278424,
-    "lon": -87.31963985383948,
-    "mi": 74,
-    "source": "manual",
-    "width": 1600,
-    "height": 1200
-  },
-  {
-    "filename": "poXUtdA0jHLpvSodpn46b3VlPB6mIIv5F-6VhVpvF68-1536x2048.jpg",
-    "lat": 46.49721,
-    "lon": -87.35569000000001,
-    "mi": 76,
+    "filename": "Wrp9cErN8YEogpvno-NEqJvzqUGWdmesit--gZmK3jg-1536x2048.jpg",
+    "lat": 46.46379097433689,
+    "lon": -87.1951363615623,
+    "mi": 66.6,
     "source": "manual",
     "width": 1200,
     "height": 1600
