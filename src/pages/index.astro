@@ -18,6 +18,7 @@ import PhotoGallery from "../components/PhotoGallery.astro";
 import MkUltraExplainer from "../components/MkUltraExplainer.astro";
 
 const BIKEREG_URL = 'https://www.bikereg.com/mk-ultra-gravel';
+const GLRC_URL = 'https://www.glrc.org/donate';
 ---
 
 <style>
@@ -223,7 +224,7 @@ const BIKEREG_URL = 'https://www.bikereg.com/mk-ultra-gravel';
         </a>
 
         <p class="text-text-muted text-xs">
-          $10 suggested donation to Great Lakes Recovery Centers
+          $10 suggested donation to <a href={GLRC_URL} class="text-text-muted hover:text-accent-green transition-colors underline">Great Lakes Recovery Centers</a>
         </p>
 
         <p class="text-text-muted text-sm mt-6">
