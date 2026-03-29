@@ -57,7 +57,7 @@ Full details: [milestones/v2.0-ROADMAP.md](milestones/v2.0-ROADMAP.md)
 **Plans:** 1 plan (coordinated multi-file commit: RouteMap.astro + ElevationProfile.astro + GravelSectors.astro + EventInfoBlock.astro + index.astro)
 
 Plans:
-- [ ] 17-01: Sector color recolor (3 files) + GLRC link additions (2 files)
+- [x] 17-01: Sector color recolor (3 files) + GLRC link additions (2 files)
 
 #### Phase 18: Photo Position Verification
 
@@ -141,7 +141,7 @@ Plans:
 | 14. Content | v2.0 | 2/2 | Complete | 2026-03-27 |
 | 15. Animations | v2.0 | 2/2 | Complete | 2026-03-28 |
 | 16. v2.0 UAT Fixes | v2.0 | 4/4 | Complete | 2026-03-28 |
-| 17. Sector Colors + GLRC Links | v3.0 | 0/1 | Not started | - |
+| 17. Sector Colors + GLRC Links | v3.0 | 1/1 | Complete | 2026-03-28 |
 | 18. Photo Position Verification | v3.0 | 0/1 | Not started | - |
 | 19. KOM Segments on Elevation | v3.0 | 0/1 | Not started | - |
 | 20. Bike Icon Crosshair | v3.0 | 0/1 | Not started | - |

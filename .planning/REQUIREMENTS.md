@@ -9,7 +9,7 @@ Requirements for Escher Identity + Data Fixes + UX Polish milestone.
 
 ### Visual Identity
 
-- [ ] **VIS-12**: Sector color spectrum uses yellow-to-red gradient for all star ratings (1-5) — no gray tones
+- [x] **VIS-12**: Sector color spectrum uses yellow-to-red gradient for all star ratings (1-5) — no gray tones
 - [ ] **VIS-13**: KOM segments displayed on elevation profile as dashed chartreuse bands matching map KOM polyline style
 - [ ] **VIS-14**: Escher/Penrose tessellation SVG background pattern with subtle CSS transform animation and `prefers-reduced-motion` compliance
 - [ ] **VIS-15**: Penrose triangle SVG replaces current "MK" text favicon
@@ -24,7 +24,7 @@ Requirements for Escher Identity + Data Fixes + UX Polish milestone.
 
 ### Content
 
-- [ ] **CONT-05**: All GLRC / Great Lakes Recovery Centers text mentions are clickable links to glrc.org/donate
+- [x] **CONT-05**: All GLRC / Great Lakes Recovery Centers text mentions are clickable links to glrc.org/donate
 
 ## Future Requirements
 
@@ -52,8 +52,8 @@ Deferred to later milestones.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| VIS-12 | Phase 17 | Pending |
-| CONT-05 | Phase 17 | Pending |
+| VIS-12 | Phase 17 | Complete |
+| CONT-05 | Phase 17 | Complete |
 | DATA-06 | Phase 18 | Pending |
 | VIS-13 | Phase 19 | Pending |
 | UX-01 | Phase 20 | Pending |
