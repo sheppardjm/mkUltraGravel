@@ -11,8 +11,8 @@ Requirements for Escher Identity + Data Fixes + UX Polish milestone.
 
 - [x] **VIS-12**: Sector color spectrum uses yellow-to-red gradient for all star ratings (1-5) — no gray tones
 - [x] **VIS-13**: KOM segments displayed on elevation profile as dashed chartreuse bands matching map KOM polyline style
-- [ ] **VIS-14**: Escher/Penrose tessellation SVG background pattern with subtle CSS transform animation and `prefers-reduced-motion` compliance
-- [ ] **VIS-15**: Penrose triangle SVG replaces current "MK" text favicon
+- [x] **VIS-14**: Escher/Penrose tessellation SVG background pattern with subtle CSS transform animation and `prefers-reduced-motion` compliance
+- [x] **VIS-15**: Penrose triangle SVG replaces current "MK" text favicon
 
 ### Data Accuracy
 
@@ -20,7 +20,7 @@ Requirements for Escher Identity + Data Fixes + UX Polish milestone.
 
 ### Map UX
 
-- [ ] **UX-01**: Elevation hover crosshair uses bike icon (L.divIcon with inline SVG) instead of plain circleMarker dot
+- [x] **UX-01**: Elevation hover crosshair uses bike icon (L.divIcon with inline SVG) instead of plain circleMarker dot
 
 ### Content
 
@@ -57,8 +57,8 @@ Deferred to later milestones.
 | DATA-06 | Phase 18 | Complete |
 | VIS-13 | Phase 19 | Complete |
 | UX-01 | Phase 20 | Complete |
-| VIS-14 | Phase 21 | Pending |
-| VIS-15 | Phase 21 | Pending |
+| VIS-14 | Phase 21 | Complete |
+| VIS-15 | Phase 21 | Complete |
 
 **Coverage:**
 - v3.0 requirements: 7 total
@@ -67,4 +67,4 @@ Deferred to later milestones.
 
 ---
 *Requirements defined: 2026-03-28*
-*Last updated: 2026-03-28 after v3.0 roadmap created*
+*Last updated: 2026-03-29 after v3.0 milestone complete*

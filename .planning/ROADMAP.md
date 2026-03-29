@@ -4,7 +4,7 @@
 
 - SHIPPED **v1.0 MK Ultra Gravel** — Phases 1-10 (shipped 2026-03-27)
 - SHIPPED **v2.0 Interactivity + Polish** — Phases 11-16 (shipped 2026-03-28)
-- **v3.0 Escher Identity + Data Fixes + UX Polish** — Phases 17-21 (in progress)
+- SHIPPED **v3.0 Escher Identity + Data Fixes + UX Polish** — Phases 17-21 (shipped 2026-03-29)
 
 ## Phases
 
@@ -118,8 +118,8 @@ Plans:
 **Plans:** 2 plans (background pattern is a separate iteration from favicon — favicon is a single file replacement; background requires authoring + TBT gate)
 
 Plans:
-- [ ] 21-01: Penrose triangle favicon (public/favicon.svg replacement)
-- [ ] 21-02: Escher animated background pattern (global.css + index.astro)
+- [x] 21-01: Penrose triangle favicon (public/favicon.svg replacement)
+- [x] 21-02: Escher animated background pattern (global.css + index.astro)
 
 ## Progress
 
@@ -145,4 +145,4 @@ Plans:
 | 18. Photo Position Verification | v3.0 | 1/1 | Complete | 2026-03-29 |
 | 19. KOM Segments on Elevation | v3.0 | 1/1 | Complete | 2026-03-29 |
 | 20. Bike Icon Crosshair | v3.0 | 1/1 | Complete | 2026-03-29 |
-| 21. Escher Background + Favicon | v3.0 | 0/2 | Not started | - |
+| 21. Escher Background + Favicon | v3.0 | 2/2 | Complete | 2026-03-29 |
