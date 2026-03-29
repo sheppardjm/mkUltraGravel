@@ -20,7 +20,7 @@ const kom = annotations.kom as Array<{
       <div class="overflow-hidden">
         {segment.coverPhoto && (
           <img
-            src={`/images/cards/${segment.coverPhoto.replace(/\.(jpg|jpeg|png)$/i, '.webp')}`}
+            src={`/images/cards/${segment.coverPhoto.replace(/\.(jpg|jpeg|png|avif)$/i, '.webp')}`}
             alt={`${segment.name} climb`}
             width="600"
             height="338"

@@ -21,7 +21,7 @@ const photos = JSON.parse(photosRaw) as Array<{
       aria-label={`View route photo at mile ${photo.mi}`}
     >
       <img
-        src={`/images/thumbs/${photo.filename.replace(/\.(jpg|jpeg|png)$/i, '.webp')}`}
+        src={`/images/thumbs/${photo.filename.replace(/\.(jpg|jpeg|png|avif)$/i, '.webp')}`}
         alt={`Route photo at mile ${photo.mi}`}
         loading="lazy"
         decoding="async"

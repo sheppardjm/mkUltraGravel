@@ -18,6 +18,15 @@
     "height": 1600
   },
   {
+    "filename": "photo-1675213442182-24e1c1671387.avif",
+    "lat": 46.468515,
+    "lon": -86.995905,
+    "mi": 22.1,
+    "source": "manual",
+    "width": 1293,
+    "height": 1913
+  },
+  {
     "filename": "eU0XZxNsbPxjjIaHRdggS_6hf4hiHO5W4zXxgABMZfA-2048x1536.jpg",
     "lat": 46.432377,
     "lon": -86.967487,
@@ -475,5 +484,14 @@
     "source": "manual",
     "width": 1200,
     "height": 1600
+  },
+  {
+    "filename": "68686675_2890293017652424_6952024628709556224_n.jpg",
+    "lat": 46.51215,
+    "lon": -87.39763,
+    "mi": 83.8,
+    "source": "manual",
+    "width": 2048,
+    "height": 1152
   }
 ]

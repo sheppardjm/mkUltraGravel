@@ -27,7 +27,7 @@ const starColors: Record<number, string> = {
       <div class="overflow-hidden">
         {sector.coverPhoto && (
           <img
-            src={`/images/cards/${sector.coverPhoto.replace(/\.(jpg|jpeg|png)$/i, '.webp')}`}
+            src={`/images/cards/${sector.coverPhoto.replace(/\.(jpg|jpeg|png|avif)$/i, '.webp')}`}
             alt={`${sector.name} sector terrain`}
             width="600"
             height="338"
