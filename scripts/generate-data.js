@@ -23,7 +23,7 @@ const destImagesDir = path.join(__dirname, '..', 'public', 'images');
 if (!fs.existsSync(destImagesDir)) {
   fs.mkdirSync(destImagesDir, { recursive: true });
 }
-const jpgs = fs.readdirSync(srcImagesDir).filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f));
+const jpgs = fs.readdirSync(srcImagesDir).filter(f => /\.(jpg|jpeg|png|webp|avif)$/i.test(f));
 jpgs.forEach(filename => {
   fs.copyFileSync(path.join(srcImagesDir, filename), path.join(destImagesDir, filename));
 });

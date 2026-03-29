@@ -1,5 +1,5 @@
 /**
- * Photo manifest - curated list of 53 route photos with verified mile markers.
+ * Photo manifest - curated list of 55 route photos with verified mile markers.
  * Used by scripts/match-photos.js to produce public/data/photos.json.
  * All mile markers verified by route owner 2026-03-29 via photo-verify tool.
  *
@@ -13,6 +13,8 @@ const photoManifest = [
   // -- Mi 19-25: early route, Laughing Whitefish area --
   { filename: 'ipimpW4SR0M8AGHKeltyECQ-YyKS4i5Hkjx9rnpCRKU-1536x2048.jpg', mi: 19.6 },
   { filename: 'SvBAhzwpTg-p2BZyPrO-aKBFQoKBPvrofDZAEUdYROc-1536x2048.jpg', mi: 21.1 },
+  // -- Mi 21-23: Billie Helmer KOM --
+  { filename: 'photo-1675213442182-24e1c1671387.avif', mi: 22.1 },
   { filename: 'eU0XZxNsbPxjjIaHRdggS_6hf4hiHO5W4zXxgABMZfA-2048x1536.jpg', mi: 25.5 },
 
   // -- Mi 26-32: forest transitions, approaching Chatham --
@@ -80,6 +82,9 @@ const photoManifest = [
   { filename: 'Wrp9cErN8YEogpvno-NEqJvzqUGWdmesit--gZmK3jg-1536x2048.jpg', mi: 66.6 },
   { filename: 'aI8-qjgYasaaJ3Xu6RcqyaSk5EzCVwPbNGH1xn2PwFQ-1536x2048.jpg', mi: 78.7 },
   { filename: 'AU6maRolPI2hBS7Tu7-zDxC6u20udvzQv6Dix2f_jhQ-1536x2048.jpg', mi: 80.2 },
+
+  // -- Mi 83-84: Down Jeep sector --
+  { filename: '68686675_2890293017652424_6952024628709556224_n.jpg', mi: 83.8 },
 ];
 
 module.exports = { photoManifest };
