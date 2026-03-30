@@ -113,6 +113,14 @@ const submitDenied = Astro.url.searchParams.get("submit") === "denied";
             You'll be asked to authorize read access to your Strava activities.
             No data is stored beyond your segment times.
           </p>
+
+          <p class="mt-2 text-xs text-center" style="color: var(--color-text-muted); font-family: var(--font-mono);">
+            Your segment times are stored publicly on the results page. You may revoke
+            access at any time via your
+            <a href="https://www.strava.com/settings/apps" target="_blank" rel="noopener noreferrer"
+               style="color: oklch(0.72 0.19 55);">Strava settings</a>
+            — your data will be deleted within 48 hours of deauthorization.
+          </p>
         </form>
       </div>
 
