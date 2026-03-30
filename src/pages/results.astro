@@ -45,6 +45,30 @@ function formatTime(seconds: number): string {
   }
   return `${m}:${String(s).padStart(2, "0")}`;
 }
+
+// ─── Segment leaderboard builder ─────────────────────────────────────────────
+
+function buildSegmentLeaderboard(athleteList: any[], segId: string) {
+  return athleteList
+    .filter(a => a.segments?.[segId]?.elapsed_time !== undefined)
+    .map(a => ({
+      name:        a.name,
+      gender:      a.gender as "M" | "F" | "NB",
+      activityUrl: a.activityUrl as string,
+      elapsed_time: a.segments[segId].elapsed_time as number,
+    }))
+    .sort((a, b) => a.elapsed_time - b.elapsed_time);
+}
+
+const ALL_SEGMENT_IDS = [...SECTOR_SEGMENT_IDS, ...KOM_SEGMENT_IDS];
+const ALL_SEGMENT_NAMES: Record<string, string> = { ...SECTOR_NAMES, ...KOM_NAMES };
+
+const segmentLeaderboards: Record<string, ReturnType<typeof buildSegmentLeaderboard>> = {};
+for (const segId of ALL_SEGMENT_IDS) {
+  segmentLeaderboards[segId] = buildSegmentLeaderboard(athletes, segId);
+}
+
+const SEG_DISPLAY_MAX = 10;
 ---
 
 <BaseLayout title="Results — MK Ultra Gravel">
@@ -572,6 +596,172 @@ function formatTime(seconds: number): string {
                 </table>
               )}
             </div>
+          </section>
+
+          <!-- ═══════════════════════════════════════════════════════════════ -->
+          <!-- Segment Leaderboards                                            -->
+          <!-- ═══════════════════════════════════════════════════════════════ -->
+          <section aria-labelledby="segment-heading" class="mb-16">
+            <h2
+              id="segment-heading"
+              class="font-display text-2xl sm:text-3xl mb-4 mt-16"
+              style="font-family: var(--font-display); color: var(--color-accent-white);"
+            >
+              Segment Leaderboards
+            </h2>
+            <p class="text-sm mb-8" style="color: var(--color-text-muted); font-family: var(--font-mono);">
+              Individual rankings for each timed segment. All categories combined.
+            </p>
+
+            <!-- Gravel Sectors sub-section -->
+            <h3
+              class="font-display text-xl mb-4"
+              style="font-family: var(--font-display); color: var(--color-accent-white);"
+            >
+              Gravel Sectors
+            </h3>
+
+            {SECTOR_SEGMENT_IDS.map((segId, i) => {
+              const board = segmentLeaderboards[segId];
+              const visible = board.slice(0, SEG_DISPLAY_MAX);
+              const overflow = board.length - SEG_DISPLAY_MAX;
+              return (
+                <div
+                  class="classified-border p-4 mb-4"
+                  data-reveal
+                  style={`animation-delay: ${i * 40}ms`}
+                >
+                  <h4
+                    class="text-sm uppercase tracking-widest mb-3"
+                    style="font-family: var(--font-mono); color: var(--color-accent-white);"
+                  >
+                    {ALL_SEGMENT_NAMES[segId]}
+                  </h4>
+                  {board.length === 0 ? (
+                    <p class="text-xs" style="color: var(--color-text-muted); font-family: var(--font-mono);">
+                      No times recorded.
+                    </p>
+                  ) : (
+                    <>
+                      <table class="w-full">
+                        <thead>
+                          <tr>
+                            <th class="text-left pb-2 text-xs uppercase tracking-widest w-8" style="color: var(--color-text-muted); font-family: var(--font-mono);">#</th>
+                            <th class="text-left pb-2 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Name</th>
+                            <th class="text-left pb-2 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Time</th>
+                            <th class="text-left pb-2 text-xs uppercase tracking-widest w-8" style="color: var(--color-text-muted); font-family: var(--font-mono);">Cat</th>
+                            <th class="text-left pb-2 text-xs uppercase tracking-widest w-8" style="color: var(--color-text-muted); font-family: var(--font-mono);">Activity</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {visible.map((row, j) => (
+                            <tr style={`border-top: 1px solid var(--color-border);`}>
+                              <td class="py-2 pr-3 tabular-nums text-xs" style="color: var(--color-text-muted); font-family: var(--font-mono);">{j + 1}</td>
+                              <td class="py-2 pr-3 text-sm" style="color: var(--color-accent-white); font-family: var(--font-mono);">{row.name}</td>
+                              <td class="py-2 pr-3 tabular-nums text-sm" style="color: var(--color-accent-white); font-family: var(--font-mono);">{formatTime(row.elapsed_time)}</td>
+                              <td class="py-2 pr-3 text-xs" style="color: var(--color-text-muted); font-family: var(--font-mono);">{row.gender}</td>
+                              <td class="py-2">
+                                <a
+                                  href={row.activityUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  aria-label="View Strava activity"
+                                  style="color: oklch(0.72 0.19 55);"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                                    <path d="M6.731 0 2 9.125h2.788L6.73 5.497l1.93 3.628h2.766zm4.694 9.125-1.372 2.756L8.66 9.125H6.547L10.053 16l3.484-6.875z"/>
+                                  </svg>
+                                </a>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      {overflow > 0 && (
+                        <p class="text-xs mt-2" style="color: var(--color-text-muted); font-family: var(--font-mono);">
+                          and {overflow} more
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+              );
+            })}
+
+            <!-- KOM Climbs sub-section -->
+            <h3
+              class="font-display text-xl mb-4 mt-12"
+              style="font-family: var(--font-display); color: var(--color-accent-green);"
+            >
+              KOM Climbs
+            </h3>
+
+            {KOM_SEGMENT_IDS.map((segId, i) => {
+              const board = segmentLeaderboards[segId];
+              const visible = board.slice(0, SEG_DISPLAY_MAX);
+              const overflow = board.length - SEG_DISPLAY_MAX;
+              return (
+                <div
+                  class="classified-border p-4 mb-4"
+                  data-reveal
+                  style={`animation-delay: ${i * 40}ms`}
+                >
+                  <h4
+                    class="text-sm uppercase tracking-widest mb-3"
+                    style="font-family: var(--font-mono); color: var(--color-accent-white);"
+                  >
+                    {ALL_SEGMENT_NAMES[segId]}
+                  </h4>
+                  {board.length === 0 ? (
+                    <p class="text-xs" style="color: var(--color-text-muted); font-family: var(--font-mono);">
+                      No times recorded.
+                    </p>
+                  ) : (
+                    <>
+                      <table class="w-full">
+                        <thead>
+                          <tr>
+                            <th class="text-left pb-2 text-xs uppercase tracking-widest w-8" style="color: var(--color-text-muted); font-family: var(--font-mono);">#</th>
+                            <th class="text-left pb-2 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Name</th>
+                            <th class="text-left pb-2 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Time</th>
+                            <th class="text-left pb-2 text-xs uppercase tracking-widest w-8" style="color: var(--color-text-muted); font-family: var(--font-mono);">Cat</th>
+                            <th class="text-left pb-2 text-xs uppercase tracking-widest w-8" style="color: var(--color-text-muted); font-family: var(--font-mono);">Activity</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {visible.map((row, j) => (
+                            <tr style={`border-top: 1px solid var(--color-border);`}>
+                              <td class="py-2 pr-3 tabular-nums text-xs" style="color: var(--color-text-muted); font-family: var(--font-mono);">{j + 1}</td>
+                              <td class="py-2 pr-3 text-sm" style="color: var(--color-accent-white); font-family: var(--font-mono);">{row.name}</td>
+                              <td class="py-2 pr-3 tabular-nums text-sm" style="color: var(--color-accent-white); font-family: var(--font-mono);">{formatTime(row.elapsed_time)}</td>
+                              <td class="py-2 pr-3 text-xs" style="color: var(--color-text-muted); font-family: var(--font-mono);">{row.gender}</td>
+                              <td class="py-2">
+                                <a
+                                  href={row.activityUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  aria-label="View Strava activity"
+                                  style="color: oklch(0.72 0.19 55);"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                                    <path d="M6.731 0 2 9.125h2.788L6.73 5.497l1.93 3.628h2.766zm4.694 9.125-1.372 2.756L8.66 9.125H6.547L10.053 16l3.484-6.875z"/>
+                                  </svg>
+                                </a>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      {overflow > 0 && (
+                        <p class="text-xs mt-2" style="color: var(--color-text-muted); font-family: var(--font-mono);">
+                          and {overflow} more
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+              );
+            })}
           </section>
         </>
       )}
