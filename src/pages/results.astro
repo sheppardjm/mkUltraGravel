@@ -1,0 +1,624 @@
+---
+import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { join } from "node:path";
+import { computeGravelChampion, computeKomChampion, SECTOR_SEGMENT_IDS, KOM_SEGMENT_IDS } from "../lib/scoring.js";
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+// ─── Load athlete data at build time ─────────────────────────────────────────
+
+const athletesDir = join(process.cwd(), "public", "data", "results", "athletes");
+const athletes = existsSync(athletesDir)
+  ? readdirSync(athletesDir)
+      .filter(f => f.endsWith(".json"))
+      .map(f => JSON.parse(readFileSync(join(athletesDir, f), "utf-8")))
+  : [];
+
+const gravel = computeGravelChampion(athletes);
+const kom = computeKomChampion(athletes);
+const hasResults = athletes.length > 0;
+
+// ─── Segment name lookups ─────────────────────────────────────────────────────
+
+const SECTOR_NAMES: Record<string, string> = {
+  "24479292": "Sandstrom",
+  "24479426": "Akkala Rd",
+  "24479467": "Haavisto",
+  "24479496": "Forest Service Rd",
+  "34573011": "C4",
+  "6809754":  "Down Jeep",
+};
+
+const KOM_NAMES: Record<string, string> = {
+  "24479270": "Billie Helmer",
+  "41126651": "Leaving Chatham",
+  "16438243": "Silver Creek",
+};
+
+// ─── Time formatting helper ───────────────────────────────────────────────────
+
+function formatTime(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) {
+    return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+---
+
+<BaseLayout title="Results — MK Ultra Gravel">
+  <main class="min-h-screen flex flex-col items-center px-4 py-16">
+    <div class="w-full max-w-5xl mx-auto">
+
+      <!-- Back link -->
+      <a
+        href="/"
+        class="inline-flex items-center gap-2 text-sm mb-10 opacity-60 hover:opacity-100 transition-opacity"
+        style="font-family: var(--font-mono);"
+      >
+        ← Back to MK Ultra Gravel
+      </a>
+
+      <!-- Page header -->
+      <h1
+        class="text-4xl sm:text-5xl mb-10"
+        style="font-family: var(--font-display); color: var(--color-accent-white);"
+      >
+        Results
+      </h1>
+
+      {!hasResults ? (
+        <!-- Empty state — pre-event -->
+        <div class="classified-border p-8">
+          <p
+            class="text-sm uppercase tracking-widest text-center"
+            style="color: var(--color-text-muted); font-family: var(--font-mono);"
+          >
+            Results will appear here after the event on June 7, 2026.
+          </p>
+        </div>
+      ) : (
+        <>
+          <!-- ═══════════════════════════════════════════════════════════════ -->
+          <!-- Gravel Champion Leaderboard                                     -->
+          <!-- ═══════════════════════════════════════════════════════════════ -->
+          <section aria-labelledby="gravel-heading" class="mb-16">
+            <h2
+              id="gravel-heading"
+              class="font-display text-2xl sm:text-3xl mb-6"
+              style="font-family: var(--font-display); color: var(--color-accent-white);"
+            >
+              Gravel Champion
+            </h2>
+
+            <!-- Gender tabs -->
+            <div
+              role="tablist"
+              aria-label="Gravel Champion gender categories"
+              class="flex mb-6"
+              style="border-bottom: 1px solid var(--color-border);"
+            >
+              <button
+                role="tab"
+                data-section="gravel"
+                data-gender="M"
+                aria-selected="true"
+                class="px-4 py-2 text-xs uppercase tracking-widest transition-colors"
+                style="font-family: var(--font-mono); background-color: var(--color-bg-elevated); color: var(--color-accent-white);"
+              >
+                Men
+              </button>
+              <button
+                role="tab"
+                data-section="gravel"
+                data-gender="F"
+                aria-selected="false"
+                class="px-4 py-2 text-xs uppercase tracking-widest transition-colors"
+                style="font-family: var(--font-mono); background-color: transparent; color: var(--color-text-muted);"
+              >
+                Women
+              </button>
+              <button
+                role="tab"
+                data-section="gravel"
+                data-gender="NB"
+                aria-selected="false"
+                class="px-4 py-2 text-xs uppercase tracking-widest transition-colors"
+                style="font-family: var(--font-mono); background-color: transparent; color: var(--color-text-muted);"
+              >
+                Non-binary
+              </button>
+            </div>
+
+            <!-- Men panel -->
+            <div role="tabpanel" data-section="gravel" data-gender="M">
+              {gravel.M.length === 0 ? (
+                <p class="text-sm py-8 text-center" style="color: var(--color-text-muted); font-family: var(--font-mono);">
+                  No results in this category yet.
+                </p>
+              ) : (
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr>
+                      <th class="text-left pb-3 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Rank</th>
+                      <th class="text-left pb-3 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Name</th>
+                      <th class="text-left pb-3 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Total Time</th>
+                      <th class="text-left pb-3 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Activity</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {gravel.M.map((entry, i) => (
+                      <tr
+                        data-reveal
+                        style={`border-top: 1px solid var(--color-border); animation-delay: ${i * 40}ms;`}
+                      >
+                        <td class="py-3 pr-4 tabular-nums" style="color: var(--color-accent-white); font-family: var(--font-mono);">{i + 1}</td>
+                        <td class="py-3 pr-4">
+                          <div>
+                            <span style="color: var(--color-accent-white); font-family: var(--font-mono);">{entry.name}</span>
+                            {entry.completedSectors < SECTOR_SEGMENT_IDS.length && (
+                              <span class="ml-2 text-xs" style="color: var(--color-accent-red); font-family: var(--font-mono);">[DNF — {entry.completedSectors}/6 sectors]</span>
+                            )}
+                          </div>
+                          <details class="mt-2">
+                            <summary class="cursor-pointer text-xs" style="color: var(--color-text-muted); font-family: var(--font-mono);">Sector breakdown</summary>
+                            <dl class="mt-2 space-y-1">
+                              {SECTOR_SEGMENT_IDS.map(segId => entry.sectorTimes[segId] && (
+                                <div class="flex justify-between gap-8 text-xs">
+                                  <dt style="color: var(--color-text-muted); font-family: var(--font-mono);">{SECTOR_NAMES[segId]}</dt>
+                                  <dd class="tabular-nums" style="color: var(--color-accent-white); font-family: var(--font-mono);">{formatTime(entry.sectorTimes[segId])}</dd>
+                                </div>
+                              ))}
+                            </dl>
+                          </details>
+                        </td>
+                        <td class="py-3 pr-4 tabular-nums" style="color: var(--color-accent-white); font-family: var(--font-mono);">{formatTime(entry.totalTime)}</td>
+                        <td class="py-3">
+                          <a
+                            href={entry.activityUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="View Strava activity"
+                            style="color: oklch(0.72 0.19 55);"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                              <path d="M6.731 0 2 9.125h2.788L6.73 5.497l1.93 3.628h2.766zm4.694 9.125-1.372 2.756L8.66 9.125H6.547L10.053 16l3.484-6.875z"/>
+                            </svg>
+                          </a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            <!-- Women panel -->
+            <div role="tabpanel" data-section="gravel" data-gender="F" hidden>
+              {gravel.F.length === 0 ? (
+                <p class="text-sm py-8 text-center" style="color: var(--color-text-muted); font-family: var(--font-mono);">
+                  No results in this category yet.
+                </p>
+              ) : (
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr>
+                      <th class="text-left pb-3 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Rank</th>
+                      <th class="text-left pb-3 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Name</th>
+                      <th class="text-left pb-3 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Total Time</th>
+                      <th class="text-left pb-3 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Activity</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {gravel.F.map((entry, i) => (
+                      <tr
+                        data-reveal
+                        style={`border-top: 1px solid var(--color-border); animation-delay: ${i * 40}ms;`}
+                      >
+                        <td class="py-3 pr-4 tabular-nums" style="color: var(--color-accent-white); font-family: var(--font-mono);">{i + 1}</td>
+                        <td class="py-3 pr-4">
+                          <div>
+                            <span style="color: var(--color-accent-white); font-family: var(--font-mono);">{entry.name}</span>
+                            {entry.completedSectors < SECTOR_SEGMENT_IDS.length && (
+                              <span class="ml-2 text-xs" style="color: var(--color-accent-red); font-family: var(--font-mono);">[DNF — {entry.completedSectors}/6 sectors]</span>
+                            )}
+                          </div>
+                          <details class="mt-2">
+                            <summary class="cursor-pointer text-xs" style="color: var(--color-text-muted); font-family: var(--font-mono);">Sector breakdown</summary>
+                            <dl class="mt-2 space-y-1">
+                              {SECTOR_SEGMENT_IDS.map(segId => entry.sectorTimes[segId] && (
+                                <div class="flex justify-between gap-8 text-xs">
+                                  <dt style="color: var(--color-text-muted); font-family: var(--font-mono);">{SECTOR_NAMES[segId]}</dt>
+                                  <dd class="tabular-nums" style="color: var(--color-accent-white); font-family: var(--font-mono);">{formatTime(entry.sectorTimes[segId])}</dd>
+                                </div>
+                              ))}
+                            </dl>
+                          </details>
+                        </td>
+                        <td class="py-3 pr-4 tabular-nums" style="color: var(--color-accent-white); font-family: var(--font-mono);">{formatTime(entry.totalTime)}</td>
+                        <td class="py-3">
+                          <a
+                            href={entry.activityUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="View Strava activity"
+                            style="color: oklch(0.72 0.19 55);"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                              <path d="M6.731 0 2 9.125h2.788L6.73 5.497l1.93 3.628h2.766zm4.694 9.125-1.372 2.756L8.66 9.125H6.547L10.053 16l3.484-6.875z"/>
+                            </svg>
+                          </a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            <!-- Non-binary panel -->
+            <div role="tabpanel" data-section="gravel" data-gender="NB" hidden>
+              {gravel.NB.length === 0 ? (
+                <p class="text-sm py-8 text-center" style="color: var(--color-text-muted); font-family: var(--font-mono);">
+                  No results in this category yet.
+                </p>
+              ) : (
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr>
+                      <th class="text-left pb-3 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Rank</th>
+                      <th class="text-left pb-3 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Name</th>
+                      <th class="text-left pb-3 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Total Time</th>
+                      <th class="text-left pb-3 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Activity</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {gravel.NB.map((entry, i) => (
+                      <tr
+                        data-reveal
+                        style={`border-top: 1px solid var(--color-border); animation-delay: ${i * 40}ms;`}
+                      >
+                        <td class="py-3 pr-4 tabular-nums" style="color: var(--color-accent-white); font-family: var(--font-mono);">{i + 1}</td>
+                        <td class="py-3 pr-4">
+                          <div>
+                            <span style="color: var(--color-accent-white); font-family: var(--font-mono);">{entry.name}</span>
+                            {entry.completedSectors < SECTOR_SEGMENT_IDS.length && (
+                              <span class="ml-2 text-xs" style="color: var(--color-accent-red); font-family: var(--font-mono);">[DNF — {entry.completedSectors}/6 sectors]</span>
+                            )}
+                          </div>
+                          <details class="mt-2">
+                            <summary class="cursor-pointer text-xs" style="color: var(--color-text-muted); font-family: var(--font-mono);">Sector breakdown</summary>
+                            <dl class="mt-2 space-y-1">
+                              {SECTOR_SEGMENT_IDS.map(segId => entry.sectorTimes[segId] && (
+                                <div class="flex justify-between gap-8 text-xs">
+                                  <dt style="color: var(--color-text-muted); font-family: var(--font-mono);">{SECTOR_NAMES[segId]}</dt>
+                                  <dd class="tabular-nums" style="color: var(--color-accent-white); font-family: var(--font-mono);">{formatTime(entry.sectorTimes[segId])}</dd>
+                                </div>
+                              ))}
+                            </dl>
+                          </details>
+                        </td>
+                        <td class="py-3 pr-4 tabular-nums" style="color: var(--color-accent-white); font-family: var(--font-mono);">{formatTime(entry.totalTime)}</td>
+                        <td class="py-3">
+                          <a
+                            href={entry.activityUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="View Strava activity"
+                            style="color: oklch(0.72 0.19 55);"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                              <path d="M6.731 0 2 9.125h2.788L6.73 5.497l1.93 3.628h2.766zm4.694 9.125-1.372 2.756L8.66 9.125H6.547L10.053 16l3.484-6.875z"/>
+                            </svg>
+                          </a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </section>
+
+          <!-- ═══════════════════════════════════════════════════════════════ -->
+          <!-- KOM/QOM Champion Leaderboard                                    -->
+          <!-- ═══════════════════════════════════════════════════════════════ -->
+          <section aria-labelledby="kom-heading" class="mb-16">
+            <h2
+              id="kom-heading"
+              class="font-display text-2xl sm:text-3xl mb-6"
+              style="font-family: var(--font-display); color: var(--color-accent-green);"
+            >
+              KOM/QOM Champion
+            </h2>
+
+            <!-- Gender tabs -->
+            <div
+              role="tablist"
+              aria-label="KOM/QOM Champion gender categories"
+              class="flex mb-6"
+              style="border-bottom: 1px solid var(--color-border);"
+            >
+              <button
+                role="tab"
+                data-section="kom"
+                data-gender="M"
+                aria-selected="true"
+                class="px-4 py-2 text-xs uppercase tracking-widest transition-colors"
+                style="font-family: var(--font-mono); background-color: var(--color-bg-elevated); color: var(--color-accent-white);"
+              >
+                Men
+              </button>
+              <button
+                role="tab"
+                data-section="kom"
+                data-gender="F"
+                aria-selected="false"
+                class="px-4 py-2 text-xs uppercase tracking-widest transition-colors"
+                style="font-family: var(--font-mono); background-color: transparent; color: var(--color-text-muted);"
+              >
+                Women
+              </button>
+              <button
+                role="tab"
+                data-section="kom"
+                data-gender="NB"
+                aria-selected="false"
+                class="px-4 py-2 text-xs uppercase tracking-widest transition-colors"
+                style="font-family: var(--font-mono); background-color: transparent; color: var(--color-text-muted);"
+              >
+                Non-binary
+              </button>
+            </div>
+
+            <!-- Men panel -->
+            <div role="tabpanel" data-section="kom" data-gender="M">
+              {kom.M.length === 0 ? (
+                <p class="text-sm py-8 text-center" style="color: var(--color-text-muted); font-family: var(--font-mono);">
+                  No results in this category yet.
+                </p>
+              ) : (
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr>
+                      <th class="text-left pb-3 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Rank</th>
+                      <th class="text-left pb-3 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Name</th>
+                      <th class="text-left pb-3 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Total Points</th>
+                      <th class="text-left pb-3 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Activity</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {kom.M.map((entry, i) => (
+                      <tr
+                        data-reveal
+                        style={`border-top: 1px solid var(--color-border); animation-delay: ${i * 40}ms;`}
+                      >
+                        <td class="py-3 pr-4 tabular-nums" style="color: var(--color-accent-white); font-family: var(--font-mono);">{i + 1}</td>
+                        <td class="py-3 pr-4">
+                          <div>
+                            <span style="color: var(--color-accent-white); font-family: var(--font-mono);">{entry.name}</span>
+                          </div>
+                          <details class="mt-2">
+                            <summary class="cursor-pointer text-xs" style="color: var(--color-text-muted); font-family: var(--font-mono);">Climb breakdown</summary>
+                            <dl class="mt-2 space-y-1">
+                              {KOM_SEGMENT_IDS.map(segId => entry.climbPoints[segId] && (
+                                <div class="text-xs" style="font-family: var(--font-mono);">
+                                  <span style="color: var(--color-text-muted);">{KOM_NAMES[segId]}:</span>
+                                  {" "}
+                                  <span class="tabular-nums" style="color: var(--color-accent-white);">{formatTime(entry.climbPoints[segId].elapsed_time)}</span>
+                                  {" — "}
+                                  <span style="color: var(--color-text-muted);">#{entry.climbPoints[segId].rank}</span>
+                                  {" "}
+                                  <span style="color: var(--color-accent-green);">({entry.climbPoints[segId].points} pts)</span>
+                                </div>
+                              ))}
+                            </dl>
+                          </details>
+                        </td>
+                        <td class="py-3 pr-4 tabular-nums font-bold" style="color: var(--color-accent-green); font-family: var(--font-mono);">
+                          {entry.totalPoints}<span class="font-normal" style="color: var(--color-text-muted);">/30</span>
+                        </td>
+                        <td class="py-3">
+                          <a
+                            href={entry.activityUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="View Strava activity"
+                            style="color: oklch(0.72 0.19 55);"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                              <path d="M6.731 0 2 9.125h2.788L6.73 5.497l1.93 3.628h2.766zm4.694 9.125-1.372 2.756L8.66 9.125H6.547L10.053 16l3.484-6.875z"/>
+                            </svg>
+                          </a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            <!-- Women panel -->
+            <div role="tabpanel" data-section="kom" data-gender="F" hidden>
+              {kom.F.length === 0 ? (
+                <p class="text-sm py-8 text-center" style="color: var(--color-text-muted); font-family: var(--font-mono);">
+                  No results in this category yet.
+                </p>
+              ) : (
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr>
+                      <th class="text-left pb-3 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Rank</th>
+                      <th class="text-left pb-3 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Name</th>
+                      <th class="text-left pb-3 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Total Points</th>
+                      <th class="text-left pb-3 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Activity</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {kom.F.map((entry, i) => (
+                      <tr
+                        data-reveal
+                        style={`border-top: 1px solid var(--color-border); animation-delay: ${i * 40}ms;`}
+                      >
+                        <td class="py-3 pr-4 tabular-nums" style="color: var(--color-accent-white); font-family: var(--font-mono);">{i + 1}</td>
+                        <td class="py-3 pr-4">
+                          <div>
+                            <span style="color: var(--color-accent-white); font-family: var(--font-mono);">{entry.name}</span>
+                          </div>
+                          <details class="mt-2">
+                            <summary class="cursor-pointer text-xs" style="color: var(--color-text-muted); font-family: var(--font-mono);">Climb breakdown</summary>
+                            <dl class="mt-2 space-y-1">
+                              {KOM_SEGMENT_IDS.map(segId => entry.climbPoints[segId] && (
+                                <div class="text-xs" style="font-family: var(--font-mono);">
+                                  <span style="color: var(--color-text-muted);">{KOM_NAMES[segId]}:</span>
+                                  {" "}
+                                  <span class="tabular-nums" style="color: var(--color-accent-white);">{formatTime(entry.climbPoints[segId].elapsed_time)}</span>
+                                  {" — "}
+                                  <span style="color: var(--color-text-muted);">#{entry.climbPoints[segId].rank}</span>
+                                  {" "}
+                                  <span style="color: var(--color-accent-green);">({entry.climbPoints[segId].points} pts)</span>
+                                </div>
+                              ))}
+                            </dl>
+                          </details>
+                        </td>
+                        <td class="py-3 pr-4 tabular-nums font-bold" style="color: var(--color-accent-green); font-family: var(--font-mono);">
+                          {entry.totalPoints}<span class="font-normal" style="color: var(--color-text-muted);">/30</span>
+                        </td>
+                        <td class="py-3">
+                          <a
+                            href={entry.activityUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="View Strava activity"
+                            style="color: oklch(0.72 0.19 55);"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                              <path d="M6.731 0 2 9.125h2.788L6.73 5.497l1.93 3.628h2.766zm4.694 9.125-1.372 2.756L8.66 9.125H6.547L10.053 16l3.484-6.875z"/>
+                            </svg>
+                          </a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            <!-- Non-binary panel -->
+            <div role="tabpanel" data-section="kom" data-gender="NB" hidden>
+              {kom.NB.length === 0 ? (
+                <p class="text-sm py-8 text-center" style="color: var(--color-text-muted); font-family: var(--font-mono);">
+                  No results in this category yet.
+                </p>
+              ) : (
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr>
+                      <th class="text-left pb-3 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Rank</th>
+                      <th class="text-left pb-3 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Name</th>
+                      <th class="text-left pb-3 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Total Points</th>
+                      <th class="text-left pb-3 text-xs uppercase tracking-widest" style="color: var(--color-text-muted); font-family: var(--font-mono);">Activity</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {kom.NB.map((entry, i) => (
+                      <tr
+                        data-reveal
+                        style={`border-top: 1px solid var(--color-border); animation-delay: ${i * 40}ms;`}
+                      >
+                        <td class="py-3 pr-4 tabular-nums" style="color: var(--color-accent-white); font-family: var(--font-mono);">{i + 1}</td>
+                        <td class="py-3 pr-4">
+                          <div>
+                            <span style="color: var(--color-accent-white); font-family: var(--font-mono);">{entry.name}</span>
+                          </div>
+                          <details class="mt-2">
+                            <summary class="cursor-pointer text-xs" style="color: var(--color-text-muted); font-family: var(--font-mono);">Climb breakdown</summary>
+                            <dl class="mt-2 space-y-1">
+                              {KOM_SEGMENT_IDS.map(segId => entry.climbPoints[segId] && (
+                                <div class="text-xs" style="font-family: var(--font-mono);">
+                                  <span style="color: var(--color-text-muted);">{KOM_NAMES[segId]}:</span>
+                                  {" "}
+                                  <span class="tabular-nums" style="color: var(--color-accent-white);">{formatTime(entry.climbPoints[segId].elapsed_time)}</span>
+                                  {" — "}
+                                  <span style="color: var(--color-text-muted);">#{entry.climbPoints[segId].rank}</span>
+                                  {" "}
+                                  <span style="color: var(--color-accent-green);">({entry.climbPoints[segId].points} pts)</span>
+                                </div>
+                              ))}
+                            </dl>
+                          </details>
+                        </td>
+                        <td class="py-3 pr-4 tabular-nums font-bold" style="color: var(--color-accent-green); font-family: var(--font-mono);">
+                          {entry.totalPoints}<span class="font-normal" style="color: var(--color-text-muted);">/30</span>
+                        </td>
+                        <td class="py-3">
+                          <a
+                            href={entry.activityUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="View Strava activity"
+                            style="color: oklch(0.72 0.19 55);"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                              <path d="M6.731 0 2 9.125h2.788L6.73 5.497l1.93 3.628h2.766zm4.694 9.125-1.372 2.756L8.66 9.125H6.547L10.053 16l3.484-6.875z"/>
+                            </svg>
+                          </a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </section>
+        </>
+      )}
+
+      <!-- Powered by Strava attribution -->
+      <p class="text-xs text-center mt-16 mb-8" style="color: var(--color-text-muted); font-family: var(--font-mono);">
+        Powered by <span style="color: oklch(0.72 0.19 55); font-weight: bold;">Strava</span>
+      </p>
+
+    </div>
+  </main>
+
+  {hasResults && (
+    <script>
+      // Tab switching — scoped by data-section to support multiple independent tab groups
+      const tabButtons = document.querySelectorAll('[role="tab"]');
+      const tabPanels = document.querySelectorAll('[role="tabpanel"]');
+
+      tabButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const section = (btn as HTMLButtonElement).dataset.section;
+          const gender = (btn as HTMLButtonElement).dataset.gender;
+
+          // Update tabs within this section only
+          tabButtons.forEach(t => {
+            if ((t as HTMLButtonElement).dataset.section === section) {
+              const isActive = (t as HTMLButtonElement).dataset.gender === gender;
+              t.setAttribute('aria-selected', String(isActive));
+              // Toggle active/inactive styling
+              if (isActive) {
+                (t as HTMLElement).style.backgroundColor = 'var(--color-bg-elevated)';
+                (t as HTMLElement).style.color = 'var(--color-accent-white)';
+              } else {
+                (t as HTMLElement).style.backgroundColor = 'transparent';
+                (t as HTMLElement).style.color = 'var(--color-text-muted)';
+              }
+            }
+          });
+
+          // Show/hide panels within this section only
+          tabPanels.forEach(p => {
+            if ((p as HTMLElement).dataset.section === section) {
+              (p as HTMLElement).hidden = (p as HTMLElement).dataset.gender !== gender;
+            }
+          });
+        });
+      });
+    </script>
+  )}
+</BaseLayout>
