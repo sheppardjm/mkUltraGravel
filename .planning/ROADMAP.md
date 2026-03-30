@@ -87,10 +87,10 @@ Plans:
   2. Clicking a photo marker opens PhotoSwipe lightbox showing that photo full-screen
   3. User can swipe/arrow through all route photos from within the lightbox
   4. Closing the lightbox returns to the map without navigation or state loss
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 26-01: TBD
+- [ ] 26-01-PLAN.md -- Thumbnail photo markers + programmatic PhotoSwipe lightbox from map clicks
 
 ---
 
@@ -105,7 +105,7 @@ Plans:
 | 23. New Photos | v4.0 | 1/1 | ✓ Complete | 2026-03-29 |
 | 24. CSS + Layout + Content | v4.0 | 2/2 | ✓ Complete | 2026-03-30 |
 | 25. Map Reset | v4.0 | 1/1 | ✓ Complete | 2026-03-29 |
-| 26. Photo Lightbox from Map | v4.0 | 0/TBD | Not started | - |
+| 26. Photo Lightbox from Map | v4.0 | 0/1 | Not started | - |
 
 ---
 
