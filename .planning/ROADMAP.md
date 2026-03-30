@@ -1,6 +1,6 @@
 # Milestone v5.0: Strava Integration + Results
 
-**Status:** In progress
+**Status:** Complete
 **Phases:** 27-31
 **Total Plans:** TBD
 
@@ -86,7 +86,9 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. When Strava sends a deauthorization webhook POST for an athlete, the system deletes that athlete's result file from the repository within 48 hours
   2. The submission page displays a privacy notice explaining what data is collected, how it is used, and that deauthorizing the app on Strava will remove their results
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [x] 31-01-PLAN.md — Strava deauth webhook handler + privacy notice on submit page
 
 ---
 
@@ -125,7 +127,7 @@ Plans:
 | 28. Scoring Engine + Results Schema | 2/2 | ✓ Complete | 2026-03-30 |
 | 29. Strava OAuth + Activity Submission | 2/2 | ✓ Complete | 2026-03-30 |
 | 30. Results Page + Leaderboards | 2/2 | ✓ Complete | 2026-03-30 |
-| 31. Deauthorization Webhook + Privacy | 0/TBD | Not started | - |
+| 31. Deauthorization Webhook + Privacy | 1/1 | ✓ Complete | 2026-03-30 |
 
 ---
 

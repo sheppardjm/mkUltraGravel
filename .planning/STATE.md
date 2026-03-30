@@ -25,7 +25,7 @@ Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0
 - v2.0: 15 plans across 6 phases (3 days)
 - v3.0: 6 plans across 5 phases (2 days)
 - v4.0: 7 plans across 5 phases (4 days)
-- v5.0: 8 plans across 4 phases (1 day, in progress)
+- v5.0: 9 plans across 5 phases (1 day)
 
 **Phase 30 verified:** 5/5 must-haves passed. Results page with leaderboards, gender tabs, segment rankings.
 

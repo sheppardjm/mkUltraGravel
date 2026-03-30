@@ -27,7 +27,7 @@ Requirements for v5.0 — Strava Integration + Results. Each maps to roadmap pha
 - [x] **SUBMIT-04**: Explicit consent checkbox — results only displayed publicly after opt-in
 - [x] **SUBMIT-05**: Per-athlete JSON files committed via GitHub API, rebuild triggered via Netlify build hook
 - [x] **SUBMIT-06**: Activity validation — verify submitted activity contains matching event segment_efforts
-- [ ] **SUBMIT-07**: Deauthorization webhook — handle Strava deauth callback with 48hr data deletion
+- [x] **SUBMIT-07**: Deauthorization webhook — handle Strava deauth callback with 48hr data deletion
 
 ### Results
 
@@ -73,7 +73,7 @@ Deferred to later milestones.
 | SUBMIT-04 | Phase 29 | Complete |
 | SUBMIT-05 | Phase 29 | Complete |
 | SUBMIT-06 | Phase 29 | Complete |
-| SUBMIT-07 | Phase 31 | Pending |
+| SUBMIT-07 | Phase 31 | Complete |
 | RESULT-01 | Phase 30 | Complete |
 | RESULT-02 | Phase 30 | Complete |
 | RESULT-03 | Phase 30 | Complete |
