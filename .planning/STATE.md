@@ -5,27 +5,29 @@
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v5.0 Phase 29 — Strava OAuth + Activity Submission (COMPLETE)
+**Current focus:** v5.0 Phase 30 — Results Page + Leaderboards
 
 ## Current Position
 
 Milestone: v5.0 — Strava Integration + Results
-Phase: 29 of 31 (Strava OAuth + Activity Submission)
-Plan: 02 of 02 complete
-Status: Phase complete
-Last activity: 2026-03-30 — Completed 29-02 (strava-callback.js + submit-confirm.astro + submit-result.js)
+Phase: 30 of 31 (Results Page + Leaderboards)
+Plan: —
+Status: Ready to plan
+Last activity: 2026-03-30 — Phase 29 complete (2 plans, verified 5/5 must-haves)
 
 Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0: ██████░░░░ 60% (phases 27-29 complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 63
+- Total plans completed: 64
 - v1.0: 30 plans across 10 phases (2 days)
 - v2.0: 15 plans across 6 phases (3 days)
 - v3.0: 6 plans across 5 phases (2 days)
 - v4.0: 7 plans across 5 phases (4 days)
 - v5.0: 6 plans across 3 phases (1 day, in progress)
+
+**Phase 29 verified:** 5/5 must-haves passed. Full OAuth pipeline wired end-to-end.
 
 ## Accumulated Context
 
@@ -59,6 +61,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-30T19:30:48Z
-Stopped at: Phase 29 complete — ready for Phase 30 (results display)
+Last session: 2026-03-30
+Stopped at: Phase 29 verified and complete — ready for Phase 30 (Results Page + Leaderboards)
 Resume file: None

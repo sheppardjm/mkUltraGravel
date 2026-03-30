@@ -21,12 +21,12 @@ Requirements for v5.0 — Strava Integration + Results. Each maps to roadmap pha
 
 ### Submission
 
-- [ ] **SUBMIT-01**: Strava OAuth flow via Netlify Function (authorization code exchange)
-- [ ] **SUBMIT-02**: Segment_efforts extracted from submitted activity for 9 event segments
-- [ ] **SUBMIT-03**: Self-reported gender/category dropdown (men/women/non-binary) in submission form
-- [ ] **SUBMIT-04**: Explicit consent checkbox — results only displayed publicly after opt-in
-- [ ] **SUBMIT-05**: Per-athlete JSON files committed via GitHub API, rebuild triggered via Netlify build hook
-- [ ] **SUBMIT-06**: Activity validation — verify submitted activity contains matching event segment_efforts
+- [x] **SUBMIT-01**: Strava OAuth flow via Netlify Function (authorization code exchange)
+- [x] **SUBMIT-02**: Segment_efforts extracted from submitted activity for 9 event segments
+- [x] **SUBMIT-03**: Self-reported gender/category dropdown (men/women/non-binary) in submission form
+- [x] **SUBMIT-04**: Explicit consent checkbox — results only displayed publicly after opt-in
+- [x] **SUBMIT-05**: Per-athlete JSON files committed via GitHub API, rebuild triggered via Netlify build hook
+- [x] **SUBMIT-06**: Activity validation — verify submitted activity contains matching event segment_efforts
 - [ ] **SUBMIT-07**: Deauthorization webhook — handle Strava deauth callback with 48hr data deletion
 
 ### Results
@@ -67,12 +67,12 @@ Deferred to later milestones.
 | SCORE-01 | Phase 28 | Complete |
 | SCORE-02 | Phase 28 | Complete |
 | SCORE-03 | Phase 27 | Complete |
-| SUBMIT-01 | Phase 29 | Pending |
-| SUBMIT-02 | Phase 29 | Pending |
-| SUBMIT-03 | Phase 29 | Pending |
-| SUBMIT-04 | Phase 29 | Pending |
-| SUBMIT-05 | Phase 29 | Pending |
-| SUBMIT-06 | Phase 29 | Pending |
+| SUBMIT-01 | Phase 29 | Complete |
+| SUBMIT-02 | Phase 29 | Complete |
+| SUBMIT-03 | Phase 29 | Complete |
+| SUBMIT-04 | Phase 29 | Complete |
+| SUBMIT-05 | Phase 29 | Complete |
+| SUBMIT-06 | Phase 29 | Complete |
 | SUBMIT-07 | Phase 31 | Pending |
 | RESULT-01 | Phase 30 | Pending |
 | RESULT-02 | Phase 30 | Pending |
