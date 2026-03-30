@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 
 Milestone: v5.0 — Strava Integration + Results
 Phase: 27 of 31 (Segment Links + Scoring Explainer)
-Plan: —
-Status: Ready to plan
-Last activity: 2026-03-30 — Roadmap created for v5.0 (5 phases, 17 requirements)
+Plan: 02 of 02 complete
+Status: In progress
+Last activity: 2026-03-30 — Completed 27-02-PLAN.md (ScoringExplainer + Powered by Strava)
 
-Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0: ░░░░░░░░░░ 0%
+Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0: ██░░░░░░░░ 20% (2/10 plans)
 
 ## Performance Metrics
 
@@ -44,6 +44,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-30
-Stopped at: v5.0 roadmap created, ready to plan Phase 27
+Last session: 2026-03-30T17:14:35Z
+Stopped at: Completed 27-02-PLAN.md (ScoringExplainer component + Strava attribution)
 Resume file: None
