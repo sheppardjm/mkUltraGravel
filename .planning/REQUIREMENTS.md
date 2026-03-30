@@ -9,9 +9,9 @@ Requirements for UI Polish + Dev Tools milestone. Each maps to roadmap phases.
 
 ### Color Consistency
 
-- [ ] **CLR-01**: Extract shared `starColors` module from duplicate definitions in RouteMap, ElevationProfile, and GravelSectors
-- [ ] **CLR-02**: Map polylines for 2-star and 3-star sectors use same colors as sector cards
-- [ ] **CLR-03**: Elevation profile bands for 2-star and 3-star sectors use same colors as sector cards
+- [x] **CLR-01**: Extract shared `starColors` module from duplicate definitions in RouteMap, ElevationProfile, and GravelSectors
+- [x] **CLR-02**: Map polylines for 2-star and 3-star sectors use same colors as sector cards
+- [x] **CLR-03**: Elevation profile bands for 2-star and 3-star sectors use same colors as sector cards
 
 ### Elevation Profile Labels
 
@@ -49,9 +49,9 @@ Deferred to later milestones.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CLR-01 | Phase 33 | Pending |
-| CLR-02 | Phase 33 | Pending |
-| CLR-03 | Phase 33 | Pending |
+| CLR-01 | Phase 33 | Complete |
+| CLR-02 | Phase 33 | Complete |
+| CLR-03 | Phase 33 | Complete |
 | ELEV-01 | Phase 34 | Pending |
 | ELEV-02 | Phase 34 | Pending |
 | ELEV-03 | Phase 34 | Pending |

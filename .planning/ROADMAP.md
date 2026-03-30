@@ -62,24 +62,16 @@ Phases 27-32 delivered: Strava segment links on all 9 cards, scoring engine (Gra
 
 ---
 
-### Phase 33: Color Consistency
+### Phase 33: Color Consistency ✅
 
 **Goal**: All star-rating colors are sourced from a single shared module — map polylines, elevation bands, and sector cards show identical colors for every rating.
 
-**Depends on**: Phase 32 (v5.0 complete)
+**Completed**: 2026-03-30
 
 **Requirements**: CLR-01, CLR-02, CLR-03
 
-**Success Criteria** (what must be TRUE):
-  1. A single `src/lib/colors.js` module exports `STAR_COLORS` and is the only definition of star rating hex values in the codebase
-  2. 2-star and 3-star sector polylines on the map are visually identical in color to their corresponding sector cards
-  3. 2-star and 3-star sector bands on the elevation chart are visually identical in color to their corresponding sector cards
-  4. No inline `starColors` literal objects remain in `RouteMap.astro`, `ElevationProfile.astro`, or `GravelSectors.astro`
-
-**Plans**: 1 plan
-
 Plans:
-- [ ] 33-01: Extract starColors to src/lib/starColors.ts and update all three consumers
+- [x] 33-01: Extract starColors to src/lib/starColors.ts and update all three consumers
 
 ---
 
@@ -137,6 +129,6 @@ Plans:
 | 17-21. Escher Identity | v3.0 | 6/6 | Complete | 2026-03-29 |
 | 22-26. Route Update | v4.0 | 7/7 | Complete | 2026-03-30 |
 | 27-32. Strava + Results | v5.0 | 10/10 | Complete | 2026-03-30 |
-| 33. Color Consistency | v6.0 | 0/TBD | Not started | - |
+| 33. Color Consistency | v6.0 | 1/1 | Complete | 2026-03-30 |
 | 34. Elevation Labels | v6.0 | 0/TBD | Not started | - |
 | 35. Site Navigation | v6.0 | 0/TBD | Not started | - |
