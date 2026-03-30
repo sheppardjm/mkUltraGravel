@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v4.0 Phase 24 — CSS + Layout + Content
+**Current focus:** v4.0 Phase 25 — (next phase)
 
 ## Current Position
 
 Milestone: v4.0 — Route Update + UX Overhaul
-Phase: 24 of 26 (CSS + Layout + Content)
-Plan: 01 of 2 complete
-Status: In progress
-Last activity: 2026-03-30 — Completed 24-01-PLAN.md (CSS touch targets + card height equalization)
+Phase: 24 of 26 (CSS + Layout + Content) — COMPLETE
+Plan: 02 of 2 complete
+Status: Phase complete
+Last activity: 2026-03-30 — Completed 24-02-PLAN.md (Penrose hero animation + Grinduro format explainer)
 
-Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: [█████░░░░░] 50%
+Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: [██████░░░░] 60%
 
 ## Performance Metrics
 
@@ -30,6 +30,11 @@ Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: [████�
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
+
+**24-02 decisions:**
+- 20s rotation speed for penrose-spin (subtle but noticeable; escher-drift uses 50s)
+- transform-box: fill-box required for correct SVG rotation center (shape-relative, not viewport)
+- GrinduroExplainer placed as sibling of grid (not child) for full-width span above sector cards
 
 **24-01 decisions:**
 - min-h-[280px] chosen as card equalization value — accommodates KOM 4-item grid plus aspect-video image at column widths
@@ -61,5 +66,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-30
-Stopped at: Completed 24-01-PLAN.md — ready for 24-02
+Stopped at: Completed 24-02-PLAN.md — Phase 24 complete, ready for Phase 25
 Resume file: None
