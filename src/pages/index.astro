@@ -264,17 +264,6 @@ const GLRC_URL = 'https://www.glrc.org/donate';
         </p>
         <RouteMap />
         <ElevationProfile />
-        <button
-          id="map-reset"
-          class="mt-6 px-4 py-2 text-xs uppercase tracking-widest
-                 bg-bg-surface border border-accent-green text-text-muted
-                 hover:bg-bg-elevated hover:text-accent-green
-                 transition-colors cursor-pointer
-                 active:translate-y-px motion-reduce:active:transform-none"
-          aria-label="Reset map and elevation chart to default view"
-        >
-          Reset View
-        </button>
       </div>
     </section>
 
@@ -378,11 +367,5 @@ const GLRC_URL = 'https://www.glrc.org/donate';
     initReveal();
   }
 
-  // Reset button — dispatches map:reset to restore map + elevation chart to initial state
-  const resetBtn = document.getElementById('map-reset');
-  if (resetBtn) {
-    resetBtn.addEventListener('click', () => {
-      window.dispatchEvent(new CustomEvent('map:reset'));
-    });
-  }
+  // Reset button now lives inside RouteMap as a custom Leaflet control
 </script>

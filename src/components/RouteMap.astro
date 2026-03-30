@@ -58,6 +58,27 @@
   // Initialize map with gestureHandling enabled
   const map = L.map('map', { gestureHandling: true });
 
+  // Custom reset control — appears below zoom buttons (top-left)
+  const ResetControl = L.Control.extend({
+    options: { position: 'topleft' },
+    onAdd() {
+      const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+      const btn = L.DomUtil.create('a', '', container) as HTMLAnchorElement;
+      btn.href = '#';
+      btn.title = 'Reset view';
+      btn.setAttribute('role', 'button');
+      btn.setAttribute('aria-label', 'Reset map and elevation chart to default view');
+      btn.innerHTML = '↺';
+      L.DomEvent.disableClickPropagation(container);
+      L.DomEvent.on(btn, 'click', (e: Event) => {
+        L.DomEvent.preventDefault(e);
+        window.dispatchEvent(new CustomEvent('map:reset'));
+      });
+      return container;
+    }
+  });
+  new ResetControl().addTo(map);
+
   // Carto Dark Matter tiles — no API key required
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',

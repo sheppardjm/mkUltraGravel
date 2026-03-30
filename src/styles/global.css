@@ -206,16 +206,18 @@
     background: oklch(0.25 0.01 250) !important;
   }
 
-  /* MAP-10: Enlarge zoom controls to 44×44px touch targets (WCAG 2.5.5) */
+  /* MAP-10: Enlarge zoom + reset controls to 52×52px touch targets */
   .leaflet-bar a {
-    width: 44px !important;
-    height: 44px !important;
-    line-height: 44px !important;
+    width: 52px !important;
+    height: 52px !important;
+    line-height: 52px !important;
+    font-size: 22px !important;
   }
   .leaflet-touch .leaflet-bar a {
-    width: 44px !important;
-    height: 44px !important;
-    line-height: 44px !important;
+    width: 52px !important;
+    height: 52px !important;
+    line-height: 52px !important;
+    font-size: 22px !important;
   }
 
   .leaflet-gesture-handling-touch-warning,
