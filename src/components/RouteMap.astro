@@ -52,6 +52,9 @@
   // markercluster — side-effect import; attaches L.markerClusterGroup() to window.L
   await import('leaflet.markercluster');
 
+  // PhotoSwipeLightbox — programmatic lightbox for photo markers (MAP-12)
+  const PhotoSwipeLightbox = (await import('photoswipe/lightbox')).default;
+
   // Initialize map with gestureHandling enabled
   const map = L.map('map', { gestureHandling: true });
 
@@ -68,6 +71,24 @@
     fetch('/data/annotations.json').then(r => r.json()),
     fetch('/data/photos.json').then(r => r.json())
   ]);
+  // Build PhotoSwipe dataSource from all photos — used by the lightbox (MAP-12)
+  const dataSource = photos.map((photo: { filename: string; width: number; height: number; mi: number }) => ({
+    src: `/images/${photo.filename}`,
+    width: photo.width,
+    height: photo.height,
+    msrc: `/images/thumbs/${photo.filename.replace(/\.(jpg|jpeg|png|avif)$/i, '.webp')}`,
+    alt: `Route photo at mile ${photo.mi}`,
+  }));
+
+  // Initialize PhotoSwipe lightbox — programmatic (no gallery HTML required)
+  const lightbox = new PhotoSwipeLightbox({
+    dataSource,
+    pswpModule: () => import('photoswipe'),
+    bgOpacity: 0.95,
+    showHideAnimationType: 'fade',
+  });
+  lightbox.init();
+
   const latlngs = routeData.map((pt: { lat: number; lon: number }) => [pt.lat, pt.lon] as [number, number]);
   const routeLine = L.polyline(latlngs, {
     color: '#d4d4d4',
@@ -188,24 +209,26 @@
       .addTo(map);
   });
 
-  // Photo markers with clustering — MAP-06: geolocated photos are the primary differentiator
-  const photoIcon = L.divIcon({
-    className: 'photo-marker',
-    html: '<div style="width:10px;height:10px;background:#22d3ee;border:2px solid #fff;border-radius:2px;"></div>',
-    iconSize: [14, 14],
-    iconAnchor: [7, 7],
-    popupAnchor: [0, -10]
-  });
+  // Photo markers with clustering — MAP-11 + MAP-12: thumbnail divIcons open PhotoSwipe lightbox on click
+  const photoMarkers = photos.map((photo: { filename: string; lat: number; lon: number; mi: number }, index: number) => {
+    const icon = L.divIcon({
+      className: 'photo-marker',
+      html: `<img
+        src="/images/thumbs/${photo.filename.replace(/\.(jpg|jpeg|png|avif)$/i, '.webp')}"
+        alt="Route photo at mile ${photo.mi}"
+        style="width:48px;height:48px;object-fit:cover;border:2px solid #22d3ee;border-radius:3px;display:block;"
+        loading="lazy"
+      />`,
+      iconSize: [52, 52],
+      iconAnchor: [26, 26],
+    });
 
-  const photoMarkers = photos.map((photo: { filename: string; lat: number; lon: number }) =>
-    L.marker([photo.lat, photo.lon], { icon: photoIcon })
-      .bindPopup(
-        `<a href="/images/${photo.filename}" target="_blank" rel="noopener">` +
-        `<img src="/images/${photo.filename}" width="260" style="display:block;border-radius:2px;" loading="lazy">` +
-        `</a>`,
-        { className: 'dark-popup', maxWidth: 300 }
-      )
-  );
+    const marker = L.marker([photo.lat, photo.lon], { icon });
+    marker.on('click', () => {
+      lightbox.loadAndOpen(index);
+    });
+    return marker;
+  });
 
   const photoCluster = (L as any).markerClusterGroup({
     maxClusterRadius: 60,
@@ -261,6 +284,8 @@
 
   // Listen for map:reset — restore map to initial state (bounds, popups, sector styles, crosshair)
   window.addEventListener('map:reset', (() => {
+    // Close any open PhotoSwipe lightbox before resetting map
+    lightbox.pswp?.close();
     // Restore map to initial zoom/bounds
     map.fitBounds(initialBounds, { padding: initialPadding });
     // Close all open popups
