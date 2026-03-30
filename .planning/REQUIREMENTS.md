@@ -1,0 +1,90 @@
+# Requirements: MK Ultra Gravel
+
+**Defined:** 2026-03-30
+**Core Value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
+
+## v5.0 Requirements
+
+Requirements for v5.0 — Strava Integration + Results. Each maps to roadmap phases.
+
+### Strava Integration
+
+- [ ] **STRAVA-01**: Strava icon + link to segment page on all 9 sector/KOM cards
+- [ ] **STRAVA-02**: Segment metadata (distance, avg grade) displayed on cards
+- [ ] **STRAVA-03**: Manual KOM/QOM times displayed on 3 KOM cards
+
+### Scoring
+
+- [ ] **SCORE-01**: Gravel Champion scoring — cumulative elapsed_time across 6 sectors, ranked by gender (men/women/non-binary)
+- [ ] **SCORE-02**: KOM/QOM Champion scoring — 10-1 points for top 10 per climb, most total points wins, ranked by gender
+- [ ] **SCORE-03**: Scoring system explainer component on site
+
+### Submission
+
+- [ ] **SUBMIT-01**: Strava OAuth flow via Netlify Function (authorization code exchange)
+- [ ] **SUBMIT-02**: Segment_efforts extracted from submitted activity for 9 event segments
+- [ ] **SUBMIT-03**: Self-reported gender/category dropdown (men/women/non-binary) in submission form
+- [ ] **SUBMIT-04**: Explicit consent checkbox — results only displayed publicly after opt-in
+- [ ] **SUBMIT-05**: Per-athlete JSON files committed via GitHub API, rebuild triggered via Netlify build hook
+- [ ] **SUBMIT-06**: Activity validation — verify submitted activity contains matching event segment_efforts
+- [ ] **SUBMIT-07**: Deauthorization webhook — handle Strava deauth callback with 48hr data deletion
+
+### Results
+
+- [ ] **RESULT-01**: Gravel Champion leaderboard page (cumulative time across 6 sectors, men/women/non-binary tabs)
+- [ ] **RESULT-02**: KOM/QOM Champion leaderboard page (total points across 3 climbs, men/women/non-binary tabs)
+- [ ] **RESULT-03**: Individual segment leaderboards (per-segment times and rankings)
+- [ ] **RESULT-04**: Per-segment time breakdown displayed within gravel leaderboard rows
+- [ ] **RESULT-05**: Strava activity link on each result row
+
+## Future Requirements
+
+Deferred to later milestones.
+
+- **PERF-03**: Verify onHover performance on mid-range Android devices
+- **DATA-07**: Replace Down Jeep KOM fallback photo when better in-range photo available
+- **STRAVA-04**: Automated KOM/QOM data from Strava API (if xoms field proves reliable)
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Real-time leaderboard updates | Rebuild-on-commit latency (1-2 min) is acceptable |
+| Database backend | JSON files sufficient for single-event ~100 participants |
+| Strava segment embeds | Chrome third-party cookie deprecation makes them unreliable |
+| Auto-scraping KOM/QOM from Strava | TOS violation — using manual entry instead |
+| Live KOM/QOM holder data via API | Leaderboard endpoint removed June 2020; xoms field undocumented |
+| Bearing-aligned bike icon rotation | MEDIUM complexity; optional enhancement |
+| KOM-to-sector hover sync | Cross-component event wiring; second-pass feature |
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| STRAVA-01 | — | Pending |
+| STRAVA-02 | — | Pending |
+| STRAVA-03 | — | Pending |
+| SCORE-01 | — | Pending |
+| SCORE-02 | — | Pending |
+| SCORE-03 | — | Pending |
+| SUBMIT-01 | — | Pending |
+| SUBMIT-02 | — | Pending |
+| SUBMIT-03 | — | Pending |
+| SUBMIT-04 | — | Pending |
+| SUBMIT-05 | — | Pending |
+| SUBMIT-06 | — | Pending |
+| SUBMIT-07 | — | Pending |
+| RESULT-01 | — | Pending |
+| RESULT-02 | — | Pending |
+| RESULT-03 | — | Pending |
+| RESULT-04 | — | Pending |
+| RESULT-05 | — | Pending |
+
+**Coverage:**
+- v5.0 requirements: 17 total
+- Mapped to phases: 0
+- Unmapped: 17 ⚠️
+
+---
+*Requirements defined: 2026-03-30*
+*Last updated: 2026-03-30 after initial definition*
