@@ -5,15 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v4.0 complete — all planned phases delivered
+**Current focus:** v4.0 complete — all phases delivered including gap closure
 
 ## Current Position
 
 Milestone: v4.0 — Route Update + UX Overhaul — COMPLETE
-Phase: 26 of 26 (Photo Lightbox from Map) — Complete
-Plan: 01 of 1 — Complete
+Phase: 24 gap closure complete (all 5 phases done)
+Plan: 03 of 3 — Complete
 Status: v4.0 milestone complete
-Last activity: 2026-03-30 — Completed 26-01 (thumbnail photo markers + PhotoSwipe lightbox, human-verify approved)
+Last activity: 2026-03-30 — Completed 24-03 gap closure (card height fix, reset button as Leaflet control, zoom enlarged to 52px)
 
 Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: [██████████] 100%
 
@@ -48,6 +48,12 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - transform-box: fill-box required for correct SVG rotation center (shape-relative, not viewport)
 - GrinduroExplainer placed as sibling of grid (not child) for full-width span above sector cards
 
+**24-03 decisions:**
+- Reset button moved from standalone HTML to custom Leaflet control (L.Control.extend) per user feedback
+- Zoom controls enlarged from 44px to 52px with 22px font per user feedback
+- .leaflet-bar a selector broadened from .leaflet-control-zoom a so all controls share dark theme
+- h-[180px] on gravel card images instead of aspect-video (decouples height from container width)
+
 **24-01 decisions:**
 - min-h-[280px] chosen as card equalization value — accommodates KOM 4-item grid plus aspect-video image at column widths
 - Both .leaflet-bar a and .leaflet-touch .leaflet-bar a selectors needed (covers 26px desktop default and 30px touch default)
@@ -78,5 +84,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-30
-Stopped at: 26-01 complete (cb89066 task + docs commit) — v4.0 milestone complete
+Stopped at: 24-03 gap closure complete (c8f65ef) — all v4.0 phases verified
 Resume file: None

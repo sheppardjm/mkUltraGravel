@@ -12,7 +12,7 @@ Update the route from 80mi to 100mi (cascading through the entire data pipeline)
 
 - [x] **Phase 22: GPX Route Replacement** - Replace 80mi GPX with 100mi, re-run pipeline, verify all data
 - [x] **Phase 23: New Photos** - Process Down Jeep + Billie Helmer B&W through pipeline
-- [ ] **Phase 24: CSS + Layout + Content** - Zoom controls, card sizing, Penrose hero, Grinduro explainer
+- [x] **Phase 24: CSS + Layout + Content** - Zoom controls, card sizing, Penrose hero, Grinduro explainer
 - [x] **Phase 25: Map Reset** - Reset button restores map + elevation chart to default state
 - [x] **Phase 26: Photo Lightbox from Map** - Larger thumbnails + PhotoSwipe lightbox from map markers
 
@@ -62,7 +62,7 @@ Plans:
 Plans:
 - [x] 24-01-PLAN.md -- Zoom control 44px touch targets (MAP-10) + card height equalization (LAYOUT-01)
 - [x] 24-02-PLAN.md -- Penrose triangle hero SVG (LAYOUT-02) + Grinduro format explainer (CONT-06)
-- [ ] 24-03-PLAN.md -- Gap closure: fix card height parity (fixed image height) + reset button visibility
+- [x] 24-03-PLAN.md -- Gap closure: card height h-[180px], reset button as Leaflet control, zoom enlarged to 52px
 
 ### Phase 25: Map Reset
 **Goal**: Users can return the map and elevation chart to their default state with a single click, clearing all highlights, popups, and zoom changes.
@@ -104,7 +104,7 @@ Plans:
 |-------|-----------|----------------|--------|-----------|
 | 22. GPX Route Replacement | v4.0 | 1/1 | Complete | 2026-03-29 |
 | 23. New Photos | v4.0 | 1/1 | Complete | 2026-03-29 |
-| 24. CSS + Layout + Content | v4.0 | 2/3 | Gap closure | - |
+| 24. CSS + Layout + Content | v4.0 | 3/3 | Complete | 2026-03-30 |
 | 25. Map Reset | v4.0 | 1/1 | Complete | 2026-03-29 |
 | 26. Photo Lightbox from Map | v4.0 | 1/1 | Complete | 2026-03-30 |
 
