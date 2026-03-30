@@ -1,475 +1,305 @@
-# Technology Stack — Strava Integration + Results Milestone
+# Technology Stack — v6.0 UI Polish + Dev Tools
 
-**Project:** MK Ultra Gravel — Strava API + Results
+**Project:** MK Ultra Gravel
+**Milestone:** v6.0 — Sector labels on elevation profile, site navigation, color consistency, KOM/QOM input tool
 **Researched:** 2026-03-30
-**Scope:** Stack additions for Strava segment data (build-time), Strava OAuth submission flow (serverless), JSON-based results storage, and results leaderboard pages
-**Confidence:** HIGH for Strava API surface and Netlify Functions patterns; MEDIUM for `xoms`/`local_legend` response fields (undocumented in OpenAPI spec, confirmed by community)
+**Scope:** Stack additions/changes for 4 specific features only. All existing dependencies (Astro 6, Tailwind v4, Leaflet, Chart.js, PhotoSwipe, sharp, vitest, Netlify Functions) are unchanged and out of scope for this research.
+**Confidence:** HIGH — all findings verified against installed package source or official Astro documentation
 
 ---
 
 ## Executive Summary
 
-This milestone transitions MK Ultra Gravel from a fully static site to a **static site with serverless functions**. The core Astro build remains static (no SSR adapter needed), but three new capabilities require server-side code: (1) Strava OAuth token exchange (client_secret must never reach the browser), (2) Strava API proxying for activity submission, and (3) build hook triggering after results are stored.
+This milestone requires **zero new npm dependencies**. All 4 features are buildable with what's already installed. The work is configuration and code changes, not dependency additions.
 
-The stack additions are minimal but architecturally significant:
+The key finding: `chartjs-plugin-annotation` v3.1.0 (already installed) supports labels on box annotations with `position: {x: 'center', y: 'end'}` plus `yAdjust` to push labels below the box boundary into the chart's bottom margin. No label plugin additions needed.
 
-| Addition | Purpose | Why |
-|----------|---------|-----|
-| `@netlify/functions` | TypeScript types for Netlify Functions v2 | Required for serverless OAuth + API proxy |
-| `netlify-cli` (dev dep) | Local development with functions | `netlify dev` wraps `astro dev` + serves functions locally |
-| `netlify.toml` | Configure functions directory, env var scoping, build hooks | Required for Netlify to discover functions |
-| New prebuild script | Fetch Strava segment data at build time | Extends existing pipeline pattern |
+The color duplication problem (starColors defined identically in 3 files) is solvable by extracting to a shared JS module in `src/lib/`. This is preferable to CSS custom properties because the colors are used at runtime in Chart.js annotation config and Leaflet polyline options — neither of which reads CSS variables. A `src/lib/colors.js` file is the right abstraction.
 
-**No Strava client library.** The Strava API v3 is a simple REST API. Direct `fetch()` calls with Bearer token auth are cleaner, lighter, and more maintainable than any wrapper library. The two candidate npm packages (`strava-v3@3.1.0` and `strava`) both add unnecessary abstraction over straightforward HTTP calls.
+The navigation component uses `Astro.url.pathname` (built-in, no library) to set `aria-current="page"` on the active link. This is the standard Astro pattern confirmed by official docs.
 
-**No Astro adapter.** The site remains fully static. Netlify Functions live in the `netlify/functions/` directory alongside (not inside) the Astro project. Astro builds to `dist/`, functions deploy from `netlify/functions/`. No `@astrojs/netlify` adapter needed.
+The KOM/QOM input tool is a plain Node.js CLI script that updates `resolve-annotations.js` directly (or a separate `kom-times.json` data file). No new tooling — it fits the existing `scripts/` directory pattern.
 
 ---
 
-## Recommended Stack Additions
+## Feature 1: Sector Labels on Elevation Profile
 
-### Serverless Runtime
+### What's needed
 
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| `@netlify/functions` | ^5.1.5 | TypeScript types + utilities for Netlify Functions v2 | Provides `Config` export type for path routing, `Context` type for request handling. The v2 function format uses Web Standard `Request`/`Response` objects — modern, portable, no vendor lock-in beyond deployment target. |
-| `netlify-cli` | latest (dev) | Local development server | `netlify dev` proxies both `astro dev` (port 4321) and functions (port 8888) under a single local URL. Required to test OAuth flow locally. |
+The elevation profile needs sector name + star rating labels rendered at the **bottom** of each sector's box annotation, staggered vertically to prevent overlap on narrow sectors.
 
-### Configuration Files
+### Stack verdict: No new dependencies
 
-| File | Purpose |
-|------|---------|
-| `netlify.toml` | Functions directory, build command, environment variable scoping, redirect rules for OAuth callback |
-| `.env` (git-ignored) | Local development secrets: `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_REFRESH_TOKEN` |
+`chartjs-plugin-annotation` v3.1.0 already supports this via the box annotation's `label` sub-object.
 
-### Build-Time Dependencies (Already Available)
+### Verified API (from installed source at `node_modules/chartjs-plugin-annotation/dist/chartjs-plugin-annotation.esm.js`)
 
-| Technology | Status | Purpose in This Milestone |
-|------------|--------|---------------------------|
-| Node.js 22 (via Volta) | Already pinned | Runs prebuild Strava data fetch script using native `fetch()` (stable since Node 18) |
-| `scripts/generate-data.js` | Existing pipeline | Will be extended with a new `fetch-strava-segments.js` step |
+Box annotation label positioning uses `calculateY` which calls `getRelativePosition(availableSize, position.y)`:
+
+| `position.y` value | Result |
+|--------------------|--------|
+| `'start'` | Top of box (0 offset into available space) |
+| `'center'` | Middle of box (default) |
+| `'end'` | Bottom of box (full available space offset) |
+
+The `yAdjust` property is **added on top** of the position calculation. Setting `position: { x: 'center', y: 'end' }` with a positive `yAdjust` (e.g., `yAdjust: 12`) pushes the label **below the box** into the chart's bottom padding area.
+
+### Recommended label configuration per sector annotation
+
+```js
+label: {
+  display: true,
+  content: ['★★★', 'Sandstrom'],     // array = two-line label
+  color: starColors[sector.stars] + 'cc',
+  font: [
+    { size: 8, family: 'Space Mono, monospace' },   // star line
+    { size: 7, family: 'Space Mono, monospace' },   // name line
+  ],
+  position: { x: 'center', y: 'end' },
+  yAdjust: 10,   // pixels below box bottom edge
+  padding: 2,
+}
+```
+
+### Staggering to avoid overlap
+
+Narrow sectors (e.g., Down Jeep at 0.6 mi, Haavisto at 1.38 mi) will have labels that crowd or overlap adjacent sector labels at full chart width. Two approaches:
+
+**Option A: Alternate yAdjust** — odd-indexed sectors get `yAdjust: 10`, even-indexed get `yAdjust: 24`. Simple, no dynamic sizing needed.
+
+**Option B: Conditional display** — measure sector width in pixels at chart render time and only show labels for sectors wider than a threshold. More precise, but requires a post-render step or the `afterDraw` plugin hook.
+
+**Recommendation:** Option A (alternate yAdjust) for phase implementation. The chart is fixed height (140px mobile, 180px desktop) and the bottom padding needs to accommodate the tallest label offset. Add `layout.padding.bottom: 32` to the chart options to prevent labels from being clipped.
+
+### Integration point
+
+Modify `src/components/ElevationProfile.astro`, specifically the `annotationBoxes` construction in the `initElevation()` function. Sector annotations already have `name` and `stars` available in the loop — the label config is purely additive.
 
 ---
 
-## Strava API v3 — Critical Reference
+## Feature 2: Site Navigation Component
 
-### Authentication Model
+### What's needed
 
-Strava does NOT support client credentials or public API keys. **Every API request requires a Bearer token**, even for public segment data. This means:
+A header `<nav>` with links to Home (`/`), Results (`/results`), and Submit (`/submit`). Active state based on current page. Consistent across all pages via `BaseLayout.astro`.
 
-1. **Build-time segment fetching** needs an access token from the app owner's Strava account
-2. **User submission flow** needs each user to OAuth-authorize, producing their own access token
-3. **Access tokens expire every 6 hours** and must be refreshed via `refresh_token`
+### Stack verdict: No new dependencies
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `https://www.strava.com/oauth/authorize` | GET (browser redirect) | Start OAuth flow — user grants permission |
-| `https://www.strava.com/api/v3/oauth/token` | POST | Exchange auth code for access+refresh tokens; also refresh expired tokens |
-| `https://www.strava.com/api/v3/segments/{id}` | GET | Get segment detail (name, distance, elevation, xoms, local_legend) |
-| `https://www.strava.com/api/v3/athlete/activities` | GET | List authenticated athlete's activities |
-| `https://www.strava.com/api/v3/activities/{id}` | GET | Get detailed activity with segment_efforts |
-| `https://www.strava.com/oauth/deauthorize` | POST | Revoke app access (good citizenship) |
+Astro's built-in `Astro.url.pathname` (confirmed in official API reference at `docs.astro.build/en/reference/api-reference/#astrourl`) provides current page path at build time for static generation.
 
-### Required OAuth Scopes
+### Verified API
 
-| Scope | Why Needed |
-|-------|-----------|
-| `read` | Access public segment data (build-time segment fetch uses app owner's token with this scope) |
-| `activity:read` | Read user's activities for submission flow (find their MK Ultra ride) |
-| `activity:read_all` | Read activities regardless of privacy setting (needed because some athletes set rides to "Followers Only") |
+`Astro.url` is a standard `URL` object. `Astro.url.pathname` returns the path segment (e.g., `/`, `/results`, `/submit`).
 
-**Recommended scope string for user OAuth:** `read,activity:read_all`
+```astro
+---
+const currentPath = Astro.url.pathname;
+const navLinks = [
+  { label: 'Home', href: '/' },
+  { label: 'Results', href: '/results' },
+  { label: 'Submit', href: '/submit' },
+];
+---
+<nav>
+  {navLinks.map(link => (
+    <a
+      href={link.href}
+      aria-current={currentPath === link.href ? 'page' : undefined}
+    >
+      {link.label}
+    </a>
+  ))}
+</nav>
+```
 
-Do NOT request `activity:write` or `profile:write` — the app never modifies user data.
+`aria-current="page"` is the semantic HTML standard for indicating the current page in navigation (WCAG 2.1 requirement). CSS targets `[aria-current="page"]` for active styling.
 
-### Rate Limits
+### Integration point
 
-| Limit | Value | Implication |
-|-------|-------|-------------|
-| 15-minute window | 100 read requests | Build-time: 9 segment fetches is well within budget |
-| Daily limit | 1,000 read requests | Event day with 50 participants submitting: ~150 API calls (3 per user). Safe. |
-| Upload endpoints | 200/15min, 2,000/day | Not applicable — we don't upload |
+Create `src/components/SiteNav.astro`. Add `<SiteNav />` to `src/layouts/BaseLayout.astro` inside `<body>`, before `<slot />`. The component receives no props — it reads `Astro.url.pathname` internally.
 
-**Headers to monitor:** `X-RateLimit-Limit`, `X-RateLimit-Usage`, `X-ReadRateLimit-Limit`, `X-ReadRateLimit-Usage`
+### Note on static generation
 
-### Segment Detail Response — Key Fields
-
-The `GET /segments/{id}` endpoint returns a `DetailedSegment` with these fields relevant to our use case:
-
-| Field | Type | Use |
-|-------|------|-----|
-| `name` | string | Display name on segment cards |
-| `distance` | float (meters) | Segment length |
-| `average_grade` | float | Grade percentage |
-| `maximum_grade` | float | Max grade percentage |
-| `elevation_high` | float (meters) | Highest point |
-| `elevation_low` | float (meters) | Lowest point |
-| `total_elevation_gain` | float (meters) | Total climbing |
-| `effort_count` | int | How many times ridden |
-| `athlete_count` | int | How many athletes have ridden it |
-| `star_count` | int | Starred count |
-| `xoms` | object | **KOM/QOM times** — `xoms.kom`, `xoms.qom` as formatted time strings (e.g., `"50:03"`) |
-| `local_legend` | object | Current local legend — `local_legend.title` (athlete name), `local_legend.effort_count` |
-| `map` | PolylineMap | Encoded polyline of segment route |
-| `start_latlng` | [lat, lng] | Segment start coordinates |
-| `end_latlng` | [lat, lng] | Segment end coordinates |
-
-**IMPORTANT CAVEAT:** The `xoms` and `local_legend` fields are NOT in the official OpenAPI/Swagger spec but ARE returned by the live API. This was confirmed via the [Strava Community Hub discussion](https://communityhub.strava.com/developers-api-7/accessing-kom-qom-data-for-segment-1999). Confidence: MEDIUM — works today, but undocumented fields could theoretically be removed without notice.
-
-### Activity Detail Response — Key Fields for Results
-
-The `GET /activities/{id}` endpoint (with `include_all_efforts=true`) returns:
-
-| Field | Type | Use |
-|-------|------|-----|
-| `name` | string | Activity title |
-| `distance` | float (meters) | Total ride distance |
-| `moving_time` | int (seconds) | Moving time |
-| `elapsed_time` | int (seconds) | Total elapsed time |
-| `start_date` | datetime | When the ride started |
-| `segment_efforts` | array | **Critical** — each effort has `segment.id`, `elapsed_time`, `moving_time`, `start_date` |
-| `athlete` | object | `athlete.id`, `athlete.firstname`, `athlete.lastname` |
-
-The `segment_efforts` array is how we extract each rider's times on the 9 MK Ultra segments.
+Because this is a static site (Astro fully static, no adapter), `Astro.url.pathname` is evaluated at **build time** for each page. Each page's HTML gets its own pre-rendered nav with the correct active state — no JavaScript required.
 
 ---
 
-## Architecture: Two Token Strategies
+## Feature 3: Color Consistency Fix
 
-### Strategy 1: Build-Time (App Owner's Token)
+### What's needed
 
-For fetching segment details (names, distances, KOM/QOM times) at build time:
+`starColors` is currently defined identically in three separate files:
+- `src/components/RouteMap.astro` (client-side `<script>` tag)
+- `src/components/ElevationProfile.astro` (client-side `<script>` tag)
+- `src/components/GravelSectors.astro` (Astro frontmatter, build-time)
 
-```
-prebuild script
-  → read STRAVA_REFRESH_TOKEN from env
-  → POST /oauth/token (refresh) → get fresh access_token
-  → GET /segments/{id} x 9 → extract fields
-  → write public/data/strava-segments.json
-  → Astro reads JSON at build time (same pattern as route-data.json)
-```
+The three definitions are byte-for-byte identical today, so there is no actual color inconsistency in the rendered output. The "inconsistency" risk is future divergence: any future star rating color change requires updating 3 files.
 
-**Environment variables needed (Netlify UI, "Build" scope):**
-- `STRAVA_CLIENT_ID` — from Strava API settings
-- `STRAVA_CLIENT_SECRET` — from Strava API settings (secret)
-- `STRAVA_REFRESH_TOKEN` — app owner's refresh token (obtained once via manual OAuth)
+### Stack verdict: No new dependencies
 
-**Why refresh token, not access token:** Access tokens expire every 6 hours. Refresh tokens are long-lived. The prebuild script refreshes the access token on every build, guaranteeing a fresh token regardless of when the last build ran.
+Extract to `src/lib/colors.js` — a shared ES module. This file already exists as a directory containing `scoring.js` and `scoring.test.js`, confirming the pattern for shared utilities.
 
-### Strategy 2: Runtime (User OAuth via Netlify Functions)
+### Recommended approach
 
-For the post-event activity submission flow:
+**Option A: Shared JS module (recommended)**
 
-```
-Browser                          Netlify Function              Strava
-  │                                    │                          │
-  │  Click "Submit Results"            │                          │
-  │──redirect to Strava──────────────────────────────────────────>│
-  │                                    │     User approves        │
-  │<───────redirect with ?code=xxx─────│──────────────────────────│
-  │                                    │                          │
-  │  POST /api/strava/callback         │                          │
-  │  { code: xxx }                     │                          │
-  │───────────────────────────────────>│                          │
-  │                                    │  POST /oauth/token       │
-  │                                    │  (code + client_secret)  │
-  │                                    │─────────────────────────>│
-  │                                    │  { access_token, ... }   │
-  │                                    │<─────────────────────────│
-  │                                    │                          │
-  │                                    │  GET /athlete/activities │
-  │                                    │─────────────────────────>│
-  │                                    │  [activities...]         │
-  │                                    │<─────────────────────────│
-  │                                    │                          │
-  │  { activities for selection }      │                          │
-  │<───────────────────────────────────│                          │
-  │                                    │                          │
-  │  POST /api/strava/submit           │                          │
-  │  { activityId, gender }            │                          │
-  │───────────────────────────────────>│                          │
-  │                                    │  GET /activities/{id}    │
-  │                                    │  ?include_all_efforts    │
-  │                                    │─────────────────────────>│
-  │                                    │  { segment_efforts... }  │
-  │                                    │<─────────────────────────│
-  │                                    │                          │
-  │                                    │  Write results JSON      │
-  │                                    │  Trigger build hook      │
-  │  "Submitted! Results updating..."  │                          │
-  │<───────────────────────────────────│                          │
-```
-
-**Environment variables needed (Netlify UI, "Functions" scope):**
-- `STRAVA_CLIENT_ID`
-- `STRAVA_CLIENT_SECRET`
-- `STRAVA_REDIRECT_URI` — `https://mkultragravel.com/.netlify/functions/strava-callback` (or custom path)
-- `NETLIFY_BUILD_HOOK_URL` — build hook URL from Netlify project settings
-
-**IMPORTANT NOTE on env vars:** As of March 2026, there is a [known intermittent issue](https://answers.netlify.com/t/functions-v2-export-default-intermittently-missing-all-user-defined-env-vars-at-runtime/160958) with user-defined environment variables being absent from `process.env` at runtime in Functions v2. Use `Netlify.env.get()` as a fallback pattern, or access via `process.env` with explicit null checks. Monitor this issue.
-
----
-
-## Netlify Functions — Implementation Pattern
-
-### Directory Structure
-
-```
-mkUltraGravel/
-  netlify/
-    functions/
-      strava-auth.mts        # Initiate OAuth redirect
-      strava-callback.mts    # Exchange code for token, fetch activities
-      strava-submit.mts      # Fetch activity detail, extract segment times, store results
-  netlify.toml                # Config
-  src/                        # Existing Astro source
-  scripts/
-    fetch-strava-segments.js  # NEW: build-time segment data fetcher
-    generate-data.js          # Existing pipeline (add fetch-strava-segments.js step)
-  public/
-    data/
-      strava-segments.json    # NEW: build-time output
-      results.json            # NEW: results data (committed to repo OR stored in Netlify Blobs)
-```
-
-### Function Format (v2, ESM, TypeScript)
-
-Use `.mts` extension for ES modules with TypeScript. The v2 format uses Web Standard APIs:
-
-```typescript
-// netlify/functions/strava-auth.mts
-import type { Config, Context } from "@netlify/functions";
-
-export default async (req: Request, context: Context) => {
-  const clientId = process.env.STRAVA_CLIENT_ID;
-  const redirectUri = process.env.STRAVA_REDIRECT_URI;
-  const scope = "read,activity:read_all";
-
-  const authUrl = new URL("https://www.strava.com/oauth/authorize");
-  authUrl.searchParams.set("client_id", clientId!);
-  authUrl.searchParams.set("redirect_uri", redirectUri!);
-  authUrl.searchParams.set("response_type", "code");
-  authUrl.searchParams.set("scope", scope);
-  authUrl.searchParams.set("approval_prompt", "auto");
-
-  return Response.redirect(authUrl.toString(), 302);
-};
-
-export const config: Config = {
-  path: "/api/strava/auth"
+```js
+// src/lib/colors.js
+export const STAR_COLORS = {
+  1: '#f0c040',
+  2: '#e8962a',
+  3: '#d9641e',
+  4: '#c93a18',
+  5: '#b71c1c',
 };
 ```
 
-### netlify.toml Configuration
-
-```toml
-[build]
-  command = "npm run build"
-  publish = "dist"
-
-[functions]
-  directory = "netlify/functions"
-
-# Redirect OAuth callback to function
-[[redirects]]
-  from = "/api/strava/*"
-  to = "/.netlify/functions/strava-:splat"
-  status = 200
+Import in Astro frontmatter (build-time):
+```astro
+---
+import { STAR_COLORS } from '../lib/colors.js';
+---
 ```
 
-### Local Development
+Import in `<script>` tags (client-side, Vite bundles):
+```js
+import { STAR_COLORS } from '../lib/colors.js';
+```
+
+Astro's Vite bundler handles both import contexts. The `<script>` imports are bundled by Vite at build time — this is a documented Astro pattern from `docs.astro.build/en/guides/client-side-scripts/`.
+
+**Option B: CSS custom properties**
+
+Define `--color-star-1` through `--color-star-5` in `global.css` `@theme` block. CSS-only components could read them, but Chart.js annotation config and Leaflet polyline options take hex strings — they cannot read CSS custom properties. This option requires the JS fallback anyway, making it a partial solution.
+
+**Recommendation:** Option A only. CSS custom properties for star colors add complexity without benefit given the JS-centric consumers.
+
+### Integration point
+
+1. Create `src/lib/colors.js` with `STAR_COLORS` export
+2. Update `GravelSectors.astro` frontmatter to import and use it
+3. Update `RouteMap.astro` `<script>` to import and use it
+4. Update `ElevationProfile.astro` `<script>` to import and use it
+
+This is a refactor with no behavior change — a good candidate for a single focused phase.
+
+---
+
+## Feature 4: Local KOM/QOM Time Input Tool
+
+### What's needed
+
+A dev-only tool for entering KOM and QOM times for the 3 KOM segments. Currently `komTime: null` and `qomTime: null` in `scripts/resolve-annotations.js`. The times need to be stored and reflected in the built `public/data/annotations.json` so they appear on the KOM cards in `KomSegments.astro`.
+
+### Stack verdict: No new dependencies
+
+The existing `scripts/` directory pattern (plain Node.js CJS scripts, no framework) is the right model.
+
+### Architecture of KOM time data
+
+The data flow is:
+```
+scripts/resolve-annotations.js  (source of truth, hardcoded koms array)
+  → runs via npm run data / prebuild
+  → writes public/data/annotations.json
+    → read by KomSegments.astro at build time
+    → read by ElevationProfile.astro at runtime (fetch)
+    → read by RouteMap.astro at runtime (fetch)
+```
+
+The `komTime` and `qomTime` fields are `null` in the `koms` array in `resolve-annotations.js`. The KomSegments component already handles rendering them when non-null:
+
+```astro
+{(segment.komTime || segment.qomTime) && (
+  <div class="mt-2 pt-2 border-t border-border text-xs text-text-muted space-y-0.5">
+    {segment.komTime && <div>KOM <span class="text-accent-white">{segment.komTime}</span></div>}
+    {segment.qomTime && <div>QOM <span class="text-accent-white">{segment.qomTime}</span></div>}
+  </div>
+)}
+```
+
+### Recommended approach: Separate data file + merge script
+
+**Do NOT edit komTime/qomTime directly in `resolve-annotations.js`.**
+
+The `resolve-annotations.js` comment says `data.md` is the human-readable reference and `resolve-annotations.js` is the source of truth. KOM times are event data (updated post-event), not route geometry data. Separating them from route geometry concerns is cleaner.
+
+**Option A: `scripts/kom-times.json` (recommended)**
+
+```json
+{
+  "24479270": { "komTime": "3:42", "qomTime": "4:18" },
+  "41126651": { "komTime": "1:09", "qomTime": "1:22" },
+  "16438243": { "komTime": "7:15", "qomTime": "8:03" }
+}
+```
+
+`resolve-annotations.js` reads this file and merges times into the koms array by `stravaSegmentId`. When `kom-times.json` entries are absent, times remain `null`.
+
+**Option B: CLI update script**
+
+A `scripts/set-kom-times.js` script that accepts segment name + times as arguments:
 
 ```bash
-# Install CLI globally (or use npx)
-npm install -g netlify-cli
-
-# Link to Netlify site (one-time)
-netlify link
-
-# Pull env vars to local .env
-netlify env:pull
-
-# Run local dev (wraps astro dev + serves functions)
-netlify dev
+node scripts/set-kom-times.js "Billie Helmer" 3:42 4:18
 ```
 
-`netlify dev` automatically detects the Astro framework, runs `astro dev`, and serves functions at `http://localhost:8888/.netlify/functions/` (or custom paths via `config.path`).
+This script reads `kom-times.json`, updates the entry, writes it back, then runs `resolve-annotations.js` to regenerate `annotations.json`.
+
+**Recommendation:** Option A alone is sufficient for the first pass. The KOM times will be updated once (post-event day). An interactive CLI is nice-to-have. The JSON data file approach is simpler, auditable (git-trackable), and matches the existing pattern (`data.md` as human-readable reference).
+
+### Integration point
+
+1. Create `scripts/kom-times.json` with null-initialized entries (or empty object)
+2. Modify `scripts/resolve-annotations.js` to read and merge `kom-times.json`
+3. `npm run data` regenerates `annotations.json` with merged times
+
+The `generate-data.js` prebuild script already calls `resolve-annotations.js` in sequence with other pipeline steps — no changes to `package.json` scripts needed.
 
 ---
 
-## Results Storage Strategy
-
-### Recommended: JSON File in Git Repository
-
-Store results as `public/data/results.json` committed to the repo. When a user submits, the Netlify Function:
-
-1. Fetches current `results.json` from the repo via GitHub API (or Netlify Blobs)
-2. Appends the new result
-3. Commits the updated file (via GitHub API)
-4. Triggers a Netlify build hook to rebuild the site
-
-**Why git-committed JSON over a database:**
-- Matches existing architecture (route-data.json, annotations.json, photos.json are all git-committed JSON)
-- Zero infrastructure cost — no database to manage
-- Full version history via git
-- Build-time rendering (Astro reads JSON, generates static HTML)
-- Survives Netlify function cold starts (no connection to warm up)
-
-**Why NOT Netlify Blobs:** Netlify Blobs is a key-value store accessible from functions and build. It could work, but adds a runtime dependency for what is fundamentally static data. The results change infrequently (one batch on event day), and the data must be available at build time for static page generation anyway. Git-committed JSON is simpler and more aligned with the existing architecture.
-
-**Why NOT a database (PlanetScale, Supabase, Turso):** Massive overkill for ~50-100 result entries that change once per year. Adds a service dependency, connection management, and monthly cost for something a 10KB JSON file handles.
-
-### Build Hook for Re-rendering
-
-After writing results, trigger a Netlify build hook:
-
-```typescript
-await fetch(process.env.NETLIFY_BUILD_HOOK_URL!, {
-  method: "POST",
-  body: JSON.stringify({ trigger_title: "Results update" })
-});
-```
-
-Build hooks are created in Netlify UI under **Project configuration > Build & deploy > Continuous deployment > Build hooks**. The hook URL is a simple POST endpoint that queues a build.
-
----
-
-## What NOT to Add (And Why)
+## What NOT to Add
 
 | Temptation | Why Not |
 |------------|---------|
-| **`strava-v3` npm package** | Adds 58KB for a wrapper around `fetch()`. The Strava API has ~5 endpoints we need, all simple GET/POST with Bearer auth. Direct `fetch()` is cleaner, has zero dependencies, and we control error handling. The package's last meaningful update was months ago and it wraps an API that rarely changes. |
-| **`strava` npm package** | Same reasoning. Another wrapper we don't need. |
-| **`@astrojs/netlify` adapter** | Only needed for Astro SSR/on-demand rendering. Our site is fully static. Functions live in `netlify/functions/` independent of Astro. Adding the adapter would change the entire build output structure unnecessarily. |
-| **`passport` / `passport-strava`** | Express middleware pattern. Our functions use the Web Standard Request/Response API, not Express. Passport adds session management complexity we don't need — the OAuth flow is a simple 3-step redirect dance. |
-| **A database (Supabase, PlanetScale, Turso)** | ~50-100 results per year. JSON file in git is the correct level of complexity. The existing site serves all data from JSON files. |
-| **Netlify Identity** | We don't need user accounts. Strava OAuth gives us athlete identity for result submission. Netlify Identity would add an unnecessary authentication layer. |
-| **`jsonwebtoken` / JWT sessions** | The submission flow is short-lived (user submits, done). We pass the Strava access token through the flow and discard it. No session persistence needed. |
-| **Redis / session store** | Same reasoning. No sessions to store. |
-| **Netlify Blobs for results** | Adds runtime complexity. Results must be available at build time anyway. Git-committed JSON matches the existing pattern. |
+| `chartjs-plugin-datalabels` | chartjs-plugin-annotation v3.1.0 (already installed) handles box labels natively. A second annotation/label plugin creates ordering conflicts and adds 15KB. |
+| `astro-navbar` or similar nav library | A 3-link static nav with aria-current is ~20 lines of Astro. Any nav library adds bundle weight and prop API to learn for zero functionality gain. |
+| Nano Stores (`nanostores`) | Sharing starColors between components does NOT require reactive state. A static ES module export is the correct pattern — no reactivity needed. |
+| CSS custom properties for star colors | Chart.js and Leaflet consume hex strings, not CSS variables. A CSS-only solution doesn't solve the actual problem for these consumers. |
+| An interactive CLI with `inquirer` or `prompts` | KOM times are updated once per year. A simple JSON file is lower friction than a CLI for a one-time data entry task. |
+| `commander` or `minimist` for CLI arg parsing | If a set-kom-times script is desired, `process.argv` parsing is 5 lines for 3 segments × 2 values. No argument parser needed. |
 
 ---
 
-## Environment Variables — Complete List
+## Stack Summary (v6.0 additions)
 
-### Build Scope (available during `npm run build`)
+| Area | Technology | Version | Change |
+|------|-----------|---------|--------|
+| Elevation labels | chartjs-plugin-annotation | 3.1.0 | No change — use existing `label` sub-object on box annotations |
+| Site navigation | Astro.url.pathname | Built-in | No change — new component, no dep |
+| Color tokens | src/lib/colors.js | N/A | New file — extract existing hex values |
+| KOM times | scripts/kom-times.json | N/A | New data file — read by resolve-annotations.js |
 
-| Variable | Value | Purpose |
-|----------|-------|---------|
-| `STRAVA_CLIENT_ID` | From Strava API settings | Authenticate build-time API calls |
-| `STRAVA_CLIENT_SECRET` | From Strava API settings | Refresh access token during prebuild |
-| `STRAVA_REFRESH_TOKEN` | App owner's refresh token | Long-lived token for build-time segment fetching |
-
-### Functions Scope (available at runtime in Netlify Functions)
-
-| Variable | Value | Purpose |
-|----------|-------|---------|
-| `STRAVA_CLIENT_ID` | Same as build | Construct OAuth authorize URL |
-| `STRAVA_CLIENT_SECRET` | Same as build | Exchange auth code for tokens |
-| `STRAVA_REDIRECT_URI` | `https://{site}/.netlify/functions/strava-callback` | OAuth callback URL |
-| `NETLIFY_BUILD_HOOK_URL` | From Netlify project settings | Trigger rebuild after results update |
-| `GITHUB_TOKEN` | GitHub personal access token | Commit results.json to repo (if using git-commit strategy) |
-
-### Local Development (.env, git-ignored)
-
-```bash
-STRAVA_CLIENT_ID=your_client_id
-STRAVA_CLIENT_SECRET=your_client_secret
-STRAVA_REFRESH_TOKEN=your_refresh_token
-STRAVA_REDIRECT_URI=http://localhost:8888/.netlify/functions/strava-callback
-NETLIFY_BUILD_HOOK_URL=not_needed_locally
-GITHUB_TOKEN=your_github_pat
-```
-
-Use `netlify env:pull` to sync production env vars to local `.env` for development.
-
----
-
-## Strava API Application Setup
-
-Before any code is written, the app owner must:
-
-1. **Create a Strava API application** at `https://www.strava.com/settings/api`
-2. **Set the Authorization Callback Domain** to the production domain (e.g., `mkultragravel.com`)
-3. **Note the Client ID and Client Secret** — these go in Netlify env vars
-4. **Obtain a personal refresh token** by completing the OAuth flow once manually:
-   - Visit `https://www.strava.com/oauth/authorize?client_id={ID}&redirect_uri=http://localhost&response_type=code&scope=read`
-   - Approve the app
-   - Copy the `code` parameter from the redirect URL
-   - Exchange it: `curl -X POST https://www.strava.com/api/v3/oauth/token -d client_id={ID} -d client_secret={SECRET} -d code={CODE} -d grant_type=authorization_code`
-   - Save the `refresh_token` from the response — this is `STRAVA_REFRESH_TOKEN`
-
-**Note on app review:** For public-facing applications with many users, Strava requires app review. For a small cycling event with <100 participants, this is unlikely to be enforced, but check Strava's current policy before event day.
-
----
-
-## Installation
-
-```bash
-# New runtime dependency (types only, no bundle impact on static site)
-npm install @netlify/functions
-
-# Dev dependency for local development
-npm install -D netlify-cli
-
-# Create functions directory
-mkdir -p netlify/functions
-
-# Create netlify.toml (see configuration above)
-
-# Add .env to .gitignore (if not already)
-echo ".env" >> .gitignore
-```
-
-**Net new dependencies: 2** (`@netlify/functions` for types, `netlify-cli` for local dev)
-**Bundle size impact on static site: 0 bytes** (functions run server-side, not in browser)
-**Existing dependency changes: 0** (Astro, Tailwind, Leaflet, Chart.js, PhotoSwipe unchanged)
-
----
-
-## Stack Summary Table
-
-| Layer | Technology | Version | Status |
-|-------|-----------|---------|--------|
-| Framework | Astro | ^6.1.1 | No change (remains static, no adapter) |
-| CSS | Tailwind v4 | ^4.2.2 | No change |
-| Map | Leaflet | ^1.9.4 | No change |
-| Charts | Chart.js | ^4.5.1 | No change |
-| Lightbox | PhotoSwipe | ^5.4.4 | No change |
-| Image processing | sharp | ^0.34.5 | No change |
-| **Serverless** | **@netlify/functions** | **^5.1.5** | **NEW — TypeScript types for Netlify Functions v2** |
-| **Local dev** | **netlify-cli** | **latest** | **NEW (dev dep) — Local function serving + env var management** |
-| **Strava API** | **Direct fetch()** | **v3** | **NEW — No wrapper library, native fetch with Bearer auth** |
-| **Results storage** | **JSON in git** | **N/A** | **NEW — Committed JSON file, same pattern as existing data files** |
-| **Build triggers** | **Netlify Build Hooks** | **N/A** | **NEW — POST to webhook URL triggers site rebuild** |
-| Deployment | Netlify | N/A | No change (add functions directory + netlify.toml) |
-| Runtime | Node.js 22 | 22.22.2 (Volta) | No change |
+**Net new npm dependencies: 0**
+**Files added: 2** (`src/lib/colors.js`, `scripts/kom-times.json`)
+**Files modified: 4** (`BaseLayout.astro`, `ElevationProfile.astro`, `RouteMap.astro`, `GravelSectors.astro`, `resolve-annotations.js`)
 
 ---
 
 ## Sources
 
-### Strava API (HIGH confidence — official documentation)
-- [Strava Authentication](https://developers.strava.com/docs/authentication/) — OAuth 2.0 flow, token exchange, refresh mechanism
-- [Strava Rate Limits](https://developers.strava.com/docs/rate-limits/) — 100 reads/15min, 1,000 reads/day
-- [Strava API Reference](https://developers.strava.com/docs/reference/) — Endpoint specifications
-- [Strava Getting Started](https://developers.strava.com/docs/getting-started/) — Application registration, initial token setup
-- [Changes to the Segments API](https://developers.strava.com/docs/segment-changes/) — Leaderboard endpoint removed May 2020, `xoms` available via segment detail
+### chartjs-plugin-annotation (HIGH confidence — installed package source)
+- Installed at `node_modules/chartjs-plugin-annotation/dist/chartjs-plugin-annotation.esm.js`
+- `getRelativePosition` function (line 281): `'start'` returns 0, `'end'` returns `size`, confirms bottom-of-box positioning
+- `calculateY` function (line 1164): `yAdjust` is added to position, enabling below-box overflow
+- `BoxLabelOptions` interface: confirmed via `https://www.chartjs.org/chartjs-plugin-annotation/latest/api/interfaces/BoxLabelOptions.html`
+- Current version 3.1.0 is the latest release (GitHub releases verified: last release October 16, 2024)
 
-### Strava API (MEDIUM confidence — community-confirmed, not in official spec)
-- [Accessing KOM/QOM data for segment](https://communityhub.strava.com/developers-api-7/accessing-kom-qom-data-for-segment-1999) — Confirms `xoms` and `local_legend` fields in segment detail response
+### Astro API (HIGH confidence — official documentation)
+- `Astro.url.pathname`: `https://docs.astro.build/en/reference/api-reference/#astrourl`
+- Client-side script imports: `https://docs.astro.build/en/guides/client-side-scripts/`
 
-### Netlify Functions (HIGH confidence — official documentation)
-- [Functions Overview](https://docs.netlify.com/build/functions/overview/) — Types, limits (60s timeout, 1024MB memory)
-- [Get Started with Functions](https://docs.netlify.com/build/functions/get-started/) — v2 format, .mts extension, Web Standard API
-- [Environment Variables in Functions](https://docs.netlify.com/build/functions/environment-variables/) — `process.env` for serverless, `Netlify.env.get()` for edge, scope requirements
-- [Scheduled Functions](https://docs.netlify.com/build/functions/scheduled-functions/) — Cron syntax, 30s limit, only on published deploys
-- [Build Hooks](https://docs.netlify.com/build/configure-builds/build-hooks/) — POST to trigger rebuilds
-
-### Astro + Netlify (HIGH confidence — official documentation)
-- [Deploy Astro to Netlify](https://docs.astro.build/en/guides/deploy/netlify/) — Static sites don't need adapter
-- [Astro Netlify Adapter](https://docs.astro.build/en/guides/integrations-guide/netlify/) — Only for SSR/on-demand rendering
-- [Astro 6 on Netlify](https://www.netlify.com/changelog/2026-03-10-astro-6/) — Astro 6 works on day one; `import.meta.env` inlined at build time (use `process.env` for runtime)
-
-### Known Issues (MEDIUM confidence — community reports)
-- [Functions v2 env vars intermittently missing](https://answers.netlify.com/t/functions-v2-export-default-intermittently-missing-all-user-defined-env-vars-at-runtime/160958) — March 2026 report of user-defined env vars absent at runtime
+### Existing codebase (HIGH confidence — direct inspection)
+- `src/lib/` directory pattern: `scoring.js` already establishes shared ES module pattern
+- `GravelSectors.astro`, `RouteMap.astro`, `ElevationProfile.astro`: verified identical starColors hex values
+- `scripts/resolve-annotations.js`: komTime/qomTime are null in koms array source; `KomSegments.astro` already has conditional render for non-null times

@@ -1,474 +1,525 @@
-# Pitfalls Research
+# Domain Pitfalls
 
-**Domain:** Strava API integration + serverless OAuth + results system for static gravel cycling event site
-**Project:** MK Ultra Gravel v5.0
+**Domain:** UI polish + dev tools additions to existing Astro 6 static cycling event site
+**Project:** MK Ultra Gravel — next milestone
 **Researched:** 2026-03-30
-**Confidence:** HIGH (critical pitfalls verified with official Strava documentation and API agreement)
+**Confidence:** HIGH (annotation plugin verified via GitHub issues + official docs; color pitfall verified via Chart.js issue tracker; Astro patterns verified via official docs)
+
+---
+
+## Context
+
+This file covers pitfalls specific to ADDING these four features to the existing system:
+
+1. Chart.js annotation labels (KOM elevation profile labels, responsive behavior)
+2. Multi-page navigation in Astro (shared nav component, active state)
+3. Color consistency across Leaflet, Chart.js canvas, and Tailwind CSS (oklch mismatch)
+4. Local dev tools that write to JSON data files (KOM/QOM time input, data integrity)
+
+The existing system uses `chartjs-plugin-annotation` v3.1, Astro 6, Leaflet 1.9, Tailwind v4 with oklch design tokens, and a prebuild pipeline (`scripts/generate-data.js`) that overwrites `public/data/annotations.json` on every run.
 
 ---
 
 ## Critical Pitfalls
 
-### Pitfall 1: Strava API Agreement Prohibits Cross-User Data Display (Leaderboard Killer)
-
-**Severity:** CRITICAL -- may force fundamental redesign of the results system
-
-**What goes wrong:**
-The November 2024 Strava API Agreement update (Section 2.10) explicitly states: "You may only display or disclose to an end user the specific Strava Data related to that user." Further: "you may not display or disclose Strava Data related to other users, even if such data is publicly viewable on Strava's Platform."
-
-This means a leaderboard showing Athlete A's segment time to Athlete B is a TOS violation. The entire v5.0 concept of "results page with gravel champion + KOM/QOM champion leaderboards" using Strava-sourced segment times would violate these terms if segment effort data from one user is displayed to another.
-
-**Why it happens:**
-The previous decision to drop Strava leaderboards was about endpoint removal (segment leaderboard endpoint blocked since June 2020). The v5.0 pivot to "OAuth-authorized access is different" is partially correct -- OAuth gives access to individual user data -- but the November 2024 agreement restricts what you can DO with that data regardless of how you obtained it.
-
-**How to avoid:**
-
-Option A -- Hybrid approach (RECOMMENDED): Use Strava ONLY to verify activity completion and extract segment effort times for the submitting athlete. Store results in your own JSON as event-owned data (name, category, segment times) that the athlete explicitly consents to publish as event results. The consent happens at submission time on YOUR site, not through Strava's OAuth scope. Strava data is the input; your results JSON is the output. You never display "Strava Data" -- you display "MK Ultra Gravel event results." This is analogous to how timing companies use GPS watches to capture finish times but publish results as their own data.
-
-Option B -- Community Application exception: Strava defines "Community Applications" as apps "created with the primary purpose of permitting athletes to organize and collaborate in group activities" with fewer than 9,999 users. Classification is at Strava's "sole discretion." MK Ultra Gravel could argue it qualifies, but this is risky since Strava makes the call, and the review process is opaque.
-
-Option C -- Consent-gated display: At submission time, explicitly ask athletes: "Do you consent to having your name and segment times displayed on the MK Ultra Gravel results page?" Store the consent flag. Only display data for athletes who consented. This adds legal weight to the hybrid approach.
-
-**Warning signs:**
-- Strava developer review flags your application
-- Strava revokes your API token
-- Your app review request is denied or delayed indefinitely
-- Community reports your app for TOS violation
-
-**Phase to address:**
-Architecture/design phase -- MUST be resolved before any code is written. The entire data model depends on this decision. Recommend Option A + C combined: Strava verifies and provides data, athlete consents to publication, results are stored as event-owned JSON.
-
-**Confidence:** HIGH -- verified directly against the Strava API Agreement at strava.com/legal/api (fetched 2026-03-30) and the November 2024 support article.
+These mistakes cause silent failures, data loss, or irreversible damage.
 
 ---
 
-### Pitfall 2: Strava Segment Leaderboard Endpoint Is Gone -- No KOM/QOM Holder Data
-
-**Severity:** CRITICAL -- one of the v5.0 target features is impossible as specified
+### Pitfall 1: Chart.js Annotation Plugin Fails Silently If Registered After Chart Instantiation
 
 **What goes wrong:**
-The v5.0 requirements include "Live KOM/QOM holder data fetched via Strava API at build time." The segment leaderboard endpoint (`/api/v3/segments/:id/leaderboard`) was removed in June 2020 and has not returned. You CANNOT get the current KOM/QOM holder for a segment through the Strava API. The `getSegmentById` endpoint returns segment metadata (distance, elevation, average grade) but NOT the current record holder.
-
-The only way to get KOM/QOM-style data is through `segment_efforts` endpoints, which return the authenticated athlete's OWN efforts on a segment -- not other athletes' efforts. And even `kom_rank` fields in segment effort responses require the athlete to be a Strava subscriber.
+`AnnotationPlugin` must be registered with `Chart.register(AnnotationPlugin)` BEFORE `new Chart(...)` is called. If the import and register happen after the Chart constructor — or if the dynamic import resolves asynchronously and the Chart was already created — annotations are silently absent. There is no runtime error, no warning, no visual indicator. The chart renders normally; the annotation boxes simply do not appear.
 
 **Why it happens:**
-Strava moved leaderboard data behind their subscription paywall in 2020 and then restricted API access entirely. This was the original reason for the "Strava leaderboard permanently dropped" decision in PROJECT.md.
-
-**How to avoid:**
-- Drop the "live KOM/QOM holder data" requirement entirely. It is not possible through the API.
-- Instead, display static segment metadata that IS available: distance, average grade, elevation gain, maximum grade. This data comes from `getSegmentById` and is about the segment itself, not about users.
-- For segment links, use direct Strava segment URLs (`strava.com/segments/{id}`) so users can view leaderboards in Strava's own UI (where they have their own subscription).
-- Build KOM/QOM champions from YOUR event's submitted data, not from Strava's global leaderboards.
+Adding a new annotation type (e.g., labels) often means revisiting the plugin registration code. Developers move imports around, accidentally reorder awaits, or add the new annotation config without realizing the register call is positioned correctly relative to the Chart constructor.
 
 **Warning signs:**
-- 404 or 403 responses when calling leaderboard endpoints
-- Segment detail responses missing expected fields
-- API returning subscription-gated errors for free athletes
+- Chart renders without any annotation boxes despite config being present
+- `console.log(Chart.registry.plugins)` does not include `annotation`
+- No JavaScript errors in the console
 
-**Phase to address:**
-Requirements clarification -- must happen immediately. This changes the data model for segment cards.
+**Prevention:**
+Keep the register call immediately adjacent to the import, in a fixed block:
+```typescript
+const { default: AnnotationPlugin } = await import('chartjs-plugin-annotation');
+Chart.register(AnnotationPlugin);
+// ... fetch data, build annotationBoxes ...
+const chartInstance = new Chart(canvas, { ... });
+```
+Never move the `Chart.register()` call below `new Chart(...)`. Add a comment explaining the ordering requirement (as already exists in ElevationProfile.astro at the `AnnotationPlugin must be registered BEFORE new Chart()` comment).
 
-**Confidence:** HIGH -- verified against Strava's official "Changes to the Segments API" documentation (developers.strava.com/docs/segment-changes/).
+**Phase:** Chart annotation label phase. The existing codebase already handles this correctly — the risk is introducing a regression during edits.
+
+**Confidence:** HIGH — documented in chartjs-plugin-annotation official docs and in the existing codebase comment.
 
 ---
 
-### Pitfall 3: OAuth Token Storage in Stateless Serverless Functions
-
-**Severity:** CRITICAL -- security vulnerability if done wrong, broken flow if tokens are lost
+### Pitfall 2: KOM Annotation Labels with `drawTime: 'beforeDatasetsDraw'` Are Covered by the Dataset Line
 
 **What goes wrong:**
-Netlify Functions are stateless -- they have no persistent memory between invocations. Strava access tokens expire every 6 hours. Refresh tokens rotate on every use (old refresh token is immediately invalidated). If you store tokens only in the function's runtime memory, they disappear between invocations. If you store them in a cookie or client-side, they are exposed to XSS attacks. If two concurrent requests both try to refresh the same token, one succeeds and the other's refresh token is now invalid -- the user is locked out.
+The KOM band annotations use `drawTime: 'beforeDatasetsDraw'` so the elevation line renders on top of them (correct for the band fill/border). However, **labels drawn at the same time as their parent annotation are also drawn before the dataset**, meaning the elevation line renders on top of the label text. At 9px font size, a chartreuse label obscured by a white/cream line stroke (1.5px) is invisible at the overlap point.
 
-Strava's documentation explicitly warns: "Once a new refresh token code has been returned, the older code will no longer work."
+This was a known issue resolved in chartjs-plugin-annotation via PR #275, which added an independent `label.drawTime` property. The fix is to set `label.drawTime: 'afterDatasetsDraw'` separately from the box's `drawTime`, so the band renders beneath the line but the label renders above it.
 
 **Why it happens:**
-Developers familiar with traditional server-side sessions assume there is persistent state between function invocations. Serverless functions are ephemeral -- each invocation is a clean slate.
-
-**How to avoid:**
-
-For the activity submission flow (user authenticates, submits activity):
-1. Use Netlify environment variables for the APPLICATION's client_id and client_secret (these are static, not per-user).
-2. For per-user tokens during the OAuth flow: treat the entire submission as a single session. User authorizes -> callback receives auth code -> exchange for access token -> immediately fetch needed data -> process and store results -> done. Do NOT store the user's refresh token for later use.
-3. If you need to store tokens for later (e.g., webhook processing), use Netlify Blobs with server-side encryption. Never expose tokens to the client.
-4. Implement a token refresh mutex using Netlify Blobs' `onlyIfMatch` (ETag-based conditional writes) to prevent concurrent refresh race conditions.
-
-For build-time segment data fetching (static, not per-user):
-1. Use a dedicated "service account" -- a single Strava athlete account that authorizes the app. Store its refresh token as a Netlify environment variable.
-2. At build time, refresh the token and fetch segment metadata. This is a single-threaded build process, so no concurrency concern.
+The intuitive assumption is that if the box is configured with `drawTime: 'beforeDatasetsDraw'`, its label will be drawn after the dataset (to ensure visibility). The opposite is true — labels inherit their parent's drawTime by default in older versions, and without explicit override, both render at the same lifecycle point.
 
 **Warning signs:**
-- Users report "authentication failed" after successful OAuth
-- 401 errors on Strava API calls after token refresh
-- Duplicate activities appearing in results (concurrent submission race)
-- Tokens appearing in browser DevTools network tab
+- KOM band labels are invisible or partially obscured at positions where the elevation line crosses through them
+- Labels at the left edge of a band (`position: 'start'`) are visible on narrow bands but disappear on bands where the line immediately crosses the start
 
-**Phase to address:**
-Serverless backend phase -- token management architecture must be designed before OAuth flow implementation.
+**Prevention:**
+Add `label.drawTime: 'afterDatasetsDraw'` to all KOM box annotations that use `drawTime: 'beforeDatasetsDraw'`:
 
-**Confidence:** HIGH -- verified against Strava authentication docs (developers.strava.com/docs/authentication/).
+```typescript
+annotationBoxes[`kom_${i}`] = {
+  type: 'box',
+  drawTime: 'beforeDatasetsDraw',   // band renders beneath elevation line
+  // ...
+  label: {
+    display: true,
+    drawTime: 'afterDatasetsDraw',  // label renders above elevation line
+    content: kom.name,
+    // ...
+  },
+};
+```
+
+**Phase:** KOM elevation profile labels phase.
+
+**Confidence:** HIGH — verified via chartjs-plugin-annotation GitHub issue #243 and PR #275 resolution.
 
 ---
 
-### Pitfall 4: Application Athlete Limit Blocks User Authentication
-
-**Severity:** CRITICAL -- can block the entire submission flow if not addressed weeks before the event
+### Pitfall 3: oklch Color Strings Fail in Chart.js Animation and Color Interpolation
 
 **What goes wrong:**
-New Strava API applications start with an athlete limit (the number of unique users who can authorize). Before your app is reviewed by Strava, you may be limited to authenticating only yourself. Even after initial review, the default athlete cap may be insufficient for your event size. If 50 riders try to submit results and you have a 15-athlete limit, submissions 16-50 fail with no API-level error -- Strava simply won't complete the OAuth flow for new athletes.
+Chart.js's internal color system (used for hover state transitions, animation interpolation, and some tooltip rendering) cannot parse CSS Level 4 color syntax including `oklch(...)`. While solid oklch colors passed as strings to `borderColor` or `backgroundColor` render correctly as-is in Canvas, any code path that tries to *parse and interpolate* the color (e.g., during a transition from one color to another) throws or silently produces `rgba(0,0,0,0)`.
 
-The app review process takes 7-10 business days in the best case. Community reports indicate it can take 3-4 weeks. Some developers report submitting requests and never hearing back.
+This is documented in Chart.js GitHub issue #12101 (opened July 2025, unresolved as of research date). The specific failure scenario for this project: if `chart.update('none')` is replaced with `chart.update()` (with animation), any annotation whose color is an oklch string will fail to animate and may render black or transparent.
 
 **Why it happens:**
-Strava gates API application growth to prevent abuse. Developers often discover the limit only when real users try to authenticate, sometimes at the worst possible time (event day).
+The existing codebase correctly uses `chart.update('none')` for annotation highlight/restore operations — this bypasses the animation system entirely, so oklch strings work safely. The pitfall is introduced if someone changes `update('none')` to `update()` for smoother animations, not realizing it breaks oklch color parsing.
 
-**How to avoid:**
-1. Register the Strava API application NOW (March 2026). Not in May.
-2. Submit the app for review immediately after registration. Include a clear description: "MK Ultra Gravel event timing, ~50-100 athletes, one-time event June 7 2026."
-3. Request an athlete limit increase to at least 200 (buffer above expected participants).
-4. Build and test the OAuth flow early with test accounts to verify the flow works before event day.
-5. Monitor the athlete capacity in your API settings dashboard and the `X-RateLimit-*` response headers.
-6. Have a backup plan: if app review is denied or delayed, implement a manual results entry alternative (admin uploads CSV).
+Additionally, the `darkBgPlugin` in ElevationProfile.astro uses `ctx.fillStyle = 'oklch(0.14 0.01 250)'` directly on the Canvas 2D context. This is fine — browsers support oklch in Canvas API `fillStyle`. The issue is *Chart.js's own color parsing*, not the Canvas API itself.
 
 **Warning signs:**
-- OAuth flow works for you but fails for others
-- No response from Strava developer review after 2 weeks
-- `X-RateLimit-*` headers show athlete limit approaching capacity
+- Sector annotation bands flash black or disappear during hover/click transitions
+- `chart.update()` calls produce visual artifacts on annotations with oklch colors
+- Console error mentioning unsupported color format
 
-**Phase to address:**
-First phase -- register the app and submit for review as the very first action. This is a blocking external dependency with a multi-week lead time.
+**Prevention:**
+- Keep all `chart.update()` calls as `chart.update('none')` for annotation-only updates (no data changes, no animation needed)
+- Use hex colors (`#RRGGBB` or `#RRGGBBAA`) for all annotation `backgroundColor` and `borderColor` values — not oklch strings. The existing codebase already does this correctly (`'#7fff0018'`, `starColors[sector.stars] + '22'`, etc.)
+- Do not use oklch for annotation colors even if Tailwind CSS variables are oklch. Convert to hex at the point of annotation configuration
+- Reserve oklch for CSS-only contexts (Tailwind utilities, `global.css`) where the browser resolves them natively
 
-**Confidence:** HIGH -- verified against multiple Strava Community Hub discussions about review delays and athlete limits.
+**Phase:** Any phase touching annotation colors or adding animation. The existing codebase is safe — risk is introducing a regression.
+
+**Confidence:** HIGH — verified via Chart.js GitHub issue #12101 and direct inspection of existing ElevationProfile.astro which uses hex for all annotation colors.
 
 ---
 
-### Pitfall 5: Race Condition on Concurrent Activity Submissions
-
-**Severity:** CRITICAL -- can cause data loss (overwritten results)
+### Pitfall 4: `resolve-annotations.js` Overwrites `annotations.json` on Every Pipeline Run, Erasing Manually-Entered KOM/QOM Times
 
 **What goes wrong:**
-The v5.0 plan stores results as "committed JSON, site rebuilds to update." If two athletes submit results within seconds of each other, both Netlify Function invocations read the current results.json, add their entry, and write back. The second write overwrites the first -- Athlete A's result is lost.
+`scripts/resolve-annotations.js` reads hardcoded `koms` array (with `komTime: null, qomTime: null`), resolves GPS coordinates, and writes the complete `public/data/annotations.json` file. If a KOM/QOM input tool saves times directly into `annotations.json` (the common naive approach), those times are erased the next time `npm run dev`, `npm run build`, or `node scripts/generate-data.js` runs.
 
-This is worse than it sounds: after an event, many riders submit results within a short window. You could see 20 submissions in 10 minutes. Even with rebuild latency, the JSON write step itself is the race condition.
+The pipeline runs automatically on `npm run dev` (line 8 of package.json: `"dev": "node scripts/generate-data.js && astro dev"`). A developer who starts the dev server after entering KOM times will silently lose all entered data.
 
 **Why it happens:**
-File-based JSON storage has no built-in concurrency control. Netlify Functions can execute concurrently. There is no database transaction or row-level lock.
-
-**How to avoid:**
-
-Option A -- Append-only individual files (RECOMMENDED): Each submission creates a separate JSON file (e.g., `results/athlete-{strava_id}.json`). The build step reads ALL individual files and merges them into the leaderboard. No file is ever overwritten by another athlete's submission. Git commits from Netlify Functions add individual files, never modify a shared file.
-
-Option B -- Use Netlify Blobs with conditional writes: Netlify Blobs supports `onlyIfMatch` (ETag-based optimistic concurrency). Read the blob, get its ETag, modify, write back with `onlyIfMatch`. If another write happened, retry. This works but adds complexity.
-
-Option C -- Queue-based processing: Submissions go into a queue (Netlify Blob as append log). A scheduled function or build hook processes the queue sequentially. Eliminates concurrent write concern.
+`annotations.json` is treated as a build artifact (generated file), not a data source. The pipeline overwrites it completely every run. A KOM/QOM input tool that targets the generated output file is writing to the wrong layer — it needs to write to the source (the `koms` array in `resolve-annotations.js`) or to a separate input file that the pipeline reads.
 
 **Warning signs:**
-- Results count is lower than submissions count
-- Athletes report submitting but not appearing on results page
-- Git history shows commits that remove previously-added results
+- KOM/QOM times appear in the UI, then disappear after the next dev server restart
+- `public/data/annotations.json` shows all `null` komTime/qomTime values despite having entered data
+- Git diff shows `annotations.json` being updated to remove times
 
-**Phase to address:**
-Results storage architecture phase -- must choose the storage pattern before building the submission flow.
+**Prevention:**
+The KOM/QOM input tool must write to the authoritative source, not the generated output:
 
-**Confidence:** HIGH -- verified against Netlify Blobs documentation confirming "last write wins" with no built-in concurrency control.
+Option A (RECOMMENDED): Keep a separate `data/kom-times.json` file in source control:
+```json
+{
+  "Billie Helmer": { "komTime": "4:12", "qomTime": "5:33" },
+  "Leaving Chatham": { "komTime": null, "qomTime": null },
+  "Silver Creek": { "komTime": null, "qomTime": null }
+}
+```
+`resolve-annotations.js` reads this file and merges times into the output. The input tool writes to `data/kom-times.json`. The pipeline can run as many times as needed without losing times.
+
+Option B: `resolve-annotations.js` reads from a separate env-var-configured source or from a fixed path that is not overwritten by the pipeline.
+
+Option C (Least safe): Modify `resolve-annotations.js` to read existing `annotations.json` before overwriting, extract current komTime/qomTime values, and re-apply them. Fragile — if the pipeline ever fails halfway through, times are lost.
+
+**The key constraint:** `annotations.json` must be treated as a generated artifact. The input tool must write to source, and the pipeline merges source into output.
+
+**Phase:** KOM/QOM time input tool phase. Must be designed before writing any tool code.
+
+**Confidence:** HIGH — verified by reading `scripts/resolve-annotations.js` (directly writes output from hardcoded `koms` array) and `package.json` (pipeline runs on every `npm run dev`).
+
+---
+
+### Pitfall 5: Leaflet Polyline Colors Do Not Accept CSS Variables or oklch Strings
+
+**What goes wrong:**
+Leaflet's polyline `color` option is passed directly to the Canvas 2D context as a stroke style. Leaflet does not resolve CSS custom properties (e.g., `var(--color-accent-green)`) or modern color functions like `oklch(...)`. Passing these as `color` produces either a transparent stroke or no stroke at all, with no error.
+
+If color consistency work involves updating sector polylines or KOM polylines to reference Tailwind design tokens, using CSS variable syntax will silently fail.
+
+**Why it happens:**
+CSS custom property resolution (`var(--x)`) is a browser CSS engine feature. The Canvas API on which Leaflet is built does not run through the CSS resolver — it accepts only resolved color values (hex, rgb, rgba, hsl, hsla, or named colors).
+
+**Warning signs:**
+- Leaflet polylines are invisible (transparent) despite `color` being set
+- No JavaScript error in console
+- Works fine when the color is set to a hex value, fails with `var(--...)` or `oklch(...)`
+
+**Prevention:**
+- Keep all Leaflet `color` values as hex strings (`'#7fff00'`, `'#f0c040'`, etc.)
+- Do not attempt to reference Tailwind CSS variables inside Leaflet option objects
+- If you need to sync Leaflet colors with Tailwind tokens, use `getComputedStyle(document.documentElement).getPropertyValue('--color-accent-green')` to resolve at runtime, then pass the resolved hex/rgb value to Leaflet
+
+**Phase:** Any phase touching Leaflet polyline or marker colors. The existing codebase is safe — starColors and KOM colors are all hardcoded hex.
+
+**Confidence:** HIGH — verified by Leaflet documentation (color options accept HTML color strings: hex, rgb/rgba, named) and confirmed via inspection of existing RouteMap.astro which uses hex throughout.
 
 ---
 
 ## Moderate Pitfalls
 
-### Pitfall 6: Rate Limits Exhausted During Build-Time Segment Fetching
-
-**Severity:** HIGH -- causes build failures or stale data
-
-**What goes wrong:**
-Strava's rate limits are 200 requests per 15 minutes (overall) and 100 requests per 15 minutes for non-upload (read) endpoints, with 1,000 reads per day. MK Ultra has 9 segments. Fetching segment detail for each = 9 API calls. That is fine for a single build. But if you also fetch segment efforts, athlete data, or activity details per submission, and builds trigger frequently (multiple submissions in sequence), you can exhaust the daily limit. Worse: Netlify rebuild triggers from multiple submissions could cause parallel builds, each making API calls that count against the same rate limit.
-
-**Why it happens:**
-Developers test with single requests and forget that production involves multiple concurrent operations sharing the same rate limit pool.
-
-**How to avoid:**
-1. Cache segment metadata aggressively. Segment details (name, distance, grade) change rarely. Fetch once, commit to repo as static JSON, refresh manually or on a schedule (weekly at most).
-2. For build-time data, use a cached segment data file. Only re-fetch if the file is older than 7 days (matches Strava's cache TTL requirement in TOS Section 7.1).
-3. Monitor `X-RateLimit-Usage` and `X-ReadRateLimit-Usage` headers on every API response.
-4. Reserve at least 50% of rate budget for user-facing operations (OAuth token exchange, activity fetching during submissions). Build-time fetches should never use more than 20 requests per cycle.
-5. Implement exponential backoff on 429 responses.
-
-**Warning signs:**
-- 429 Too Many Requests responses in build logs
-- Builds succeeding but with missing/stale segment data
-- Daily limit (1,000) exhausted before end of day
-
-**Phase to address:**
-Strava API integration phase -- design the caching strategy before implementing any API calls.
-
-**Confidence:** HIGH -- verified against developers.strava.com/docs/rate-limits/.
+Mistakes that cause delays or rework but are recoverable.
 
 ---
 
-### Pitfall 7: Activity Validation -- Accepting Submissions That Are Not From The Event
-
-**Severity:** HIGH -- compromises results integrity
+### Pitfall 6: Chart.js Annotation Label Text Overflows Narrow Segment Bands
 
 **What goes wrong:**
-A user authenticates via Strava OAuth, selects an activity, and submits it as their "MK Ultra Gravel" result. But the activity could be: (a) from a different date (not June 7 2026), (b) from a different location (they rode in California), (c) missing the required segments (they took a shortcut), (d) a virtual/indoor ride, or (e) already submitted (duplicate submission).
-
-Without validation, anyone with a Strava account can submit any activity as their event result.
+KOM segment widths on the elevation chart vary significantly: "Leaving Chatham" spans only 0.38 miles, which at a 100-mile x-axis is about 0.38% of the chart width. At a 600px-wide chart, that is roughly 2.3px. The label text "Leaving Chatham" at 9px monospace font requires approximately 130px. The label is positioned `'start'` within the box, but the text renders outside the box boundary with no clipping or wrapping — it simply draws over adjacent chart content.
 
 **Why it happens:**
-Developers focus on the OAuth flow and assume that if a user authenticated, they are legitimate. But authentication proves identity, not participation.
-
-**How to avoid:**
-1. **Date validation:** Check `activity.start_date` is June 7, 2026. Allow a 24-hour window (June 7 00:00 to June 8 00:00 local time). Convert from UTC with timezone offset.
-2. **Activity type validation:** Check `activity.type` is "Ride" (not "VirtualRide", "Run", etc.).
-3. **Segment matching:** After fetching the activity with `include_all_efforts=true`, verify that `segment_efforts` contains efforts for ALL 6 timed gravel sectors. A valid MK Ultra submission must have efforts on all 6 sectors. KOM segments are optional (rider may have skipped them).
-4. **Duplicate prevention:** Check the athlete's Strava ID against existing submissions. One submission per athlete, allow updates/resubmissions (override, don't duplicate).
-5. **Geographic proximity (optional but recommended):** Check that the activity's start_latlng is within ~10km of Marquette, MI (46.5436, -87.3954).
-6. **Do NOT rely on activity name.** Users can name activities anything.
+`chartjs-plugin-annotation` has no built-in overflow detection, text truncation, or automatic repositioning for labels that are wider than their parent annotation box. The label is drawn at the anchor point regardless of whether it fits. Setting `clip: false` (the global Chart.js option) makes the situation worse on narrow bands near the chart edge.
 
 **Warning signs:**
-- Results showing activities from wrong dates
-- Segment effort counts varying wildly between submissions
-- Same athlete appearing multiple times
-- Activities with suspiciously fast times (virtual rides)
+- Label text for narrow segments visually overlaps with tick labels, grid lines, or other annotation labels
+- Two adjacent KOM segment labels collide (e.g., if future segments are added close together)
+- Label is not visible at all at small chart widths (e.g., mobile, 320px) because it renders outside the canvas
 
-**Phase to address:**
-Submission flow phase -- validation logic must be implemented in the Netlify Function that processes submissions.
+**Prevention:**
+For the three current KOM segments, check the rendered pixel width of each band at the minimum expected chart width (320px mobile). Calculate the pixel width: `(endMi - startMi) / totalMi * chartWidth`. If less than ~80px, the label will overflow.
 
-**Confidence:** MEDIUM -- validation logic is standard but segment matching depends on Strava actually matching segments to the activity (GPS quality varies).
+Mitigations (in order of preference):
+1. Use short names or abbreviations where labels will be narrow: `"Chatham"` instead of `"Leaving Chatham"` for narrow bands
+2. Rotate the label 90 degrees for narrow bands: `rotation: 90` — vertical text fits within a narrow vertical band
+3. Use `position: { x: 'start', y: 'start' }` with a negative `yAdjust` to float the label above the band
+4. Conditionally hide labels below a pixel-width threshold using a scriptable `display` option:
+```typescript
+label: {
+  display: (ctx) => {
+    const chart = ctx.chart;
+    const pixelWidth = chart.scales.x.getPixelForValue(kom.endMi)
+      - chart.scales.x.getPixelForValue(kom.startMi);
+    return pixelWidth > 50;
+  },
+  content: kom.name,
+}
+```
+
+**Phase:** KOM elevation profile labels phase.
+
+**Confidence:** HIGH — verified via chartjs-plugin-annotation documentation (no overflow handling documented) and direct geometry calculation for the three KOM segments.
 
 ---
 
-### Pitfall 8: Gender Categorization -- Strava's API Has Only M, F, or null
-
-**Severity:** HIGH -- the v5.0 spec requires a non-binary category but the data source cannot provide it
+### Pitfall 7: Astro `Astro.url.pathname` Requires Explicit Passing to Navigation Component
 
 **What goes wrong:**
-The v5.0 requirements specify "Three gender categories: men, women, non-binary (from Strava profile)." Strava's API returns the `sex` field with only two valid values: "M" or "F". Any other value (including selections from newer Strava UI gender options) resets to `null` in the API. Athletes who select non-binary, prefer not to say, or leave the field empty all return `null`.
+In Astro 6, `Astro.url` (and its `.pathname`) is only available in the frontmatter code fence (the `---` block) of `.astro` files. It is NOT available as a global in `<script>` tags, and it does NOT automatically propagate into child components.
 
-You cannot distinguish between "non-binary" and "didn't set their gender" from the API response alone.
+When building a shared `Nav.astro` component placed inside `BaseLayout.astro`, the component does NOT automatically know which page it is currently rendering on. If the Nav component tries to use `Astro.url` directly in its own frontmatter, it does get the current URL — but only if the component is evaluated in a per-page context (which components in layouts are). This works correctly at build time. The pitfall is assuming the Nav component needs to receive the current URL as a prop and threading it unnecessarily.
+
+The REAL pitfall is the inverse: forgetting that `Astro.url.pathname` is available in a child component's frontmatter and instead trying to determine active state in a `<script>` tag using `window.location.pathname`. This works at runtime but produces a flash of unstyled navigation (FUN) — the active state is not applied on initial server-rendered HTML, then snaps on after JS runs.
 
 **Why it happens:**
-Strava's UI has evolved to be more inclusive, but the API has not kept pace. The `sex` field in the DetailedAthlete model remains binary.
-
-**How to avoid:**
-1. Do NOT rely solely on Strava's `sex` field for categorization.
-2. Add a gender/category selection step in YOUR submission form. Options: "Men", "Women", "Non-Binary". Default to Strava's value if M or F, but ALWAYS allow override.
-3. This also handles the case where someone's Strava profile is wrong or where they prefer a different competition category.
-4. Store the category in your results JSON as a first-class field, independent of Strava data.
-5. For athletes who don't select a category and have `sex: null` from Strava, either prompt them to choose or place them in an "uncategorized" bucket (not ideal -- better to require selection).
+Developers coming from React or Vue assume that "current route" is a client-side concept requiring JavaScript. In Astro's static build model, every page's HTML is rendered at build time with full knowledge of `Astro.url.pathname`, so active state should be determined at build time, not runtime.
 
 **Warning signs:**
-- Large number of athletes in the non-binary category who actually just had null Strava profiles
-- Athletes requesting category changes after results are published
+- Navigation active state appears with a brief flash/jump when page loads
+- Navigation looks inactive on first paint, then highlights the correct link
+- DevTools shows the active class being added after DOMContentLoaded
 
-**Phase to address:**
-Submission flow design -- the category selection UI must be part of the submission form.
+**Prevention:**
+Determine active state at build time in the component's frontmatter, not in a `<script>` tag:
 
-**Confidence:** HIGH -- verified against Strava API v3 documentation and community discussions confirming the sex field only supports M/F/null.
+```astro
+---
+const currentPath = Astro.url.pathname;
+const navLinks = [
+  { href: '/', label: 'Event' },
+  { href: '/results', label: 'Results' },
+];
+---
+<nav>
+  {navLinks.map(link => (
+    <a
+      href={link.href}
+      aria-current={currentPath === link.href ? 'page' : undefined}
+      class={currentPath === link.href ? 'nav-active' : ''}
+    >
+      {link.label}
+    </a>
+  ))}
+</nav>
+```
+
+Use `aria-current="page"` for accessibility. Style the active state with `a[aria-current="page"]` in CSS.
+
+**Phase:** Navigation component phase.
+
+**Confidence:** HIGH — verified via Astro official docs (routing, layouts) and the `Astro.url` API reference.
 
 ---
 
-### Pitfall 9: Strava 7-Day Data Cache Limit -- TOS Requires Deletion
-
-**Severity:** HIGH -- TOS violation can result in API access revocation
+### Pitfall 8: Adding Navigation to BaseLayout Breaks Pages With Custom `<head>` Content
 
 **What goes wrong:**
-Strava API Agreement Section 7.1 states: "No Strava Data shall remain in your cache longer than seven days." If you cache segment metadata, activity details, or athlete profiles and never purge them, you violate the TOS. This seems to conflict with storing results permanently -- but it depends on what you store and how.
+`BaseLayout.astro` uses a named slot `<slot name="head" />` for pages to inject page-specific head content. When adding navigation to the layout, a common mistake is restructuring the `<body>` in a way that removes or wraps the default `<slot />` (unnamed slot). Pages that pass content to the unnamed slot then render only the layout shell with no page content.
+
+The subtler version: adding a sticky navigation bar that uses `position: fixed` or `position: sticky` changes the layout's stacking context. The map (which uses Leaflet with `z-index: 0`) and the grain/escher overlays (which use `z-index: 9998` and `z-index: 9999`) may render on top of a fixed navigation bar unless the nav has a higher z-index.
 
 **Why it happens:**
-Developers cache API responses for performance and forget about the TTL requirement. Or they don't realize "committed JSON in a git repo" counts as caching Strava data.
-
-**How to avoid:**
-1. Distinguish between "Strava Data" (API responses, segment metadata, athlete profiles) and "event data" (your results, your scoring, your leaderboard).
-2. At submission time: fetch Strava data, extract what you need (segment effort elapsed_time, activity date), compute your results, and store ONLY the derived results. Don't store raw Strava API responses.
-3. Results JSON should contain: athlete name (as they entered it, not from Strava profile), category (as they selected it), segment times (as numbers, not Strava effort objects), and total score. Do NOT store Strava athlete IDs, profile URLs, or activity IDs in the published results.
-4. You MAY store Strava IDs internally (for deduplication) but must delete them if the athlete deauthorizes.
-5. Segment metadata (name, distance, grade) used on cards: fetch at build time, cache for up to 7 days. Re-fetch on next build if stale. Since builds happen on commit, and the site rebuilds on submission, this naturally refreshes.
+`BaseLayout.astro` is a simple shell with no visual chrome. Adding navigation as a structural element changes the document flow. The fixed overlays (`grain-overlay` at z-index 9999, `escher-overlay` at z-index 9998) were designed for a chromeless layout and will cover a fixed nav unless accounted for.
 
 **Warning signs:**
-- Raw Strava API response JSONs committed to the repo
-- Strava athlete profile data visible in your results JSON
-- No data purge mechanism when athletes deauthorize
+- Pages render blank or show only the navigation bar after layout refactoring
+- Navigation bar is partially or fully covered by the grain or escher overlay texture
+- Leaflet popup appears behind the navigation bar on scroll
 
-**Phase to address:**
-Data architecture phase -- define exactly what fields are stored in results JSON and what is transient.
+**Prevention:**
+- When adding navigation to BaseLayout, keep the `<slot />` and `<slot name="head" />` unchanged
+- Give the nav bar `z-index: 10000` (one above `grain-overlay` at 9999) to ensure it renders above all overlays
+- After adding the nav, verify each page (index.astro, results.astro, submit.astro, submit-confirm.astro) still renders its content correctly
+- Check that Leaflet popups appear above the page content but below the nav bar at typical z-index values
 
-**Confidence:** HIGH -- verified against the Strava API Agreement at strava.com/legal/api.
+**Phase:** Navigation component phase.
+
+**Confidence:** MEDIUM — based on inspection of existing BaseLayout.astro z-index values and Astro layout slot behavior (official docs).
 
 ---
 
-### Pitfall 10: Deauthorization Handling -- Must Delete User Data Within 48 Hours
-
-**Severity:** HIGH -- GDPR and TOS compliance requirement
+### Pitfall 9: Color Drift Between oklch Token (Tailwind) and Hex Approximation (Chart.js / Leaflet)
 
 **What goes wrong:**
-When an athlete revokes your app's access (via Strava's settings or your deauthorize endpoint), the API Agreement Section 5.4 requires: "all Personal Data pertaining to that user is deleted from your Developer Applications and related networks, systems and servers." Section 2.14(vi) requires this within 48 hours. If results are committed JSON in a git repo, deleting them requires a new commit, a rebuild, and potentially rewriting git history (which you shouldn't do).
+The design uses `--color-accent-green: oklch(0.85 0.24 145)`. When this color needs to appear in Chart.js annotations or Leaflet markers (which require hex), a developer eyeballs the hex equivalent as `#7fff00` (chartreuse) or uses an online converter. The converted hex may visually match on the developer's display but differ on wide-gamut displays (P3, Rec2020) where oklch values outside the sRGB gamut are clipped differently by different browsers.
 
-Strava sends a webhook event with `"authorized": "false"` when an athlete deauthorizes.
+More concretely: `oklch(0.85 0.24 145)` is a vivid yellow-green that sits outside the sRGB gamut on P3 displays. Its sRGB approximation (used by most converters) is approximately `#6eff4a`. The project currently uses chartreuse (`#7fff00`) for KOM markers, which is a different hue. These are intentionally different colors (green for accent, chartreuse for KOM), but if someone tries to "match" the Tailwind accent green in Chart.js using hex, they will get a color that diverges visually between standard and wide-gamut displays.
 
 **Why it happens:**
-Developers build the "happy path" (submission) and forget the "unhappy path" (deauthorization/deletion).
-
-**How to avoid:**
-1. Listen for deauthorization webhook events (the webhook callback already needs to handle this).
-2. Store a mapping of Strava athlete ID to submission file (e.g., in a Netlify Blob that maps athlete_id -> result_filename).
-3. On deauthorization: delete the athlete's result file, trigger a rebuild.
-4. For git-committed results: the deletion commit adds a new commit removing the file. Previous commits still contain the data in git history, but the live site no longer displays it. This is a reasonable interpretation for a static site -- the data is "deleted from your Developer Application" (the live site) even if git history retains it.
-5. Alternatively: if using Netlify Blobs for results storage, deletion is immediate and permanent.
-6. Document your data handling practices in a simple privacy notice linked from the submission flow.
+CSS resolves oklch natively at display time with gamut mapping. The Canvas API receives a fixed color string that cannot gamut-map. The two rendering systems produce different results for colors at the edge of sRGB.
 
 **Warning signs:**
-- No webhook handler for deauthorization events
-- No mechanism to identify which results belong to which Strava athlete
-- No privacy policy or data handling notice on the submission page
+- Annotation colors look different on MacBook Retina (P3) vs standard display
+- "The chart color doesn't match the card border color" — both using the same design token concept but different rendering paths
+- Hex color in Chart.js annotation looks slightly more saturated or different hue than the Tailwind utility class on the same page
 
-**Phase to address:**
-Webhook and submission flow phases -- must be designed alongside the submission architecture.
+**Prevention:**
+- Accept that Chart.js/Leaflet canvas colors will be sRGB approximations of oklch tokens. Document this explicitly.
+- For the existing project, the colors are intentionally different across surfaces (yellow-to-red for sectors, chartreuse for KOM, accent-green for general UI). Do not attempt to use oklch tokens directly in Chart.js or Leaflet — use the hardcoded hex values that are already correct for their purpose.
+- When adding new colors that need to match between CSS and Canvas, define both values explicitly:
+  ```
+  // In global.css @theme
+  --color-kom: oklch(0.85 0.24 120);         // CSS contexts
+  --color-kom-hex: #7fff00;                   // Canvas contexts (approximation)
+  ```
+- Never compute the hex from the oklch at runtime via `getComputedStyle` and pass it to Leaflet — `getComputedStyle` returns the resolved oklch string, not a hex, and Leaflet cannot use it.
 
-**Confidence:** HIGH -- verified against Strava API Agreement Sections 5.4 and 2.14(vi), and webhook documentation.
+**Phase:** Any phase touching new colors across both CSS and canvas surfaces.
+
+**Confidence:** MEDIUM — verified via Chart.js issue #12101 (confirms no oklch support in Chart.js), Leaflet docs (hex/rgb required), and oklch gamut behavior (Evil Martians oklch reference).
 
 ---
 
-## Technical Debt Patterns
+### Pitfall 10: KOM/QOM Input Tool Has No Validation — Invalid Times Corrupt Build
 
-Shortcuts that seem reasonable but create long-term problems.
+**What goes wrong:**
+A dev tool that writes KOM/QOM times to a source JSON file can write invalid values (e.g., `"4:62"`, `"abc"`, `""`, or `null` formatted as a string). These propagate through the pipeline into `annotations.json`, which is then used at build time by `KomSegments.astro` (reads the JSON in its frontmatter at SSG time) and at runtime by `ElevationProfile.astro` (fetches via `/data/annotations.json`). An invalid time string like `"4:62"` does not crash the build but renders incorrectly in the UI. A value like `null` stored as the string `"null"` would display as literal text.
 
-| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
-|----------|-------------------|----------------|-----------------|
-| Storing Strava refresh tokens as env vars for build-time use | Simple, no database needed | Token rotates on every use; must update env var after each refresh. If a build fails mid-refresh, the old token is invalidated and new one is lost. | Acceptable for a single-event site if you implement a write-back mechanism that updates the env var on every refresh. |
-| Skipping webhook subscription | One less endpoint to build and maintain | No deauthorization handling, no real-time activity notifications, manual polling only | Never acceptable -- TOS requires deauthorization handling |
-| Hardcoding segment IDs in source code | Fast, no config files to manage | If segment IDs change (re-created segments), requires code change and deploy | Acceptable -- these segments are stable and owned by the event organizer |
-| Single JSON file for all results | Simple reads, easy to reason about | Race condition on concurrent writes (see Pitfall 5) | Never acceptable -- use per-athlete files |
-| Using Strava athlete name directly | No extra form field needed | Name may not match what rider wants displayed; violates TOS if stored longer than 7 days | Never acceptable -- always ask for display name in submission form |
-| Skipping CSRF protection on OAuth callback | Simplifies the flow | Open redirect / session fixation attacks possible | Never acceptable |
+**Why it happens:**
+Dev tools are often written quickly without full validation. The format for time strings (`"M:SS"` or `"H:MM:SS"`) is not enforced anywhere in the current system.
 
-## Integration Gotchas
+**Warning signs:**
+- KOM time displays as `null` or `"null"` in the UI
+- KOM time shows as a number (seconds) instead of formatted time
+- Build succeeds but site shows garbled time values
+- `npm run validate` (which validates athlete result files) does not validate annotation JSON
 
-Common mistakes when connecting to external services.
+**Prevention:**
+The KOM/QOM input tool must validate before writing:
+```javascript
+// Valid time formats: "M:SS", "MM:SS", "H:MM:SS"
+const TIME_REGEX = /^\d{1,2}:\d{2}(:\d{2})?$/;
 
-| Integration | Common Mistake | Correct Approach |
-|-------------|----------------|------------------|
-| Strava OAuth | Storing only the access token, not the refresh token | Always persist the LATEST refresh token. Access tokens expire in 6 hours. The refresh token is the long-lived credential. |
-| Strava OAuth | Reusing an old refresh token | Every token refresh returns a NEW refresh token. The old one is immediately invalidated. You MUST store and use the latest one. |
-| Strava OAuth | Not validating the `state` parameter on callback | Generate a cryptographically random `state` value, store it (e.g., in a signed cookie), and verify it matches on callback. Prevents CSRF and session fixation. |
-| Strava API | Calling the leaderboard endpoint | It has been removed since June 2020. Returns 404. Do not attempt. |
-| Strava API | Fetching activity without `include_all_efforts=true` | Segment efforts are only included when this parameter is set. Without it, you cannot verify segment completion. |
-| Strava Webhook | Expecting to create multiple webhook subscriptions | Each Strava application can have exactly ONE webhook subscription. It covers all authenticated athletes. |
-| Strava Webhook | Doing heavy processing in the webhook handler | Webhook must respond with 200 status within 2 seconds. Do async processing: save the event to a queue/blob and process separately. |
-| Netlify Functions | Writing to the local filesystem and expecting persistence | Netlify Functions run in ephemeral containers. Writes to `/tmp` disappear between invocations. Use Netlify Blobs or git commits for persistence. |
-| Netlify Functions | Assuming functions share memory or state | Each function invocation is independent. Use Netlify Blobs or environment variables for shared state. |
-| Netlify Build | Triggering too many rebuilds | Each submission triggers a rebuild. If 20 people submit in 10 minutes, that is 20 builds. Netlify has build minute limits (300/month on free tier, 1000 on Pro). Consider batching: process submissions into Blobs, trigger a single rebuild every 15 minutes via scheduled function. |
+function validateTime(value) {
+  if (value === null) return true;  // null is allowed (no time set)
+  if (typeof value !== 'string') return false;
+  if (!TIME_REGEX.test(value)) return false;
+  // Validate seconds are 0-59
+  const parts = value.split(':');
+  const seconds = parseInt(parts[parts.length - 1]);
+  return seconds >= 0 && seconds <= 59;
+}
+```
 
-## Performance Traps
+Also run `npm run validate` (or extend it) after writing to catch downstream issues before committing. Consider adding annotation JSON validation to `scripts/validate-results.mjs` or as a separate `npm run validate-data` script.
 
-Patterns that work at small scale but fail as usage grows.
+**Phase:** KOM/QOM time input tool phase.
 
-| Trap | Symptoms | Prevention | When It Breaks |
-|------|----------|------------|----------------|
-| Fetching Strava data at build time for every rebuild | Builds slow down; rate limits hit; stale data on failure | Cache segment data as static JSON; only re-fetch when stale (>7 days) or manually triggered | At 10+ builds/day against 1,000 daily request limit |
-| One rebuild per submission | Build queue backs up; results delayed by 30+ minutes | Batch submissions: collect in Blobs, rebuild on schedule (every 15 min) or after N new submissions | At 10+ submissions within a build window (~3 min/build) |
-| Netlify Function cold starts during OAuth | User waits 2-6 seconds for OAuth redirect; may assume it is broken and retry | Warm functions with scheduled pings; use Edge Functions for the redirect endpoint (50-200ms cold start) | First user of the day or after 15 min inactivity |
-| Loading full activity detail for all submitted activities | Slow build; rate limit exhaustion | Store only extracted times at submission; build reads pre-processed results files, not raw activity data | At 50+ submissions with 9 segments each |
+**Confidence:** HIGH — verified by reading `KomSegments.astro` (uses komTime/qomTime directly as display strings), `resolve-annotations.js` (no validation of time strings), and `validate-results.mjs` (validates athlete JSONs only, not annotations.json).
 
-## Security Mistakes
+---
 
-Domain-specific security issues beyond general web security.
+### Pitfall 11: `npm run dev` Runs the Full Pipeline Including Image Processing — Dev Loop Is Slow
 
-| Mistake | Risk | Prevention |
-|---------|------|------------|
-| Exposing Strava client_secret in client-side JavaScript | Anyone can impersonate your app, make API calls on your behalf, exhaust your rate limits | Client secret ONLY in Netlify env vars, ONLY accessed by server-side functions. Never in Astro components or client JS. |
-| No `state` parameter in OAuth redirect | CSRF attack: attacker initiates OAuth flow, victim completes it, attacker gets access to victim's linked account | Generate random state, store in signed httpOnly cookie, verify on callback. |
-| Accepting activity ID from client without re-fetching | User submits fabricated segment times by providing fake activity data | Always fetch the activity directly from Strava API server-side using the user's access token. Never trust client-submitted activity data. |
-| Storing access/refresh tokens in localStorage or cookies accessible to JS | XSS vulnerability exposes tokens; attacker can make Strava API calls as the user | Keep tokens server-side only (Netlify Blobs or function memory). Use httpOnly signed session cookies for user identification. |
-| No input validation on submission payload | Injection attacks, malformed data corrupting results JSON | Validate all fields server-side: Strava athlete ID (integer), activity ID (integer), category (enum: M/F/NB), display name (string, max 100 chars, sanitized). |
-| OAuth callback URL not restricted to your domain | Open redirect vulnerability; phishing attacks | Register exact callback URL in Strava app settings (`https://mkultragravel.netlify.app/.netlify/functions/strava-callback`). Validate the redirect_uri matches. |
+**What goes wrong:**
+`generate-data.js` runs ALL pipeline steps sequentially, including `generate-thumbnails.js` (uses Sharp to generate WebP thumbnails for all photos) and `assign-card-photos.js` (generates card crops). These steps are expensive and depend on the `images/` directory. If a developer is only iterating on annotation data (e.g., refining KOM/QOM times), they wait for the full photo processing pipeline on every `npm run dev` restart.
 
-## UX Pitfalls
+More critically for dev tools: if the KOM/QOM tool is a standalone script (`node scripts/set-kom-times.js`), it should NOT trigger the full pipeline. But if it is wired as `npm run dev` (like the existing dev script), every KOM time update reruns image processing unnecessarily.
 
-Common user experience mistakes in this domain.
+**Why it happens:**
+`generate-data.js` has no incremental/skip logic for steps whose inputs have not changed. Sharp thumbnail generation is idempotent (it skips existing files) but still runs the file system checks.
 
-| Pitfall | User Impact | Better Approach |
-|---------|-------------|-----------------|
-| OAuth flow opens in same tab, losing the submission context | User completes OAuth on Strava, gets redirected back but forgets what they were doing | Open Strava OAuth in a popup or new tab; callback page auto-closes and communicates back to the parent page. Or: clearly show "returning you to MK Ultra Gravel..." on callback. |
-| Requiring Strava subscription for submission | Non-subscriber athletes cannot participate in results | Only use API features available to free Strava accounts. Segment efforts on owned activities are available to free users. |
-| Showing raw elapsed_time from Strava (seconds) | "3847 seconds" is meaningless to cyclists | Format as HH:MM:SS or MM:SS. For cumulative gravel time, show "1:04:07" not "3847". |
-| No feedback after submission | User doesn't know if submission worked; submits again | Show clear success/failure state. "Your results have been submitted. The leaderboard updates every 15 minutes." |
-| Results page only shows overall leaderboard | Athlete cannot find their own position easily | Include a "Find your results" search/filter by name. Highlight the viewing athlete's row if they are logged in. |
-| No explanation of scoring system on results page | Athletes don't understand how scores are calculated | Include scoring explainer directly on the results page, not just on a separate page. "Gravel Champion = lowest cumulative time across 6 sectors. KOM/QOM Champion = top 10 earn points (10-1)." |
+**Warning signs:**
+- Dev server takes 10-30 seconds to start because it processes photos every time
+- Running a quick data edit requires waiting for the full image pipeline
 
-## "Looks Done But Isn't" Checklist
+**Prevention:**
+- The KOM/QOM input tool should be a standalone script (`node scripts/set-kom-times.js`) that ONLY modifies the source time file and optionally calls `node scripts/resolve-annotations.js` to update `annotations.json`. It should NOT invoke the full `generate-data.js`.
+- Wire it to a dedicated npm script: `"times": "node scripts/set-kom-times.js"` — separate from `npm run dev`
+- For the dev loop on annotation data, use `npm run data` (which already runs `node scripts/generate-data.js` directly) and know that photo steps are idempotent
 
-Things that appear complete but are missing critical pieces.
+**Phase:** KOM/QOM time input tool phase.
 
-- [ ] **OAuth flow:** Often missing `state` parameter validation -- verify CSRF protection exists on callback
-- [ ] **OAuth flow:** Often missing error handling for user denial -- verify graceful handling when user clicks "Cancel" on Strava authorization page
-- [ ] **Token refresh:** Often missing handling for expired refresh tokens -- verify what happens when Strava returns 401 on refresh (e.g., user deauthorized via Strava settings)
-- [ ] **Activity fetch:** Often missing `include_all_efforts=true` parameter -- verify segment_efforts array is populated in API response
-- [ ] **Submission validation:** Often missing date check -- verify submissions are rejected for activities not on June 7, 2026
-- [ ] **Results display:** Often missing deauthorized-athlete cleanup -- verify results page doesn't show athletes who revoked access
-- [ ] **Webhook endpoint:** Often missing GET handler for subscription validation -- verify both GET (challenge response) and POST (event handling) work
-- [ ] **Webhook endpoint:** Often missing 200 response within 2 seconds -- verify heavy processing is async, not blocking the response
-- [ ] **Rate limiting:** Often missing monitoring -- verify `X-RateLimit-Usage` headers are logged/checked before making additional calls
-- [ ] **Privacy notice:** Often missing entirely -- verify submission page includes what data is collected, how it is used, and how to request deletion
+**Confidence:** HIGH — verified by reading `package.json` (dev script runs full pipeline) and `generate-data.js` (all steps run unconditionally).
 
-## Recovery Strategies
+---
 
-When pitfalls occur despite prevention, how to recover.
+## Minor Pitfalls
 
-| Pitfall | Recovery Cost | Recovery Steps |
-|---------|---------------|----------------|
-| TOS violation (displaying cross-user data) | HIGH | Immediately remove the violating feature. Restructure to hybrid approach (event-owned data with consent). Contact Strava developer support proactively to explain remediation. |
-| Lost refresh token (rotated and not saved) | MEDIUM | Re-authenticate the service account manually via browser. Update the env var with new refresh token. Add write-back mechanism to prevent recurrence. |
-| Concurrent write data loss | MEDIUM | Identify missing submissions from Strava webhook event log. Manually re-add lost results. Migrate to per-athlete file storage. |
-| Rate limit exhaustion | LOW | Wait for 15-minute window reset (or midnight UTC for daily). Implement caching to prevent recurrence. No data is lost -- just delayed. |
-| App review denied/delayed | HIGH | Implement manual results entry as fallback (admin-only form). Have this ready as a contingency by event day. |
-| Invalid activity submissions accepted | MEDIUM | Audit results against submission log. Remove invalid entries. Tighten validation logic. Communicate corrections to affected athletes. |
-| Athlete deauthorization not handled | HIGH | Audit all stored data for Strava-sourced personal information. Delete within 48 hours. Implement webhook handler to prevent recurrence. |
-| Cold start causes OAuth timeout | LOW | Implement function warming (scheduled ping every 10 min). Consider Edge Functions for redirect endpoints. |
+Mistakes that cause annoyance or visual imperfection but are fixable without data loss.
 
-## Pitfall-to-Phase Mapping
+---
 
-How roadmap phases should address these pitfalls.
+### Pitfall 12: Astro Component `<style>` Scoping Does Not Apply to Dynamically-Injected Leaflet DOM
 
-| Pitfall | Prevention Phase | Verification |
-|---------|------------------|--------------|
-| P1: TOS cross-user data display | Architecture/design (first phase) | Legal review of data flow: does any Strava Data from User A appear to User B? If yes, redesign. |
-| P2: Segment leaderboard endpoint gone | Requirements (before planning) | Confirm all planned API calls against current Strava API reference. No 404s. |
-| P3: Token storage in serverless | Backend architecture phase | Integration test: two sequential function invocations, verify token persistence. |
-| P4: Athlete limit blocks auth | Pre-development (app registration) | Verify athlete limit >= 200 in Strava API settings dashboard before event. |
-| P5: Concurrent write race condition | Storage architecture phase | Load test: simulate 10 concurrent submissions, verify all 10 appear in results. |
-| P6: Rate limit exhaustion | API integration phase | Monitor headers in all API responses. Verify daily usage stays under 500 (50% buffer). |
-| P7: Invalid activity submissions | Submission flow phase | Test with: wrong date activity, virtual ride, activity missing segments, duplicate submission. All rejected. |
-| P8: Gender/category from Strava | Submission UI phase | Test with athlete whose Strava sex is null. Verify category selection is required. |
-| P9: 7-day cache limit | Data architecture phase | Audit results JSON: no raw Strava API fields present. Only derived event data. |
-| P10: Deauthorization handling | Webhook phase | Test: authorize, submit result, deauthorize via Strava. Verify result removed within 48h. |
+**What goes wrong:**
+Leaflet creates DOM elements outside the Astro component's render scope (popup content, `divIcon` elements, cluster bubbles). Astro's scoped CSS (styles in a component's `<style>` block) adds a unique data attribute like `data-astro-cid-xxx` to elements rendered in the component template, then scopes CSS selectors to that attribute. DOM injected by Leaflet at runtime has no such attribute and receives no component-scoped styles.
+
+This is already handled in `RouteMap.astro` via `:global()` wrappers (`.bike-crosshair`, `.sector-badge`, etc.). The pitfall is forgetting this pattern when adding NEW marker or popup types and then wondering why the styles don't apply.
+
+**Why it happens:**
+Component-scoped CSS is a build-time transformation. Runtime DOM injection bypasses it. The pattern is non-obvious to developers unfamiliar with Astro's scoping model.
+
+**Warning signs:**
+- New Leaflet marker or popup element has no styling despite style rules existing in the component
+- Styles work in browser DevTools when added via the inspector but not from source
+- Style is only applied to the first render (Astro template) but not to Leaflet-injected copies
+
+**Prevention:**
+All Leaflet-injected styles (markers, popups, badges) must use `:global()` in the component's `<style>` block, or be defined in `global.css`. The existing codebase uses `:global()` for all five divIcon classes — follow this pattern for any new marker types.
+
+**Phase:** Any phase adding new Leaflet marker or popup types.
+
+**Confidence:** HIGH — verified by reading RouteMap.astro style block (all Leaflet elements use `:global()`) and Astro scoped CSS documentation.
+
+---
+
+### Pitfall 13: Navigation `aria-current` Must Be Exact Path Match — Trailing Slash Gotcha
+
+**What goes wrong:**
+`Astro.url.pathname` for the index page may return `/` or may return an empty string depending on the Astro version and base configuration. A comparison like `currentPath === '/'` works for the index page root, but `currentPath === '/results'` fails if Astro normalizes the path to `/results/` (with trailing slash) depending on the `trailingSlash` configuration.
+
+Astro 6 defaults to `'ignore'` for `trailingSlash`, meaning `/results` and `/results/` are treated the same. But `Astro.url.pathname` for a page at `src/pages/results.astro` returns `/results` (no trailing slash) in the default configuration. This is usually fine, but if base path or output configuration changes, the exact string match breaks silently.
+
+**Why it happens:**
+Path comparison against string literals is fragile. Configuration changes alter what `Astro.url.pathname` returns without triggering errors.
+
+**Warning signs:**
+- Active nav state stopped working after changing `astro.config.mjs`
+- Active state applies to EVERY page (over-matching) because of a logic error in the comparison
+- Active state applies to NO pages (under-matching) because of trailing slash mismatch
+
+**Prevention:**
+Use a normalizing comparison: strip trailing slashes before comparing, and handle the root path explicitly:
+```astro
+---
+const rawPath = Astro.url.pathname;
+const currentPath = rawPath.endsWith('/') && rawPath.length > 1
+  ? rawPath.slice(0, -1)
+  : rawPath;
+---
+```
+Or use `startsWith` for section-based matching where sub-routes should also highlight the nav item (though this site has flat routing, so exact match is fine).
+
+**Phase:** Navigation component phase.
+
+**Confidence:** MEDIUM — based on Astro documentation for `trailingSlash` and `Astro.url` behavior.
+
+---
+
+## Phase-Specific Warnings
+
+| Phase Topic | Likely Pitfall | Mitigation |
+|-------------|----------------|------------|
+| KOM elevation profile labels | Pitfall 2: label obscured by dataset line | Add `label.drawTime: 'afterDatasetsDraw'` |
+| KOM elevation profile labels | Pitfall 6: label overflows narrow band | Test at 320px width; use short names or `rotation: 90` |
+| KOM elevation profile labels | Pitfall 1: annotation plugin register order | Do not reorder imports/awaits during edits |
+| Navigation component | Pitfall 7: flash of unstyled active state | Use build-time `Astro.url.pathname` comparison, not client JS |
+| Navigation component | Pitfall 8: z-index conflict with overlays | Nav z-index must exceed grain-overlay at 9999 |
+| Navigation component | Pitfall 13: trailing slash mismatch | Normalize pathname before comparison |
+| Color consistency work | Pitfall 3: oklch in Chart.js | Keep annotation colors as hex; keep `update('none')` |
+| Color consistency work | Pitfall 5: oklch in Leaflet | Keep polyline colors as hex strings |
+| Color consistency work | Pitfall 9: canvas vs CSS color drift | Accept approximation; document hex equivalents |
+| KOM/QOM time input tool | Pitfall 4: pipeline overwrites input | Write to source file, not `annotations.json` |
+| KOM/QOM time input tool | Pitfall 10: invalid time format | Validate with regex before writing |
+| KOM/QOM time input tool | Pitfall 11: slow full pipeline | Standalone script, not wired to `npm run dev` |
+| New Leaflet markers/popups | Pitfall 12: scoped CSS misses Leaflet DOM | Use `:global()` for all Leaflet-injected elements |
+
+---
 
 ## Sources
 
-**Official Strava Documentation (HIGH confidence):**
-- [Strava API Agreement](https://www.strava.com/legal/api) -- Sections 2.10, 2.14, 5.2, 5.4, 7.1
-- [Strava Authentication Docs](https://developers.strava.com/docs/authentication/) -- OAuth flow, token rotation, scopes
-- [Strava Rate Limits](https://developers.strava.com/docs/rate-limits/) -- 200/15min, 2000/day limits
-- [Strava Webhook Events API](https://developers.strava.com/docs/webhooks/) -- Subscription, validation, deauth events
-- [Changes to the Segments API](https://developers.strava.com/docs/segment-changes/) -- June 2020 leaderboard removal
-- [Strava API v3 Reference](https://developers.strava.com/docs/reference/) -- Endpoint details, scopes, response models
+**Chart.js / chartjs-plugin-annotation (HIGH confidence):**
+- [chartjs-plugin-annotation Box Annotations](https://www.chartjs.org/chartjs-plugin-annotation/latest/guide/types/box.html) — label options, drawTime behavior
+- [chartjs-plugin-annotation Options](https://www.chartjs.org/chartjs-plugin-annotation/latest/guide/options.html) — drawTime lifecycle positions
+- [GitHub Issue #243: Labels with drawTime: beforeDatasetsDraw](https://github.com/chartjs/chartjs-plugin-annotation/issues/243) — dataset covers labels; resolved via independent label.drawTime
+- [GitHub Issue #151: Annotation label cuts off when positioned right](https://github.com/chartjs/chartjs-plugin-annotation/issues/151) — clip and xAdjust workarounds
+- [GitHub Issue #12101: CSS Level 4 Color Syntax support](https://github.com/chartjs/Chart.js/issues/12101) — oklch fails in Chart.js animation/interpolation paths
+- [chartjs-plugin-annotation Label Annotations](https://www.chartjs.org/chartjs-plugin-annotation/latest/guide/types/label.html) — display, font, position options
 
-**Official Strava Announcements (HIGH confidence):**
-- [API Agreement Update (Support)](https://support.strava.com/hc/en-us/articles/31798729397773-API-Agreement-Update-How-Data-Appears-on-3rd-Party-Apps) -- November 2024 changes
-- [Updates to Strava's API Agreement (Press)](https://press.strava.com/articles/updates-to-stravas-api-agreement) -- Official announcement
+**Astro (HIGH confidence):**
+- [Astro Docs: Layouts](https://docs.astro.build/en/basics/layouts/) — slot behavior, BaseLayout patterns
+- [Astro Docs: Routing](https://docs.astro.build/en/guides/routing/) — pathname behavior, trailingSlash config
+- [Astro Tutorial: Navigation Component](https://docs.astro.build/en/tutorial/3-components/1/) — active state pattern
+- [Highlight Nav Link for Current Page in Astro](https://www.cyishere.dev/blog/astro-active-nav-item) — Astro.url.pathname pattern, aria-current
 
-**Community and Analysis (MEDIUM confidence):**
-- [DCRainmaker: Strava's Changes To Kill Off Apps](https://www.dcrainmaker.com/2024/11/stravas-changes-to-kill-off-apps.html) -- Detailed analysis of November 2024 changes
-- [Strava Community Hub: Rate Limit Questions](https://communityhub.strava.com/developers-api-7/rate-limit-questions-12328)
-- [Strava Community Hub: Athlete Limit Increase](https://communityhub.strava.com/developers-api-7/strava-api-athlete-limit-increase-anyone-approved-beyond-1-000-users-12345)
-- [Strava Community Hub: KOM/QOM Data Access](https://communityhub.strava.com/developers-api-7/accessing-kom-qom-data-for-segment-1999)
-- [Covaera: Strava Events Guide](https://covaera.com/strava-guide) -- Example of consent-gated event results
+**Leaflet (HIGH confidence):**
+- [Leaflet Docs: Polyline](https://leafletjs.com/reference.html#polyline) — color option accepts hex/rgb/named, not CSS variables
+- Existing `RouteMap.astro` inspection — all colors hardcoded as hex
 
-**Netlify Documentation (HIGH confidence):**
-- [Netlify Functions Overview](https://docs.netlify.com/build/functions/overview/)
-- [Netlify Blobs](https://docs.netlify.com/build/data-and-storage/netlify-blobs/) -- Conditional writes, concurrency
-- [Netlify Environment Variables](https://docs.netlify.com/build/environment-variables/overview/)
-- [Netlify Secrets Controller](https://docs.netlify.com/build/environment-variables/secrets-controller/)
+**Tailwind / CSS Color (MEDIUM confidence):**
+- [Tailwind v4.0 blog post](https://tailwindcss.com/blog/tailwindcss-v4) — oklch in @theme, CSS-first config
+- [OKLCH in CSS: why we moved from RGB and HSL](https://evilmartians.com/chronicles/oklch-in-css-why-quit-rgb-hsl) — gamut behavior, sRGB approximation
+
+**Project source code (HIGH confidence — direct inspection):**
+- `scripts/resolve-annotations.js` — overwrites annotations.json from hardcoded source
+- `package.json` — dev script runs full pipeline
+- `src/components/ElevationProfile.astro` — existing annotation pattern, hex colors, `update('none')`
+- `src/components/KomSegments.astro` — renders komTime/qomTime as display strings
+- `src/layouts/BaseLayout.astro` — slot structure, overlay z-index values
+- `src/styles/global.css` — z-index values for grain-overlay (9999) and escher-overlay (9998)
 
 ---
-*Pitfalls research for: Strava API integration + serverless OAuth + results system for MK Ultra Gravel v5.0*
+
+*Pitfalls research for: UI polish + navigation + dev tools additions to MK Ultra Gravel*
 *Researched: 2026-03-30*
