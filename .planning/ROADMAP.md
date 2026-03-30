@@ -72,7 +72,10 @@ Plans:
   3. Gravel Champion rows show each rider's total time and a per-segment time breakdown
   4. Individual segment leaderboards show per-segment times and rankings for all 9 segments
   5. Each result row includes a link to the rider's Strava activity
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 30-01-PLAN.md — Results page with Gravel Champion + KOM/QOM Champion leaderboards, gender tabs, per-segment breakdowns
+- [ ] 30-02-PLAN.md — Individual segment leaderboards for all 9 segments
 
 ### Phase 31: Deauthorization Webhook + Privacy
 
@@ -121,7 +124,7 @@ Plans:
 | 27. Segment Links + Scoring Explainer | 2/2 | ✓ Complete | 2026-03-30 |
 | 28. Scoring Engine + Results Schema | 2/2 | ✓ Complete | 2026-03-30 |
 | 29. Strava OAuth + Activity Submission | 2/2 | ✓ Complete | 2026-03-30 |
-| 30. Results Page + Leaderboards | 0/TBD | Not started | - |
+| 30. Results Page + Leaderboards | 0/2 | Planned | - |
 | 31. Deauthorization Webhook + Privacy | 0/TBD | Not started | - |
 
 ---
