@@ -5,7 +5,7 @@
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v4.0 Phase 25 — (next phase)
+**Current focus:** v4.0 Phase 25 — Map Reset
 
 ## Current Position
 
