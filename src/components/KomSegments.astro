@@ -16,7 +16,7 @@ const kom = annotations.kom as Array<{
 
 <div class="space-y-4">
   {kom.map((segment, i) => (
-    <div class="classified-border bg-bg-surface card-hover" data-reveal style={`animation-delay: ${i * 60}ms`}>
+    <div class="classified-border bg-bg-surface card-hover min-h-[280px]" data-reveal style={`animation-delay: ${i * 60}ms`}>
       <div class="overflow-hidden">
         {segment.coverPhoto && (
           <img
