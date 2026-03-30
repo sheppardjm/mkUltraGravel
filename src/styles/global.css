@@ -197,12 +197,12 @@
     color: oklch(0.62 0.01 90) !important;
   }
 
-  .leaflet-control-zoom a {
+  .leaflet-bar a {
     background: oklch(0.18 0.01 250) !important;
     color: oklch(0.85 0.01 90) !important;
     border-color: oklch(0.25 0.01 250) !important;
   }
-  .leaflet-control-zoom a:hover {
+  .leaflet-bar a:hover {
     background: oklch(0.25 0.01 250) !important;
   }
 
