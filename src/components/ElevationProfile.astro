@@ -247,6 +247,19 @@
     (chartInstance as any).update('none');
   }) as EventListener, { signal });
 
+  // Listen for map:reset — restore all sector annotation bands to default opacity
+  window.addEventListener('map:reset', (() => {
+    const annots = (chartInstance as any).options.plugins.annotation.annotations;
+    Object.keys(annots).forEach(key => {
+      const annot = annots[key];
+      if (annot._baseColor) {
+        annot.backgroundColor = annot._baseColor + '22';  // default ~13% opacity
+        annot.borderColor = annot._baseColor + '66';       // default ~40% opacity
+      }
+    });
+    (chartInstance as any).update('none');
+  }) as EventListener, { signal });
+
   // Listen for map:sectorClick — dim all other sectors, strongly highlight the clicked one
   window.addEventListener('map:sectorClick', ((e: Event) => {
     const { sectorIndex } = (e as CustomEvent<{sectorIndex: number}>).detail;
