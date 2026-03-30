@@ -49,23 +49,23 @@ Deferred to later milestones.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CLR-01 | Pending | Pending |
-| CLR-02 | Pending | Pending |
-| CLR-03 | Pending | Pending |
-| ELEV-01 | Pending | Pending |
-| ELEV-02 | Pending | Pending |
-| ELEV-03 | Pending | Pending |
-| ELEV-04 | Pending | Pending |
-| NAV-01 | Pending | Pending |
-| NAV-02 | Pending | Pending |
-| NAV-03 | Pending | Pending |
-| NAV-04 | Pending | Pending |
+| CLR-01 | Phase 33 | Pending |
+| CLR-02 | Phase 33 | Pending |
+| CLR-03 | Phase 33 | Pending |
+| ELEV-01 | Phase 34 | Pending |
+| ELEV-02 | Phase 34 | Pending |
+| ELEV-03 | Phase 34 | Pending |
+| ELEV-04 | Phase 34 | Pending |
+| NAV-01 | Phase 35 | Pending |
+| NAV-02 | Phase 35 | Pending |
+| NAV-03 | Phase 35 | Pending |
+| NAV-04 | Phase 35 | Pending |
 
 **Coverage:**
 - v6.0 requirements: 10 total
-- Mapped to phases: 0
-- Unmapped: 10 ⚠️
+- Mapped to phases: 10
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-30*
-*Last updated: 2026-03-30 after initial definition*
+*Last updated: 2026-03-30 after roadmap creation*
