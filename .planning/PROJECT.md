@@ -74,34 +74,28 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 - LAYOUT-01: Gravel sector cards match KOM cards via h-[180px] — v4.0
 - LAYOUT-02: Penrose triangle SVG hero with 20s rotation animation — v4.0
 - CONT-06: Grinduro format explainer above sector cards — v4.0
+- STRAVA-01: Strava icon + link on all 9 sector/KOM cards — v5.0
+- STRAVA-02: Segment metadata (distance, avg grade) on cards — v5.0
+- STRAVA-03: Manual KOM/QOM times on 3 KOM cards — v5.0
+- SCORE-01: Gravel Champion scoring engine (cumulative time, gender-separated) — v5.0
+- SCORE-02: KOM/QOM Champion scoring engine (10-1 points, gender-separated) — v5.0
+- SCORE-03: Scoring system explainer component — v5.0
+- SUBMIT-01: Strava OAuth flow via Netlify Functions — v5.0
+- SUBMIT-02: Segment_efforts extraction from activity — v5.0
+- SUBMIT-03: Self-reported gender/category dropdown — v5.0
+- SUBMIT-04: Explicit consent checkbox for public results — v5.0
+- SUBMIT-05: Per-athlete JSON via GitHub API + rebuild trigger — v5.0
+- SUBMIT-06: Activity validation (matching segment_efforts) — v5.0
+- SUBMIT-07: Deauthorization webhook with 48hr data deletion — v5.0
+- RESULT-01: Gravel Champion leaderboard with gender tabs — v5.0
+- RESULT-02: KOM/QOM Champion leaderboard with gender tabs — v5.0
+- RESULT-03: Individual segment leaderboards — v5.0
+- RESULT-04: Per-segment time breakdowns in gravel rows — v5.0
+- RESULT-05: Strava activity links on result rows — v5.0
 
 ### Active
 
-**Current Milestone: v5.0 — Strava Integration + Results**
-
-**Goal:** Integrate Strava segment data into sector/KOM cards, build a scoring system, create an activity submission flow via Strava OAuth on Netlify Functions, and build a results page with gravel champion and KOM/QOM champion leaderboards.
-
-**Target features:**
-- Strava segment links + icons on all 9 sector/KOM cards (6 gravel + 3 KOM)
-- Live KOM/QOM holder data fetched via Strava API at build time
-- Scoring system: gravel = cumulative time, KOM/QOM = top 10 points (10-1)
-- Scoring explainer on site
-- Strava OAuth activity submission flow (Netlify Functions)
-- Results stored as committed JSON, site rebuilds to update
-- Results page: gravel champion + KOM/QOM champion leaderboards
-- Three gender categories: men, women, non-binary (from Strava profile)
-- Individual segment leaderboards
-
-**Strava segment IDs:**
-- Billie Helmer: 24479270
-- Sandstrom Rd: 24479292
-- Leaving Chatham: 41126651
-- Akkala Rd: 24479426
-- Haavisto: 24479467
-- Forest Service Rd: 24479496
-- C4: 34573011
-- Silver Creek: 16438243
-- Down Jeep: 6809754
+(No active milestone — run `/gsd:new-milestone` to start next)
 
 ### Out of Scope
 
@@ -112,21 +106,22 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 - Email list signup — single event, high obligation, low return
 - Merchandise / shop — not the site's purpose
 - Strava segment embeds — unreliable due to Chrome third-party cookie deprecation
+- Auto-scraping KOM/QOM from Strava — TOS violation; using manual entry
 - Weather widget — irrelevant before event day
 - Database — JSON file storage sufficient for single-event results
 - Real-time leaderboard updates — rebuild-on-commit is acceptable latency
 
 ## Context
 
-**Shipped v4.0** with ~2,859 LOC across Astro/CSS/JS source files and build scripts.
+**Shipped v5.0** with ~11,500 LOC across Astro/CSS/JS source files, Netlify Functions, and build scripts.
 
-**Tech stack:** Astro 6, Tailwind v4, Leaflet 1.9.4, Chart.js, PhotoSwipe, sharp (thumbnails)
+**Tech stack:** Astro 6, Tailwind v4, Leaflet 1.9.4, Chart.js, PhotoSwipe, sharp (thumbnails), vitest (testing), Netlify Functions v1 (Strava OAuth/API)
 
-**Deployment:** Netlify with git-triggered CI/CD from GitHub. Prebuild pipeline generates route-data.json, annotations.json, photos.json, thumbnails, card crops, and hero WebP on every deploy.
+**Deployment:** Netlify with git-triggered CI/CD from GitHub. Prebuild pipeline generates route-data.json, annotations.json, photos.json, thumbnails, card crops, and hero WebP on every deploy. Strava OAuth submission triggers GitHub API commit + Netlify build hook for rebuild.
 
 **Performance:** Lighthouse mobile Performance 96, LCP 2.48s, CLS 0.054, TBT 0ms. All Core Web Vitals green. All animations compositor-safe (transform/opacity only). Escher drift and Penrose spin animations gated behind prefers-reduced-motion.
 
-**v4.0 shipped:** 100mi route replacement, 55 photos (AVIF support), photo lightbox from map, map reset control, 52px touch targets, card parity, Penrose hero, Grinduro explainer.
+**v5.0 shipped:** Strava segment links on all 9 cards, scoring engine (Gravel Champion + KOM/QOM Champion), Strava OAuth activity submission (4 Netlify Functions), results page with dual leaderboards and gender tabs, deauthorization webhook + privacy notice, prebuild pipeline gap closure.
 
 **Event Details:**
 - Date: June 7, 2026
@@ -161,7 +156,7 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | Haversine proximity for card photo assignment | No new npm dependency; pure Node.js arithmetic | Good |
 | CSS-only animations | Protects TBT 0ms; no GSAP or motion library | Good |
 | Two-div pattern for card-hover + overflow-hidden | CSS Overflow Module Level 3 clips box-shadow; structural fix | Good |
-| Strava leaderboard permanently dropped | TOS prohibits displaying user data; endpoint blocked since June 2020 | ⚠️ Revisit — v5.0 uses OAuth-authorized access, different from scraping |
+| Strava leaderboard permanently dropped | TOS prohibits displaying user data; endpoint blocked since June 2020 | ✓ Revisited — v5.0 uses consent-based OAuth, not scraping |
 
 | Four `<rect>` in SVG tile, no `<use>` | Data URI can't resolve fragment identifiers | Good |
 | KOM annotations omit _baseColor | Isolates KOM from sector hover/click handlers | Good |
@@ -173,6 +168,16 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | h-[180px] fixed image height | Decouples card image from container width; gravel col-span-2 was 2x taller | Good |
 | showHideAnimationType: 'fade' | No DOM anchor element to zoom from (lightbox opens programmatically) | Good |
 | .leaflet-bar a broadened selector | All map controls (zoom + reset) share unified dark theme | Good |
+| Netlify Functions v1 (exports.handler) | Active v2 env var bug as of 2026-03-28 | Good |
+| OAuth state = base64url JSON {nonce, activityUrl} | Activity URL survives round-trip without server storage | Good |
+| activity:read_all scope (not activity:read) | include_all_efforts=true requires read_all | Good |
+| Gender from form, not Strava profile | Schema intent + self-identification | Good |
+| String segment IDs in scoring engine | Strava returns integer, String() cast avoids coercion | Good |
+| Tie-safe dense ranking | Athletes with identical times share rank and points | Good |
+| Combined genders per segment leaderboard | Avoids 27 mini-boards; cross-category performance | Good |
+| Root-cause fix in resolve-annotations.js | Ensures idempotency vs manual JSON edit | Good |
+| Fire-and-forget Netlify build hook | Submission must not fail if hook is slow/unavailable | Good |
+| CSRF cookie double-submit pattern | Prevents OAuth state replay attacks | Good |
 
 ---
-*Last updated: 2026-03-30 after v5.0 milestone started*
+*Last updated: 2026-03-30 after v5.0 milestone complete*

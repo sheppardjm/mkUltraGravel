@@ -1,5 +1,33 @@
 # Project Milestones: MK Ultra Gravel
 
+## v5.0 Strava Integration + Results (Shipped: 2026-03-30)
+
+**Delivered:** Full Strava integration — segment links on all 9 cards, TDD scoring engine, OAuth activity submission via Netlify Functions, results page with dual leaderboards and gender tabs, deauthorization webhook for TOS compliance, and prebuild pipeline gap closure.
+
+**Phases completed:** 27-32 (10 plans total)
+
+**Key accomplishments:**
+
+- Strava segment links on all 9 sector/KOM cards with scoring explainer component
+- TDD scoring engine — Gravel Champion (cumulative time) + KOM/QOM Champion (10-1 points) with gender separation, DNF handling, tie-safe ranking (13 vitest tests)
+- Strava OAuth activity submission flow — 4 Netlify Functions with CSRF protection, gender/consent form, GitHub API commit + rebuild trigger
+- Results page at /results with dual leaderboards, gender tabs, per-segment breakdowns, individual segment rankings
+- Deauthorization webhook + privacy notice for Strava TOS Section 5.4 compliance
+- Prebuild pipeline gap closure — Strava fields preserved through resolve-annotations.js build
+
+**Stats:**
+
+- 69 files created/modified
+- +8,681 lines of code (Astro/JS/JSON)
+- 6 phases, 10 plans
+- 4 days (2026-03-26 → 2026-03-30)
+
+**Git range:** `b42c1ec` → `03668ac`
+
+**What's next:** TBD — next milestone planning via `/gsd:new-milestone`
+
+---
+
 ## v4.0 Route Update + UX Overhaul (Shipped: 2026-03-30)
 
 **Delivered:** Updated route from 80mi to 100mi with full pipeline re-run, added 2 new photos with AVIF support, and shipped 5 UX improvements — photo lightbox from map, map reset, enlarged controls, card layout parity, Penrose hero animation, and Grinduro format explainer.
