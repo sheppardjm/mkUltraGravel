@@ -206,6 +206,18 @@
     background: oklch(0.25 0.01 250) !important;
   }
 
+  /* MAP-10: Enlarge zoom controls to 44×44px touch targets (WCAG 2.5.5) */
+  .leaflet-bar a {
+    width: 44px !important;
+    height: 44px !important;
+    line-height: 44px !important;
+  }
+  .leaflet-touch .leaflet-bar a {
+    width: 44px !important;
+    height: 44px !important;
+    line-height: 44px !important;
+  }
+
   .leaflet-gesture-handling-touch-warning,
   .leaflet-gesture-handling-scroll-warning {
     color: oklch(0.85 0.01 90);
