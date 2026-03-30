@@ -77,21 +77,44 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ### Active
 
-(No active milestone — run `/gsd:new-milestone` to start next)
+**Current Milestone: v5.0 — Strava Integration + Results**
+
+**Goal:** Integrate Strava segment data into sector/KOM cards, build a scoring system, create an activity submission flow via Strava OAuth on Netlify Functions, and build a results page with gravel champion and KOM/QOM champion leaderboards.
+
+**Target features:**
+- Strava segment links + icons on all 9 sector/KOM cards (6 gravel + 3 KOM)
+- Live KOM/QOM holder data fetched via Strava API at build time
+- Scoring system: gravel = cumulative time, KOM/QOM = top 10 points (10-1)
+- Scoring explainer on site
+- Strava OAuth activity submission flow (Netlify Functions)
+- Results stored as committed JSON, site rebuilds to update
+- Results page: gravel champion + KOM/QOM champion leaderboards
+- Three gender categories: men, women, non-binary (from Strava profile)
+- Individual segment leaderboards
+
+**Strava segment IDs:**
+- Billie Helmer: 24479270
+- Sandstrom Rd: 24479292
+- Leaving Chatham: 41126651
+- Akkala Rd: 24479426
+- Haavisto: 24479467
+- Forest Service Rd: 24479496
+- C4: 34573011
+- Silver Creek: 16438243
+- Down Jeep: 6809754
 
 ### Out of Scope
 
 - Registration system — handled by BikeReg, site just links to it
 - User accounts / login — no need
-- Results / timing — not a race
 - Mobile app — web only
 - Blog / news updates — single-page event site
 - Email list signup — single event, high obligation, low return
 - Merchandise / shop — not the site's purpose
-- Strava live leaderboard — TOS prohibits displaying user data to third parties; API endpoint blocked since June 2020
 - Strava segment embeds — unreliable due to Chrome third-party cookie deprecation
 - Weather widget — irrelevant before event day
-- Backend / serverless functions — site stays fully static
+- Database — JSON file storage sufficient for single-event results
+- Real-time leaderboard updates — rebuild-on-commit is acceptable latency
 
 ## Context
 
@@ -115,7 +138,7 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ## Constraints
 
-- **Tech stack**: Static site — no backend needed, content is fixed
+- **Tech stack**: Astro static site + Netlify Functions for Strava OAuth/API
 - **External dependency**: BikeReg handles registration, site links out
 - **Assets**: GPX file (100mi route) and 55 route photos in repo (1 AVIF, rest JPG); photos use manual mile-marker positioning (no EXIF GPS)
 - **Timeline**: Site needs to be live well before June 7, 2026
@@ -138,7 +161,7 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | Haversine proximity for card photo assignment | No new npm dependency; pure Node.js arithmetic | Good |
 | CSS-only animations | Protects TBT 0ms; no GSAP or motion library | Good |
 | Two-div pattern for card-hover + overflow-hidden | CSS Overflow Module Level 3 clips box-shadow; structural fix | Good |
-| Strava leaderboard permanently dropped | TOS prohibits displaying user data; endpoint blocked since June 2020 | Good — avoided wasted effort |
+| Strava leaderboard permanently dropped | TOS prohibits displaying user data; endpoint blocked since June 2020 | ⚠️ Revisit — v5.0 uses OAuth-authorized access, different from scraping |
 
 | Four `<rect>` in SVG tile, no `<use>` | Data URI can't resolve fragment identifiers | Good |
 | KOM annotations omit _baseColor | Isolates KOM from sector hover/click handlers | Good |
@@ -152,4 +175,4 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | .leaflet-bar a broadened selector | All map controls (zoom + reset) share unified dark theme | Good |
 
 ---
-*Last updated: 2026-03-30 after v4.0 milestone*
+*Last updated: 2026-03-30 after v5.0 milestone started*
