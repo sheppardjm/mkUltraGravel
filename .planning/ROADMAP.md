@@ -1,7 +1,7 @@
 # Milestone v5.0: Strava Integration + Results
 
-**Status:** Complete
-**Phases:** 27-31
+**Status:** Gap Closure
+**Phases:** 27-32
 **Total Plans:** TBD
 
 ## Overview
@@ -90,6 +90,22 @@ Plans:
 Plans:
 - [x] 31-01-PLAN.md — Strava deauth webhook handler + privacy notice on submit page
 
+### Phase 32: Prebuild Pipeline — Preserve Strava Fields
+
+**Goal**: The prebuild data pipeline preserves `stravaSegmentId`, `komTime`, and `qomTime` fields in annotations.json so that Strava segment links, segment metadata, and KOM/QOM times render on all 9 sector/KOM cards in production builds.
+**Depends on**: Phase 27 (added Strava fields to annotations.json and card components)
+**Requirements**: STRAVA-01, STRAVA-02, STRAVA-03
+**Gap Closure**: Closes all gaps from v5.0 audit — prebuild pipeline clobbering Strava fields
+**Research flag**: None (fix is in existing prebuild scripts resolve-annotations.js and/or assign-card-photos.js)
+**Success Criteria** (what must be TRUE):
+  1. After `npm run build`, annotations.json contains `stravaSegmentId` for all 9 sector/KOM entries
+  2. After `npm run build`, annotations.json contains `komTime` and `qomTime` for the 3 KOM entries
+  3. The built site renders Strava segment links on all 9 sector/KOM cards
+  4. The built site renders segment distance and average grade on all 9 cards
+  5. The built site renders KOM and QOM times on the 3 KOM cards
+Plans:
+- [ ] 32-01-PLAN.md — Modify prebuild scripts to merge Strava fields into annotations.json
+
 ---
 
 ## Coverage
@@ -128,6 +144,7 @@ Plans:
 | 29. Strava OAuth + Activity Submission | 2/2 | ✓ Complete | 2026-03-30 |
 | 30. Results Page + Leaderboards | 2/2 | ✓ Complete | 2026-03-30 |
 | 31. Deauthorization Webhook + Privacy | 1/1 | ✓ Complete | 2026-03-30 |
+| 32. Prebuild Pipeline — Preserve Strava Fields | 0/1 | ◻ Not started | — |
 
 ---
 

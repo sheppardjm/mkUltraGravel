@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v5.0 Phase 31 — Final phase
+**Current focus:** v5.0 Phase 32 — Gap closure (prebuild pipeline)
 
 ## Current Position
 
 Milestone: v5.0 — Strava Integration + Results
-Phase: 31 of 31 (Deauthorization Webhook + Privacy)
-Plan: 1 of 1
-Status: Phase complete — v5.0 COMPLETE
-Last activity: 2026-03-30 — Completed 31-01-PLAN.md (deauth webhook + privacy notice)
+Phase: 32 of 32 (Prebuild Pipeline — Preserve Strava Fields)
+Plan: 0 of 1
+Status: Not started — gap closure phase from audit
+Last activity: 2026-03-30 — Phase 32 added from v5.0 milestone audit
 
-Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0: ██████████ 100% (phases 27-31 complete)
+Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0: █████████░ 90% (phases 27-31 complete, 32 pending)
 
 ## Performance Metrics
 
