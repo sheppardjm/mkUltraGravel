@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 
 Milestone: v5.0 — Strava Integration + Results
 Phase: 28 of 31 (Scoring Engine + Results Schema)
-Plan: —
-Status: Ready to plan
-Last activity: 2026-03-30 — Phase 27 complete (2 plans, verified 5/5 must-haves)
+Plan: 1 of 2 complete
+Status: In progress
+Last activity: 2026-03-30 — Completed 28-01-PLAN.md (scoring engine, all tests pass)
 
-Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0: ██░░░░░░░░ 20% (phase 27 complete)
+Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0: ███░░░░░░░ 30% (28-01 complete)
 
 ## Performance Metrics
 
@@ -44,6 +44,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-30
-Stopped at: Phase 27 complete, ready to plan Phase 28
+Last session: 2026-03-30T18:13Z
+Stopped at: Completed 28-01-PLAN.md — scoring engine (src/lib/scoring.js) with all 13 tests passing
 Resume file: None
