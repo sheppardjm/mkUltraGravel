@@ -10,24 +10,24 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 ## Current Position
 
 Milestone: v5.0 — Strava Integration + Results
-Phase: 30 of 31 (Results Page + Leaderboards) — COMPLETE
-Plan: 02 of 2 (complete)
-Status: Phase complete
-Last activity: 2026-03-30 — Completed 30-02-PLAN.md (per-segment leaderboards for all 9 segments)
+Phase: 31 of 31 (Deauthorization Webhook + Privacy)
+Plan: —
+Status: Ready to plan
+Last activity: 2026-03-30 — Phase 30 complete (2 plans, verified 5/5 must-haves)
 
 Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0: ████████░░ 80% (phases 27-30 complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 64
+- Total plans completed: 66
 - v1.0: 30 plans across 10 phases (2 days)
 - v2.0: 15 plans across 6 phases (3 days)
 - v3.0: 6 plans across 5 phases (2 days)
 - v4.0: 7 plans across 5 phases (4 days)
-- v5.0: 6 plans across 3 phases (1 day, in progress)
+- v5.0: 8 plans across 4 phases (1 day, in progress)
 
-**Phase 29 verified:** 5/5 must-haves passed. Full OAuth pipeline wired end-to-end.
+**Phase 30 verified:** 5/5 must-haves passed. Results page with leaderboards, gender tabs, segment rankings.
 
 ## Accumulated Context
 
@@ -72,6 +72,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-30T20:29:42Z
-Stopped at: Completed 30-02-PLAN.md — per-segment leaderboards for all 9 segments on /results
+Last session: 2026-03-30
+Stopped at: Phase 30 verified and complete — ready for Phase 31 (Deauthorization Webhook + Privacy)
 Resume file: None

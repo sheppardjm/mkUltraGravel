@@ -31,11 +31,11 @@ Requirements for v5.0 — Strava Integration + Results. Each maps to roadmap pha
 
 ### Results
 
-- [ ] **RESULT-01**: Gravel Champion leaderboard page (cumulative time across 6 sectors, men/women/non-binary tabs)
-- [ ] **RESULT-02**: KOM/QOM Champion leaderboard page (total points across 3 climbs, men/women/non-binary tabs)
-- [ ] **RESULT-03**: Individual segment leaderboards (per-segment times and rankings)
-- [ ] **RESULT-04**: Per-segment time breakdown displayed within gravel leaderboard rows
-- [ ] **RESULT-05**: Strava activity link on each result row
+- [x] **RESULT-01**: Gravel Champion leaderboard page (cumulative time across 6 sectors, men/women/non-binary tabs)
+- [x] **RESULT-02**: KOM/QOM Champion leaderboard page (total points across 3 climbs, men/women/non-binary tabs)
+- [x] **RESULT-03**: Individual segment leaderboards (per-segment times and rankings)
+- [x] **RESULT-04**: Per-segment time breakdown displayed within gravel leaderboard rows
+- [x] **RESULT-05**: Strava activity link on each result row
 
 ## Future Requirements
 
@@ -74,11 +74,11 @@ Deferred to later milestones.
 | SUBMIT-05 | Phase 29 | Complete |
 | SUBMIT-06 | Phase 29 | Complete |
 | SUBMIT-07 | Phase 31 | Pending |
-| RESULT-01 | Phase 30 | Pending |
-| RESULT-02 | Phase 30 | Pending |
-| RESULT-03 | Phase 30 | Pending |
-| RESULT-04 | Phase 30 | Pending |
-| RESULT-05 | Phase 30 | Pending |
+| RESULT-01 | Phase 30 | Complete |
+| RESULT-02 | Phase 30 | Complete |
+| RESULT-03 | Phase 30 | Complete |
+| RESULT-04 | Phase 30 | Complete |
+| RESULT-05 | Phase 30 | Complete |
 
 **Coverage:**
 - v5.0 requirements: 17 total
