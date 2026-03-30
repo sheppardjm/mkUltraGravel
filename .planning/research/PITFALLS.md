@@ -1,531 +1,474 @@
-# Domain Pitfalls
+# Pitfalls Research
 
-**Domain:** Gravel cycling event website -- static site with interactive map, GPX overlay, geo-located photos, dark brutalist design
-**Project:** MK Ultra Gravel
-**Researched:** 2026-03-29
-**Scope:** v4.0 -- Route Update + UX Overhaul (adding features to existing Astro 6 + Leaflet + Chart.js system)
-
----
-
-> This file replaces the v2.0 pitfalls document. It addresses what can go wrong when
-> updating the GPX route (80mi to 100mi), integrating PhotoSwipe with Leaflet map markers,
-> adding a map reset button, resizing Leaflet zoom controls, equalizing card layouts,
-> adding a Penrose triangle animation, processing new photos, and updating content references.
-> All pitfalls are grounded in actual code inspection of the codebase (2,703 LOC).
+**Domain:** Strava API integration + serverless OAuth + results system for static gravel cycling event site
+**Project:** MK Ultra Gravel v5.0
+**Researched:** 2026-03-30
+**Confidence:** HIGH (critical pitfalls verified with official Strava documentation and API agreement)
 
 ---
 
 ## Critical Pitfalls
 
-Mistakes that cause rewrites, data corruption, or break the deployed site.
+### Pitfall 1: Strava API Agreement Prohibits Cross-User Data Display (Leaderboard Killer)
 
-### Pitfall 1: GPX Replacement Cascading Data Corruption
+**Severity:** CRITICAL -- may force fundamental redesign of the results system
 
-**What goes wrong:** Replacing `MK Ultra.gpx` with a new 100mi GPX file changes the underlying track geometry. Every mile marker in the system is resolved against this track via `findPointAtMile()` in `resolve-annotations.js` and `match-photos.js`. If the new GPX has a different start point, different routing through Marquette, or different trackpoint density, then:
+**What goes wrong:**
+The November 2024 Strava API Agreement update (Section 2.10) explicitly states: "You may only display or disclose to an end user the specific Strava Data related to that user." Further: "you may not display or disclose Strava Data related to other users, even if such data is publicly viewable on Strava's Platform."
 
-1. **Sector coordinates shift.** `resolve-annotations.js` hardcodes sectors by `startMi` (e.g., Sandstrom at 23.4, C4 at 58.7, Down Jeep at 83.55). These mile markers were calibrated to the OLD GPX. A new GPX with a different path will map these mile values to different lat/lon positions -- potentially placing sector overlays off the actual road.
+This means a leaderboard showing Athlete A's segment time to Athlete B is a TOS violation. The entire v5.0 concept of "results page with gravel champion + KOM/QOM champion leaderboards" using Strava-sourced segment times would violate these terms if segment effort data from one user is displayed to another.
 
-2. **Photo positions shift.** `photo-manifest.js` has 53 entries with hardcoded `mi` values (19.6 through 80.2). These were "verified by route owner 2026-03-29 via photo-verify tool" against the current GPX. A new GPX changes where `mi: 40.2` maps to on the ground.
+**Why it happens:**
+The previous decision to drop Strava leaderboards was about endpoint removal (segment leaderboard endpoint blocked since June 2020). The v5.0 pivot to "OAuth-authorized access is different" is partially correct -- OAuth gives access to individual user data -- but the November 2024 agreement restricts what you can DO with that data regardless of how you obtained it.
 
-3. **KOM segments shift.** Same mechanism -- Billie Helmer (21.9mi), Leaving Chatham (37.6mi), Silver Creek (78.55mi) all resolve via mile-marker lookup.
+**How to avoid:**
 
-4. **Restock points shift.** Chatham Convenience Store (37.3mi), Rumely Gas Station (46.3mi), Dollar General (76.1mi) resolve the same way.
+Option A -- Hybrid approach (RECOMMENDED): Use Strava ONLY to verify activity completion and extract segment effort times for the submitting athlete. Store results in your own JSON as event-owned data (name, category, segment times) that the athlete explicitly consents to publish as event results. The consent happens at submission time on YOUR site, not through Strava's OAuth scope. Strava data is the input; your results JSON is the output. You never display "Strava Data" -- you display "MK Ultra Gravel event results." This is analogous to how timing companies use GPS watches to capture finish times but publish results as their own data.
 
-5. **Card cover photos break silently.** `assign-card-photos.js` selects coverPhoto by finding photos within `[startMi, startMi+lengthMi]`. If sector boundaries shift relative to photo positions, different (wrong) cover photos get selected -- or the fallback nearest-photo path triggers with no warning visible in the deployed site.
+Option B -- Community Application exception: Strava defines "Community Applications" as apps "created with the primary purpose of permitting athletes to organize and collaborate in group activities" with fewer than 9,999 users. Classification is at Strava's "sole discretion." MK Ultra Gravel could argue it qualifies, but this is risky since Strava makes the call, and the review process is opaque.
 
-**Why it happens:** The pipeline architecture ties ALL annotation positions to mile-marker values that are only meaningful relative to a specific GPX track. There is no position-pinning mechanism (no lat/lon anchors for annotations).
-
-**Consequences:** Sector overlays appear on wrong roads. Photo markers float in forests. KOM climb overlays miss the actual hill. Everything looks subtly wrong but the build succeeds with zero errors.
+Option C -- Consent-gated display: At submission time, explicitly ask athletes: "Do you consent to having your name and segment times displayed on the MK Ultra Gravel results page?" Store the consent flag. Only display data for athletes who consented. This adds legal weight to the hybrid approach.
 
 **Warning signs:**
-- `resolve-annotations.js` emits `WARNING: Mile marker X exceeds route end` for any annotation past the new GPX's total distance
-- `match-photos.js` emits similar warnings for photos past route end
-- Sector polylines on the map visibly don't align with the road
-- `route-data.json` meta shows different `totalMi` than expected
+- Strava developer review flags your application
+- Strava revokes your API token
+- Your app review request is denied or delayed indefinitely
+- Community reports your app for TOS violation
 
-**Prevention:**
-1. Run the pipeline (`npm run prebuild`) immediately after GPX replacement
-2. Visually inspect EVERY sector overlay on the map at zoom level 14+
-3. Check that all restock markers are on or adjacent to roads
-4. Verify photo markers cluster along the route polyline, not in empty forest
-5. If ANY mile markers are wrong, update them in `resolve-annotations.js` (sectors/KOMs/restocks) and `photo-manifest.js` (photos) BEFORE considering the GPX swap complete
-6. Consider: if the route changed significantly, ALL 53 photo mile markers need re-verification
+**Phase to address:**
+Architecture/design phase -- MUST be resolved before any code is written. The entire data model depends on this decision. Recommend Option A + C combined: Strava verifies and provides data, athlete consents to publication, results are stored as event-owned JSON.
 
-**Detection:** Compare before/after screenshots at each sector. Diff `annotations.json` lat/lon values pre and post pipeline run.
-
-**Phase:** Must be addressed FIRST -- before any other v4.0 work. All other features depend on correct route data.
-
-**Confidence:** HIGH -- verified by reading `resolve-annotations.js` lines 43-71, `match-photos.js` lines 58-86, `assign-card-photos.js` lines 49-68.
+**Confidence:** HIGH -- verified directly against the Strava API Agreement at strava.com/legal/api (fetched 2026-03-30) and the November 2024 support article.
 
 ---
 
-### Pitfall 2: Two GPX Files -- Wrong One Gets Used
+### Pitfall 2: Strava Segment Leaderboard Endpoint Is Gone -- No KOM/QOM Holder Data
 
-**What goes wrong:** The repo currently contains TWO GPX files:
-- `MK Ultra.gpx` (231KB, 7516 lines, dated Mar 26) -- the current active file
-- `MK_Ultra.gpx` (237KB, 8352 lines, dated Mar 29) -- a newer file with underscore naming
+**Severity:** CRITICAL -- one of the v5.0 target features is impossible as specified
 
-`parse-gpx.js` line 29 hardcodes: `const GPX_SOURCE = path.join(ROOT, 'MK Ultra.gpx');` (with SPACE, not underscore). The newer `MK_Ultra.gpx` file is ignored by the pipeline entirely.
+**What goes wrong:**
+The v5.0 requirements include "Live KOM/QOM holder data fetched via Strava API at build time." The segment leaderboard endpoint (`/api/v3/segments/:id/leaderboard`) was removed in June 2020 and has not returned. You CANNOT get the current KOM/QOM holder for a segment through the Strava API. The `getSegmentById` endpoint returns segment metadata (distance, elevation, average grade) but NOT the current record holder.
 
-**Why it happens:** The GPX source path is hardcoded with a space in the filename. If the new 100mi GPX is saved as `MK_Ultra.gpx` (or any name other than exactly `MK Ultra.gpx`), the pipeline will silently continue using the old file.
+The only way to get KOM/QOM-style data is through `segment_efforts` endpoints, which return the authenticated athlete's OWN efforts on a segment -- not other athletes' efforts. And even `kom_rank` fields in segment effort responses require the athlete to be a Strava subscriber.
 
-**Consequences:** You think you updated the route but the site still shows the old track. Worse: if you delete the old file without renaming the new one, the pipeline fails with "GPX source file not found" and the build breaks entirely.
+**Why it happens:**
+Strava moved leaderboard data behind their subscription paywall in 2020 and then restricted API access entirely. This was the original reason for the "Strava leaderboard permanently dropped" decision in PROJECT.md.
+
+**How to avoid:**
+- Drop the "live KOM/QOM holder data" requirement entirely. It is not possible through the API.
+- Instead, display static segment metadata that IS available: distance, average grade, elevation gain, maximum grade. This data comes from `getSegmentById` and is about the segment itself, not about users.
+- For segment links, use direct Strava segment URLs (`strava.com/segments/{id}`) so users can view leaderboards in Strava's own UI (where they have their own subscription).
+- Build KOM/QOM champions from YOUR event's submitted data, not from Strava's global leaderboards.
 
 **Warning signs:**
-- `route-data.json` meta `totalMi` doesn't change after "replacing" the GPX
-- The map shows the same route geometry as before
+- 404 or 403 responses when calling leaderboard endpoints
+- Segment detail responses missing expected fields
+- API returning subscription-gated errors for free athletes
 
-**Prevention:**
-1. Before replacing: document which file is the active source (`MK Ultra.gpx` with space)
-2. Replace by overwriting the exact filename, or update the path in `parse-gpx.js` line 29
-3. After pipeline run, verify `route-data.json` meta shows the expected new `totalMi` and `trackpoints` count
-4. Delete the unused GPX file to prevent future confusion
+**Phase to address:**
+Requirements clarification -- must happen immediately. This changes the data model for segment cards.
 
-**Phase:** Route update phase. First step.
-
-**Confidence:** HIGH -- verified by reading `parse-gpx.js` line 29 and `ls` output showing both files.
+**Confidence:** HIGH -- verified against Strava's official "Changes to the Segments API" documentation (developers.strava.com/docs/segment-changes/).
 
 ---
 
-### Pitfall 3: Elevation Profile X-Axis Max Mismatch After Route Change
+### Pitfall 3: OAuth Token Storage in Stateless Serverless Functions
 
-**What goes wrong:** `ElevationProfile.astro` line 196 hardcodes `max: 100` for the x-axis:
-```
-x: { type: 'linear', min: 0, max: 100, ... }
-```
+**Severity:** CRITICAL -- security vulnerability if done wrong, broken flow if tokens are lost
 
-The current GPX produces `totalMi: 98.23`. If the new 100mi GPX produces exactly 100.0mi, this is fine. But if it produces 101.2mi or 99.5mi, the chart either clips the last mile or has dead space. More critically: if the new route is genuinely 100mi, sector bands for "Down Jeep" at 83.55mi will render correctly, but any new annotations past mile 100 would be invisible.
+**What goes wrong:**
+Netlify Functions are stateless -- they have no persistent memory between invocations. Strava access tokens expire every 6 hours. Refresh tokens rotate on every use (old refresh token is immediately invalidated). If you store tokens only in the function's runtime memory, they disappear between invocations. If you store them in a cookie or client-side, they are exposed to XSS attacks. If two concurrent requests both try to refresh the same token, one succeeds and the other's refresh token is now invalid -- the user is locked out.
 
-**Why it happens:** The x-axis max was set to 100 as a "forward-compatible" value (noted in the code comment) but it's still a hardcoded assumption about route length.
+Strava's documentation explicitly warns: "Once a new refresh token code has been returned, the older code will no longer work."
 
-**Prevention:**
-1. After GPX replacement, check `route-data.json` meta `totalMi`
-2. If > 100, update the `max` value in ElevationProfile.astro
-3. Consider making it dynamic: read from route-data.json meta instead of hardcoding
+**Why it happens:**
+Developers familiar with traditional server-side sessions assume there is persistent state between function invocations. Serverless functions are ephemeral -- each invocation is a clean slate.
 
-**Phase:** Route update phase. Verify after pipeline re-run.
+**How to avoid:**
 
-**Confidence:** HIGH -- verified by reading `ElevationProfile.astro` line 196.
+For the activity submission flow (user authenticates, submits activity):
+1. Use Netlify environment variables for the APPLICATION's client_id and client_secret (these are static, not per-user).
+2. For per-user tokens during the OAuth flow: treat the entire submission as a single session. User authorizes -> callback receives auth code -> exchange for access token -> immediately fetch needed data -> process and store results -> done. Do NOT store the user's refresh token for later use.
+3. If you need to store tokens for later (e.g., webhook processing), use Netlify Blobs with server-side encryption. Never expose tokens to the client.
+4. Implement a token refresh mutex using Netlify Blobs' `onlyIfMatch` (ETag-based conditional writes) to prevent concurrent refresh race conditions.
+
+For build-time segment data fetching (static, not per-user):
+1. Use a dedicated "service account" -- a single Strava athlete account that authorizes the app. Store its refresh token as a Netlify environment variable.
+2. At build time, refresh the token and fetch segment metadata. This is a single-threaded build process, so no concurrency concern.
+
+**Warning signs:**
+- Users report "authentication failed" after successful OAuth
+- 401 errors on Strava API calls after token refresh
+- Duplicate activities appearing in results (concurrent submission race)
+- Tokens appearing in browser DevTools network tab
+
+**Phase to address:**
+Serverless backend phase -- token management architecture must be designed before OAuth flow implementation.
+
+**Confidence:** HIGH -- verified against Strava authentication docs (developers.strava.com/docs/authentication/).
+
+---
+
+### Pitfall 4: Application Athlete Limit Blocks User Authentication
+
+**Severity:** CRITICAL -- can block the entire submission flow if not addressed weeks before the event
+
+**What goes wrong:**
+New Strava API applications start with an athlete limit (the number of unique users who can authorize). Before your app is reviewed by Strava, you may be limited to authenticating only yourself. Even after initial review, the default athlete cap may be insufficient for your event size. If 50 riders try to submit results and you have a 15-athlete limit, submissions 16-50 fail with no API-level error -- Strava simply won't complete the OAuth flow for new athletes.
+
+The app review process takes 7-10 business days in the best case. Community reports indicate it can take 3-4 weeks. Some developers report submitting requests and never hearing back.
+
+**Why it happens:**
+Strava gates API application growth to prevent abuse. Developers often discover the limit only when real users try to authenticate, sometimes at the worst possible time (event day).
+
+**How to avoid:**
+1. Register the Strava API application NOW (March 2026). Not in May.
+2. Submit the app for review immediately after registration. Include a clear description: "MK Ultra Gravel event timing, ~50-100 athletes, one-time event June 7 2026."
+3. Request an athlete limit increase to at least 200 (buffer above expected participants).
+4. Build and test the OAuth flow early with test accounts to verify the flow works before event day.
+5. Monitor the athlete capacity in your API settings dashboard and the `X-RateLimit-*` response headers.
+6. Have a backup plan: if app review is denied or delayed, implement a manual results entry alternative (admin uploads CSV).
+
+**Warning signs:**
+- OAuth flow works for you but fails for others
+- No response from Strava developer review after 2 weeks
+- `X-RateLimit-*` headers show athlete limit approaching capacity
+
+**Phase to address:**
+First phase -- register the app and submit for review as the very first action. This is a blocking external dependency with a multi-week lead time.
+
+**Confidence:** HIGH -- verified against multiple Strava Community Hub discussions about review delays and athlete limits.
+
+---
+
+### Pitfall 5: Race Condition on Concurrent Activity Submissions
+
+**Severity:** CRITICAL -- can cause data loss (overwritten results)
+
+**What goes wrong:**
+The v5.0 plan stores results as "committed JSON, site rebuilds to update." If two athletes submit results within seconds of each other, both Netlify Function invocations read the current results.json, add their entry, and write back. The second write overwrites the first -- Athlete A's result is lost.
+
+This is worse than it sounds: after an event, many riders submit results within a short window. You could see 20 submissions in 10 minutes. Even with rebuild latency, the JSON write step itself is the race condition.
+
+**Why it happens:**
+File-based JSON storage has no built-in concurrency control. Netlify Functions can execute concurrently. There is no database transaction or row-level lock.
+
+**How to avoid:**
+
+Option A -- Append-only individual files (RECOMMENDED): Each submission creates a separate JSON file (e.g., `results/athlete-{strava_id}.json`). The build step reads ALL individual files and merges them into the leaderboard. No file is ever overwritten by another athlete's submission. Git commits from Netlify Functions add individual files, never modify a shared file.
+
+Option B -- Use Netlify Blobs with conditional writes: Netlify Blobs supports `onlyIfMatch` (ETag-based optimistic concurrency). Read the blob, get its ETag, modify, write back with `onlyIfMatch`. If another write happened, retry. This works but adds complexity.
+
+Option C -- Queue-based processing: Submissions go into a queue (Netlify Blob as append log). A scheduled function or build hook processes the queue sequentially. Eliminates concurrent write concern.
+
+**Warning signs:**
+- Results count is lower than submissions count
+- Athletes report submitting but not appearing on results page
+- Git history shows commits that remove previously-added results
+
+**Phase to address:**
+Results storage architecture phase -- must choose the storage pattern before building the submission flow.
+
+**Confidence:** HIGH -- verified against Netlify Blobs documentation confirming "last write wins" with no built-in concurrency control.
 
 ---
 
 ## Moderate Pitfalls
 
-Mistakes that cause broken UX, visual bugs, or require non-trivial fixes.
+### Pitfall 6: Rate Limits Exhausted During Build-Time Segment Fetching
 
-### Pitfall 4: PhotoSwipe + Leaflet Popup Integration -- Event Propagation Conflict
+**Severity:** HIGH -- causes build failures or stale data
 
-**What goes wrong:** Currently, photo markers on the map open popups with `<a href="/images/..." target="_blank">` links (RouteMap.astro lines 198-204). The v4.0 goal is to replace this with PhotoSwipe lightbox on click. The problem: Leaflet popups intercept click events before they bubble to PhotoSwipe. Specifically:
+**What goes wrong:**
+Strava's rate limits are 200 requests per 15 minutes (overall) and 100 requests per 15 minutes for non-upload (read) endpoints, with 1,000 reads per day. MK Ultra has 9 segments. Fetching segment detail for each = 9 API calls. That is fine for a single build. But if you also fetch segment efforts, athlete data, or activity details per submission, and builds trigger frequently (multiple submissions in sequence), you can exhaust the daily limit. Worse: Netlify rebuild triggers from multiple submissions could cause parallel builds, each making API calls that count against the same rate limit.
 
-1. Leaflet's popup content is injected into a `.leaflet-popup-content` div that sits inside Leaflet's event capture layer
-2. PhotoSwipe expects to bind to gallery items via CSS selector (`gallery: '#photo-gallery', children: '.gallery-item'`)
-3. Leaflet popup HTML is dynamically created/destroyed on each marker click -- it doesn't exist in the DOM until the popup opens
-4. PhotoSwipe's `lightbox.init()` runs once at page load and scans for `.gallery-item` elements -- it will NOT find dynamically created popup content
+**Why it happens:**
+Developers test with single requests and forget that production involves multiple concurrent operations sharing the same rate limit pool.
 
-**Why it happens:** PhotoSwipe and Leaflet have completely separate DOM ownership models. PhotoSwipe expects static gallery markup. Leaflet creates/destroys popup DOM dynamically.
-
-**Consequences:** Clicking a photo marker either: (a) opens the popup but PhotoSwipe doesn't trigger, (b) triggers PhotoSwipe but from the wrong context, or (c) both fire causing double-open behavior.
-
-**Warning signs:**
-- Photo marker click opens a popup with an image but no lightbox
-- Console errors about missing PhotoSwipe gallery items
-- Lightbox opens but with wrong image index
-
-**Prevention:**
-1. Do NOT try to put PhotoSwipe gallery markup inside Leaflet popups
-2. Instead: intercept the marker click event BEFORE it opens a popup. Use `marker.on('click', ...)` to trigger PhotoSwipe programmatically via its API (`lightbox.loadAndOpen(index)`)
-3. The photo markers array (`photoMarkers` in RouteMap.astro line 196) already has the photo data -- use the marker's index to open the correct PhotoSwipe slide
-4. Remove `bindPopup()` from photo markers entirely -- replace with direct PhotoSwipe open
-5. PhotoSwipe needs a data source (array of `{src, width, height}` items) that matches the photos array. This data exists in `photos.json` (which includes `width` and `height` from the thumbnail generator)
-
-**Alternative approach:** Use PhotoSwipe's dynamic slide data source pattern instead of DOM-based gallery. Feed it the photos array directly and trigger `loadAndOpen(index)` from marker click.
-
-**Phase:** PhotoSwipe integration phase.
-
-**Confidence:** HIGH -- verified by reading PhotoSwipe init pattern (PhotoGallery.astro lines 37-48), Leaflet marker binding (RouteMap.astro lines 196-204), and understanding Leaflet's popup lifecycle.
-
----
-
-### Pitfall 5: Map Reset Button -- Incomplete State Restoration
-
-**What goes wrong:** The map has at least 8 independent pieces of state that can diverge from the initial view. A reset button that only calls `map.fitBounds(routeLine.getBounds())` will leave ghost state:
-
-| State | How it changes | What reset must do |
-|-------|---------------|-------------------|
-| Zoom + center | `flyToBounds()` on sector click (RouteMap.astro line 270) | `fitBounds(routeLine.getBounds(), { padding: [20, 20] })` |
-| Open popups | Clicking any marker/sector | `map.closePopup()` |
-| Sector highlight styles | `map:sectorClick` sets weight:7/opacity:1 on one, dims others to 0.4 (RouteMap.astro lines 263-268) | Restore ALL polylines to `originalStyle` (weight:5, opacity:0.9) |
-| Elevation chart sector highlight | `map:sectorClick` event persists highlighted band (ElevationProfile.astro lines 249-265) | Dispatch reset event to restore all annotation band colors |
-| Bike crosshair marker | `elevation:hover` sets opacity:1 (RouteMap.astro line 249) | `crosshair.setOpacity(0)` |
-| Sector badge visibility | Zoom-dependent (`zoomend` handler, RouteMap.astro line 143) | Will auto-correct when zoom resets |
-| MarkerCluster state | Spiderfy state if user clicked a cluster | `photoCluster.unspiderfy()` or let fitBounds handle it |
-| Chart tooltip | Hovering over elevation chart | Chart.js tooltip auto-hides, no action needed |
-
-**Why it happens:** The map + elevation chart communicate via 6 CustomEvents (`elevation:hover`, `elevation:hoverEnd`, `elevation:sectorClick`, `map:sectorHover`, `map:sectorClick`). Each event modifies state in the receiving component. A reset must either reverse all these state changes or dispatch a new "reset" event that both components listen to.
-
-**Consequences:** User clicks "Reset" but sectors remain dimmed, or the elevation chart still shows a highlighted band, or the bike crosshair is still visible at the last hovered position.
+**How to avoid:**
+1. Cache segment metadata aggressively. Segment details (name, distance, grade) change rarely. Fetch once, commit to repo as static JSON, refresh manually or on a schedule (weekly at most).
+2. For build-time data, use a cached segment data file. Only re-fetch if the file is older than 7 days (matches Strava's cache TTL requirement in TOS Section 7.1).
+3. Monitor `X-RateLimit-Usage` and `X-ReadRateLimit-Usage` headers on every API response.
+4. Reserve at least 50% of rate budget for user-facing operations (OAuth token exchange, activity fetching during submissions). Build-time fetches should never use more than 20 requests per cycle.
+5. Implement exponential backoff on 429 responses.
 
 **Warning signs:**
-- After clicking reset, visual artifacts remain (dimmed sectors, highlighted bands)
-- Reset works for zoom/center but sectors look wrong
-- Crosshair visible at [0,0] after reset
+- 429 Too Many Requests responses in build logs
+- Builds succeeding but with missing/stale segment data
+- Daily limit (1,000) exhausted before end of day
 
-**Prevention:**
-1. Define a `map:reset` CustomEvent that both RouteMap and ElevationProfile listen to
-2. In RouteMap's handler: `fitBounds()`, `closePopup()`, restore all sector styles, hide crosshair, unspiderfy clusters
-3. In ElevationProfile's handler: restore all annotation band colors to defaults, call `chart.update('none')`
-4. The reset button should be OUTSIDE both components (in index.astro or a wrapper) and dispatch the single event
-5. Store `initialBounds` at map init time -- don't recalculate from routeLine every time (the polyline reference is inside the initMap closure)
+**Phase to address:**
+Strava API integration phase -- design the caching strategy before implementing any API calls.
 
-**Phase:** Map reset button phase. Design the event contract first, implement in both components.
-
-**Confidence:** HIGH -- verified by tracing all state mutations in RouteMap.astro and ElevationProfile.astro.
+**Confidence:** HIGH -- verified against developers.strava.com/docs/rate-limits/.
 
 ---
 
-### Pitfall 6: Leaflet Zoom Control CSS Specificity War
+### Pitfall 7: Activity Validation -- Accepting Submissions That Are Not From The Event
 
-**What goes wrong:** The existing zoom control styles in `global.css` lines 200-207 use `!important` on every property:
+**Severity:** HIGH -- compromises results integrity
 
-```css
-.leaflet-control-zoom a {
-  background: oklch(0.18 0.01 250) !important;
-  color: oklch(0.85 0.01 90) !important;
-  border-color: oklch(0.25 0.01 250) !important;
-}
-```
+**What goes wrong:**
+A user authenticates via Strava OAuth, selects an activity, and submits it as their "MK Ultra Gravel" result. But the activity could be: (a) from a different date (not June 7 2026), (b) from a different location (they rode in California), (c) missing the required segments (they took a shortcut), (d) a virtual/indoor ride, or (e) already submitted (duplicate submission).
 
-To make controls larger, you need to override `width`, `height`, `line-height`, and `font-size`. But Leaflet's own CSS (imported via `@import "leaflet/dist/leaflet.css" layer(leaflet)`) sets these properties. The `@layer leaflet` declaration in `global.css` line 4 means Leaflet CSS has the LOWEST priority in the cascade. This is actually good -- it means overrides in `@layer components` should win without `!important`.
+Without validation, anyone with a Strava account can submit any activity as their event result.
 
-BUT: the existing `!important` declarations set a precedent. If new sizing styles are added WITHOUT `!important` while neighboring properties use it, the cascade behavior becomes confusing to maintain. Worse: if someone later adds `!important` to Leaflet's own CSS import (thinking they need it), the entire layer system breaks.
+**Why it happens:**
+Developers focus on the OAuth flow and assume that if a user authenticated, they are legitimate. But authentication proves identity, not participation.
 
-**Why it happens:** The layer system (`@layer leaflet, base, components, utilities`) was designed correctly, but `!important` was added as a belt-and-suspenders measure on the color overrides. New size overrides must follow the same pattern for consistency.
-
-**Consequences:** Zoom controls either don't resize (Leaflet's inline styles win) or resize inconsistently (width changes but not height).
-
-**Prevention:**
-1. Add size overrides in the same `@layer components` block as existing Leaflet overrides (global.css ~line 200)
-2. Use `!important` on ALL new properties to match the existing pattern -- don't mix `!important` and non-`!important` in the same selector block
-3. Target `.leaflet-control-zoom a` for both `+` and `-` buttons
-4. Set `width`, `height`, `line-height`, and `font-size` together -- they are interdependent
-5. Test at mobile and desktop breakpoints -- Leaflet has no responsive controls by default
-6. Check that the zoom control doesn't overlap the attribution control when made larger
-
-**Phase:** Map zoom controls phase.
-
-**Confidence:** HIGH -- verified by reading `global.css` lines 1-4 (layer declaration) and lines 200-207 (existing zoom styles).
-
----
-
-### Pitfall 7: Card Layout Equalization -- `space-y-4` Prevents CSS Grid Alignment
-
-**What goes wrong:** Both `GravelSectors.astro` and `KomSegments.astro` use `<div class="space-y-4">` as their root wrapper, which applies `margin-top` between children. The parent in `index.astro` (line 272) uses:
-
-```html
-<div class="grid md:grid-cols-3 gap-8">
-  <div class="md:col-span-2"> <!-- sectors -->
-  <div> <!-- KOM + restock -->
-```
-
-The v4.0 goal is to make sector cards the same size as KOM cards. The problem: these are in SEPARATE grid cells. The sectors are in a `col-span-2` column, KOM in a `col-span-1` column. CSS Grid can equalize heights of items in the SAME row, but it cannot equalize card heights across different grid cells unless you restructure the layout.
-
-Additionally, both card components use `space-y-4` (vertical stack) -- cards are NOT in a sub-grid. Even within the sectors column, cards are vertically stacked, not in a card grid. Making them "the same size" requires either:
-- Converting both to a shared CSS grid with `auto-rows: 1fr` (forces equal height)
-- Setting explicit `min-height` on cards (brittle, breaks with content changes)
-- Using `subgrid` (limited browser support with older Safari)
-
-**Why it happens:** The current layout treats sectors and KOMs as independent vertical lists in separate columns. "Same size" across columns requires a fundamentally different layout strategy.
-
-**Consequences:** Either cards are the wrong height, or the layout restructure breaks the existing responsive behavior.
-
-**Prevention:**
-1. Clarify the requirement: does "same size" mean same card HEIGHT, same card WIDTH, or both?
-2. If same height: wrap cards in a grid with `grid-auto-rows: 1fr` within each column
-3. If matching across columns: this requires restructuring the parent grid or using JavaScript to measure and set heights
-4. Preserve the `aspect-video` image ratio (16:9) on card images -- don't stretch
-5. Test with cover photos of different aspect ratios (the pipeline generates 600x338 but display is `object-cover`)
-
-**Phase:** Card layout phase. Clarify requirement before implementation.
-
-**Confidence:** MEDIUM -- the exact requirement for "resized to match KOM cards" needs clarification.
-
----
-
-### Pitfall 8: Penrose Triangle Animation Z-Index Collision
-
-**What goes wrong:** The site has a crowded z-index stack:
-
-| Element | z-index | Source |
-|---------|---------|--------|
-| grain-overlay | 9999 | global.css line 90 |
-| escher-overlay | 9998 | global.css line 101 |
-| Section content | 10 (via Tailwind `z-10`) | index.astro lines 203, 245, 270, 294, 307 |
-| Route map | 0 | RouteMap.astro line 15 |
-| Leaflet internal layers | 400-800 (Leaflet's own z-index system) | Leaflet CSS |
-| Bike crosshair | +1000 (zIndexOffset) | RouteMap.astro line 238 |
-
-A Penrose triangle "above page title" in the hero section must:
-- Appear ABOVE the hero background image (`.tone-image` with `position: absolute`)
-- Appear ABOVE the hero content (`z-10`)
-- Appear BELOW the grain-overlay (9999) and escher-overlay (9998) for visual consistency
-- NOT interfere with the Leaflet map's internal z-index system when scrolled past
-
-**Why it happens:** The z-index values jump from 10 to 9998 with nothing in between. Any new fixed/absolute element must pick a value in this gap. But the hero section uses `overflow: hidden`, which creates a new stacking context -- z-index values inside it are relative to the section, not the page.
-
-**Consequences:** Triangle either hidden behind overlays, or appears above everything (including map controls and popups), or doesn't animate because `will-change: transform` creates a new stacking context that fights with existing ones.
-
-**Prevention:**
-1. Place the Penrose triangle as a sibling of the hero content div (inside `#hero` section, alongside the `z-10` div)
-2. Give it `z-index: 5` (below content text at z-10, above tone image at z-auto)
-3. Do NOT use `position: fixed` -- use `position: absolute` within the hero section
-4. Use `will-change: transform` sparingly -- only during animation, remove after (or accept the stacking context)
-5. Test that grain-overlay and escher-overlay still render on top
-
-**Phase:** Penrose triangle phase.
-
-**Confidence:** HIGH -- verified z-index values by reading global.css and all component styles.
-
----
-
-### Pitfall 9: Penrose Triangle Animation Performance -- Compositor Thread vs Main Thread
-
-**What goes wrong:** The existing animations in the codebase are all compositor-safe:
-- `escher-drift` uses only `transform` (global.css lines 253-257)
-- `reveal` uses only `opacity` + `transform` (global.css lines 37-46)
-- `card-hover` uses only `box-shadow` with `transition: 0ms step-start` (effectively no transition cost)
-
-PROJECT.md explicitly notes: "All animations compositor-safe (transform/opacity only). TBT 0ms baseline."
-
-If the Penrose triangle animation uses properties like `scale`, `rotate`, or `filter` (not `transform: scale()/rotate()`), or triggers layout (e.g., `width`, `height`, `margin`), it will break the TBT 0ms baseline.
-
-**Why it happens:** CSS `scale` and `rotate` are now standalone properties (not sub-properties of `transform`). They ARE compositor-safe in modern browsers, but they create new stacking contexts. The risk is using properties that LOOK safe but aren't (e.g., `filter: drop-shadow()` forces main-thread repaint, `clip-path` forces repaint on some engines).
-
-**Consequences:** Lighthouse Performance score drops. TBT increases from 0ms. CLS potentially increases if animation causes layout shift.
-
-**Prevention:**
-1. Use ONLY `transform` and `opacity` for the animation
-2. Gate behind `@media (prefers-reduced-motion: no-preference)` -- same pattern as `escher-drift` (global.css line 259)
-3. Use `will-change: transform` on the element (but be aware of stacking context implications from Pitfall 8)
-4. Keep animation duration long and easing smooth (like escher-drift at 50s) to avoid visual jank
-5. Test with Lighthouse after implementation -- verify TBT stays 0ms
-6. The existing `escher-overlay` animation (global.css line 262) is a good template to follow
-
-**Phase:** Penrose triangle phase.
-
-**Confidence:** HIGH -- verified animation patterns and performance baseline in PROJECT.md and global.css.
-
----
-
-### Pitfall 10: New Photo Addition -- Pipeline Assumptions and Manual Steps
-
-**What goes wrong:** Adding 2 new photos (Down Jeep + Billie Helmer B&W) requires 5 coordinated manual steps, any of which silently breaks the pipeline:
-
-1. **File placement.** Photos must go in `/images/` (root, not `public/images/`). The pipeline copies from `images/` to `public/images/` at line 21-29 of `generate-data.js`. Placing them directly in `public/images/` means they bypass the pipeline and won't get thumbnails or photos.json entries.
-
-2. **Manifest entry format.** Each entry in `photo-manifest.js` is `{ filename: 'exact-filename.jpg', mi: 40.2 }`. The filename must EXACTLY match the file in `images/`. Case-sensitive. No path prefix.
-
-3. **Mile marker accuracy.** The `mi` value must correspond to where on the NEW route (after GPX replacement) the photo was taken. If you assign `mi: 83.55` for a Down Jeep photo but the new GPX puts mile 83.55 at a different location, the photo marker will be misplaced.
-
-4. **Photo dimensions.** `generate-thumbnails.js` reads original image dimensions via `sharp(srcPath).metadata()` and writes them to `photos.json`. PhotoGallery.astro reads `data-pswp-width` and `data-pswp-height` from this data. If sharp can't read the image (corrupt file, unsupported format), the entire pipeline fails.
-
-5. **File format.** The manifest filter (generate-data.js line 26) matches `/\.(jpg|jpeg|png|webp)$/i`. The PhotoGallery thumbnail path replacement (PhotoGallery.astro line 24) does `.replace(/\.(jpg|jpeg|png)$/i, '.webp')`. If a new photo is `.webp` format, the thumbnail regex won't match and the thumbnail `src` will be wrong.
-
-**Why it happens:** The pipeline was designed for batch processing of a fixed photo set. Adding individual photos requires understanding the full chain: `images/` -> `photo-manifest.js` -> `match-photos.js` -> `photos.json` -> `generate-thumbnails.js` -> `photos.json` (enriched) -> `assign-card-photos.js` -> `annotations.json`.
-
-**Consequences:** Missing thumbnails (404 in gallery), wrong photo positions on map, pipeline build failure, or PhotoSwipe lightbox showing wrong dimensions.
+**How to avoid:**
+1. **Date validation:** Check `activity.start_date` is June 7, 2026. Allow a 24-hour window (June 7 00:00 to June 8 00:00 local time). Convert from UTC with timezone offset.
+2. **Activity type validation:** Check `activity.type` is "Ride" (not "VirtualRide", "Run", etc.).
+3. **Segment matching:** After fetching the activity with `include_all_efforts=true`, verify that `segment_efforts` contains efforts for ALL 6 timed gravel sectors. A valid MK Ultra submission must have efforts on all 6 sectors. KOM segments are optional (rider may have skipped them).
+4. **Duplicate prevention:** Check the athlete's Strava ID against existing submissions. One submission per athlete, allow updates/resubmissions (override, don't duplicate).
+5. **Geographic proximity (optional but recommended):** Check that the activity's start_latlng is within ~10km of Marquette, MI (46.5436, -87.3954).
+6. **Do NOT rely on activity name.** Users can name activities anything.
 
 **Warning signs:**
-- `npm run prebuild` fails with sharp error
-- New photos don't appear in gallery
-- New photos appear at wrong position on map
-- Gallery shows broken image icons for thumbnails
+- Results showing activities from wrong dates
+- Segment effort counts varying wildly between submissions
+- Same athlete appearing multiple times
+- Activities with suspiciously fast times (virtual rides)
 
-**Prevention:**
-1. Place source files in `/images/` (NOT `public/images/`)
-2. Add manifest entries with verified mile markers for the NEW GPX
-3. Run `npm run prebuild` and check for warnings
-4. Verify `photos.json` has the new entries with correct `width`/`height`
-5. Verify `public/images/thumbs/` has new `.webp` thumbnails
-6. Check that the gallery grid shows the new photos at the correct position
+**Phase to address:**
+Submission flow phase -- validation logic must be implemented in the Netlify Function that processes submissions.
 
-**Phase:** Photo addition phase. Must happen AFTER GPX replacement (Pitfall 1) so mile markers are accurate.
-
-**Confidence:** HIGH -- verified by tracing the complete pipeline in generate-data.js, photo-manifest.js, match-photos.js, and generate-thumbnails.js.
+**Confidence:** MEDIUM -- validation logic is standard but segment matching depends on Strava actually matching segments to the activity (GPS quality varies).
 
 ---
 
-### Pitfall 11: Content "80 miles" to "100 miles" -- Scattered References
+### Pitfall 8: Gender Categorization -- Strava's API Has Only M, F, or null
 
-**What goes wrong:** The distance reference exists in multiple places with different update mechanisms:
+**Severity:** HIGH -- the v5.0 spec requires a non-binary category but the data source cannot provide it
 
-| Location | Current Value | Update Mechanism |
-|----------|--------------|------------------|
-| `index.astro` line 210 | "100 miles" (hardcoded) | Manual edit |
-| `index.astro` line 249 | `{Math.round(routeMeta.totalMi)} miles` | Dynamic from route-data.json |
-| `BaseLayout.astro` line 12 | "100 miles" (meta description) | Manual edit |
-| `MkUltraExplainer.astro` line 33 | "100 miles" (body text) | Manual edit |
-| `ElevationProfile.astro` line 196 | `max: 100` (x-axis range) | Manual edit |
-| `PROJECT.md` line 108 | "Distance: 100 miles" | Manual edit |
+**What goes wrong:**
+The v5.0 requirements specify "Three gender categories: men, women, non-binary (from Strava profile)." Strava's API returns the `sex` field with only two valid values: "M" or "F". Any other value (including selections from newer Strava UI gender options) resets to `null` in the API. Athletes who select non-binary, prefer not to say, or leave the field empty all return `null`.
 
-The hero (line 210) and meta description (BaseLayout line 12) already say "100 miles". The route section (line 249) dynamically reads from `route-data.json` which currently shows 98.23mi, producing "98 miles" after `Math.round()`. This is the EXISTING inconsistency noted in v2.0 verification.
+You cannot distinguish between "non-binary" and "didn't set their gender" from the API response alone.
 
-After the 100mi GPX replacement, `routeMeta.totalMi` should become ~100.x, and `Math.round()` will produce 100 or 101. If the GPX total is 100.6mi, the route section will say "101 miles" while everything else says "100 miles".
+**Why it happens:**
+Strava's UI has evolved to be more inclusive, but the API has not kept pace. The `sex` field in the DetailedAthlete model remains binary.
 
-**Why it happens:** Mix of hardcoded strings and dynamic values. The dynamic value was intentionally left dynamic to "auto-update when GPX changes" but `Math.round()` doesn't guarantee matching the marketing copy.
+**How to avoid:**
+1. Do NOT rely solely on Strava's `sex` field for categorization.
+2. Add a gender/category selection step in YOUR submission form. Options: "Men", "Women", "Non-Binary". Default to Strava's value if M or F, but ALWAYS allow override.
+3. This also handles the case where someone's Strava profile is wrong or where they prefer a different competition category.
+4. Store the category in your results JSON as a first-class field, independent of Strava data.
+5. For athletes who don't select a category and have `sex: null` from Strava, either prompt them to choose or place them in an "uncategorized" bucket (not ideal -- better to require selection).
 
-**Consequences:** Users see "100 miles" in the hero but "101 miles" (or "98 miles") in the route section. Minor credibility issue.
+**Warning signs:**
+- Large number of athletes in the non-binary category who actually just had null Strava profiles
+- Athletes requesting category changes after results are published
 
-**Prevention:**
-1. After GPX replacement, check `route-data.json` meta `totalMi` exact value
-2. If `Math.round(totalMi)` != 100, consider `Math.floor()` or hardcoding "100" in the route section
-3. Search all files for distance references: `grep -r "miles\|100 mi\|80 mi" src/`
-4. The `ElevationProfile.astro` x-axis `max: 100` is already correct if the route is ~100mi
-5. Decide: is the canonical distance "100 miles" (marketing) or the actual GPS distance?
+**Phase to address:**
+Submission flow design -- the category selection UI must be part of the submission form.
 
-**Phase:** Content update phase. Verify after GPX replacement.
-
-**Confidence:** HIGH -- verified all references via grep and code inspection.
+**Confidence:** HIGH -- verified against Strava API v3 documentation and community discussions confirming the sex field only supports M/F/null.
 
 ---
 
-## Minor Pitfalls
+### Pitfall 9: Strava 7-Day Data Cache Limit -- TOS Requires Deletion
 
-Mistakes that cause annoyance, visual inconsistency, or minor rework.
+**Severity:** HIGH -- TOS violation can result in API access revocation
 
-### Pitfall 12: Grinduro Explainer Placement -- Section Scroll Anchor Confusion
+**What goes wrong:**
+Strava API Agreement Section 7.1 states: "No Strava Data shall remain in your cache longer than seven days." If you cache segment metadata, activity details, or athlete profiles and never purge them, you violate the TOS. This seems to conflict with storing results permanently -- but it depends on what you store and how.
 
-**What goes wrong:** The v4.0 target says "Grinduro-style event format explainer in sector section." The current sector section (`#sectors` in index.astro line 269) contains the grid with GravelSectors + KomSegments + RestockPoints. Adding a Grinduro explainer here increases the section length and pushes the actual cards further down. If users navigate via `#sectors` anchor, they'll see the explainer text first, not the cards.
+**Why it happens:**
+Developers cache API responses for performance and forget about the TTL requirement. Or they don't realize "committed JSON in a git repo" counts as caching Strava data.
 
-**Why it happens:** Section anchors point to the top of the section. Adding content above the cards shifts everything down.
+**How to avoid:**
+1. Distinguish between "Strava Data" (API responses, segment metadata, athlete profiles) and "event data" (your results, your scoring, your leaderboard).
+2. At submission time: fetch Strava data, extract what you need (segment effort elapsed_time, activity date), compute your results, and store ONLY the derived results. Don't store raw Strava API responses.
+3. Results JSON should contain: athlete name (as they entered it, not from Strava profile), category (as they selected it), segment times (as numbers, not Strava effort objects), and total score. Do NOT store Strava athlete IDs, profile URLs, or activity IDs in the published results.
+4. You MAY store Strava IDs internally (for deduplication) but must delete them if the athlete deauthorizes.
+5. Segment metadata (name, distance, grade) used on cards: fetch at build time, cache for up to 7 days. Re-fetch on next build if stale. Since builds happen on commit, and the site rebuilds on submission, this naturally refreshes.
 
-**Prevention:**
-1. Place the explainer ABOVE the card grid but BELOW the section heading
-2. Keep it concise (1-2 short paragraphs)
-3. Test the `#sectors` anchor scroll position after adding content
-4. Consider: should this be a separate component like `MkUltraExplainer.astro`?
+**Warning signs:**
+- Raw Strava API response JSONs committed to the repo
+- Strava athlete profile data visible in your results JSON
+- No data purge mechanism when athletes deauthorize
 
-**Phase:** Content phase.
+**Phase to address:**
+Data architecture phase -- define exactly what fields are stored in results JSON and what is transient.
 
-**Confidence:** MEDIUM -- depends on exact placement decision.
-
----
-
-### Pitfall 13: Photo Marker Popup to Lightbox -- Losing Context
-
-**What goes wrong:** Currently, clicking a photo marker opens a Leaflet popup showing a small image with a link to the full image. The v4.0 change to PhotoSwipe lightbox means the user leaves the map context entirely (PhotoSwipe covers the full screen). After closing PhotoSwipe, the user is back on the page but potentially scrolled to the gallery section (if PhotoSwipe was also initialized there).
-
-**Why it happens:** PhotoSwipe maintains its own scroll/focus state. Opening a lightbox from the map section and closing it should return focus to the map, but PhotoSwipe's default behavior doesn't guarantee this.
-
-**Prevention:**
-1. Use separate PhotoSwipe instances for map and gallery (different `gallery` selectors)
-2. Or use the programmatic API (`loadAndOpen(index, dataSource)`) with a separate data source for map photos
-3. Test that closing the lightbox returns focus/scroll to the map section
-4. Consider: should map PhotoSwipe show only the clicked photo, or allow swiping through all route photos?
-
-**Phase:** PhotoSwipe integration phase.
-
-**Confidence:** MEDIUM -- depends on PhotoSwipe's programmatic API behavior.
+**Confidence:** HIGH -- verified against the Strava API Agreement at strava.com/legal/api.
 
 ---
 
-### Pitfall 14: Map Reset Button Position and Accessibility
+### Pitfall 10: Deauthorization Handling -- Must Delete User Data Within 48 Hours
 
-**What goes wrong:** The v4.0 spec says "below map." The map is followed immediately by the ElevationProfile in the DOM (index.astro lines 251-252):
+**Severity:** HIGH -- GDPR and TOS compliance requirement
 
-```html
-<RouteMap />
-<ElevationProfile />
-```
+**What goes wrong:**
+When an athlete revokes your app's access (via Strava's settings or your deauthorize endpoint), the API Agreement Section 5.4 requires: "all Personal Data pertaining to that user is deleted from your Developer Applications and related networks, systems and servers." Section 2.14(vi) requires this within 48 hours. If results are committed JSON in a git repo, deleting them requires a new commit, a rebuild, and potentially rewriting git history (which you shouldn't do).
 
-A reset button "below map" could mean between map and elevation chart, or below both. If placed between them, it visually breaks the map-elevation pairing. If placed below both, it's far from the map (the elevation chart is 140-180px tall).
+Strava sends a webhook event with `"authorized": "false"` when an athlete deauthorizes.
 
-Additionally, the button must be keyboard accessible and discoverable. A plain text button near a canvas chart can be overlooked.
+**Why it happens:**
+Developers build the "happy path" (submission) and forget the "unhappy path" (deauthorization/deletion).
 
-**Prevention:**
-1. Place the button between map and elevation chart but styled to feel like part of the map (position it absolutely over the map's bottom edge, or as a floating button)
-2. OR place it below the elevation chart with clear visual connection to the map
-3. Use a visible button with clear label ("Reset Map") not just an icon
-4. Include `aria-label` if using an icon button
-5. The button dispatches a single `map:reset` event (see Pitfall 5)
+**How to avoid:**
+1. Listen for deauthorization webhook events (the webhook callback already needs to handle this).
+2. Store a mapping of Strava athlete ID to submission file (e.g., in a Netlify Blob that maps athlete_id -> result_filename).
+3. On deauthorization: delete the athlete's result file, trigger a rebuild.
+4. For git-committed results: the deletion commit adds a new commit removing the file. Previous commits still contain the data in git history, but the live site no longer displays it. This is a reasonable interpretation for a static site -- the data is "deleted from your Developer Application" (the live site) even if git history retains it.
+5. Alternatively: if using Netlify Blobs for results storage, deletion is immediate and permanent.
+6. Document your data handling practices in a simple privacy notice linked from the submission flow.
 
-**Phase:** Map reset phase. Design decision needed before implementation.
+**Warning signs:**
+- No webhook handler for deauthorization events
+- No mechanism to identify which results belong to which Strava athlete
+- No privacy policy or data handling notice on the submission page
 
-**Confidence:** MEDIUM -- placement is a design decision.
+**Phase to address:**
+Webhook and submission flow phases -- must be designed alongside the submission architecture.
 
----
-
-### Pitfall 15: Down Jeep Sector at Mile 83.55 -- Beyond Current Photo Coverage
-
-**What goes wrong:** The photo manifest ends at mile 80.2 (`AU6maRolPI2hBS7Tu7-zDxC6u20udvzQv6Dix2f_jhQ-1536x2048.jpg`). The Down Jeep sector spans miles 83.55-84.15. `assign-card-photos.js` will use the nearest-photo fallback (the mi:80.2 photo) for Down Jeep's card cover, which is 3+ miles away from the actual sector.
-
-The v4.0 goal includes adding a Down Jeep photo. If this photo is added BEFORE the card assignment runs, the new photo should be selected as Down Jeep's cover. But if the photo's mile marker in the manifest is wrong (e.g., assigned mi:84.0 when the new GPX puts the sector at a different mile), the assignment may still use the fallback.
-
-**Why it happens:** The card photo algorithm (assign-card-photos.js line 54) checks `p.mi >= startMi && p.mi <= endMi`. The new photo must have a `mi` value within [83.55, 84.15] to be selected for Down Jeep.
-
-**Prevention:**
-1. Add the Down Jeep photo to the manifest with a `mi` value between 83.55 and 84.15
-2. Run the pipeline and verify `annotations.json` shows the new photo as Down Jeep's `coverPhoto`
-3. Check the console output for "no photos within range" warnings -- there should be NONE for Down Jeep after adding the photo
-4. Same applies for Billie Helmer (mi 21.9-22.59) -- the new photo's `mi` must fall in this range
-
-**Phase:** Photo addition phase. Coordinate with GPX replacement.
-
-**Confidence:** HIGH -- verified by reading assign-card-photos.js algorithm and current photo coverage gaps.
+**Confidence:** HIGH -- verified against Strava API Agreement Sections 5.4 and 2.14(vi), and webhook documentation.
 
 ---
 
-## Phase-Specific Warnings
+## Technical Debt Patterns
 
-Summary table mapping each v4.0 feature to its most likely pitfall and mitigation.
+Shortcuts that seem reasonable but create long-term problems.
 
-| Phase/Feature | Primary Pitfall | Severity | Mitigation |
-|---------------|----------------|----------|------------|
-| GPX route replacement | Cascading data corruption (P1) + wrong file (P2) | CRITICAL | Replace exact filename, re-run pipeline, visually verify ALL annotations |
-| GPX route replacement | Elevation x-axis mismatch (P3) | MODERATE | Check totalMi, update max if needed |
-| GPX route replacement | Content distance inconsistency (P11) | MINOR | Grep all "miles" references, decide canonical distance |
-| PhotoSwipe from map markers | Event propagation conflict (P4) | MODERATE | Use programmatic API, don't nest PhotoSwipe in popups |
-| PhotoSwipe from map markers | Losing map context (P13) | MINOR | Separate PhotoSwipe instances for map vs gallery |
-| Map reset button | Incomplete state restoration (P5) | MODERATE | Define reset event, handle ALL 8 state items |
-| Map reset button | Button placement (P14) | MINOR | Design decision -- between map+chart or below both |
-| Map zoom controls | CSS specificity war (P6) | MODERATE | Match existing !important pattern, set all size props together |
-| Card layout equalization | Grid alignment across columns (P7) | MODERATE | Clarify requirement (height vs width), restructure if needed |
-| Penrose triangle | Z-index collision (P8) | MODERATE | Use z-5 inside hero section, test overlay layering |
-| Penrose triangle | Animation performance (P9) | MODERATE | Transform/opacity only, reduced-motion gate, verify TBT 0ms |
-| New photos | Pipeline assumptions (P10) | MODERATE | Follow 5-step checklist, place in /images/ not /public/images/ |
-| New photos | Down Jeep coverage gap (P15) | MINOR | Ensure mi value falls within sector range |
-| Grinduro explainer | Scroll anchor shift (P12) | MINOR | Place below heading, keep concise |
+| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
+|----------|-------------------|----------------|-----------------|
+| Storing Strava refresh tokens as env vars for build-time use | Simple, no database needed | Token rotates on every use; must update env var after each refresh. If a build fails mid-refresh, the old token is invalidated and new one is lost. | Acceptable for a single-event site if you implement a write-back mechanism that updates the env var on every refresh. |
+| Skipping webhook subscription | One less endpoint to build and maintain | No deauthorization handling, no real-time activity notifications, manual polling only | Never acceptable -- TOS requires deauthorization handling |
+| Hardcoding segment IDs in source code | Fast, no config files to manage | If segment IDs change (re-created segments), requires code change and deploy | Acceptable -- these segments are stable and owned by the event organizer |
+| Single JSON file for all results | Simple reads, easy to reason about | Race condition on concurrent writes (see Pitfall 5) | Never acceptable -- use per-athlete files |
+| Using Strava athlete name directly | No extra form field needed | Name may not match what rider wants displayed; violates TOS if stored longer than 7 days | Never acceptable -- always ask for display name in submission form |
+| Skipping CSRF protection on OAuth callback | Simplifies the flow | Open redirect / session fixation attacks possible | Never acceptable |
 
-## Dependency Order for v4.0
+## Integration Gotchas
 
-Based on pitfall analysis, the safest implementation order is:
+Common mistakes when connecting to external services.
 
-1. **GPX replacement first** -- everything depends on correct route data (P1, P2, P3)
-2. **New photos second** -- mile markers must be set against the new GPX (P10, P15)
-3. **Content updates third** -- distance references need final totalMi value (P11)
-4. **Map reset button fourth** -- requires understanding current state model (P5)
-5. **PhotoSwipe integration fifth** -- depends on photos.json being correct (P4, P13)
-6. **Card layout sixth** -- independent of data pipeline (P7)
-7. **Zoom controls seventh** -- CSS-only change, low risk (P6)
-8. **Penrose triangle eighth** -- purely additive, no data dependencies (P8, P9)
-9. **Grinduro explainer ninth** -- content only, lowest risk (P12)
+| Integration | Common Mistake | Correct Approach |
+|-------------|----------------|------------------|
+| Strava OAuth | Storing only the access token, not the refresh token | Always persist the LATEST refresh token. Access tokens expire in 6 hours. The refresh token is the long-lived credential. |
+| Strava OAuth | Reusing an old refresh token | Every token refresh returns a NEW refresh token. The old one is immediately invalidated. You MUST store and use the latest one. |
+| Strava OAuth | Not validating the `state` parameter on callback | Generate a cryptographically random `state` value, store it (e.g., in a signed cookie), and verify it matches on callback. Prevents CSRF and session fixation. |
+| Strava API | Calling the leaderboard endpoint | It has been removed since June 2020. Returns 404. Do not attempt. |
+| Strava API | Fetching activity without `include_all_efforts=true` | Segment efforts are only included when this parameter is set. Without it, you cannot verify segment completion. |
+| Strava Webhook | Expecting to create multiple webhook subscriptions | Each Strava application can have exactly ONE webhook subscription. It covers all authenticated athletes. |
+| Strava Webhook | Doing heavy processing in the webhook handler | Webhook must respond with 200 status within 2 seconds. Do async processing: save the event to a queue/blob and process separately. |
+| Netlify Functions | Writing to the local filesystem and expecting persistence | Netlify Functions run in ephemeral containers. Writes to `/tmp` disappear between invocations. Use Netlify Blobs or git commits for persistence. |
+| Netlify Functions | Assuming functions share memory or state | Each function invocation is independent. Use Netlify Blobs or environment variables for shared state. |
+| Netlify Build | Triggering too many rebuilds | Each submission triggers a rebuild. If 20 people submit in 10 minutes, that is 20 builds. Netlify has build minute limits (300/month on free tier, 1000 on Pro). Consider batching: process submissions into Blobs, trigger a single rebuild every 15 minutes via scheduled function. |
+
+## Performance Traps
+
+Patterns that work at small scale but fail as usage grows.
+
+| Trap | Symptoms | Prevention | When It Breaks |
+|------|----------|------------|----------------|
+| Fetching Strava data at build time for every rebuild | Builds slow down; rate limits hit; stale data on failure | Cache segment data as static JSON; only re-fetch when stale (>7 days) or manually triggered | At 10+ builds/day against 1,000 daily request limit |
+| One rebuild per submission | Build queue backs up; results delayed by 30+ minutes | Batch submissions: collect in Blobs, rebuild on schedule (every 15 min) or after N new submissions | At 10+ submissions within a build window (~3 min/build) |
+| Netlify Function cold starts during OAuth | User waits 2-6 seconds for OAuth redirect; may assume it is broken and retry | Warm functions with scheduled pings; use Edge Functions for the redirect endpoint (50-200ms cold start) | First user of the day or after 15 min inactivity |
+| Loading full activity detail for all submitted activities | Slow build; rate limit exhaustion | Store only extracted times at submission; build reads pre-processed results files, not raw activity data | At 50+ submissions with 9 segments each |
+
+## Security Mistakes
+
+Domain-specific security issues beyond general web security.
+
+| Mistake | Risk | Prevention |
+|---------|------|------------|
+| Exposing Strava client_secret in client-side JavaScript | Anyone can impersonate your app, make API calls on your behalf, exhaust your rate limits | Client secret ONLY in Netlify env vars, ONLY accessed by server-side functions. Never in Astro components or client JS. |
+| No `state` parameter in OAuth redirect | CSRF attack: attacker initiates OAuth flow, victim completes it, attacker gets access to victim's linked account | Generate random state, store in signed httpOnly cookie, verify on callback. |
+| Accepting activity ID from client without re-fetching | User submits fabricated segment times by providing fake activity data | Always fetch the activity directly from Strava API server-side using the user's access token. Never trust client-submitted activity data. |
+| Storing access/refresh tokens in localStorage or cookies accessible to JS | XSS vulnerability exposes tokens; attacker can make Strava API calls as the user | Keep tokens server-side only (Netlify Blobs or function memory). Use httpOnly signed session cookies for user identification. |
+| No input validation on submission payload | Injection attacks, malformed data corrupting results JSON | Validate all fields server-side: Strava athlete ID (integer), activity ID (integer), category (enum: M/F/NB), display name (string, max 100 chars, sanitized). |
+| OAuth callback URL not restricted to your domain | Open redirect vulnerability; phishing attacks | Register exact callback URL in Strava app settings (`https://mkultragravel.netlify.app/.netlify/functions/strava-callback`). Validate the redirect_uri matches. |
+
+## UX Pitfalls
+
+Common user experience mistakes in this domain.
+
+| Pitfall | User Impact | Better Approach |
+|---------|-------------|-----------------|
+| OAuth flow opens in same tab, losing the submission context | User completes OAuth on Strava, gets redirected back but forgets what they were doing | Open Strava OAuth in a popup or new tab; callback page auto-closes and communicates back to the parent page. Or: clearly show "returning you to MK Ultra Gravel..." on callback. |
+| Requiring Strava subscription for submission | Non-subscriber athletes cannot participate in results | Only use API features available to free Strava accounts. Segment efforts on owned activities are available to free users. |
+| Showing raw elapsed_time from Strava (seconds) | "3847 seconds" is meaningless to cyclists | Format as HH:MM:SS or MM:SS. For cumulative gravel time, show "1:04:07" not "3847". |
+| No feedback after submission | User doesn't know if submission worked; submits again | Show clear success/failure state. "Your results have been submitted. The leaderboard updates every 15 minutes." |
+| Results page only shows overall leaderboard | Athlete cannot find their own position easily | Include a "Find your results" search/filter by name. Highlight the viewing athlete's row if they are logged in. |
+| No explanation of scoring system on results page | Athletes don't understand how scores are calculated | Include scoring explainer directly on the results page, not just on a separate page. "Gravel Champion = lowest cumulative time across 6 sectors. KOM/QOM Champion = top 10 earn points (10-1)." |
+
+## "Looks Done But Isn't" Checklist
+
+Things that appear complete but are missing critical pieces.
+
+- [ ] **OAuth flow:** Often missing `state` parameter validation -- verify CSRF protection exists on callback
+- [ ] **OAuth flow:** Often missing error handling for user denial -- verify graceful handling when user clicks "Cancel" on Strava authorization page
+- [ ] **Token refresh:** Often missing handling for expired refresh tokens -- verify what happens when Strava returns 401 on refresh (e.g., user deauthorized via Strava settings)
+- [ ] **Activity fetch:** Often missing `include_all_efforts=true` parameter -- verify segment_efforts array is populated in API response
+- [ ] **Submission validation:** Often missing date check -- verify submissions are rejected for activities not on June 7, 2026
+- [ ] **Results display:** Often missing deauthorized-athlete cleanup -- verify results page doesn't show athletes who revoked access
+- [ ] **Webhook endpoint:** Often missing GET handler for subscription validation -- verify both GET (challenge response) and POST (event handling) work
+- [ ] **Webhook endpoint:** Often missing 200 response within 2 seconds -- verify heavy processing is async, not blocking the response
+- [ ] **Rate limiting:** Often missing monitoring -- verify `X-RateLimit-Usage` headers are logged/checked before making additional calls
+- [ ] **Privacy notice:** Often missing entirely -- verify submission page includes what data is collected, how it is used, and how to request deletion
+
+## Recovery Strategies
+
+When pitfalls occur despite prevention, how to recover.
+
+| Pitfall | Recovery Cost | Recovery Steps |
+|---------|---------------|----------------|
+| TOS violation (displaying cross-user data) | HIGH | Immediately remove the violating feature. Restructure to hybrid approach (event-owned data with consent). Contact Strava developer support proactively to explain remediation. |
+| Lost refresh token (rotated and not saved) | MEDIUM | Re-authenticate the service account manually via browser. Update the env var with new refresh token. Add write-back mechanism to prevent recurrence. |
+| Concurrent write data loss | MEDIUM | Identify missing submissions from Strava webhook event log. Manually re-add lost results. Migrate to per-athlete file storage. |
+| Rate limit exhaustion | LOW | Wait for 15-minute window reset (or midnight UTC for daily). Implement caching to prevent recurrence. No data is lost -- just delayed. |
+| App review denied/delayed | HIGH | Implement manual results entry as fallback (admin-only form). Have this ready as a contingency by event day. |
+| Invalid activity submissions accepted | MEDIUM | Audit results against submission log. Remove invalid entries. Tighten validation logic. Communicate corrections to affected athletes. |
+| Athlete deauthorization not handled | HIGH | Audit all stored data for Strava-sourced personal information. Delete within 48 hours. Implement webhook handler to prevent recurrence. |
+| Cold start causes OAuth timeout | LOW | Implement function warming (scheduled ping every 10 min). Consider Edge Functions for redirect endpoints. |
+
+## Pitfall-to-Phase Mapping
+
+How roadmap phases should address these pitfalls.
+
+| Pitfall | Prevention Phase | Verification |
+|---------|------------------|--------------|
+| P1: TOS cross-user data display | Architecture/design (first phase) | Legal review of data flow: does any Strava Data from User A appear to User B? If yes, redesign. |
+| P2: Segment leaderboard endpoint gone | Requirements (before planning) | Confirm all planned API calls against current Strava API reference. No 404s. |
+| P3: Token storage in serverless | Backend architecture phase | Integration test: two sequential function invocations, verify token persistence. |
+| P4: Athlete limit blocks auth | Pre-development (app registration) | Verify athlete limit >= 200 in Strava API settings dashboard before event. |
+| P5: Concurrent write race condition | Storage architecture phase | Load test: simulate 10 concurrent submissions, verify all 10 appear in results. |
+| P6: Rate limit exhaustion | API integration phase | Monitor headers in all API responses. Verify daily usage stays under 500 (50% buffer). |
+| P7: Invalid activity submissions | Submission flow phase | Test with: wrong date activity, virtual ride, activity missing segments, duplicate submission. All rejected. |
+| P8: Gender/category from Strava | Submission UI phase | Test with athlete whose Strava sex is null. Verify category selection is required. |
+| P9: 7-day cache limit | Data architecture phase | Audit results JSON: no raw Strava API fields present. Only derived event data. |
+| P10: Deauthorization handling | Webhook phase | Test: authorize, submit result, deauthorize via Strava. Verify result removed within 48h. |
 
 ## Sources
 
-All pitfalls verified by direct codebase inspection:
+**Official Strava Documentation (HIGH confidence):**
+- [Strava API Agreement](https://www.strava.com/legal/api) -- Sections 2.10, 2.14, 5.2, 5.4, 7.1
+- [Strava Authentication Docs](https://developers.strava.com/docs/authentication/) -- OAuth flow, token rotation, scopes
+- [Strava Rate Limits](https://developers.strava.com/docs/rate-limits/) -- 200/15min, 2000/day limits
+- [Strava Webhook Events API](https://developers.strava.com/docs/webhooks/) -- Subscription, validation, deauth events
+- [Changes to the Segments API](https://developers.strava.com/docs/segment-changes/) -- June 2020 leaderboard removal
+- [Strava API v3 Reference](https://developers.strava.com/docs/reference/) -- Endpoint details, scopes, response models
 
-- `scripts/parse-gpx.js` -- GPX source path (line 29), track parsing, route-data.json output format
-- `scripts/resolve-annotations.js` -- hardcoded sector/KOM/restock mile markers, findPointAtMile algorithm
-- `scripts/match-photos.js` -- photo position resolution, validation checks
-- `scripts/photo-manifest.js` -- manifest format, mile marker values, curated 53-photo list
-- `scripts/generate-thumbnails.js` -- sharp metadata read, thumbnail generation, photos.json enrichment
-- `scripts/assign-card-photos.js` -- cover photo selection algorithm (two-pass: within-range, then nearest fallback)
-- `scripts/generate-data.js` -- pipeline orchestration, image copy from images/ to public/images/
-- `src/components/RouteMap.astro` -- map init, sector overlays, photo markers, crosshair, event bus
-- `src/components/ElevationProfile.astro` -- chart init, sector bands, x-axis max:100, event bus
-- `src/components/GravelSectors.astro` -- card layout (space-y-4), cover photo rendering
-- `src/components/KomSegments.astro` -- card layout (space-y-4), cover photo rendering
-- `src/components/PhotoGallery.astro` -- PhotoSwipe init pattern, thumbnail path construction
-- `src/styles/global.css` -- layer order, z-index values, animation patterns, Leaflet overrides
-- `src/pages/index.astro` -- section structure, distance references, z-index usage
-- `src/layouts/BaseLayout.astro` -- meta description, overlay divs
-- File system inspection -- two GPX files, 73 images in /images/
+**Official Strava Announcements (HIGH confidence):**
+- [API Agreement Update (Support)](https://support.strava.com/hc/en-us/articles/31798729397773-API-Agreement-Update-How-Data-Appears-on-3rd-Party-Apps) -- November 2024 changes
+- [Updates to Strava's API Agreement (Press)](https://press.strava.com/articles/updates-to-stravas-api-agreement) -- Official announcement
+
+**Community and Analysis (MEDIUM confidence):**
+- [DCRainmaker: Strava's Changes To Kill Off Apps](https://www.dcrainmaker.com/2024/11/stravas-changes-to-kill-off-apps.html) -- Detailed analysis of November 2024 changes
+- [Strava Community Hub: Rate Limit Questions](https://communityhub.strava.com/developers-api-7/rate-limit-questions-12328)
+- [Strava Community Hub: Athlete Limit Increase](https://communityhub.strava.com/developers-api-7/strava-api-athlete-limit-increase-anyone-approved-beyond-1-000-users-12345)
+- [Strava Community Hub: KOM/QOM Data Access](https://communityhub.strava.com/developers-api-7/accessing-kom-qom-data-for-segment-1999)
+- [Covaera: Strava Events Guide](https://covaera.com/strava-guide) -- Example of consent-gated event results
+
+**Netlify Documentation (HIGH confidence):**
+- [Netlify Functions Overview](https://docs.netlify.com/build/functions/overview/)
+- [Netlify Blobs](https://docs.netlify.com/build/data-and-storage/netlify-blobs/) -- Conditional writes, concurrency
+- [Netlify Environment Variables](https://docs.netlify.com/build/environment-variables/overview/)
+- [Netlify Secrets Controller](https://docs.netlify.com/build/environment-variables/secrets-controller/)
+
+---
+*Pitfalls research for: Strava API integration + serverless OAuth + results system for MK Ultra Gravel v5.0*
+*Researched: 2026-03-30*

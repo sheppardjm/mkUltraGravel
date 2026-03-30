@@ -1,14 +1,14 @@
-# Architecture Patterns -- v4.0 Route Update + UX Overhaul
+# Architecture Patterns -- v5.0 Strava Integration + Results
 
-**Domain:** Static gravel cycling event website (Astro 6 + Leaflet + Chart.js)
+**Domain:** Strava API integration with static gravel cycling event site (Astro 6 SSG + Netlify Functions)
 **Project:** MK Ultra Gravel
-**Researched:** 2026-03-29
-**Focus:** How 8 v4.0 features integrate with the v3.0 shipped architecture
-**Overall confidence:** HIGH (all features traced to specific files, line ranges, and integration points by direct codebase inspection)
+**Researched:** 2026-03-30
+**Focus:** How Strava OAuth, segment data, activity submission, scoring, and results pages integrate with the existing Astro + Netlify static architecture
+**Overall confidence:** HIGH for data flow and Netlify Functions patterns (verified against official docs); MEDIUM for Strava API field availability (leaderboard endpoint deprecated, xoms field availability needs runtime verification)
 
 ---
 
-## Existing Architecture Snapshot (v3.0 Baseline)
+## Existing Architecture Snapshot (v4.0 Baseline)
 
 ### Component Inventory
 
@@ -18,868 +18,807 @@
 | ElevationProfile | `src/components/ElevationProfile.astro` | Lazy scroll/IntersectionObserver -> `initElevation()` async | `/data/route-data.json`, `/data/annotations.json` fetched at runtime |
 | GravelSectors | `src/components/GravelSectors.astro` | SSR/build-time | `annotations.json` via `readFileSync` |
 | KomSegments | `src/components/KomSegments.astro` | SSR/build-time | `annotations.json` via `readFileSync` |
-| PhotoGallery | `src/components/PhotoGallery.astro` | SSR template + runtime PhotoSwipe init | `photos.json` via `readFileSync` (SSR), PhotoSwipe lightbox init on `astro:page-load` |
+| PhotoGallery | `src/components/PhotoGallery.astro` | SSR template + runtime PhotoSwipe init | `photos.json` via `readFileSync` |
+| GrinduroExplainer | `src/components/GrinduroExplainer.astro` | Static HTML | None |
 | RestockPoints | `src/components/RestockPoints.astro` | SSR/build-time | `annotations.json` via `readFileSync` |
-| MkUltraExplainer | `src/components/MkUltraExplainer.astro` | Static HTML | None |
-| EventInfoBlock | `src/components/EventInfoBlock.astro` | Static HTML | None (hardcoded URLs) |
 | CountdownTimer | `src/components/CountdownTimer.astro` | Runtime JS | None (hardcoded date) |
-| BaseLayout | `src/layouts/BaseLayout.astro` | Astro layout | None |
+| EventInfoBlock | `src/components/EventInfoBlock.astro` | Static HTML | None |
+| MkUltraExplainer | `src/components/MkUltraExplainer.astro` | Static HTML | None |
 
-### CustomEvent Bus (Established v2.0, Unchanged in v3.0)
-
-```
-elevation:hover      { lat, lon }            ElevationProfile -> RouteMap    (crosshair position)
-elevation:hoverEnd   (no payload)            ElevationProfile -> RouteMap    (hide crosshair)
-elevation:sectorClick { sectorIndex }        ElevationProfile -> RouteMap    (zoom to sector)
-map:sectorHover      { sectorIndex | null }  RouteMap -> ElevationProfile   (highlight band)
-map:sectorClick      { sectorIndex }         RouteMap -> ElevationProfile   (dim others, highlight one)
-```
-
-All listeners registered inside `initMap()` / `initElevation()` async functions with `AbortController` + `{ signal }` cleanup.
-
-### Build Pipeline
+### Build Pipeline (Current)
 
 ```
-scripts/generate-data.js (coordinator -- runs steps sequentially):
+scripts/generate-data.js (coordinator):
   1. Copy images/ -> public/images/
   2. parse-gpx.js         -> public/data/route-data.json + public/mk-ultra.gpx
   3. resolve-annotations.js -> public/data/annotations.json
   4. match-photos.js      -> public/data/photos.json
-  5. generate-thumbnails.js -> public/images/thumbs/*.webp + enriches photos.json (width/height)
-  6. assign-card-photos.js -> annotations.json (enriched with coverPhoto) + public/images/cards/*.webp
+  5. generate-thumbnails.js -> public/images/thumbs/*.webp + enriches photos.json
+  6. assign-card-photos.js -> annotations.json (coverPhoto) + public/images/cards/*.webp
   7. convert-hero.js      -> public/images/hero.webp
   8. convert-tone-images.js -> public/tone/*.webp
 ```
 
-**Critical pipeline detail:** `parse-gpx.js` reads from `MK Ultra.gpx` (hardcoded at line 29 as `const GPX_SOURCE = path.join(ROOT, 'MK Ultra.gpx')`). The output `route-data.json` contains `{ meta: { totalMi, elevationGainFt, trackpoints }, track: [...] }`. Every downstream script depends on `route-data.json` existing and being correct.
+### Key Existing Patterns
 
-### starColors Map (3 Independent Copies)
+- **Data flow:** Build scripts write JSON to `public/data/`, Astro components read via `readFileSync` at build time (SSR) or `fetch()` at runtime
+- **No backend:** Purely static site, no serverless functions, no database
+- **No authentication:** No user sessions, no OAuth, no tokens
+- **CustomEvent bus:** Window-level event dispatch for map-elevation sync (6 events)
+- **Single page:** `src/pages/index.astro` is the only page
 
-The `starColors` constant exists identically in three files (updated to yellow-to-red spectrum in v3.0):
+---
 
-| File | Line Range | Context |
-|------|-----------|---------|
-| `RouteMap.astro` | Lines 83-89 | Runtime JS in `initMap()` |
-| `ElevationProfile.astro` | Lines 57-63 | Runtime JS in `initElevation()` |
-| `GravelSectors.astro` | Lines 15-21 | Build-time Astro frontmatter |
+## Recommended Architecture for v5.0
 
-v4.0 does not change these values, but any sector data changes from the GPX swap propagate through the same color system.
+### Architecture Overview
 
-### Page Layout in index.astro
+v5.0 introduces two fundamentally new capabilities to what has been a purely static site:
+
+1. **Build-time API integration:** Prebuild scripts fetch data from Strava API and write it to JSON files that Astro consumes at build time (extends existing pattern)
+2. **Runtime serverless functions:** Netlify Functions handle OAuth flow and activity processing (new pattern)
+
+The key architectural principle: **keep the site static, use functions only for operations that require secrets or user interaction, and bridge the two via committed JSON + site rebuild.**
 
 ```
-BaseLayout
-  grain-overlay (fixed, z-9999)
-  escher-overlay (fixed, z-9998)
-  main
-    #hero          -- tone-image bg, h1 "MK Ultra Gravel", countdown, register CTA
-    MkUltraExplainer -- declassified section
-    #route         -- tone-image bg, RouteMap + ElevationProfile
-    register CTA   -- mid-page registration block
-    #sectors       -- GravelSectors (2-col) + KomSegments + RestockPoints (1-col)
-    #photos        -- tone-image bg, PhotoGallery
-    #info          -- tone-image bg, EventInfoBlock
+ARCHITECTURE LAYERS:
+
+[Browser]  -->  [Static Site (Astro SSG on Netlify CDN)]
+                    |
+                    +-- reads public/data/results.json at build time
+                    +-- reads public/data/segments.json at build time
+                    +-- links to /.netlify/functions/* for submission
+                    |
+[Netlify Functions]  -->  [Strava API]
+                    |
+                    +-- strava-auth (OAuth flow)
+                    +-- submit-activity (process + score + commit)
+                    |
+[Build Pipeline]  -->  [Strava API]
+                    |
+                    +-- fetch-segments.js (prebuild step)
+                    |
+[GitHub API]  <--  [submit-activity function commits results.json]
+                    |
+[Netlify Build Hook]  <--  [submit-activity triggers rebuild]
 ```
 
 ---
 
-## Feature 1: GPX Replacement (100mi Route)
+## Integration Points with Existing Pipeline
 
-**What:** Replace `MK Ultra.gpx` (80mi, tracked) with `MK_Ultra.gpx` (100mi, untracked). Re-run entire pipeline. Update all downstream references.
+### New Prebuild Step: fetch-segments.js
 
-**Integration points and exact changes:**
+**Where it fits in the pipeline:**
 
-### 1a. GPX Source File
-
-`scripts/parse-gpx.js` line 29:
-```javascript
-const GPX_SOURCE = path.join(ROOT, 'MK Ultra.gpx');
+```
+scripts/generate-data.js (coordinator) -- UPDATED:
+  1. Copy images/ -> public/images/
+  2. parse-gpx.js         -> public/data/route-data.json + public/mk-ultra.gpx
+  3. resolve-annotations.js -> public/data/annotations.json
+  4. fetch-segments.js     -> public/data/segments.json          <<< NEW
+  5. match-photos.js      -> public/data/photos.json
+  6. generate-thumbnails.js -> public/images/thumbs/*.webp
+  7. assign-card-photos.js -> annotations.json (coverPhoto) + cards/
+  8. convert-hero.js      -> public/images/hero.webp
+  9. convert-tone-images.js -> public/tone/*.webp
 ```
 
-Two options:
-- **Option A (rename):** Rename `MK_Ultra.gpx` to `MK Ultra.gpx`, overwriting the old file. Zero code changes -- pipeline reads the same filename.
-- **Option B (update reference):** Change `parse-gpx.js` line 29 to read `MK_Ultra.gpx` instead.
+**Rationale for position:** After `resolve-annotations.js` (which establishes the segment names and positions) but before downstream consumers. The `fetch-segments.js` script needs the Strava segment IDs (hardcoded, same as annotations) but does NOT depend on annotations.json output -- it queries Strava API directly. Placing it after step 3 is logical ordering, not a hard dependency.
 
-**Recommendation: Option A (rename).** The filename `MK Ultra.gpx` is the canonical source name baked into the pipeline. Renaming avoids touching pipeline code and eliminates risk of inconsistency. The old 80mi GPX is tracked in git history if ever needed.
+**What it does:**
+- Reads 9 Strava segment IDs (hardcoded in the script, matching the segment IDs from PROJECT.md)
+- Calls `GET /api/v3/segments/{id}` for each segment with an app-level access token
+- Extracts: `xoms.kom`, `xoms.qom`, `name`, `distance`, `average_grade`, `effort_count`, `athlete_count`
+- Writes `public/data/segments.json`
+- Gracefully degrades: if Strava API is down or rate-limited, uses cached segments.json if it exists, or skips with warning
 
-### 1b. Pipeline Re-run
+**Environment variable:** `STRAVA_ACCESS_TOKEN` -- set in Netlify UI with "Build" scope for prebuild, "Functions" scope for runtime functions.
 
-After GPX replacement, run `node scripts/generate-data.js`. This regenerates:
-- `public/data/route-data.json` -- new trackpoints, new `meta.totalMi` (~100), new `meta.elevationGainFt`
-- `public/mk-ultra.gpx` -- copied from source
-- `public/data/annotations.json` -- re-resolved coordinates from new trackpoints (annotation mile markers are hardcoded in `resolve-annotations.js` lines 118-155; they reference mile positions that must still exist on the new route)
-- `public/data/photos.json` -- re-resolved photo coordinates from new trackpoints
+**Important caveat (MEDIUM confidence):** The `xoms` field on segment detail is returned by the Strava API `getSegmentById` endpoint, but availability may depend on whether the authenticated user has a Strava subscription. The segment leaderboard endpoint (`/segments/{id}/leaderboard`) was deprecated in May 2020 and is no longer available. KOM/QOM times from `xoms` need runtime verification during implementation.
 
-### 1c. Annotation Mile Marker Validation
+### Existing Pipeline: No Changes Required
 
-`resolve-annotations.js` hardcodes sector/KOM/restock mile positions:
-```
-Sectors: 23.4, 39.5, 43.0, 50.7, 58.7, 83.55
-KOMs: 21.9, 37.6, 78.55
-Restocks: 37.3, 46.3, 76.1
-```
+Steps 1-3 and 5-9 remain unchanged. The `resolve-annotations.js` hardcoded data (sector names, mile markers, star ratings) is the source of truth for route content. Strava segment data supplements this with performance data (KOM/QOM times, effort counts) but does not replace it.
 
-Maximum annotation mile = 83.55 + 0.6 = 84.15 (Down Jeep end). The 80mi route ended at ~98.23mi (per existing route-data.json meta). The new 100mi route will extend further. All annotations fall within both route lengths, so no clamping warnings will appear. But the physical path may have shifted -- verify that annotation GPS coordinates still land on-route after re-running.
+### New Data File: results.json
 
-### 1d. Photo Manifest Validation
-
-`photo-manifest.js` has 53 photos with mile markers from 19.6 to 80.2. Maximum photo mile = 80.2. Both the old and new routes cover this range. Any new photos (Feature 7) will be added with mile markers that must exist on the new 100mi route.
-
-### 1e. index.astro Route Stats
-
-`index.astro` line 249:
-```astro
-{Math.round(routeMeta.totalMi)} miles -- {routeMeta.elevationGainFt.toLocaleString()} ft elevation gain
-```
-This reads `routeDataJson.meta` at build time (lines 5-7). The pipeline re-run updates `route-data.json`, so this auto-updates. No code change needed.
-
-### 1f. ElevationProfile X-Axis
-
-`ElevationProfile.astro` line 196:
-```javascript
-max: 100,  // forward-compatible with 100mi route
-```
-Already set to 100. No change needed.
-
-### 1g. Downstream File Changes (Committed)
-
-After pipeline re-run, these files will have new content to commit:
-- `public/data/route-data.json`
-- `public/data/annotations.json`
-- `public/data/photos.json`
-- `public/mk-ultra.gpx`
-- Potentially regenerated thumbnails/card images (if photo coordinates shift enough to change assignment)
-
-**Risk level:** MEDIUM. The GPX swap is the foundation -- all other data-dependent features rely on correct pipeline output. Verify pipeline completes without errors and spot-check annotation positions on the map.
+`public/data/results.json` is NOT generated by the prebuild pipeline. It is committed to the repo by the `submit-activity` Netlify Function via the GitHub API. When Netlify detects the commit, it triggers a rebuild, and Astro reads the updated file at build time.
 
 ---
 
-## Feature 2: New Photos (Down Jeep + Billie Helmer B&W)
+## Netlify Functions Architecture
 
-**What:** Add 2 new photos to the pipeline, producing new entries in `photos.json` and gallery.
-
-**Integration points:**
-
-### 2a. Image Files
-
-Place new `.jpg`/`.png` files in the repo-root `images/` directory. The pipeline copies `images/` to `public/images/` at step 1 of `generate-data.js` (line 26: `fs.readdirSync(srcImagesDir).filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f))`).
-
-### 2b. Photo Manifest
-
-Add entries to `scripts/photo-manifest.js` in the correct mile-marker sorted position:
-
-```javascript
-// Down Jeep sector photo -- mi ~83-84 (within Down Jeep sector at 83.55-84.15)
-{ filename: 'new-down-jeep-photo.jpg', mi: 83.8 },
-// Billie Helmer B&W -- mi ~21-22 (within Billie Helmer KOM at 21.9-22.59)
-{ filename: 'billie-helmer-bw.jpg', mi: 22.0 },
-```
-
-The manifest is sorted by mile marker. Insert at the appropriate position.
-
-### 2c. Pipeline Re-run
-
-`node scripts/generate-data.js` will:
-1. Copy new images to `public/images/`
-2. `match-photos.js` reads manifest, resolves GPS from `route-data.json`, writes `photos.json` (now 55 entries)
-3. `generate-thumbnails.js` creates 400px WebP thumbs in `public/images/thumbs/`
-4. `assign-card-photos.js` may assign new photos as `coverPhoto` on annotations if they are closer (by Haversine distance) to a sector/KOM midpoint than existing cover photos
-
-### 2d. Downstream Consumers
-
-- **PhotoGallery.astro:** SSR reads `photos.json` at build time. New photos appear in the grid automatically. PhotoSwipe lightbox discovers all `.gallery-item` children. No code change.
-- **RouteMap.astro:** Runtime fetches `photos.json`. New photo markers appear in cluster group automatically. No code change.
-- **GravelSectors.astro / KomSegments.astro:** If `assign-card-photos.js` changes `coverPhoto` fields, cards automatically render the new cover photos. No code change.
-
-**Risk level:** LOW. Fully additive -- no existing code changes. Only risk is incorrect mile marker causing wrong GPS position.
-
----
-
-## Feature 3: Map Reset Button
-
-**What:** A button below the map that resets the Leaflet map to original bounds AND resets the Chart.js elevation profile to default state.
-
-**This is the most architecturally interesting feature because it bridges two lazy-initialized components that currently have no "reset" concept.**
-
-### 3a. Current State
-
-- **Map:** `map.fitBounds(routeLine.getBounds(), { padding: [20, 20] })` is called once at init (RouteMap.astro line 80). After user interaction (zoom, pan, flyToBounds from sector clicks), there is no way to return to original bounds.
-- **Elevation profile:** Chart.js chart is initialized once with static options. Sector click events change annotation `backgroundColor`/`borderColor` and call `chart.update('none')`. There is no "restore all annotations to default" function.
-- **Communication:** The two components communicate exclusively via CustomEvents on `window`. There is no shared state object or module-level reference.
-
-### 3b. Recommended Architecture
-
-**Add a `map:reset` CustomEvent to the established bus.**
-
-The reset button lives in `index.astro` (or a thin wrapper component) between `<RouteMap />` and `<ElevationProfile />`. It dispatches a single event; both components listen independently.
+### Directory Structure
 
 ```
-New event: map:reset (no payload)  Button -> RouteMap + ElevationProfile
+netlify/
+  functions/
+    strava-auth.mts          OAuth callback handler
+    submit-activity.mts       Activity processing + scoring
+    lib/
+      strava.ts               Strava API client (shared)
+      scoring.ts              Scoring engine (shared)
+      github.ts               GitHub API commit helper (shared)
 ```
 
-**Button placement in index.astro** (between RouteMap and ElevationProfile in the `#route` section):
+**File extension:** `.mts` for modern ES modules with TypeScript. Netlify Functions v2 natively supports TypeScript with `.mts` -- no build step or tsconfig required (Netlify provides a base tsconfig). The modern handler pattern uses `export default async (req: Request, context: Context)`.
 
-```html
-<RouteMap />
-<div class="flex justify-end mt-2 mb-1">
-  <button id="map-reset-btn" class="text-text-muted text-xs uppercase tracking-widest
-    border border-border px-3 py-1.5 hover:text-accent-green hover:border-accent-green
-    transition-colors" type="button">
-    Reset View
-  </button>
-</div>
-<ElevationProfile />
+**Shared code in `lib/`:** Netlify Functions allow subdirectories. The entry files (`strava-auth.mts`, `submit-activity.mts`) import from `./lib/` using relative paths with file extensions (ESM requirement).
+
+### Function 1: strava-auth.mts
+
+**Purpose:** Handle Strava OAuth authorization code callback, exchange for tokens, fetch athlete profile + activity segment efforts, pass to scoring.
+
+**Trigger:** User clicks "Submit Activity" on the site, which redirects to Strava OAuth authorize URL. After user approves, Strava redirects to `/.netlify/functions/strava-auth?code=XXX&scope=XXX`.
+
+**Flow:**
+
+```
+1. User clicks "Submit Activity" link on results page
+   |
+   v
+2. Browser redirects to:
+   https://www.strava.com/oauth/authorize?
+     client_id={STRAVA_CLIENT_ID}&
+     redirect_uri={SITE_URL}/.netlify/functions/strava-auth&
+     response_type=code&
+     scope=read,activity:read&
+     state={activity_id}                 <<< activity ID passed via state param
+   |
+   v
+3. User approves on Strava, redirected to:
+   /.netlify/functions/strava-auth?code=XXX&scope=XXX&state={activity_id}
+   |
+   v
+4. Function exchanges code for access_token:
+   POST https://www.strava.com/oauth/token
+     { client_id, client_secret, code, grant_type: "authorization_code" }
+   Response: { access_token, refresh_token, expires_at, athlete: { id, sex, firstname, lastname } }
+   |
+   v
+5. Function fetches activity with segment efforts:
+   GET /api/v3/activities/{activity_id}?include_all_efforts=true
+   Headers: Authorization: Bearer {access_token}
+   |
+   v
+6. Function extracts matching segment_efforts for our 9 segment IDs
+   |
+   v
+7. Function scores the efforts and updates results.json
+   |
+   v
+8. Function commits results.json to GitHub repo via GitHub API
+   |
+   v
+9. Function triggers Netlify build hook to rebuild site
+   |
+   v
+10. Function redirects user to results page with success message
 ```
 
-**Button script (in index.astro or inline):**
-```javascript
-document.getElementById('map-reset-btn')?.addEventListener('click', () => {
-  window.dispatchEvent(new CustomEvent('map:reset'));
-});
-```
+**Handler signature:**
 
-### 3c. RouteMap.astro Changes
+```typescript
+import type { Context } from "@netlify/functions";
 
-Inside `initMap()`, after the route bounds are calculated, store the original bounds and add a reset listener:
+export default async (req: Request, context: Context) => {
+  const url = new URL(req.url);
+  const code = url.searchParams.get("code");
+  const state = url.searchParams.get("state"); // activity ID
+  const scope = url.searchParams.get("scope");
 
-```javascript
-// Store original bounds for reset
-const originalBounds = routeLine.getBounds();
-
-// Listen for reset
-window.addEventListener('map:reset', () => {
-  map.flyToBounds(originalBounds, { padding: [20, 20] });
-  // Restore all sector polyline styles to default
-  sectorPolylines.forEach((p, i) => {
-    const sector = annotations.sectors[i];
-    p.setStyle({
-      color: starColors[sector.stars] || '#ffffff',
-      weight: 5,
-      opacity: 0.9
-    });
+  // ... exchange code, fetch activity, score, commit, rebuild
+  // Return redirect to results page
+  return new Response(null, {
+    status: 302,
+    headers: { Location: "/results/?submitted=true" }
   });
-  // Hide crosshair
-  crosshair.setOpacity(0);
-}, { signal });
+};
 ```
 
-The `sectorPolylines` array and `annotations.sectors` are already in scope within `initMap()`. The `crosshair` marker is in scope. The `signal` from the existing `AbortController` handles cleanup.
+**Environment variables required (Functions scope):**
+- `STRAVA_CLIENT_ID` -- from Strava API application settings
+- `STRAVA_CLIENT_SECRET` -- from Strava API application settings
+- `GITHUB_TOKEN` -- Personal access token with `repo` scope for committing results.json
+- `GITHUB_REPO` -- `owner/repo` format (e.g., `Sheppardjm/mkUltraGravel`)
+- `NETLIFY_BUILD_HOOK_URL` -- Build hook URL for triggering rebuild
+- `SITE_URL` -- Available as read-only Netlify variable
 
-### 3d. ElevationProfile.astro Changes
+### Function 2: submit-activity.mts
 
-Inside `initElevation()`, after the annotation boxes are built, add a reset listener:
+**Purpose:** An alternative architecture consideration -- this function could be used if the OAuth callback and activity processing are separated. However, the **recommended approach is to combine everything in `strava-auth.mts`** because:
 
-```javascript
-window.addEventListener('map:reset', () => {
-  // Restore all sector annotation bands to default state
-  const annots = chartInstance.options.plugins.annotation.annotations;
-  Object.keys(annots).forEach(key => {
-    const annot = annots[key];
-    if (annot._baseColor) {
-      annot.backgroundColor = annot._baseColor + '22';
-      annot.borderColor = annot._baseColor + '66';
+1. We already have the user's access token from the OAuth exchange
+2. We know the activity ID from the `state` parameter
+3. Processing is fast (one API call + scoring math)
+4. Splitting into two functions would require storing the access token between calls (no database)
+
+**Recommendation:** Use a single `strava-auth.mts` function that handles the complete flow. If processing becomes complex in the future, split then.
+
+**If a separate submission endpoint is still desired** (for admin re-processing or manual submission), it could accept an activity URL and use an app-level token, but this introduces complexity without clear benefit for a single-event site.
+
+### Shared Library: lib/strava.ts
+
+```typescript
+// Strava API client
+const STRAVA_API = "https://www.strava.com/api/v3";
+
+export async function exchangeCode(code: string): Promise<TokenResponse> {
+  const res = await fetch("https://www.strava.com/oauth/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      client_id: process.env.STRAVA_CLIENT_ID,
+      client_secret: process.env.STRAVA_CLIENT_SECRET,
+      code,
+      grant_type: "authorization_code",
+    }),
+  });
+  return res.json();
+}
+
+export async function getActivity(accessToken: string, activityId: string) {
+  const res = await fetch(
+    `${STRAVA_API}/activities/${activityId}?include_all_efforts=true`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  );
+  return res.json();
+}
+
+// For build-time segment fetching
+export async function getSegment(accessToken: string, segmentId: number) {
+  const res = await fetch(
+    `${STRAVA_API}/segments/${segmentId}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  );
+  return res.json();
+}
+```
+
+### Shared Library: lib/scoring.ts
+
+Contains the scoring engine -- pure functions, no side effects, testable independently. Details in "Scoring Engine Architecture" section below.
+
+### Shared Library: lib/github.ts
+
+```typescript
+export async function commitFile(
+  path: string,
+  content: string,
+  message: string
+): Promise<void> {
+  const repo = process.env.GITHUB_REPO;
+  const token = process.env.GITHUB_TOKEN;
+
+  // Get current file SHA (needed for updates)
+  const getRes = await fetch(
+    `https://api.github.com/repos/${repo}/contents/${path}`,
+    { headers: { Authorization: `token ${token}` } }
+  );
+  const existing = getRes.ok ? await getRes.json() : null;
+
+  // Create or update file
+  await fetch(
+    `https://api.github.com/repos/${repo}/contents/${path}`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `token ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message,
+        content: Buffer.from(content).toString("base64"),
+        sha: existing?.sha,  // required for updates, omit for creation
+        committer: {
+          name: "MK Ultra Bot",
+          email: "noreply@mkultragravel.com",
+        },
+      }),
     }
+  );
+}
+
+export async function triggerRebuild(): Promise<void> {
+  await fetch(process.env.NETLIFY_BUILD_HOOK_URL!, {
+    method: "POST",
+    body: JSON.stringify({}),
   });
-  chartInstance.update('none');
-}, { signal });
-```
-
-This is nearly identical to the existing `map:sectorHover` handler (lines 228-246) when `sectorIndex === null` -- it resets all bands to their default opacity. The pattern is already established.
-
-### 3e. Initialization Race Condition
-
-The button exists in the DOM immediately (SSR HTML). The map and elevation components lazy-initialize on scroll. If a user clicks "Reset View" before scrolling to the map, the `map:reset` event fires but no listener exists yet. This is harmless -- no error thrown, no state corruption, the event simply has no subscribers. Once both components initialize, they register their listeners and future clicks work. This is the same non-issue that exists for all existing CustomEvents (e.g., `elevation:hover` fires before the map initializes if the user somehow hovers the chart first -- impossible in practice because both are below the fold).
-
-**Risk level:** LOW. Extends the established CustomEvent bus pattern. One new event, two new listeners, one new DOM element.
-
----
-
-## Feature 4: Photo Lightbox from Map
-
-**What:** Map photo marker clicks open PhotoSwipe lightbox instead of showing a popup with a link to the full image.
-
-### 4a. Current Photo Marker Behavior
-
-RouteMap.astro lines 196-204:
-```javascript
-const photoMarkers = photos.map((photo) =>
-  L.marker([photo.lat, photo.lon], { icon: photoIcon })
-    .bindPopup(
-      `<a href="/images/${photo.filename}" target="_blank" rel="noopener">` +
-      `<img src="/images/${photo.filename}" width="260" ...>` +
-      `</a>`,
-      { className: 'dark-popup', maxWidth: 300 }
-    )
-);
-```
-
-Clicking a marker opens a Leaflet popup with an `<img>` thumbnail wrapped in an `<a>` link that opens the full image in a new tab.
-
-### 4b. Current PhotoSwipe Initialization
-
-PhotoGallery.astro lines 37-48:
-```javascript
-const lightbox = new PhotoSwipeLightbox({
-  gallery: '#photo-gallery',
-  children: '.gallery-item',
-  pswpModule: () => import('photoswipe'),
-  bgOpacity: 0.95,
-});
-lightbox.init();
-```
-
-PhotoSwipe is scoped to `#photo-gallery` and its `.gallery-item` children. It uses the `data-pswp-width` and `data-pswp-height` attributes on each `<a>` element for sizing.
-
-### 4c. Approach: Programmatic PhotoSwipe Open from Map
-
-PhotoSwipe 5.x supports programmatic opening via its `loadAndOpen()` API. Instead of binding to a gallery container, we can create a data source array and open a specific slide.
-
-**In RouteMap.astro** (inside `initMap()`, after photos are fetched):
-
-```javascript
-// Build PhotoSwipe data source from photos array
-const pswpDataSource = photos.map((photo) => ({
-  src: `/images/${photo.filename}`,
-  width: photo.width,   // available in photos.json (enriched by generate-thumbnails.js)
-  height: photo.height,
-}));
-
-// Replace bindPopup with click handler that opens PhotoSwipe
-const photoMarkers = photos.map((photo, index) =>
-  L.marker([photo.lat, photo.lon], { icon: photoIcon })
-    .on('click', async () => {
-      const { default: PhotoSwipe } = await import('photoswipe');
-      const pswp = new PhotoSwipe({
-        dataSource: pswpDataSource,
-        index: index,
-        bgOpacity: 0.95,
-      });
-      pswp.init();
-    })
-);
-```
-
-This dynamically imports `photoswipe` (the core module, not the lightbox helper) on first click. Subsequent clicks reuse the cached module. The `index` parameter opens the clicked photo. The user can swipe through all route photos.
-
-**Key detail:** `photos.json` already contains `width` and `height` fields (added by `generate-thumbnails.js`). This means we have the dimensions PhotoSwipe needs without any additional data.
-
-### 4d. Larger Thumbnails in Popup (Alternative)
-
-If the intent is to keep Leaflet popups BUT make the thumbnail larger and clickable to lightbox, a hybrid approach works:
-
-1. Keep the `bindPopup` with a larger thumbnail image
-2. Add a click listener on the popup content that opens PhotoSwipe
-3. This requires waiting for `popupopen` event to attach the click handler
-
-The pure PhotoSwipe approach (4c) is cleaner -- fewer DOM layers, no popup-within-lightbox confusion, direct click-to-lightbox UX.
-
-### 4e. PhotoSwipe CSS
-
-PhotoSwipe CSS is already imported in `global.css` line 13:
-```css
-@import "photoswipe/style.css" layer(components);
-```
-And dark theme overrides exist at lines 217-221. No additional CSS needed.
-
-### 4f. Photo Cluster Behavior
-
-When a cluster is clicked, `leaflet.markercluster` zooms to show individual markers (`zoomToBoundsOnClick: true`, line 209). At max zoom with `spiderfyOnMaxZoom: true`, individual markers splay out and become individually clickable. The click handler on each marker then triggers PhotoSwipe. This works with no special cluster handling.
-
-**Risk level:** LOW. PhotoSwipe is already bundled. The programmatic API is well-documented. The main change is replacing `bindPopup` with a `click` event handler on each photo marker.
-
----
-
-## Feature 5: Larger Zoom Controls
-
-**What:** Increase the size of Leaflet's built-in zoom +/- buttons for better touch targets.
-
-### 5a. Current Zoom Control Styles
-
-`global.css` lines 200-207:
-```css
-.leaflet-control-zoom a {
-  background: oklch(0.18 0.01 250) !important;
-  color: oklch(0.85 0.01 90) !important;
-  border-color: oklch(0.25 0.01 250) !important;
-}
-.leaflet-control-zoom a:hover {
-  background: oklch(0.25 0.01 250) !important;
 }
 ```
 
-Currently only colors are overridden. Leaflet's default zoom buttons are 26x26px.
+---
 
-### 5b. CSS Override
+## Data Flow: Activity Submission to Display
 
-Add size overrides to the existing block in `global.css`:
+### Complete Flow Diagram
 
-```css
-.leaflet-control-zoom a {
-  background: oklch(0.18 0.01 250) !important;
-  color: oklch(0.85 0.01 90) !important;
-  border-color: oklch(0.25 0.01 250) !important;
-  width: 36px !important;
-  height: 36px !important;
-  line-height: 36px !important;
-  font-size: 18px !important;
-}
+```
+USER ACTION                    SERVERLESS                         GIT/BUILD
+-----------                    ----------                         ---------
+1. User rides event
+   on June 7, 2026
+        |
+2. Strava auto-creates
+   activity with
+   segment_efforts
+        |
+3. User visits results
+   page, clicks
+   "Submit Activity"
+        |
+4. User pastes Strava            5. strava-auth.mts
+   activity URL, JS              receives OAuth callback
+   extracts activity ID,         with code + activity_id
+   redirects to Strava     -->
+   OAuth with state=
+   {activity_id}
+        |                             |
+        |                        6. Exchange code for
+        |                           access_token
+        |                             |
+        |                        7. GET /athlete
+        |                           (sex field for gender)
+        |                             |
+        |                        8. GET /activities/{id}
+        |                           ?include_all_efforts=true
+        |                             |
+        |                        9. Filter segment_efforts
+        |                           for our 9 segment IDs
+        |                             |
+        |                       10. Score efforts via
+        |                           scoring engine
+        |                             |
+        |                       11. Read current results.json
+        |                           from GitHub API
+        |                             |
+        |                       12. Merge new results,
+        |                           re-score leaderboards
+        |                             |
+        |                       13. Commit updated          --> 14. GitHub receives
+        |                           results.json                    commit
+        |                           via GitHub API                      |
+        |                             |                            15. Netlify detects
+        |                       16. POST to Netlify                    commit OR
+        |                           build hook             --> 17. Build hook triggers
+        |                             |                            rebuild
+        |                       18. Redirect user to               |
+        |                           /results/?submitted=true  18. Astro reads updated
+        |                                                          results.json at
+        |                                                          build time
+19. User sees results                                              |
+    page (after rebuild)                                      19. New static HTML
+    showing their times                                           deployed to CDN
 ```
 
-The `!important` declarations are already established in this block (lines 201-203) because Leaflet's own CSS has specificity from the leaflet layer. The existing `@layer leaflet` ensures Tailwind and component styles override Leaflet defaults, but the `.leaflet-control-zoom` overrides use `!important` as the established pattern.
+### Latency Expectations
 
-### 5c. Touch Target Compliance
+| Step | Duration | Notes |
+|------|----------|-------|
+| OAuth redirect + user approval | 5-15 seconds | User interaction |
+| Token exchange | 200-500ms | Strava API |
+| Fetch activity | 500-1000ms | Strava API (large payload with all efforts) |
+| Score + merge | <50ms | Pure computation |
+| GitHub commit | 500-1000ms | GitHub API |
+| Build hook trigger | 100-200ms | Netlify API |
+| Netlify rebuild | 30-60 seconds | Full Astro build |
 
-WCAG 2.5.8 (Target Size) recommends minimum 44x44px touch targets. At 36px we improve significantly from 26px. Going to 44px may be too visually heavy for the dark minimal aesthetic. 36px is a reasonable compromise -- document the tradeoff.
-
-**Integration point:** `src/styles/global.css` lines 200-207 only. No JS changes.
-
-**Risk level:** VERY LOW. Pure CSS, confined to one rule block.
+**Total time from submission to updated site: ~1-2 minutes.** The user is redirected to the results page immediately with a "submission received" message. The rebuild happens in the background. This latency is explicitly acceptable per PROJECT.md: "rebuild-on-commit is acceptable latency."
 
 ---
 
-## Feature 6: Card Equalization (Sector Cards Match KOM Cards)
+## results.json Schema
 
-**What:** Make GravelSectors.astro card dimensions match KomSegments.astro cards.
+### Recommended Structure
 
-### 6a. Current Card Structures
-
-**GravelSectors.astro card:**
-```html
-<div class="classified-border bg-bg-surface card-hover">
-  <div class="overflow-hidden">
-    {coverPhoto && <img class="w-full aspect-video object-cover" />}
-    <div class="p-4">
-      <div class="flex items-start justify-between gap-4">
-        <h3 class="text-accent-white text-lg">{name}</h3>
-        <span class="text-base tracking-widest shrink-0">{stars}</span>
-      </div>
-      <div class="flex gap-6 text-text-muted text-sm mt-1">
-        <span>Mile {startMi}</span>
-        <span>{lengthMi} mi</span>
-      </div>
-    </div>
-  </div>
-</div>
-```
-
-**KomSegments.astro card:**
-```html
-<div class="classified-border bg-bg-surface card-hover">
-  <div class="overflow-hidden">
-    {coverPhoto && <img class="w-full aspect-video object-cover" />}
-    <div class="p-4">
-      <h3 class="text-accent-green mb-2">{name}</h3>
-      <div class="grid grid-cols-2 gap-x-6 gap-y-1 text-text-muted text-sm">
-        <span>Mile {startMi}</span>
-        <span>{lengthMi} mi</span>
-        <span>{grade}% grade</span>
-        <span>{elevFt} ft gain</span>
-      </div>
-    </div>
-  </div>
-</div>
-```
-
-### 6b. Structural Differences
-
-| Aspect | GravelSectors | KomSegments |
-|--------|--------------|-------------|
-| Cover image | `aspect-video` (16:9) | `aspect-video` (16:9) |
-| Title color | `text-accent-white text-lg` | `text-accent-green mb-2` |
-| Title layout | `flex justify-between` with star rating | Single `h3` |
-| Metadata | `flex gap-6` (horizontal pair) | `grid grid-cols-2` (2x2 grid) |
-| Data fields | 2 (mile, length) | 4 (mile, length, grade, elev) |
-
-The structural difference is in the metadata layout. GravelSectors uses a horizontal flex row; KomSegments uses a 2-column grid. If both are in `space-y-4` containers, card height differences come from:
-1. Number of metadata lines (2 fields in 1 row vs 4 fields in 2 rows)
-2. Star rating span in the title row (adds width pressure, may wrap)
-
-### 6c. Equalization Approach
-
-The cards live in different grid columns on the page (index.astro lines 272-280):
-```html
-<div class="grid md:grid-cols-3 gap-8">
-  <div class="md:col-span-2">   <!-- GravelSectors: 2/3 width -->
-    <GravelSectors />
-  </div>
-  <div>                          <!-- KomSegments + RestockPoints: 1/3 width -->
-    <KomSegments />
-    <RestockPoints />
-  </div>
-</div>
-```
-
-GravelSectors cards are wider (2 columns) and KomSegments are narrower (1 column). True pixel-perfect height matching across different column widths with different content is not practical with CSS alone -- content drives height.
-
-**Practical equalization means:**
-1. Same padding (`p-4` on both -- already true)
-2. Same image aspect ratio (`aspect-video` on both -- already true)
-3. Same title typography (align heading sizes)
-4. Consistent metadata layout approach (both use `grid grid-cols-2` or both use `flex`)
-
-The most impactful change: Give GravelSectors the same `grid grid-cols-2` metadata layout as KomSegments, and make title styling consistent. This creates visual rhythm even if absolute pixel heights differ.
-
-**Integration points:**
-- `src/components/GravelSectors.astro` -- change metadata `<div>` from `flex gap-6` to `grid grid-cols-2 gap-x-6 gap-y-1`, optionally adjust title styling
-- No JS changes. No data changes.
-
-**Risk level:** VERY LOW. HTML/CSS template changes in one file.
-
----
-
-## Feature 7: Grinduro Explainer
-
-**What:** New content block explaining the Grinduro-style timed sector format. Placed in or near the #sectors section.
-
-### 7a. Content Placement Options
-
-The #sectors section (index.astro lines 269-285) contains the 3-column grid with GravelSectors, KomSegments, and RestockPoints. The Grinduro explainer introduces the concept that sectors are timed segments.
-
-**Option A: Above the grid, below the section heading.**
-```html
-<h2 data-reveal>Gravel Sectors</h2>
-<GrinduroExplainer />   <!-- NEW -->
-<div class="grid md:grid-cols-3 gap-8">
-  ...existing grid...
-</div>
-```
-Pro: Explains the format before the reader sees individual sectors.
-Con: Pushes cards further down.
-
-**Option B: Inside the grid, spanning all columns.**
-```html
-<div class="grid md:grid-cols-3 gap-8">
-  <div class="md:col-span-3">
-    <GrinduroExplainer />
-  </div>
-  <div class="md:col-span-2">
-    <GravelSectors />
-  </div>
-  ...
-</div>
-```
-Pro: Part of the grid layout.
-Con: Breaks the clean 2-col + 1-col rhythm.
-
-**Recommendation: Option A.** The explainer is contextual prose, not a card. It belongs between the heading and the cards, same as the "Paris-Roubaix Rated Sectors" subheading already there. The pattern matches MkUltraExplainer (contextual prose block between sections).
-
-### 7b. Component Structure
-
-Create `src/components/GrinduroExplainer.astro`:
-
-```astro
----
-// No frontmatter required -- purely static HTML
----
-<div class="classified-border p-6 md:p-8 mb-8 text-text-body text-sm leading-relaxed">
-  <p>...</p>
-</div>
-```
-
-Follow the pattern of `MkUltraExplainer.astro` (static HTML, `classified-border` treatment, prose content).
-
-### 7c. Integration in index.astro
-
-Add import at top:
-```astro
-import GrinduroExplainer from "../components/GrinduroExplainer.astro";
-```
-
-Place in the #sectors section, between heading and grid:
-```astro
-<h2 class="text-3xl md:text-5xl mb-8" data-reveal>Gravel Sectors</h2>
-<GrinduroExplainer />
-<div class="grid md:grid-cols-3 gap-8">
-```
-
-**Integration points:**
-- New file: `src/components/GrinduroExplainer.astro`
-- Modified: `src/pages/index.astro` (import + template insertion)
-
-**Risk level:** VERY LOW. New static component, pure HTML.
-
----
-
-## Feature 8: Penrose Triangle Above Page Title
-
-**What:** SVG Penrose triangle element positioned above the "MK Ultra Gravel" h1 in the hero section, with subtle animation.
-
-### 8a. Hero Section Structure
-
-`index.astro` lines 195-233 (hero):
-```html
-<section id="hero" class="relative min-h-screen flex items-center justify-center ...">
-  <img src="/tone/CIA-MKULTRA-IG_Page_01.webp" class="tone-image ..." />
-  <div class="relative z-10 text-center max-w-3xl">
-    <p class="stamp mb-6">Classification: Ultra</p>
-    <h1 ...>MK Ultra Gravel</h1>
-    ...
-  </div>
-</section>
-```
-
-The Penrose triangle goes between the "Classification: Ultra" stamp and the h1:
-
-```html
-<p class="stamp mb-6">Classification: Ultra</p>
-<div class="penrose-hero mb-4" aria-hidden="true">
-  <svg viewBox="0 0 280 243" width="80" ...>
-    <!-- Penrose triangle paths (same as favicon) -->
-  </svg>
-</div>
-<h1 ...>MK Ultra Gravel</h1>
-```
-
-### 8b. SVG Source
-
-The Penrose triangle SVG already exists as `public/favicon.svg` (confirmed by inspection -- three-path impossible triangle in green shades). The same path data can be reused at a larger size.
-
-Current favicon SVG viewBox paths:
-```svg
-<path d="M 55.0625,182.4375 L 80.6875,182.5625 L 151.21875,59.84375 ..." fill="#a3f0a0"/>
-<path d="M 15.625,206.0625 L 27.5,228.4375 L 252.30454,228.28334 ..." fill="#6db86a"/>
-<path d="M 124.05609,12.990601 L 15.638759,206.0253 ..." fill="#3d7a3a"/>
-```
-
-### 8c. Animation
-
-The existing Escher overlay uses `escher-drift` animation (global.css lines 253-257):
-```css
-@keyframes escher-drift {
-  0%   { transform: translate(0, 0) scale(1); }
-  50%  { transform: translate(-50px, -50px) scale(1.3); }
-  100% { transform: translate(-100px, -100px) scale(1); }
-}
-```
-
-The favicon itself already has a `scale` animation defined in the favicon component (from v3.0). For the hero Penrose, a subtle rotation or scale pulse works:
-
-```css
-@keyframes penrose-breathe {
-  0%, 100% { transform: scale(1); opacity: 0.9; }
-  50%      { transform: scale(1.05); opacity: 1; }
-}
-
-.penrose-hero svg {
-  animation: penrose-breathe 4s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .penrose-hero svg {
-    animation: none;
+```json
+{
+  "lastUpdated": "2026-06-07T18:30:00Z",
+  "segments": {
+    "24479270": { "name": "Billie Helmer", "type": "kom", "stravaUrl": "https://www.strava.com/segments/24479270" },
+    "24479292": { "name": "Sandstrom Rd", "type": "gravel", "stravaUrl": "https://www.strava.com/segments/24479292" },
+    "41126651": { "name": "Leaving Chatham", "type": "kom", "stravaUrl": "https://www.strava.com/segments/41126651" },
+    "24479426": { "name": "Akkala Rd", "type": "gravel", "stravaUrl": "https://www.strava.com/segments/24479426" },
+    "24479467": { "name": "Haavisto", "type": "gravel", "stravaUrl": "https://www.strava.com/segments/24479467" },
+    "24479496": { "name": "Forest Service Rd", "type": "gravel", "stravaUrl": "https://www.strava.com/segments/24479496" },
+    "34573011": { "name": "C4", "type": "gravel", "stravaUrl": "https://www.strava.com/segments/34573011" },
+    "16438243": { "name": "Silver Creek", "type": "kom", "stravaUrl": "https://www.strava.com/segments/16438243" },
+    "6809754":  { "name": "Down Jeep", "type": "gravel", "stravaUrl": "https://www.strava.com/segments/6809754" }
+  },
+  "athletes": {
+    "12345678": {
+      "name": "Jane Smith",
+      "gender": "F",
+      "stravaId": 12345678,
+      "activityId": 987654321,
+      "activityUrl": "https://www.strava.com/activities/987654321",
+      "submittedAt": "2026-06-07T16:00:00Z",
+      "efforts": {
+        "24479292": { "elapsedTime": 1423, "movingTime": 1410 },
+        "24479426": { "elapsedTime": 389, "movingTime": 385 },
+        "24479467": { "elapsedTime": 412, "movingTime": 410 },
+        "24479496": { "elapsedTime": 1890, "movingTime": 1878 },
+        "34573011": { "elapsedTime": 1654, "movingTime": 1640 },
+        "6809754":  { "elapsedTime": 198, "movingTime": 195 },
+        "24479270": { "elapsedTime": 245, "movingTime": 240 },
+        "41126651": { "elapsedTime": 102, "movingTime": 100 },
+        "16438243": { "elapsedTime": 567, "movingTime": 560 }
+      }
+    }
+  },
+  "leaderboards": {
+    "gravel": {
+      "M": [
+        { "athleteId": "12345678", "totalTime": 5966, "rank": 1 }
+      ],
+      "F": [],
+      "NB": []
+    },
+    "kom": {
+      "M": [
+        { "athleteId": "12345678", "points": 30, "rank": 1, "breakdown": { "24479270": 10, "41126651": 10, "16438243": 10 } }
+      ],
+      "F": [],
+      "NB": []
+    }
   }
 }
 ```
 
-Compositor-safe (transform + opacity only). Gated behind `prefers-reduced-motion`.
+### Schema Design Rationale
 
-### 8d. Integration Points
+**Athletes keyed by Strava ID:** Prevents duplicate submissions. If an athlete re-submits, their existing entry is updated (latest activity wins). The Strava athlete ID is stable and unique.
 
-- Modified: `src/pages/index.astro` (add SVG element in hero section)
-- Modified: `src/styles/global.css` (add `.penrose-hero` class and `@keyframes penrose-breathe`)
-- No JS changes.
+**Efforts keyed by segment ID:** Direct lookup -- no array scanning. The segment IDs are the same 9 IDs used throughout the system.
 
-**Risk level:** VERY LOW. Static SVG element with CSS animation. Same pattern as existing Escher overlay.
+**Pre-computed leaderboards:** The `leaderboards` object is computed at submission time and stored. This means the results page reads pre-sorted arrays -- no scoring computation at build time. The scoring engine runs in the Netlify Function, not in Astro.
 
----
+**Gender categories:** `M` (male), `F` (female), `NB` (non-binary). Strava's API `sex` field returns `"M"`, `"F"`, or `null`. The `null` case (Strava's "Rather not say" option) maps to `NB`. This is a design decision -- athletes who don't specify gender on Strava compete in the non-binary category. The site should explain this clearly.
 
-## Modified vs New Components Summary
+**elapsed_time vs moving_time:** Store both. Use `elapsed_time` for scoring (standard in cycling -- stops count against you). This matches Strava's segment leaderboard behavior.
 
-| File | Status | v4.0 Changes |
-|------|--------|-------------|
-| `MK Ultra.gpx` | Replaced | Overwrite with `MK_Ultra.gpx` content (100mi route) |
-| `scripts/photo-manifest.js` | Modified | Add 2 new photo entries with mile markers |
-| `src/pages/index.astro` | Modified | Add reset button HTML/JS, import GrinduroExplainer, add Penrose SVG in hero |
-| `src/components/RouteMap.astro` | Modified | Store original bounds, add `map:reset` listener, replace `bindPopup` with PhotoSwipe click handler |
-| `src/components/ElevationProfile.astro` | Modified | Add `map:reset` listener to restore annotation defaults |
-| `src/components/GravelSectors.astro` | Modified | Equalize card layout to match KomSegments |
-| `src/styles/global.css` | Modified | Add zoom control size overrides, `.penrose-hero` animation |
-| `src/components/GrinduroExplainer.astro` | **NEW** | Static HTML Grinduro format explainer |
-| `public/data/route-data.json` | Regenerated | Pipeline output from new GPX |
-| `public/data/annotations.json` | Regenerated | Pipeline output (re-resolved coordinates) |
-| `public/data/photos.json` | Regenerated | Pipeline output (new photos + re-resolved coordinates) |
-| `public/mk-ultra.gpx` | Regenerated | Pipeline copies source GPX to public |
+### Schema Size Estimation
+
+For a 100-person event: ~50KB JSON (9 efforts per athlete, 3 leaderboards with 3 gender categories). Negligible for a static site build or GitHub API commit.
 
 ---
 
-## CustomEvent Bus -- Updated for v4.0
+## segments.json Schema (Build-Time Strava Data)
 
+### Recommended Structure
+
+```json
+{
+  "fetchedAt": "2026-06-01T12:00:00Z",
+  "segments": {
+    "24479270": {
+      "name": "Billie Helmer",
+      "distance": 1110,
+      "averageGrade": 6.4,
+      "maximumGrade": 12.1,
+      "elevationHigh": 340,
+      "elevationLow": 268,
+      "effortCount": 142,
+      "athleteCount": 89,
+      "xoms": {
+        "kom": "2:45",
+        "qom": "3:12",
+        "overall": "2:45"
+      },
+      "stravaUrl": "https://www.strava.com/segments/24479270"
+    }
+  }
+}
 ```
-EXISTING (unchanged):
-elevation:hover      { lat, lon }            ElevationProfile -> RouteMap
-elevation:hoverEnd   (no payload)            ElevationProfile -> RouteMap
-elevation:sectorClick { sectorIndex }        ElevationProfile -> RouteMap
-map:sectorHover      { sectorIndex | null }  RouteMap -> ElevationProfile
-map:sectorClick      { sectorIndex }         RouteMap -> ElevationProfile
 
-NEW:
-map:reset            (no payload)            Reset button -> RouteMap + ElevationProfile
+### How Components Consume This Data
+
+**GravelSectors.astro and KomSegments.astro** currently read from `annotations.json` only. To display Strava data (KOM/QOM times, Strava links), they also read `segments.json`:
+
+```astro
+---
+const annotations = JSON.parse(readFileSync(..., "annotations.json"));
+const segmentData = JSON.parse(readFileSync(..., "segments.json"));
+// Match annotation names to segment data by segment ID mapping
+---
 ```
 
-One new event. Follows the same `window.dispatchEvent` / `window.addEventListener` pattern with `AbortController` signal cleanup.
+The mapping between annotation names and Strava segment IDs is defined in the segment configuration (hardcoded in both `resolve-annotations.js` and `fetch-segments.js`). A shared `segment-config.js` module could eliminate this duplication.
 
 ---
 
-## Data Flow Changes
+## Scoring Engine Architecture
 
-### GPX Swap Cascade
+### Gravel Champion Scoring
 
-```
-MK_Ultra.gpx (new 100mi)
-    |
-    v (rename to "MK Ultra.gpx" or update parse-gpx.js reference)
-parse-gpx.js
-    |
-    v
-route-data.json (new trackpoints, meta.totalMi ~100)
-    |
-    +---> resolve-annotations.js ---> annotations.json (re-resolved coordinates)
-    |
-    +---> match-photos.js ---> photos.json (re-resolved photo coords, +2 new photos)
-    |
-    +---> generate-thumbnails.js ---> thumbs/ (new photo thumbs)
-    |
-    +---> assign-card-photos.js ---> annotations.json (coverPhoto, potentially updated)
-```
-
-### Photo Data Flow (New Photos)
+**Rule:** Cumulative elapsed_time across all 6 gravel sectors. Lowest total time wins.
 
 ```
-images/new-photo.jpg   (source file)
-    |
-    +---> photo-manifest.js  (manual entry: filename + mi)
-    |
-    +---> generate-data.js step 1: copy to public/images/
-    |
-    +---> match-photos.js: resolve lat/lon from route-data.json
-    |
-    +---> generate-thumbnails.js: create public/images/thumbs/new-photo.webp
-    |
-    +---> assign-card-photos.js: consider for card coverPhoto assignment
+Gravel segments: Sandstrom, Akkala Rd, Haavisto, Forest Service Rd, C4, Down Jeep
+Segment IDs:     24479292,  24479426,  24479467,  24479496,       34573011, 6809754
+
+Score = SUM(elapsed_time for each gravel segment)
+Rank by: ascending total time (lowest = 1st)
+Requirement: Must have efforts for ALL 6 gravel segments to qualify
 ```
+
+### KOM/QOM Champion Scoring
+
+**Rule:** Top 10 points system across 3 KOM segments. Points: 1st=10, 2nd=9, ..., 10th=1.
+
+```
+KOM segments: Billie Helmer, Leaving Chatham, Silver Creek
+Segment IDs:  24479270,      41126651,        16438243
+
+For each KOM segment, rank all athletes by elapsed_time (ascending).
+Assign points: rank 1 = 10 pts, rank 2 = 9 pts, ..., rank 10 = 1 pt, rank 11+ = 0 pts.
+KOM Champion Score = SUM(points across 3 KOM segments)
+Max possible: 30 points (1st on all 3)
+Rank by: descending points (highest = 1st)
+Tiebreaker: lowest combined elapsed_time on KOM segments
+```
+
+### Gender Separation
+
+All leaderboards are computed per gender category (`M`, `F`, `NB`). An athlete only competes against others in their gender category.
+
+### Scoring Engine as Pure Function
+
+```typescript
+// lib/scoring.ts
+interface Athlete {
+  id: string;
+  gender: "M" | "F" | "NB";
+  efforts: Record<string, { elapsedTime: number; movingTime: number }>;
+}
+
+interface LeaderboardEntry {
+  athleteId: string;
+  totalTime?: number;    // gravel
+  points?: number;       // KOM
+  rank: number;
+  breakdown?: Record<string, number>;  // KOM points per segment
+}
+
+const GRAVEL_SEGMENT_IDS = ["24479292", "24479426", "24479467", "24479496", "34573011", "6809754"];
+const KOM_SEGMENT_IDS = ["24479270", "41126651", "16438243"];
+
+export function computeLeaderboards(athletes: Record<string, Athlete>) {
+  // Returns { gravel: { M: [...], F: [...], NB: [...] }, kom: { M: [...], F: [...], NB: [...] } }
+}
+```
+
+The scoring engine is imported by the Netlify Function. It receives all athletes, computes all leaderboards, and returns the complete leaderboard structure. This is recomputed on every submission (merging new athlete into existing data and re-ranking).
+
+---
+
+## New Pages and Components
+
+### New Page: src/pages/results.astro
+
+A second page (the site's first multi-page addition). Reads `results.json` and `segments.json` at build time, renders static leaderboard HTML.
+
+**Page sections:**
+1. Scoring explainer (how gravel champion + KOM/QOM champion work)
+2. Gravel champion leaderboard (3 gender tabs/sections)
+3. KOM/QOM champion leaderboard (3 gender tabs/sections)
+4. Individual segment leaderboards (9 segments, expandable)
+5. "Submit Your Activity" CTA
+
+### New Components
+
+| Component | File | Pattern | Data Source |
+|-----------|------|---------|-------------|
+| SubmitActivity | `src/components/SubmitActivity.astro` | Client-side JS for URL input + redirect | None (constructs OAuth URL) |
+| GravelLeaderboard | `src/components/GravelLeaderboard.astro` | SSR/build-time | `results.json` via `readFileSync` |
+| KomLeaderboard | `src/components/KomLeaderboard.astro` | SSR/build-time | `results.json` via `readFileSync` |
+| SegmentLeaderboard | `src/components/SegmentLeaderboard.astro` | SSR/build-time | `results.json` via `readFileSync` |
+| ScoringExplainer | `src/components/ScoringExplainer.astro` | Static HTML | None |
+
+### Modified Components
+
+| Component | Change | Reason |
+|-----------|--------|--------|
+| GravelSectors.astro | Add Strava segment link + icon per card | Display segment URL from segment config |
+| KomSegments.astro | Add Strava link + KOM/QOM times from segments.json | Display xoms data |
+| BaseLayout.astro | Add nav link to /results/ | Site navigation |
+| index.astro | Add results CTA or link | Cross-page navigation |
+
+---
+
+## Environment Variables Summary
+
+| Variable | Scope | Purpose | Set In |
+|----------|-------|---------|--------|
+| `STRAVA_CLIENT_ID` | Build + Functions | Strava API app ID | Netlify UI |
+| `STRAVA_CLIENT_SECRET` | Functions | OAuth token exchange | Netlify UI |
+| `STRAVA_ACCESS_TOKEN` | Build | App-level token for prebuild segment fetch | Netlify UI |
+| `GITHUB_TOKEN` | Functions | Commit results.json to repo | Netlify UI |
+| `GITHUB_REPO` | Functions | Target repo for commits | Netlify UI |
+| `NETLIFY_BUILD_HOOK_URL` | Functions | Trigger site rebuild | Netlify UI |
+
+**Critical Netlify caveat:** Environment variables in `netlify.toml` are NOT available to functions at runtime. All function env vars must be set in the Netlify UI with "Functions" scope.
+
+**Critical Astro 6 caveat:** `import.meta.env` values are inlined at build time in Astro 6. Do NOT use `import.meta.env` for secrets in server-side code -- they will be baked into build output. Prebuild scripts use `process.env` directly, which is safe.
+
+---
+
+## Strava API Constraints
+
+### Rate Limits
+
+| Limit | Value | Implication |
+|-------|-------|-------------|
+| Read requests per 15 min | 100 | Build-time: 9 segment fetches = 9 requests. Safe. |
+| Read requests per day | 1,000 | Even with 100 submissions/day, each submission is 2 reads (token exchange + activity fetch) = 200 reads. Safe. |
+| 15-min reset | 0, 15, 30, 45 min past hour | If rate-limited, build fails gracefully with cached data |
+
+### Token Management
+
+- **Build-time:** A single app-level access token (from the Strava app owner's account). Refresh manually if it expires (6 hours). For the prebuild to be reliable, generate a long-lived token via the refresh flow before each deploy session, or add a refresh step to the prebuild script.
+- **Runtime:** Per-user tokens from OAuth flow. Used once immediately, then discarded. No need to store or refresh.
+
+**Recommendation for build-time token:** Add a `refresh-strava-token.js` script that reads `STRAVA_REFRESH_TOKEN` from env, calls the refresh endpoint, and writes the new access token to a temp location or env. OR, simpler: use a refresh token in the `fetch-segments.js` script itself -- call the refresh endpoint at the start of each build, then use the fresh access token for segment fetches.
+
+### Scope Requirements
+
+| Scope | Needed For | When |
+|-------|-----------|------|
+| `read` | Segment detail (getSegmentById) | Build-time app token |
+| `activity:read` | Activity with segment_efforts | Runtime per-user OAuth |
+| `profile:read_all` | Athlete sex field | Runtime per-user OAuth |
+
+### Segment Leaderboard Endpoint: UNAVAILABLE
+
+**The `/segments/{id}/leaderboard` endpoint was deprecated on May 18, 2020 and is no longer available.** This means we cannot fetch full segment leaderboards from Strava. Our leaderboards are built entirely from submitted activities -- only athletes who submit their activity through our OAuth flow appear in results. This is actually the correct design for an event-specific leaderboard.
+
+### Athlete Sex Field Values
+
+The Strava API `sex` field returns:
+- `"M"` -- male
+- `"F"` -- female
+- `null` -- "Rather not say" / not specified
+
+There is no native non-binary option in the Strava API. Our mapping: `"M"` -> Men, `"F"` -> Women, `null` -> Non-binary. Document this mapping clearly on the results page so athletes understand which category they will be placed in.
+
+---
+
+## Activity ID Extraction Pattern
+
+The user submits a Strava activity URL. The client-side JS extracts the activity ID.
+
+```
+Input: https://www.strava.com/activities/12345678901
+Extract: 12345678901
+
+Regex: /strava\.com\/activities\/(\d+)/
+```
+
+This activity ID is passed to the Strava OAuth flow via the `state` parameter:
+
+```
+https://www.strava.com/oauth/authorize?
+  client_id={STRAVA_CLIENT_ID}&
+  redirect_uri={SITE_URL}/.netlify/functions/strava-auth&
+  response_type=code&
+  scope=read,activity:read,profile:read_all&
+  state={activity_id}
+```
+
+The `state` parameter is returned unchanged in the OAuth callback, allowing the function to know which activity to fetch without storing any state.
+
+---
+
+## Anti-Patterns to Avoid
+
+### Anti-Pattern A: Database for Results
+
+**What:** Using a database (Supabase, PlanetScale, etc.) for results storage.
+**Why bad for this project:** Adds infrastructure complexity, costs, and operational burden for a single-event site with ~100 athletes. JSON-in-repo is sufficient, version-controlled, and free.
+**Instead:** Commit `results.json` to the repo via GitHub API. The file is the database.
+
+### Anti-Pattern B: Client-Side Scoring
+
+**What:** Shipping the scoring engine to the browser, fetching results.json at runtime, computing leaderboards client-side.
+**Why bad:** Increases bundle size, duplicates logic, allows tampering. The static site pattern (pre-computed leaderboards baked into HTML) is faster, simpler, and more secure.
+**Instead:** Score in the Netlify Function, store pre-computed leaderboards in results.json, render at build time.
+
+### Anti-Pattern C: Storing Strava Tokens
+
+**What:** Storing user access tokens or refresh tokens for later use.
+**Why bad:** Violates Strava TOS spirit, creates security liability, unnecessary. Each submission is a one-shot flow: OAuth -> fetch activity -> score -> done.
+**Instead:** Use the token immediately in the OAuth callback function, then discard it.
+
+### Anti-Pattern D: Polling Strava for Activities
+
+**What:** Periodically checking Strava for new activities that match the event.
+**Why bad:** Rate limit waste, no way to identify which activities are event rides vs. regular rides, requires storing app-level tokens with activity:read scope for all athletes.
+**Instead:** Athlete-initiated submission. The athlete explicitly submits their activity URL, authorizes via OAuth, and the function processes it once.
+
+### Anti-Pattern E: Astro SSR/Server Mode
+
+**What:** Switching from SSG to SSR to handle server-side routes for OAuth.
+**Why bad:** Transforms the entire deployment model. The site is performant as static HTML on CDN. SSR adds latency, complexity, and cost. Netlify Functions handle the server-side needs independently.
+**Instead:** Keep Astro in SSG mode. Use Netlify Functions (separate from Astro) for all server-side logic.
+
+### Anti-Pattern F: Netlify.toml for Secrets
+
+**What:** Putting `STRAVA_CLIENT_SECRET` or `GITHUB_TOKEN` in `netlify.toml`.
+**Why bad:** `netlify.toml` is committed to the repo (public). Also, `netlify.toml` env vars are NOT available to functions at runtime (verified in official docs).
+**Instead:** All secrets set in Netlify UI with appropriate scope (Build and/or Functions).
 
 ---
 
 ## Suggested Build Order (Dependency-Driven)
 
 ```
-Phase 1: GPX Replacement + Pipeline (FOUNDATION)
-  Files: MK Ultra.gpx, scripts/parse-gpx.js (maybe), run pipeline
-  Rationale: MUST come first. Every data-dependent feature relies on
-  correct route-data.json from the new 100mi GPX. Also generates the
-  annotation coordinates that downstream features display.
-  Verify: Pipeline completes without warnings. route-data.json meta
-  shows ~100mi. Annotation GPS positions land on-route visually.
-  Dev server shows updated route on map, correct elevation profile.
+Phase 1: Segment Configuration + Strava Data (FOUNDATION)
+  New: scripts/fetch-segments.js, public/data/segments.json
+  Modified: scripts/generate-data.js (add fetch-segments step)
+  New: shared segment ID config (used by fetch-segments + scoring)
+  Rationale: Establishes the Strava data pipeline integration and
+  segment ID mapping that all downstream work depends on.
 
-Phase 2: New Photos
-  Files: images/*.jpg, scripts/photo-manifest.js, re-run pipeline
-  Rationale: Depends on Phase 1 (correct route-data.json for GPS
-  resolution). Must come before Photo Lightbox (Feature 4) to ensure
-  the photos.json data source has all photos including width/height.
-  Verify: 55 photos in photos.json. New markers visible on map.
-  New thumbnails in gallery grid.
+Phase 2: Strava Links on Sector/KOM Cards
+  Modified: GravelSectors.astro, KomSegments.astro
+  Reads: segment config for Strava URLs
+  Rationale: Simplest visible change -- adds Strava segment links to
+  existing cards. No serverless functions needed. Validates that
+  segment data is accessible and the mapping is correct.
 
-Phase 3: Card Equalization + Grinduro Explainer (LAYOUT)
-  Files: GravelSectors.astro, GrinduroExplainer.astro (new), index.astro
-  Rationale: Independent of map/chart JS. Pure HTML/CSS template work.
-  No dependency on other features. Can be done in parallel with Phase 4-6
-  but grouping layout work together makes review easier.
-  Verify: Sector cards visually consistent with KOM cards. Grinduro
-  explainer renders correctly above sector grid.
+Phase 3: Scoring Engine + Results Schema
+  New: netlify/functions/lib/scoring.ts, public/data/results.json (seed)
+  Rationale: Pure logic, testable independently. Must be built before
+  the submission flow or results page can work.
 
-Phase 4: Larger Zoom Controls (CSS-ONLY)
-  Files: global.css
-  Rationale: Single CSS rule addition. Zero risk. Independent.
-  Verify: Zoom buttons visually larger. Touch target improved.
+Phase 4: Strava OAuth + Submission Function
+  New: netlify/functions/strava-auth.mts, netlify/functions/lib/strava.ts,
+       netlify/functions/lib/github.ts
+  New: SubmitActivity.astro component
+  Env: STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET, GITHUB_TOKEN,
+       GITHUB_REPO, NETLIFY_BUILD_HOOK_URL
+  Rationale: The core serverless integration. Depends on scoring engine
+  (Phase 3) for processing submissions. Depends on segment config
+  (Phase 1) for matching segment_efforts.
 
-Phase 5: Map Reset Button (EVENT BUS)
-  Files: index.astro, RouteMap.astro, ElevationProfile.astro
-  Rationale: Extends the CustomEvent bus. Depends on Phase 1 (map must
-  display correctly to verify reset). Independent of other features.
-  Verify: Click reset after zooming/panning -- map returns to full
-  route bounds. Click reset after sector click -- elevation chart
-  annotations return to default opacity.
+Phase 5: Results Page + Leaderboard Components
+  New: src/pages/results.astro, GravelLeaderboard.astro,
+       KomLeaderboard.astro, SegmentLeaderboard.astro,
+       ScoringExplainer.astro
+  Modified: BaseLayout.astro (nav), index.astro (results link)
+  Rationale: Renders the results.json data. Depends on the schema
+  being defined (Phase 3) and ideally on submission working (Phase 4)
+  so real data can be tested.
 
-Phase 6: Photo Lightbox from Map (PHOTOSWIPE)
-  Files: RouteMap.astro
-  Rationale: Depends on Phase 2 (photos.json must have width/height
-  for all photos). Replaces existing popup behavior with PhotoSwipe.
-  Verify: Click map photo marker -- PhotoSwipe opens showing that
-  photo. Swipe left/right navigates to other route photos. Cluster
-  expand then click works correctly.
-
-Phase 7: Penrose Header (VISUAL POLISH)
-  Files: index.astro, global.css
-  Rationale: Pure visual addition. Zero functional dependencies.
-  Last because it is decorative polish -- highest creative iteration
-  cost, lowest functional value.
-  Verify: Penrose triangle visible above title. Animation runs
-  smoothly. Reduced-motion respected. LCP not impacted.
+Phase 6: KOM/QOM Data on Cards (BUILD-TIME STRAVA FETCH)
+  Modified: KomSegments.astro (display xoms.kom, xoms.qom)
+  Depends: fetch-segments.js producing segments.json with xoms data
+  Rationale: Deferred because xoms field availability is MEDIUM
+  confidence -- needs runtime verification. If xoms is not available,
+  this phase can be dropped without affecting the core results system.
 ```
 
 ### Dependency Graph
 
 ```
-Phase 1 (GPX)
+Phase 1 (Segment Config + Data)
   |
-  +---> Phase 2 (Photos)
+  +---> Phase 2 (Strava Links on Cards)
+  |
+  +---> Phase 3 (Scoring Engine)
   |       |
-  |       +---> Phase 6 (Photo Lightbox)
+  |       +---> Phase 4 (OAuth + Submission)
+  |       |       |
+  |       |       +---> Phase 5 (Results Page)
+  |       |
+  |       +---> Phase 5 (Results Page)
   |
-  +---> Phase 5 (Reset Button)
-  |
-  +--- (independent) ---> Phase 3 (Cards + Grinduro)
-  +--- (independent) ---> Phase 4 (Zoom CSS)
-  +--- (independent) ---> Phase 7 (Penrose Header)
+  +---> Phase 6 (KOM/QOM Data) -- can be parallel with 3-5
+
+Phase 6 is independent of 3-5 and can be done anytime after Phase 1.
+Phases 2 is independent of 3-6.
 ```
-
-Phases 3, 4, and 7 have zero dependencies on other v4.0 features. They can be built in any order or parallelized. Phase 1 is the critical path foundation. Phase 2 depends on Phase 1. Phase 6 depends on Phase 2. Phase 5 depends on Phase 1.
-
----
-
-## Performance Impact Assessment
-
-| Feature | TBT Risk | LCP Risk | CLS Risk |
-|---------|----------|----------|----------|
-| GPX replacement | None | None | None (data is fetched post-LCP) |
-| New photos | None | None | None (lazy-loaded below fold) |
-| Map reset button | None | None | None (static HTML button) |
-| Photo lightbox | None | None | None (PhotoSwipe already bundled; dynamic import defers load) |
-| Larger zoom controls | None | None | Minimal (36px vs 26px, controls are absolutely positioned in map) |
-| Card equalization | None | None | None (SSR HTML, same content) |
-| Grinduro explainer | None | None | None (SSR HTML, known height) |
-| Penrose header | None | Minimal | Possible (SVG element above h1 shifts layout) |
-
-**Penrose CLS mitigation:** Give the SVG container a fixed height (`h-20` or explicit `height: 80px`) so the browser reserves space during SSR. Since the SVG is inline HTML (not dynamically loaded), the space is allocated at initial paint and CLS is zero.
-
----
-
-## Anti-Patterns to Avoid for v4.0
-
-### Anti-Pattern A: Running Pipeline Before GPX Swap
-
-**What:** Running `node scripts/generate-data.js` while `MK Ultra.gpx` still points to the 80mi route.
-**Why bad:** Generates route data for the old route. All downstream data (annotations, photos) resolve to old-route coordinates. If new photos are added to the manifest referencing mile 80+, they clamp to the old route endpoint.
-**Instead:** Swap the GPX file FIRST, then run the pipeline once.
-
-### Anti-Pattern B: Two PhotoSwipe Instances Without Coordination
-
-**What:** Creating a second PhotoSwipe Lightbox instance in RouteMap for map photo clicks, while the existing gallery instance also runs.
-**Why bad:** Two lightbox instances can conflict -- both may attempt to handle keyboard events (escape, arrow keys), accessibility focus trapping, and body scroll locking simultaneously.
-**Instead:** Use the programmatic `new PhotoSwipe()` API (not `PhotoSwipeLightbox`) for map clicks. This creates a one-shot instance per click that auto-destroys on close. The gallery's persistent `PhotoSwipeLightbox` instance only activates on gallery clicks. They never overlap because the user cannot be in both the map section and gallery section simultaneously.
-
-### Anti-Pattern C: Storing Map/Chart References Globally
-
-**What:** Exposing `map`, `chartInstance`, or `routeLine` as `window.mapRef` etc. for the reset button to access directly.
-**Why bad:** Breaks the encapsulation that `initMap()` / `initElevation()` closures provide. Creates global state that is hard to reason about and test. Other scripts could accidentally modify map state.
-**Instead:** Use the established CustomEvent bus pattern. The reset button dispatches `map:reset`; each component handles its own reset logic within its own closure scope. No global state needed.
-
-### Anti-Pattern D: Hardcoding New Route Distance in Multiple Places
-
-**What:** Changing "100 miles" text in index.astro line 210 and other places after GPX swap.
-**Why bad:** The route-data.json `meta.totalMi` is the source of truth. The hero section already uses `{Math.round(routeMeta.totalMi)} miles` (line 249). Hardcoded distance references elsewhere may become stale.
-**Instead:** The hero text at line 210 (`100 miles`) is intentionally hardcoded marketing copy ("Marquette Fire Bell -- 100 miles -- Free"). This is acceptable because it is aspirational branding, not data. The actual distance in the #route section reads from `routeMeta.totalMi`. Verify both after pipeline re-run.
 
 ---
 
@@ -887,40 +826,42 @@ Phases 3, 4, and 7 have zero dependencies on other v4.0 features. They can be bu
 
 | Area | Confidence | Source | Notes |
 |------|------------|--------|-------|
-| GPX pipeline cascade | HIGH | Direct inspection of `parse-gpx.js`, `resolve-annotations.js`, `match-photos.js` | Hardcoded path at line 29 confirmed |
-| CustomEvent bus extension (reset) | HIGH | Established pattern in 5 existing events; 2 components; same `AbortController` | Zero new patterns -- pure extension |
-| PhotoSwipe programmatic API | MEDIUM | Training data for PhotoSwipe 5.x; not verified against Context7 | PhotoSwipe programmatic open needs phase-specific verification |
-| Leaflet zoom control CSS | HIGH | Existing `!important` overrides in global.css confirmed working | Same specificity pattern |
-| Card equalization scope | HIGH | Direct comparison of GravelSectors.astro vs KomSegments.astro templates | Both inspected line-by-line |
-| Photo marker click handler | HIGH | Leaflet `.on('click')` is established API; used on sector polylines already | RouteMap.astro lines 120-121 |
-| Penrose SVG paths | HIGH | Favicon SVG inspected; same paths reusable at any scale | ViewBox-based scaling works natively |
-| CLS risk of Penrose | MEDIUM | Theoretical analysis; not measured | Mitigated by fixed-height container |
+| Netlify Functions v2 pattern | HIGH | Official Netlify docs (verified via WebFetch) | .mts, Request/Context handler, process.env |
+| Strava OAuth flow | HIGH | Official Strava developer docs (verified via WebFetch) | Standard authorization code flow |
+| Strava activity segment_efforts | HIGH | Official API docs + community examples | include_all_efforts=true returns all efforts |
+| Strava athlete sex field | HIGH | Official API docs + community discussion | Returns "M", "F", or null |
+| Strava xoms (KOM/QOM times) | MEDIUM | Community discussion (2024) | Reported working on getSegmentById, but may depend on subscription status. Needs runtime verification. |
+| Strava leaderboard endpoint | HIGH | Official deprecation docs (verified) | Deprecated May 2020, unavailable |
+| GitHub API file commit | HIGH | Official GitHub REST API docs | PUT /repos/{owner}/{repo}/contents/{path} |
+| Netlify build hooks | HIGH | Official Netlify docs (verified via WebFetch) | POST to unique URL triggers rebuild |
+| results.json schema | HIGH | Design decision, no external dependency | Follows established JSON data pattern |
+| Scoring engine | HIGH | Pure logic, no external dependency | Matches PROJECT.md requirements |
+| Build pipeline integration | HIGH | Direct codebase inspection | fetch-segments.js fits existing coordinator pattern |
+| Env var scoping | HIGH | Official Netlify docs (verified) | netlify.toml vars NOT available in functions |
+| Astro 6 import.meta.env inlining | HIGH | Netlify changelog (2026-03-10) | Secrets must not use import.meta.env |
 
 ---
 
 ## Sources
 
-All findings derived from direct codebase inspection of the following files:
+### Official Documentation (HIGH confidence)
+- [Strava OAuth2 Authentication](https://developers.strava.com/docs/authentication/) -- complete OAuth flow, scopes, token management
+- [Strava API v3 Reference](https://developers.strava.com/docs/reference/) -- activity, segment, athlete endpoints
+- [Strava Rate Limits](https://developers.strava.com/docs/rate-limits/) -- 100 read/15min, 1000 read/day
+- [Strava Segment API Changes (May 2020)](https://developers.strava.com/docs/segment-changes/) -- leaderboard endpoint deprecated
+- [Strava Segment Efforts V3 API](https://strava.github.io/api/v3/efforts/) -- complete effort response structure
+- [Strava Segments V3 API](https://strava.github.io/api/v3/segments/) -- segment detail, xoms, leaderboard (deprecated)
+- [Netlify Functions Get Started](https://docs.netlify.com/build/functions/get-started/) -- v2 handler pattern, .mts, directory structure
+- [Netlify Functions Environment Variables](https://docs.netlify.com/build/functions/environment-variables/) -- scoping rules, process.env access
+- [Netlify Build Hooks](https://docs.netlify.com/build/configure-builds/build-hooks/) -- POST trigger, URL format, payload
+- [Netlify: Astro 6 just works](https://www.netlify.com/changelog/2026-03-10-astro-6/) -- import.meta.env inlining caveat
 
-- `src/pages/index.astro` -- page composition, hero section, route section, sectors section
-- `src/components/RouteMap.astro` -- Leaflet map, photo markers, crosshair, sector polylines, CustomEvent listeners
-- `src/components/ElevationProfile.astro` -- Chart.js, annotation boxes, sector/KOM bands, CustomEvent listeners
-- `src/components/GravelSectors.astro` -- sector card template, starColors
-- `src/components/KomSegments.astro` -- KOM card template
-- `src/components/PhotoGallery.astro` -- PhotoSwipe lightbox initialization, gallery grid
-- `src/components/RestockPoints.astro` -- restock point list
-- `src/components/MkUltraExplainer.astro` -- explainer component pattern
-- `src/components/EventInfoBlock.astro` -- static HTML component
-- `src/layouts/BaseLayout.astro` -- layout shell, overlays
-- `src/styles/global.css` -- design tokens, leaflet overrides, animations
-- `scripts/generate-data.js` -- pipeline coordinator
-- `scripts/parse-gpx.js` -- GPX parser, hardcoded source path
-- `scripts/resolve-annotations.js` -- annotation resolver, hardcoded mile positions
-- `scripts/match-photos.js` -- photo position resolver
-- `scripts/photo-manifest.js` -- photo manifest (53 entries)
-- `public/favicon.svg` -- Penrose triangle SVG paths
-- `public/data/route-data.json` -- generated route data (verified present)
-- `public/data/annotations.json` -- generated annotations (verified present)
-- `public/data/photos.json` -- generated photo data (verified present)
-- `package.json` -- dependency versions confirmed
-- `.planning/PROJECT.md` -- project context, feature list, key decisions
+### Community Sources (MEDIUM confidence)
+- [Accessing KOM/QOM data for segment](https://communityhub.strava.com/developers-api-7/accessing-kom-qom-data-for-segment-1999) -- xoms field confirmation
+- [Strava Gender Settings](https://support.strava.com/hc/en-us/articles/4424254689805-Gender-Settings-and-Leaderboard-Filters) -- gender options (page returned 403, info from search results)
+- [GitHub API: Create or update file contents](https://developer.github.com/v3/repos/contents/) -- commit via REST API
+
+### Direct Codebase Inspection (HIGH confidence)
+- All existing component files, build scripts, data files, and configuration inspected directly
+- Pipeline integration points verified against actual `generate-data.js` coordinator
+- Data flow traced through `readFileSync` patterns in Astro components

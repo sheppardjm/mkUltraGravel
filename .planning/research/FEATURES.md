@@ -1,718 +1,433 @@
-# Feature Landscape — v4.0 Route Update + UX Overhaul
+# Feature Research: Strava Integration + Results
 
-**Domain:** Gravel cycling event website — route update, UX improvements, visual polish
-**Researched:** 2026-03-29
-**Project:** MK Ultra Gravel — v4.0 features layered onto shipped v3.0
-
----
-
-## Context: What This Research Covers
-
-v3.0 shipped Escher tessellation background, Penrose favicon, yellow-to-red sector spectrum, corrected photo positions, bike icon crosshair, and KOM elevation bands. This research covers the v4.0 feature categories:
-
-1. **Map reset/home button** — reset map + elevation to default view
-2. **Photo lightbox from map** — map photo markers open in lightbox (replace new-tab)
-3. **Larger map zoom controls** — accessibility and mobile usability
-4. **Card layout equalization** — sector cards match KOM card sizing
-5. **Grinduro format explainer** — describe the hybrid race format
-6. **Penrose triangle in header** — brand element above page title
-7. **GPX route update** — swap to 100mi route, cascade data changes
+**Domain:** Gravel cycling event website -- Strava segment integration, Grinduro-style scoring, activity submission, results leaderboards
+**Researched:** 2026-03-30
+**Confidence:** MEDIUM (Strava API TOS constraints create significant design uncertainty)
 
 ---
 
-## Feature 1: Map Reset / Home Button
+## Critical Finding: Strava API Agreement Restricts Leaderboard Display
 
-### Current State
+**This finding shapes every feature in this milestone.**
 
-After a user zooms into a sector (via click), explores photo clusters, or pans the map manually, there is **no way to return to the default view** without reloading the page. The elevation chart similarly has no "reset" concept — it always shows the full route, but the map can be in any zoom/pan state.
+Strava's November 2024 API Agreement update (Section 2.10) prohibits displaying one user's Strava data to other users:
 
-The map initializes with `map.fitBounds(routeLine.getBounds(), { padding: [20, 20] })` — this is the "home" state.
+> "You may not display or disclose Strava Data related to other users, even if such data is publicly viewable on Strava's Platform."
 
-### Expected Behavior (Industry Standard)
+**What this means for MK Ultra Gravel:**
+- A public leaderboard showing segment times pulled from Strava API for multiple riders **violates Section 2.10** on its face
+- No carve-out exists for event organizers or race results
+- The segment leaderboard endpoint (`/segments/:id/leaderboard`) was removed entirely in 2020
 
-**How cycling and outdoor sites handle map reset:**
+**Confidence:** HIGH -- verified directly from [Strava API Agreement](https://www.strava.com/legal/api) and [DCRainmaker analysis](https://www.dcrainmaker.com/2024/11/stravas-changes-to-kill-off-apps.html)
 
-- **RideWithGPS:** Provides a "fit to route" button that zooms the map to show the entire route. This is the standard pattern for route-centric cycling maps.
-- **Leaflet.zoomhome** (established plugin): Adds a home button between +/- zoom controls. Stores initial bounds via `setHomeBounds()`. Uses a home icon (typically Font Awesome `fa-home`). Tooltip text explains the function.
-- **Leaflet.ResetView** (alternative plugin): Provides a reset view control that returns to original location and zoom level.
-- **Google Maps / Mapbox:** "Zoom to fit" or "Reset" is typically available as a button with a compass or home icon.
+### The Consent-Based Workaround
 
-**Consensus:** The universal pattern is a button with a home/globe/compass icon that calls `fitBounds()` on the stored initial bounds. It resets zoom and pan simultaneously.
+The viable approach for a grassroots event: **each rider explicitly opts in to having their results displayed publicly.**
 
-### What View State to Reset
+The flow:
+1. Rider connects via Strava OAuth (grants `activity:read` scope)
+2. Rider's segment efforts are extracted from their activity
+3. **Rider explicitly consents** to having their name and times displayed on the results page
+4. Only consenting riders appear on the leaderboard
 
-The button should reset:
-1. **Map view** — `map.flyToBounds(routeLine.getBounds(), { padding: [20, 20] })` (animated return to initial bounds)
-2. **Sector highlights** — any highlighted sector polylines return to default styles
-3. **Elevation chart** — any highlighted annotation bands return to default opacity
+This is distinct from the pattern Strava targeted (apps silently displaying user data to others). Here, each user takes an affirmative action to submit their results. VeloViewer reportedly received approval from Strava using a similar frequent-consent approach, though the written terms remain ambiguous.
 
-The reset is a CustomEvent (`map:reset`) on the window — both RouteMap and ElevationProfile listen and restore defaults. This follows the existing CustomEvent bus architecture.
+**Risk level:** MEDIUM. A ~50-person grassroots event is unlikely to attract Strava enforcement attention, but the design should respect the spirit of the policy. The consent-based submission model is both the legally cautious and the UX-appropriate approach.
 
-### Implementation Approach
+---
 
-**Recommended: Custom HTML button below the map (not a Leaflet control inside the map).**
+## Feature Landscape
 
-Rationale: The milestone spec says "map reset button below map." Placing it outside the Leaflet container avoids z-index conflicts with tiles, doesn't compete visually with zoom controls, and is more discoverable on mobile where the map is touch-interactive.
+### Table Stakes (Users Expect These)
 
-```html
-<button id="map-reset" class="...brutalist styles...">
-  Reset Map View
-</button>
+Features users assume exist when they see "Strava integration" and "results" on a cycling event site.
+
+| Feature | Why Expected | Complexity | Dependencies | Notes |
+|---------|--------------|------------|--------------|-------|
+| **Strava segment links on sector/KOM cards** | Riders want to preview segments before the event; "View on Strava" links are the standard pattern | LOW | Existing GravelSectors.astro, KomSegments.astro, annotations.json | URL format: `https://www.strava.com/segments/{ID}`. All 9 segment IDs known. Must include Strava attribution per brand guidelines. |
+| **Scoring system explainer** | Riders must understand how winners are determined; Grinduro format is niche | LOW | Existing GrinduroExplainer.astro | Expand existing explainer to cover: gravel champion = cumulative time, KOM/QOM champion = points (10-1 for top 10). Three gender categories. |
+| **Strava OAuth submission flow** | The mechanism by which riders submit their ride; OAuth is the standard Strava integration pattern | HIGH | Netlify Functions (new), Strava API app registration | Two serverless functions: `/api/auth` (redirect to Strava) and `/api/callback` (exchange code for token, fetch activity). 6-hour access token expiry; refresh tokens for re-submissions. |
+| **Activity submission page/form** | Riders need a place to submit their Strava activity link and consent to results display | MEDIUM | OAuth flow, Netlify Functions | Post-event page. Rider pastes activity URL or selects from recent activities. System extracts segment_efforts for matching segment IDs. Rider reviews times, confirms consent, submits. |
+| **Results data extraction from Strava** | The system must pull segment_efforts from the rider's activity and match to the 9 event segments | HIGH | OAuth token, Strava API | `GET /activities/{id}?include_all_efforts=true` returns `segment_efforts[]` with `elapsed_time`, `moving_time`, `segment.id`. Match against 9 known segment IDs. |
+| **Results page with leaderboards** | The whole point -- riders and spectators want to see who won | MEDIUM | Results JSON data, new Astro page | Static page rebuilt from committed JSON. Gravel Champion table: cumulative time across 6 sectors. KOM/QOM Champion table: points from top-10 per climb. Per-segment tables. |
+| **Gender categories** | Standard in competitive cycling; project specifies men/women/non-binary | MEDIUM | Strava athlete `sex` field | **Critical gap:** Strava API only returns "M", "F", or null for `sex`. No non-binary option. Null maps to "Rather not say" and historically defaulted to men's leaderboard. Solution: add self-reported gender selection in submission form, do NOT rely on Strava's field. |
+| **"Powered by Strava" attribution** | Required by Strava API Agreement and brand guidelines | LOW | None | Must display official logo on any page using Strava data. "View on Strava" links must be bold, underlined, or orange (#FC5200). Never imply Strava endorsement. |
+| **Results stored as committed JSON** | Project constraint from PROJECT.md -- no database, rebuild-on-commit | LOW | Git workflow | JSON file(s) in `/public/data/results/`. Site rebuilds on commit. Netlify Functions write to a staging location; organizer reviews and commits. |
+
+### Differentiators (Competitive Advantage)
+
+Features that set MK Ultra Gravel apart from typical grassroots event sites.
+
+| Feature | Value Proposition | Complexity | Dependencies | Notes |
+|---------|-------------------|------------|--------------|-------|
+| **Per-segment leaderboards** | Most grassroots events show only overall results; showing each segment lets riders see where they gained/lost time | LOW (once data exists) | Results JSON, results page | Grinduro's Synergy Race Timing shows per-segment rank + time. Columns: Place, Name, Segment Time. One table per segment. |
+| **KOM/QOM points breakdown** | Transparent scoring -- riders see exactly which climbs earned them points | LOW (once data exists) | Results JSON | Table showing: Climb name, Rank (1-10), Points earned. Sum = total. Unique to the point-based KOM system. |
+| **Build-time KOM/QOM holder display** | Show current Strava KOM/QOM times on segment cards pre-event; creates competitive motivation | MEDIUM | Strava API at build time, `getSegmentById` endpoint | `xoms` field returns `kom` and `qom` times. Display on KOM cards as "Current KOM: X:XX". **Caveat:** may require Strava subscription for full data; needs testing. |
+| **Individual rider result card** | After submission, rider sees their own segment-by-segment breakdown | LOW | Submission flow | Immediate feedback after OAuth + extraction. Shows: segment name, time, rank (if results exist). Personal and shareable. |
+| **Brutalist results page design** | Most event results pages are generic timing platform exports; MK Ultra's dark brutalist aesthetic applied to results is distinctive | MEDIUM | Design system tokens, existing CSS patterns | Classified-border tables, accent-green headers, redacted motifs. Match the existing site identity. |
+| **Submission confirmation with Strava deep link** | After submitting, link back to the rider's activity on Strava | LOW | Activity ID from submission | "View your activity on Strava" -- required by brand guidelines and good UX. |
+
+### Anti-Features (Deliberately NOT Building)
+
+Features that seem good but create problems in this context.
+
+| Anti-Feature | Why Requested | Why Problematic | Alternative |
+|--------------|---------------|-----------------|-------------|
+| **Strava segment embeds (iframes)** | Quick way to show segment details inline | Already in PROJECT.md "Out of Scope." Chrome third-party cookie changes made embeds unreliable. Strava embeds require login for full data. Heavy iframe weight on a performant page. | Direct "View on Strava" links to `strava.com/segments/{ID}` |
+| **Real-time leaderboard updates** | Excitement of seeing results come in live | Requires persistent backend, WebSocket or polling, server-side rendering. Massively overengineered for a ~50-person grassroots event. Already declared out of scope in PROJECT.md. | Rebuild-on-commit. Organizer reviews submissions, commits JSON, Netlify rebuilds. Latency is minutes, not seconds -- acceptable. |
+| **Automatic activity detection** | System detects rider's event activity without them submitting | Requires polling all authorized athletes' recent activities. Rate limit of 200 req/15min makes this impractical for batch processing. Privacy-invasive (reading all activities, not just the event one). | Rider explicitly submits their activity link/ID. Clear, consensual, simple. |
+| **Full segment leaderboard scraping** | Show top 10 all-time for each segment from Strava | Segment Leaderboard endpoint removed in 2020. Would violate API TOS even if available. | Show only event participants' times, sourced from their own authorized submissions. |
+| **User accounts / persistent login** | Remember returning users, let them edit submissions | Requires auth system, session management, database. Single-event site with ~50 riders doesn't justify this complexity. | One-time OAuth per submission. Rider can re-submit (new OAuth) to update. Organizer handles disputes manually. |
+| **Automated gender categorization from Strava** | Pull gender from Strava profile to auto-assign category | Strava API `sex` field only supports "M"/"F"/null. No non-binary option. Relying on it would exclude non-binary riders from their correct category. | Self-reported gender selection in submission form. Dropdown: Men / Women / Non-Binary. |
+| **Database for results storage** | "Proper" data persistence | Already declared out of scope. JSON file storage is sufficient for a single event with ~50-100 riders. Database adds hosting cost, complexity, and a moving part that can fail. | Committed JSON files. Git is the database. Netlify rebuilds on push. |
+| **Email notifications** | Notify riders when results are posted | Requires email service integration, collecting email addresses, managing unsubscribes. Overkill for a single event. | Social media announcement linking to results page. Riders who submitted will naturally check back. |
+| **Strava webhook for activity updates** | Get notified when a rider updates/deletes their activity | Webhook setup requires persistent endpoint, verification, ongoing maintenance. Event results are a snapshot in time. | Results are final after organizer review. If a rider's activity is later flagged/deleted on Strava, organizer can manually update JSON. |
+| **Weather widget** | Show race day conditions | Already out of scope. Irrelevant before event; after event, conditions are known. | Mention conditions in a post-event summary if desired. |
+
+---
+
+## Feature Dependencies
+
+```
+Strava App Registration (prerequisite)
+    |
+    +-- client_id + client_secret needed for ALL Strava features
+    |
+    v
+Strava OAuth Flow (Netlify Functions)
+    |
+    +-- /api/auth --> redirects to Strava authorization
+    +-- /api/callback --> exchanges code for token
+    |
+    v
+Activity Data Extraction
+    |
+    +-- GET /activities/{id}?include_all_efforts=true
+    +-- Match segment_efforts against 9 known segment IDs
+    +-- Extract elapsed_time for each matching effort
+    |
+    v
+Submission Form + Consent
+    |
+    +-- Rider reviews extracted times
+    +-- Rider selects gender category (Men/Women/Non-Binary)
+    +-- Rider explicitly consents to public display
+    |
+    v
+Results JSON Committed to Repo
+    |
+    +-- Organizer reviews submissions
+    +-- Commits to /public/data/results/*.json
+    +-- Netlify rebuild triggered
+    |
+    v
+Results Page (static, built from JSON)
+    +-- Gravel Champion leaderboard (cumulative time)
+    +-- KOM/QOM Champion leaderboard (points)
+    +-- Per-segment leaderboards
+    +-- Individual rider breakdowns
+
+--- INDEPENDENT features (no dependency chain) ---
+
+Strava Segment Links on Cards
+    +-- depends on: annotations.json (has segment IDs)
+    +-- depends on: GravelSectors.astro, KomSegments.astro (existing)
+
+Scoring Explainer Update
+    +-- depends on: GrinduroExplainer.astro (existing)
+
+Build-time KOM/QOM Display
+    +-- depends on: Strava API at build time (getSegmentById)
+    +-- depends on: KomSegments.astro (existing)
+    +-- NOTE: requires Strava app token, separate from user OAuth
 ```
 
-On click: dispatch `window.dispatchEvent(new CustomEvent('map:reset'))`.
+### Dependency Notes
 
-RouteMap.astro listens and calls `map.flyToBounds(initialBounds)`.
-ElevationProfile.astro listens and restores all annotation opacities to defaults.
-
-**Alternative considered:** Using `leaflet.zoomhome` plugin. Rejected because: (a) adds a dependency for one button, (b) places the button inside the map container (spec says "below map"), (c) uses Font Awesome icon (project uses no icon fonts).
-
-### Table Stakes vs Differentiator
-
-| Aspect | Category | Notes |
-|--------|----------|-------|
-| Ability to return to default map view | **TABLE STAKES** | Users expect this after any zoom/pan interaction |
-| Button below map (outside container) | **TABLE STAKES** | More discoverable than tiny icon in map corner |
-| Animated flyToBounds transition | **DIFFERENTIATOR** | Smooth return vs jarring snap; low effort |
-| Resets both map AND elevation highlights | **DIFFERENTIATOR** | Cross-component reset via CustomEvent bus |
-
-### Anti-Features
-
-| Anti-Feature | Why Avoid |
-|--------------|-----------|
-| Plugin dependency for reset button | One-button function doesn't justify a new npm package |
-| Reset button inside map container | Competes with zoom controls; less discoverable on mobile |
-| Reset that reloads the page | Destroys lazy-loaded state; slow and disorienting |
-
-### Complexity: **LOW**
-
-Dependencies on existing features:
-- CustomEvent bus (built in v2.0)
-- `routeLine.getBounds()` already computed at map init
-- Annotation opacity restore pattern already exists in `map:sectorHover` handler
-
-### Confidence: HIGH
-
-Standard Leaflet pattern verified via official docs. Implementation requires ~20 lines.
+- **OAuth Flow requires Strava App Registration first:** Must register at developers.strava.com to get client_id and client_secret. Set authorized redirect domain to the Netlify site URL.
+- **Activity extraction requires OAuth token:** Cannot pull segment efforts without the rider's authorization. Scope needed: `activity:read` (or `activity:read_all` for private activities).
+- **Results page requires committed JSON:** The static site has no runtime data access. Results must exist as JSON files at build time.
+- **Segment links are fully independent:** Can ship immediately with just the 9 known segment IDs. No API calls needed.
+- **Build-time KOM/QOM requires a separate app-level token:** Uses the Strava app's own access token (not a user's), refreshed via client credentials. This is a build-time prebuild script, not a runtime operation.
 
 ---
 
-## Feature 2: Photo Lightbox from Map Markers
+## Scoring System Design
 
-### Current State
+### Gravel Champion (Cumulative Time)
 
-Photo map markers use `bindPopup()` with an `<a href="/images/${photo.filename}" target="_blank">` wrapping a 260px `<img>`. Clicking a photo marker opens a popup with a small image preview. Clicking the image opens it in a **new browser tab** at full resolution. There is no lightbox integration — the existing PhotoSwipe instance in PhotoGallery.astro is entirely separate.
+Based on Grinduro's model (verified via [Grinduro About](https://grinduro.com/about/) and [Synergy Race Timing results](https://www.synergyracetiming.com/grinduro/)):
 
-The photo markers are 10x10px cyan squares — functional but hard to identify as "photos" at a glance. Markers use `L.markerClusterGroup` for clustering.
+- **Method:** Sum of elapsed_time across 6 gravel sectors
+- **Ranking:** Lowest cumulative time wins
+- **Categories:** Men, Women, Non-Binary (separate leaderboards)
+- **Display columns:** Place, Name, Sector 1 Time, Sector 2 Time, ..., Sector 6 Time, Total Time
+- **Missing sectors:** If a rider's activity doesn't include all 6 sectors (e.g., they cut the course), they are listed as DNF or ranked below complete riders
 
-### Expected Behavior (Industry Standard)
+**Grinduro reference:** Synergy Race Timing displays: Place, Name, Bib, Total Time, then per-segment Rank + Time. MK Ultra can adapt this without bib numbers (no physical timing).
 
-**How map-based photo browsers work:**
+### KOM/QOM Champion (Points)
 
-1. **Thumbnail in popup:** When the user clicks a photo marker on the map, a popup opens showing a thumbnail-sized preview (typically 200-300px wide). This is what the site currently does.
+Project-specific system (not standard Grinduro):
 
-2. **Lightbox on click:** When the user clicks the thumbnail in the popup, a full-screen lightbox opens showing the high-resolution image. This is what Google Maps, Flickr maps, and Komoot do.
+- **Method:** Top 10 finishers per KOM segment earn points: 10, 9, 8, 7, 6, 5, 4, 3, 2, 1
+- **Ranking:** Highest total points across 3 KOM segments wins
+- **Categories:** Men, Women, Non-Binary (separate leaderboards)
+- **Tiebreaker:** If points are tied, fastest cumulative KOM time wins
+- **Display columns:** Place, Name, C4 (rank/pts), Silver Creek (rank/pts), Down Jeep (rank/pts), Total Points
 
-3. **Bidirectional navigation** (advanced): The lightbox can navigate to other photos, and the map can highlight the currently-viewed photo's marker. The Leaflet-PhotoSwipe integration article demonstrates this pattern using state management.
+### Segment Effort Data from Strava API
 
-**The key UX expectation:** Clicking a thumbnail in a map popup should NOT open a new tab. It should open in-context (lightbox). Opening a new tab is a jarring navigation that breaks the user's spatial context.
+When fetching an activity with `include_all_efforts=true`, each `segment_effort` contains:
+- `segment.id` -- match against the 9 known IDs
+- `elapsed_time` -- total seconds including stops (use this for ranking)
+- `moving_time` -- seconds excluding stops
+- `start_date_local` -- when the effort started
+- `distance` -- meters covered
+- `kom_rank` -- 1-10 if in top 10 (subscribers only)
+- `pr_rank` -- 1-3 if personal record
 
-### Implementation Pattern
+**Which time to use:** `elapsed_time` is the standard for race results. It includes any time the rider stopped within the segment. Using `moving_time` would reward riders who stop (auto-pause removes stopped time), creating a perverse incentive.
 
-**Approach A: Programmatic PhotoSwipe `loadAndOpen()` (RECOMMENDED)**
+**Confidence:** HIGH -- segment effort fields verified via [Strava API Reference](https://developers.strava.com/docs/reference/) and [Strava Segment Efforts V3 docs](https://strava.github.io/api/v3/efforts/)
 
-PhotoSwipe's `loadAndOpen(index, dataSource)` method opens the lightbox at a specific image index. The approach:
+---
 
-1. Store the PhotoSwipe lightbox instance as a module-scoped variable accessible to both components
-2. In the map popup HTML, add a click handler on the thumbnail that calls `lightbox.loadAndOpen(photoIndex)`
-3. The lightbox opens showing the clicked photo at full resolution
+## Strava OAuth Flow Design
 
-**Technical challenge:** RouteMap.astro and PhotoGallery.astro are separate Astro `<script>` blocks. They don't share module scope. The solution is the same CustomEvent bus already in use:
+### Flow Steps
 
-```javascript
-// In RouteMap.astro popup click handler:
-window.dispatchEvent(new CustomEvent('photo:openLightbox', {
-  detail: { index: photoIndex }
-}));
+1. **Rider clicks "Submit Results"** on post-event results submission page
+2. **Redirect to Strava:** `GET https://www.strava.com/oauth/authorize` with:
+   - `client_id`: MK Ultra Gravel app ID
+   - `redirect_uri`: `https://mkultragravel.netlify.app/.netlify/functions/callback`
+   - `response_type`: `code`
+   - `scope`: `activity:read`
+   - `approval_prompt`: `auto` (shows consent screen first time only)
+3. **Rider authorizes on Strava** (grants read access to their activities)
+4. **Strava redirects to callback** with `code` parameter
+5. **Netlify Function exchanges code for token:** `POST https://www.strava.com/api/v3/oauth/token` with client_id, client_secret, code
+6. **Token response includes:** access_token (6hr), refresh_token, athlete summary (id, firstname, lastname, sex)
+7. **Function fetches activity:** Rider provides activity ID/URL. Function calls `GET /activities/{id}?include_all_efforts=true`
+8. **Extract matching segment efforts:** Filter `segment_efforts` where `segment.id` matches one of 9 known IDs
+9. **Return results to submission form:** Rider sees their extracted times, selects gender category, confirms consent
+10. **Submission stored:** Results written to a staging area (could be a Netlify Function that creates a GitHub commit via API, or a simpler approach like emailing the organizer)
 
-// In PhotoGallery.astro (or a new script):
-window.addEventListener('photo:openLightbox', (e) => {
-  lightbox.loadAndOpen(e.detail.index);
-});
+### Rate Limits
+
+- 200 requests per 15 minutes (overall)
+- 100 requests per 15 minutes (read endpoints)
+- 2,000 requests per day (overall)
+- 1,000 requests per day (read endpoints)
+
+For a ~50-person event where each submission requires ~2 API calls (token exchange + activity fetch), this is well within limits even if everyone submits simultaneously.
+
+**Confidence:** HIGH -- rate limits verified via [Strava Rate Limits docs](https://developers.strava.com/docs/rate-limits/)
+
+### Netlify Functions Architecture
+
+Two functions needed:
+
+1. **`/api/auth`** -- Generates Strava authorization URL with proper parameters, redirects rider
+2. **`/api/callback`** -- Handles OAuth callback, exchanges code for token, fetches activity data, returns extracted results
+
+Environment variables (Netlify dashboard):
+- `STRAVA_CLIENT_ID`
+- `STRAVA_CLIENT_SECRET`
+- `STRAVA_REDIRECT_URI`
+
+**Confidence:** MEDIUM -- Netlify Functions + OAuth pattern verified via [Netlify blog](https://www.netlify.com/blog/2018/07/30/how-to-setup-serverless-oauth-flows-with-netlify-functions-and-intercom/), but Strava-specific implementation needs testing.
+
+---
+
+## Gender Category Handling
+
+**The problem:** MK Ultra Gravel specifies three categories: Men, Women, Non-Binary. Strava's API `sex` field only supports "M", "F", or null.
+
+**The solution:** Self-reported gender in the submission form.
+
+| Approach | Pros | Cons |
+|----------|------|------|
+| Use Strava `sex` field | Zero UI friction | No non-binary option; null defaults to unknown; violates inclusivity goal |
+| Self-reported dropdown | Inclusive; rider controls categorization | One extra form field |
+| Pre-fill from Strava, allow override | Best of both worlds | More complex UI; Strava's "M"/"F" framing may feel exclusionary |
+
+**Recommendation:** Self-reported dropdown with NO pre-fill from Strava. Options: Men / Women / Non-Binary. Simple, inclusive, respects rider identity.
+
+**Grinduro precedent:** Grinduro uses "Open Gender" as their non-binary category name. MK Ultra can use "Non-Binary" directly -- clearer language.
+
+**Confidence:** HIGH for the gender gap in Strava API (verified via [Strava developer discussions](https://groups.google.com/g/strava-api/c/_Ox4pgfiuas) and [Strava gender settings](https://support.strava.com/hc/en-us/articles/4424254689805-Gender-Settings-and-Leaderboard-Filters))
+
+---
+
+## Results Page Design
+
+### Reference: Grinduro/Synergy Race Timing
+
+Grinduro results (via Synergy Race Timing) show:
+- **Category headers:** Pro Men, Pro Women, Men 34 & Under, etc.
+- **Columns:** Place, Name, Bib, Total Time, then per-segment (Rank + Time)
+- **No points system** -- pure cumulative time
+
+MK Ultra adapts this with two scoring systems:
+1. **Gravel Champion** -- cumulative time (like Grinduro)
+2. **KOM/QOM Champion** -- points (unique to MK Ultra)
+
+### Page Structure
+
+```
+/results (new Astro page)
+
+  Hero: "RESULTS // CLASSIFIED" (match site brutalist aesthetic)
+  Event date, conditions, participant count
+
+  Section 1: Gravel Champions
+    Tab/toggle: Men | Women | Non-Binary
+    Table: Place, Name, S1, S2, S3, S4, S5, S6, Total Time
+    Highlight: Top 3 (podium styling)
+
+  Section 2: KOM/QOM Champions
+    Tab/toggle: Men | Women | Non-Binary
+    Table: Place, Name, C4 (rank/pts), Silver Creek (rank/pts), Down Jeep (rank/pts), Total Points
+    Highlight: Top 3
+
+  Section 3: Individual Segment Results
+    Expandable per-segment tables
+    6 gravel sectors + 3 KOM segments = 9 tables
+    Each: Place, Name, Time
+
+  Footer: "Powered by Strava" attribution
 ```
 
-This maintains the decoupled architecture. No shared imports across components.
+### Data Model (Results JSON)
 
-**Approach B: Separate PhotoSwipe instance per popup (AVOID)**
-
-Creating a new PhotoSwipeLightbox for each popup would duplicate initialization, waste memory, and create inconsistent UI state between map lightbox and gallery lightbox.
-
-### Thumbnail Size in Popup
-
-The current popup shows a 260px-wide full-resolution image loaded via `<img src="/images/${photo.filename}">`. This is wasteful — full-res images can be 1-2MB each. The project already has WebP thumbnails at `/images/thumbs/`.
-
-**Recommendation:** Use the existing 400px WebP thumbnail in the popup instead of the full-resolution image. Change popup HTML to reference the thumbnail path. This reduces popup load from ~1MB to ~30KB per image.
-
-### Larger Photo Markers
-
-The current 10x10px cyan square markers are hard to identify as "photos." Options:
-
-1. **Thumbnail markers** (divIcon with actual image) — Show a small ~40x40px crop of the photo as the marker itself. High visual impact but increases tile-level DOM complexity for 53+ markers. With clustering, only ~10-15 markers are visible at most zoom levels.
-
-2. **Camera icon markers** — Replace the cyan square with a small camera SVG icon (similar to the bike crosshair pattern). Clear semantic meaning. Low complexity.
-
-3. **Larger cyan squares/circles** — Scale the existing 10px marker to 16-20px. Minimal change, some improvement.
-
-**Recommendation:** Option 2 (camera icon) for the marker itself. Increase from 10x10 to 16x16px. Keep the cluster icon as-is (already 32x32px with count).
-
-### Photo Index Mapping
-
-To call `loadAndOpen(index)`, the map marker click handler needs to know which index the photo occupies in the PhotoSwipe gallery. Since both components load from the same `photos.json`, the array index is consistent. Store the index as a `data-photo-index` attribute on each marker, or pass it through the CustomEvent.
-
-### Table Stakes vs Differentiator
-
-| Aspect | Category | Notes |
-|--------|----------|-------|
-| Thumbnail in popup | **TABLE STAKES** | Already exists |
-| Click thumbnail opens lightbox (not new tab) | **TABLE STAKES** | New-tab behavior is a UX regression; users expect in-context viewing |
-| WebP thumbnails in popup (not full-res) | **TABLE STAKES** | Performance; 1MB per popup image is unacceptable on mobile |
-| Larger/camera-icon markers | **DIFFERENTIATOR** | Visual clarity; most small event sites use default markers |
-| Bidirectional map-gallery sync | **ANTI-FEATURE for v4.0** | High complexity (state management); defer to v5+ if ever needed |
-
-### Anti-Features
-
-| Anti-Feature | Why Avoid |
-|--------------|-----------|
-| New-tab behavior on thumbnail click | Breaks spatial context; mobile creates tab sprawl |
-| Full-resolution images in popup | 1MB per popup on mobile is a performance failure |
-| Separate PhotoSwipe instance per popup | Memory waste; inconsistent UI |
-| Bidirectional map-gallery navigation | Requires state management layer; overengineered for 53 photos |
-
-### Complexity: **MEDIUM**
-
-This is the most architecturally complex v4.0 feature because it bridges two independent components (RouteMap and PhotoGallery) through the event bus. Key risks:
-- Ensuring photo index consistency between map markers and gallery order
-- PhotoSwipe lightbox must be initialized before map popup click can trigger it
-- Popup DOM is created dynamically by Leaflet — event delegation needed for click handlers inside popups
-
-Dependencies on existing features:
-- PhotoSwipe already initialized in PhotoGallery.astro
-- Photos.json loaded by both RouteMap and PhotoGallery
-- CustomEvent bus architecture (built in v2.0)
-
-### Confidence: HIGH
-
-PhotoSwipe `loadAndOpen()` API verified via official docs. CustomEvent pattern proven in v2.0.
-
----
-
-## Feature 3: Larger Map Zoom Controls
-
-### Current State
-
-Leaflet's default zoom controls are small: the +/- buttons are approximately 26x26px. They use the project's dark theme overrides (dark background, light text, dark border). The controls are in the default `topleft` position.
-
-### Expected Behavior (Accessibility Standards)
-
-**WCAG 2.5.5 (AAA):** Interactive targets should be at least **44x44 CSS pixels**. This is the practical standard for mobile-first design. Apple HIG recommends 44pt; Google Material Design recommends 48dp.
-
-**WCAG 2.5.8 (AA):** Interactive targets must be at least **24x24 CSS pixels** OR have 24px spacing around them. The default Leaflet controls meet AA but fall short of AAA.
-
-**The cycling audience skews mobile.** Riders exploring a route are often on phones. Fat-finger errors on tiny zoom buttons are frustrating. Most cycling map sites (RideWithGPS, Komoot) use larger-than-default controls.
-
-### Implementation Approach
-
-**CSS-only override (RECOMMENDED).** The Leaflet zoom control elements have well-known class names (`.leaflet-control-zoom-in`, `.leaflet-control-zoom-out`). Override their dimensions in global.css:
-
-```css
-.leaflet-control-zoom a {
-  width: 44px !important;
-  height: 44px !important;
-  line-height: 44px !important;
-  font-size: 22px !important;
+```json
+{
+  "event": {
+    "date": "2026-06-07",
+    "participants": 47
+  },
+  "submissions": [
+    {
+      "athlete": {
+        "id": 12345,
+        "firstName": "Jane",
+        "lastName": "Doe",
+        "gender": "women"
+      },
+      "activityId": 67890,
+      "submittedAt": "2026-06-07T18:30:00Z",
+      "consentedToDisplay": true,
+      "sectors": {
+        "24479270": { "elapsed_time": 1234, "moving_time": 1200 },
+        "24479292": { "elapsed_time": 987, "moving_time": 970 }
+      },
+      "koms": {
+        "34573011": { "elapsed_time": 456, "moving_time": 450 },
+        "16438243": { "elapsed_time": 789, "moving_time": 780 },
+        "6809754": { "elapsed_time": 321, "moving_time": 315 }
+      }
+    }
+  ]
 }
 ```
 
-This meets WCAG 2.5.5 AAA target size without any JavaScript changes, new plugins, or custom controls. The existing dark theme overrides in global.css already target `.leaflet-control-zoom a` — the size overrides go in the same rule.
+---
 
-**Alternative considered:** Custom L.Control.Zoom extension. Rejected because CSS achieves the same result with zero JavaScript.
+## Pre-Event vs Post-Event Features
 
-**Alternative considered:** Zoom slider plugin. Rejected because it adds complexity and the +/- pattern is universally understood.
+### Pre-Event (Ship Before June 7)
 
-### Table Stakes vs Differentiator
+| Feature | Effort | Priority |
+|---------|--------|----------|
+| Strava segment links on all 9 cards | 1-2 hours | P1 -- immediate value, zero API dependency |
+| Scoring explainer update | 1-2 hours | P1 -- riders need to understand scoring before the event |
+| Strava app registration | 30 min | P1 -- prerequisite for all API features |
+| Build-time KOM/QOM holder display | 4-8 hours | P2 -- motivational, but needs API testing |
 
-| Aspect | Category | Notes |
-|--------|----------|-------|
-| Zoom controls visible and functional | **TABLE STAKES** | Already exists |
-| 44x44px touch targets (WCAG AAA) | **TABLE STAKES** | Accessibility requirement; mobile cycling audience |
-| Dark-themed controls matching site design | **TABLE STAKES** | Already exists via global.css overrides |
+### Post-Event (Ship After June 7)
 
-### Anti-Features
-
-| Anti-Feature | Why Avoid |
-|--------------|-----------|
-| Custom zoom control plugin | Adds dependency for CSS-achievable result |
-| Removing zoom controls entirely | Some mobile users lack pinch-zoom familiarity |
-| Zoom slider | Unfamiliar interaction pattern; adds complexity |
-
-### Complexity: **VERY LOW**
-
-Three CSS properties on an existing selector. No JavaScript changes. No new dependencies.
-
-Dependencies on existing features:
-- `.leaflet-control-zoom a` already styled in global.css
-
-### Confidence: HIGH
-
-CSS override approach verified via Leaflet community and documentation. Standard pattern.
+| Feature | Effort | Priority |
+|---------|--------|----------|
+| Strava OAuth submission flow | 8-16 hours | P1 -- core submission mechanism |
+| Activity data extraction | 4-8 hours | P1 -- extracts segment times |
+| Submission form with consent + gender | 4-8 hours | P1 -- rider-facing submission UI |
+| Results JSON generation | 2-4 hours | P1 -- data pipeline from submissions to JSON |
+| Results page with leaderboards | 8-16 hours | P1 -- the deliverable |
+| Per-segment leaderboards | 2-4 hours | P2 -- enhances results page |
+| Individual rider result card | 2-4 hours | P2 -- immediate feedback after submission |
 
 ---
 
-## Feature 4: Card Layout Equalization
-
-### Current State
-
-Sector cards and KOM cards use the same visual structure (`.classified-border`, cover photo, metadata). However, they appear in **different grid columns** in the page layout:
-
-```html
-<div class="grid md:grid-cols-3 gap-8">
-  <div class="md:col-span-2">  <!-- Sectors: 2/3 width -->
-    <GravelSectors />
-  </div>
-  <div>                         <!-- KOM + Restock: 1/3 width -->
-    <KomSegments />
-    <RestockPoints />
-  </div>
-</div>
-```
-
-Sectors get 2/3 width; KOM cards get 1/3. This means sector cards are wider than KOM cards. The milestone spec says "gravel sector cards resized to match KOM cards" — this implies equalizing the card sizes, likely by changing the grid layout.
-
-### Expected Behavior (Industry Standard)
-
-**Card grids in cycling/event sites:**
-
-Responsive card grids using CSS Grid with `auto-fill` or `auto-fit` and `minmax()` are the standard approach. Equal-height cards happen automatically with CSS Grid when items are in the same row (`grid-auto-rows: 1fr` or `align-items: stretch`).
-
-The common pattern for mixed content types (sectors + KOMs) is either:
-1. **Unified grid** — all cards in the same grid with equal column widths
-2. **Section-separated** — sectors and KOMs in separate sections, each with their own grid
-
-Since sectors (6 cards) and KOM segments (3 cards) have different content structures and quantities, the current two-column layout makes sense conceptually. The issue is the width disparity.
-
-### Implementation Options
-
-**Option A: Equal-width columns**
-
-Change `md:grid-cols-3` with `md:col-span-2` to a simpler layout where both columns are equal width:
-
-```html
-<div class="grid md:grid-cols-2 gap-8">
-  <div>  <!-- Sectors -->
-  <div>  <!-- KOM + Restock -->
-```
-
-This gives each column 50% width. Cards in both columns will be similar widths.
-
-**Option B: Full-width unified grid**
-
-Remove the two-column split entirely. Place all cards (sectors, KOMs, restock) in a single responsive grid:
-
-```html
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-  <!-- All sector cards -->
-  <!-- All KOM cards -->
-  <!-- Restock cards -->
-</div>
-```
-
-With `grid-auto-rows: 1fr`, all cards in the same row will have equal heights. This is the most robust equalization approach.
-
-**Option C: Match card internal layout only**
-
-Keep the 2/3 + 1/3 column split but ensure the card internal structure (photo aspect ratio, padding, font sizes) is identical. The cards themselves would be "equal" in proportion even though their container widths differ.
-
-**Recommendation: Option A (equal-width columns).**
-
-It's the simplest change that achieves the spec requirement ("sector cards resized to match KOM cards"). The 2-column layout preserves the sector/KOM conceptual grouping while equalizing widths. The Grinduro format explainer (Feature 5) can be placed above or below the sector cards in the same column, or as a full-width element above the grid.
-
-### Table Stakes vs Differentiator
-
-| Aspect | Category | Notes |
-|--------|----------|-------|
-| Cards readable and well-formatted | **TABLE STAKES** | Already exists |
-| Equal-width cards across sections | **TABLE STAKES** | Visual consistency; unequal widths look unfinished |
-| Auto-equal-height rows (CSS Grid) | **DIFFERENTIATOR** | Polished presentation; most small event sites don't achieve this |
-
-### Anti-Features
-
-| Anti-Feature | Why Avoid |
-|--------------|-----------|
-| JavaScript-based height equalization | CSS Grid handles this natively; JS adds complexity and flash of unstyled content |
-| Fixed pixel heights on cards | Fragile; breaks when content length varies |
-| Removing the sector/KOM grouping | Conceptual grouping aids comprehension; mixing card types is confusing |
-
-### Complexity: **LOW**
-
-CSS grid class changes in index.astro. No JavaScript. No new dependencies.
-
-Dependencies on existing features:
-- Existing grid layout in index.astro (#sectors section)
-- GravelSectors.astro and KomSegments.astro card structure
-
-### Confidence: HIGH
-
-CSS Grid equalization is standard practice, verified via MDN and CSS-Tricks.
-
----
-
-## Feature 5: Grinduro Format Explainer
-
-### Current State
-
-The site describes MK Ultra Gravel as having "timed gravel sectors and KOM/QOM segments" but doesn't explain what this means. The Grinduro format is niche — even experienced cyclists may not know how it works. There is no "how the race works" section.
-
-### How Grinduro Describes Their Format
-
-From the official Grinduro website (verified via direct fetch):
-
-> "Gravel Road Race + Mountain Bike-Style Enduro = one long loop of pavement and dirt, where finishing times aren't based on overall loop time, but four timed segments."
-
-Key language patterns Grinduro uses:
-- **"Timed segments"** — consistent term for the competitive portions
-- **"Gran Fondo-style mass start"** — the non-competitive beginning
-- **"Overall time doesn't matter"** — the critical differentiator from a normal race
-- **"Reward the most well-rounded of rouleurs"** — segments test different skills
-- **"Not just a bike race"** but **"a celebration of cycling"** — festival framing
-
-Grinduro's segments are typically 5-15 minutes long and test different skills: dirt road climb, dirt road roller, dirt road descent, singletrack descent.
-
-### Content Recommendations
-
-The explainer should answer three questions:
-
-1. **What is it?** Mass start, ride the full route at your own pace, but specific sectors are timed.
-2. **How does timing work?** Only your sector times count. You can cruise/socialize between sectors.
-3. **What does it reward?** The most well-rounded rider — sectors test climbing, descending, and technical skill.
-
-**Recommended placement:** In the #sectors section, above the sector cards. This gives context before the user sees the sector-by-sector breakdown.
-
-**Recommended tone:** Match the existing MK Ultra voice — brutalist, direct, slightly conspiratorial. Not corporate marketing copy.
-
-**Example structure:**
-
-```
-## How It Works
-
-Mass start. 100 miles. Six timed gravel sectors.
-
-Your finishing time doesn't matter. Only your sector times count. Ride
-the full route at whatever pace you want — then turn it up to eleven
-when you hit the timed sectors.
-
-Each sector tests something different: technical descents, grinding
-climbs, fast rollers. The most well-rounded rider wins.
-
-Think Grinduro meets Paris-Roubaix. With less singletrack and more
-gravel.
-```
-
-### Content from Grinduro to Adapt (Not Copy)
-
-The site should explain the format in MK Ultra's voice, not quote Grinduro directly. Key concepts to adapt:
-- "Overall time doesn't matter" → MK Ultra version
-- "Timed segments" → "Timed sectors" (the site already uses "sectors" language)
-- "Reward the most well-rounded" → align with Paris-Roubaix difficulty framing
-- Festival/fun emphasis → align with MK Ultra's counterculture identity
-
-### Table Stakes vs Differentiator
-
-| Aspect | Category | Notes |
-|--------|----------|-------|
-| Explaining the race format somewhere on the page | **TABLE STAKES** | Most riders won't know what Grinduro-style means |
-| Placed in context above sector cards | **TABLE STAKES** | Context before detail is standard information architecture |
-| Voice-matched to MK Ultra brand | **DIFFERENTIATOR** | Most event sites use generic marketing copy |
-| Connecting format to Paris-Roubaix sector tradition | **DIFFERENTIATOR** | Bridges two cycling traditions the audience knows |
-
-### Anti-Features
-
-| Anti-Feature | Why Avoid |
-|--------------|-----------|
-| Quoting Grinduro website directly | Copyright concern; the site should have its own voice |
-| Multi-paragraph essay on race formats | Brevity is the brand; 3-5 short sentences max |
-| Comparing to other specific events by name | Could imply affiliation; keep it conceptual |
-| FAQ-style expandable sections | Overengineered for ~50 words of content |
-
-### Complexity: **VERY LOW**
-
-HTML content addition to index.astro in the #sectors section. No JavaScript. No new dependencies. Matches existing `MkUltraExplainer.astro` pattern.
-
-Dependencies on existing features:
-- #sectors section layout in index.astro
-
-### Confidence: HIGH
-
-Grinduro format verified directly from official website. Content structure is editorial, not technical.
-
----
-
-## Feature 6: Penrose Triangle in Header
-
-### Current State
-
-The hero section contains:
-1. CIA document background image
-2. "Classification: Ultra" stamp
-3. "MK Ultra Gravel" glitch-animated h1
-4. Event details (date, location, distance)
-5. Countdown timer
-6. Register CTA button
-7. Donation link
-
-There is no brand icon or logo above the title. The Penrose triangle exists only as the favicon (shipped in v3.0).
-
-### Expected Behavior (Industry Standard)
-
-**Hero section branding patterns:**
-
-The "icon above title" pattern is well-established:
-- Brand mark or logo icon sits centered above the main heading
-- Typically 60-120px in size
-- Serves as a visual anchor that draws the eye down to the title
-- Common in event sites, landing pages, and product pages
-
-**For cycling events specifically:** Most use their logo above the event name. The Penrose triangle would serve as MK Ultra Gravel's logo mark.
-
-### Implementation
-
-The existing Penrose triangle SVG from the favicon can be reused at larger scale. The favicon uses hex fills for browser compatibility, but an inline SVG in the hero can use the full oklch color space.
-
-**Placement:** Centered above the h1, below the "Classification: Ultra" stamp. Approximate sizing: 60-80px width.
-
-**Animation:** The milestone spec says "subtle animation." Options:
-1. **Slow rotation** — `transform: rotate(360deg)` over 20-30s. Compositor-safe. Fits the psychedelic theme. Simple.
-2. **Color cycling** — animate the three triangle faces through different hues. Requires animating `fill`, which is NOT compositor-safe. Avoid.
-3. **Pulse/breathe** — `transform: scale(1) → scale(1.05)` oscillation. Compositor-safe. Subtle.
-4. **Floating** — `transform: translateY(0) → translateY(-8px)` oscillation. Compositor-safe.
-
-**Recommendation:** Slow rotation (option 1). It directly evokes the "impossible" nature of the Penrose triangle — it appears to rotate in a way that shouldn't be possible. Gated behind `prefers-reduced-motion: no-preference` per existing project pattern.
-
-```css
-@keyframes penrose-rotate {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .penrose-hero {
-    animation: penrose-rotate 25s linear infinite;
-  }
-}
-```
-
-### Table Stakes vs Differentiator
-
-| Aspect | Category | Notes |
-|--------|----------|-------|
-| Having a visual brand mark on the page | **TABLE STAKES** | Event sites need visual identity beyond text |
-| Penrose triangle specifically | **DIFFERENTIATOR** | Unique, on-brand impossible geometry |
-| Subtle rotation animation | **DIFFERENTIATOR** | Adds dynamism; rare in cycling event sites |
-| prefers-reduced-motion gate | **TABLE STAKES** | Accessibility requirement; matches existing pattern |
-
-### Anti-Features
-
-| Anti-Feature | Why Avoid |
-|--------------|-----------|
-| Animating fill/stroke color | Not compositor-safe; causes paint on every frame |
-| Large (>120px) hero icon | Competes with h1 for visual hierarchy; pushes content below fold |
-| Complex multi-step animation | Distracting; the hero already has glitch text animation |
-| Canvas-rendered triangle | Breaks zero-TBT; unnecessary for a single SVG element |
-
-### Complexity: **LOW**
-
-Inline SVG in index.astro hero section. CSS animation in global.css or component style. No JavaScript. No new dependencies.
-
-Dependencies on existing features:
-- Penrose triangle SVG design (created in v3.0 as favicon)
-- Hero section structure in index.astro
-
-### Confidence: HIGH
-
-SVG inline + CSS animation is a standard, proven pattern.
-
----
-
-## Feature 7: GPX Route Update (80mi to 100mi)
-
-### Current State
-
-The site uses an 80mi GPX file (`MK_Ultra.gpx` or `MK Ultra.gpx` in repo root). The prebuild pipeline processes this into:
-- `public/data/route-data.json` — track points with lat, lon, ele, mi
-- `public/data/annotations.json` — sectors, KOMs, restock points with track arrays
-- `public/data/photos.json` — 53 photos with lat, lon, mi positions
-- Route metadata (totalMi, elevationGainFt) displayed on the page
-
-The elevation chart x-axis is already set to `max: 100` (forward-compatible from v3.0).
-
-### What Changes When a Cycling Route Is Updated
-
-When replacing a GPX file for a cycling event, a cascade of dependent data must be verified or updated:
-
-1. **Total distance** — route-data.json `meta.totalMi` changes
-2. **Total elevation gain** — `meta.elevationGainFt` changes
-3. **Sector positions** — `startMi`, `endMi`, and `track` arrays in annotations.json. If the route changed significantly, sectors may start/end at different mile markers even if the physical location didn't change (because mile markers shift when the route changes).
-4. **KOM positions** — same as sectors: `startMi`, `endMi`, track arrays
-5. **Restock point positions** — lat/lon may stay the same but `mi` values shift
-6. **Photo positions** — lat/lon are fixed (photos are geolocated) but `mi` values shift
-7. **Page content** — any hardcoded distance references ("80 miles" becomes "100 miles")
-8. **Map bounds** — initial fitBounds changes to encompass the longer route
-9. **Elevation profile** — new data renders automatically; x-axis max already 100
-
-### Pipeline Re-run
-
-The existing prebuild pipeline (`scripts/` directory) should handle most of this automatically when the new GPX file is placed in the repo. The pipeline:
-1. Parses GPX to generate route-data.json
-2. Maps sector/KOM annotations to track points (snaps to nearest route point)
-3. Assigns photo mile markers by lat/lon proximity (haversine calculation)
-
-**Critical verification needed:** If the route changed significantly (not just extended at the end), all sector/KOM start/end positions in annotations.json need manual verification. The pipeline auto-generates track arrays from mile-marker ranges, but the mile markers themselves may need updating.
-
-### New Photos
-
-The milestone spec mentions two new photos: "Down Jeep" and "Billie Helmer B&W." These need:
-1. Placed in `/images/` directory
-2. Mile-marker positions assigned in the photo data
-3. Pipeline run to generate WebP thumbnails
-4. Card crop photos generated if assigned to a sector/KOM
-
-### Content References to Update
-
-Hardcoded distance references in the codebase:
-
-| Location | Current | Needs Update |
-|----------|---------|--------------|
-| `index.astro` hero subtitle | "100 miles" | Already correct (updated in v3.0) |
-| `BaseLayout.astro` meta description | "100 miles" | Already correct |
-| Elevation chart x-axis | `max: 100` | Already correct |
-| Route stats display | Dynamic from `routeMeta` | Auto-updates |
-| PROJECT.md | "100-mile" | Already correct |
-
-The main content references appear to already say "100 miles" from earlier updates. The actual route data will change when the GPX file is swapped.
-
-### Table Stakes vs Differentiator
-
-| Aspect | Category | Notes |
-|--------|----------|-------|
-| Route data matches actual event route | **TABLE STAKES** | Inaccurate route data destroys site credibility |
-| Pipeline auto-regeneration | **TABLE STAKES** | Already built; ensures consistency |
-| Manual verification of sector/KOM positions | **TABLE STAKES** | Pipeline can't verify semantic correctness |
-| New photos integrated | **TABLE STAKES** | Fresh content for updated route |
-
-### Anti-Features
-
-| Anti-Feature | Why Avoid |
-|--------------|-----------|
-| Manually editing route-data.json | The pipeline exists for a reason; manual edits bypass validation |
-| Skipping sector position verification | Shifted mile markers = wrong sector annotations on map |
-| Deploying without visual QA | Route shape changes could cause unexpected map rendering |
-
-### Complexity: **MEDIUM**
-
-The GPX swap itself is trivial, but the cascade of verification work is significant:
-- Sector and KOM mile-marker verification (6 sectors + 3 KOMs)
-- Photo mile-marker positions (53 photos)
-- Visual QA of map rendering with new route
-- Two new photos through the pipeline
-
-The pipeline handles the mechanical work, but human verification is needed for semantic correctness.
-
-Dependencies on existing features:
-- Prebuild pipeline scripts (built in v1.0, refined in v2.0)
-- annotations.json sector/KOM data
-- photos.json positioning data
-
-### Confidence: MEDIUM
-
-Pipeline reliability is HIGH (proven across v1-v3). But the **new GPX file is not yet available** (per memory: "awaiting updated GPX from Strava before Phase 1 verification can pass"). This is a blocking external dependency.
-
----
-
-## Feature Dependency Map (v4.0)
-
-```
-GPX Route Update (Feature 7) — BLOCKING DEPENDENCY: new GPX file from Strava
-  |
-  +-- triggers pipeline re-run
-  |     +-- regenerates route-data.json (distances, elevation)
-  |     +-- regenerates annotations.json (sector/KOM track arrays)
-  |     +-- regenerates photos.json (mile markers shift)
-  |
-  +-- requires manual verification of sector/KOM positions
-  +-- requires visual QA
-
-Map Reset Button (Feature 1) — INDEPENDENT
-  +-- depends on: map init bounds (will update with new GPX automatically)
-  +-- depends on: CustomEvent bus (exists)
-
-Photo Lightbox from Map (Feature 2) — INDEPENDENT
-  +-- depends on: PhotoSwipe initialized (exists)
-  +-- depends on: photos.json (shared data source)
-  +-- depends on: CustomEvent bus (exists)
-
-Larger Zoom Controls (Feature 3) — INDEPENDENT
-  +-- depends on: global.css Leaflet overrides (exists)
-
-Card Layout Equalization (Feature 4) — INDEPENDENT
-  +-- depends on: grid layout in index.astro (exists)
-
-Grinduro Format Explainer (Feature 5) — INDEPENDENT
-  +-- depends on: #sectors section in index.astro (exists)
-
-Penrose Header Triangle (Feature 6) — INDEPENDENT
-  +-- depends on: hero section in index.astro (exists)
-  +-- depends on: Penrose SVG from favicon (exists, v3.0)
-```
-
-**All features except Feature 7 (GPX update) are fully independent and can be built in any order.** Feature 7 has an external dependency (new GPX file) and should be scheduled first if the file is available, or deferred if not.
+## Feature Prioritization Matrix
+
+| Feature | User Value | Implementation Cost | Priority | Phase |
+|---------|------------|---------------------|----------|-------|
+| Strava segment links on cards | HIGH | LOW | P1 | Pre-event |
+| Scoring explainer | HIGH | LOW | P1 | Pre-event |
+| "Powered by Strava" attribution | REQUIRED | LOW | P1 | Pre-event |
+| OAuth submission flow | HIGH | HIGH | P1 | Post-event |
+| Activity data extraction | HIGH | HIGH | P1 | Post-event |
+| Submission form + consent | HIGH | MEDIUM | P1 | Post-event |
+| Results page (gravel + KOM leaderboards) | HIGH | MEDIUM | P1 | Post-event |
+| Gender self-selection | HIGH | LOW | P1 | Post-event |
+| Results JSON committed to repo | MEDIUM | LOW | P1 | Post-event |
+| Per-segment leaderboards | MEDIUM | LOW | P2 | Post-event |
+| Individual rider result card | MEDIUM | LOW | P2 | Post-event |
+| Build-time KOM/QOM holder display | MEDIUM | MEDIUM | P2 | Pre-event |
+| Brutalist results page styling | MEDIUM | MEDIUM | P2 | Post-event |
 
 ---
 
 ## Phase Ordering Recommendation
 
-**Phase 1: GPX Route Update** (if GPX available)
-- Swap GPX file, run pipeline, verify all sector/KOM/photo positions
-- Process two new photos
-- Rationale: All other features render on top of the route data; get the foundation right first
+**Phase 1: Pre-Event Card Enhancements** (independent, ship immediately)
+- Strava segment links on all 9 sector/KOM cards
+- Scoring explainer update (expand GrinduroExplainer)
+- "Powered by Strava" attribution
+- Rationale: Zero API dependency, immediate value for riders exploring the site
 
-**Phase 2: Quick UX Wins** (parallel-safe)
-- Larger zoom controls (Feature 3) — 5 minutes, CSS only
-- Grinduro format explainer (Feature 5) — 15 minutes, HTML only
-- Penrose header triangle (Feature 6) — 20 minutes, SVG + CSS
-- Card layout equalization (Feature 4) — 10 minutes, CSS only
-- Rationale: All are low-complexity, zero-dependency, high-visibility improvements
+**Phase 2: Strava API Foundation** (prerequisite for all API features)
+- Register Strava API application
+- Implement OAuth flow (2 Netlify Functions)
+- Activity data extraction + segment matching
+- Rationale: Backend foundation; must work before submission UI can be built
 
-**Phase 3: Map Reset Button** (Feature 1)
-- CustomEvent integration with both map and elevation chart
-- Rationale: Simple but touches two components; test after route data is finalized
+**Phase 3: Submission Flow** (rider-facing, post-event)
+- Submission page with OAuth trigger
+- Activity selection / URL input
+- Segment time review display
+- Gender category selection
+- Consent checkbox + submission
+- Rationale: The user-facing submission experience
 
-**Phase 4: Photo Lightbox from Map** (Feature 2)
-- Most architecturally complex feature: bridges RouteMap and PhotoGallery
-- Rationale: Needs photo index consistency, which depends on finalized photos.json
+**Phase 4: Results Page** (the deliverable)
+- Results JSON schema + sample data
+- Gravel Champion leaderboard
+- KOM/QOM Champion leaderboard
+- Per-segment leaderboards
+- Brutalist results page design
+- Rationale: Display layer depends on data layer being complete
+
+**Optional Phase: Build-time KOM/QOM Display**
+- Prebuild script fetching segment data via Strava API
+- KOM/QOM time display on cards
+- Rationale: Nice pre-event enhancement but requires API testing; lower priority than core results flow
 
 ---
 
-## MVP Recommendation
+## Competitor/Reference Feature Analysis
 
-All seven features are scoped for v4.0 and all should ship. None are deferrable — they represent the minimum bar for the route update milestone.
-
-Priority if time-constrained:
-1. GPX route update (Feature 7) — **must ship** (route accuracy is existential)
-2. Photo lightbox from map (Feature 2) — **must ship** (new-tab behavior is a UX bug)
-3. Map reset button (Feature 1) — **must ship** (no way to recover from zoom is broken UX)
-4. Grinduro explainer (Feature 5) — **should ship** (format confusion hurts registration)
-5. Card equalization (Feature 4) — **should ship** (visual polish)
-6. Zoom controls (Feature 3) — **should ship** (accessibility)
-7. Penrose header (Feature 6) — **nice to have** (brand polish)
+| Feature | Grinduro (Synergy Timing) | Grassroots Gravel (Athlinks) | GRVL Events | MK Ultra Approach |
+|---------|---------------------------|------------------------------|-------------|-------------------|
+| Results hosting | External timing platform | Athlinks third-party | No results on site | Built into site (JSON + static) |
+| Scoring | Cumulative time, 4 segments | Overall time | N/A | Dual: cumulative time + KOM points |
+| Gender categories | M/F/Open Gender/Para | M/F | N/A | Men/Women/Non-Binary |
+| Timing method | Physical timing chips | Physical timing | N/A | Strava segment efforts (self-reported) |
+| Strava integration | None (external timing) | None | Clubs + route embeds only | OAuth submission + segment extraction |
+| Per-segment display | Yes (rank + time per segment) | No | No | Yes (matching Grinduro pattern) |
+| Results page design | Generic timing platform | Generic Athlinks | N/A | Brutalist, matching site identity |
 
 ---
 
@@ -720,35 +435,51 @@ Priority if time-constrained:
 
 | Finding | Confidence | Source |
 |---------|------------|--------|
-| Leaflet fitBounds for map reset | HIGH | Leaflet official docs |
-| PhotoSwipe loadAndOpen(index) API | HIGH | PhotoSwipe official docs (photoswipe.com/methods/) |
-| CustomEvent bus for cross-component communication | HIGH | Proven in existing codebase (v2.0+) |
-| WCAG 2.5.5 44x44px touch target for zoom | HIGH | W3C WCAG 2.1 official spec |
-| CSS Grid auto-equalization of card heights | HIGH | MDN, CSS-Tricks, ModernCSS.dev |
-| Grinduro format description and language | HIGH | Direct fetch of grinduro.com/about/ and grinduro.com/california/ |
-| Penrose SVG rotation is compositor-safe | HIGH | Standard CSS transform animation; same pattern as Escher drift |
-| GPX pipeline regeneration reliability | HIGH | Proven across v1-v3 (3 milestone cycles) |
-| New GPX file availability | LOW | External dependency; "awaiting updated GPX from Strava" per memory |
-| Photo index consistency between components | MEDIUM | Both load from photos.json; ordering verified by inspection but not tested across lightbox trigger |
+| Strava API Agreement prohibits displaying user data to others | HIGH | [Strava API Agreement](https://www.strava.com/legal/api), [DCRainmaker](https://www.dcrainmaker.com/2024/11/stravas-changes-to-kill-off-apps.html) |
+| Consent-based submission is the viable workaround | MEDIUM | [VeloViewer precedent](https://blog.veloviewer.com/opting-in-to-leaderboards-and-other-things-gdpr/), logical reading of TOS |
+| OAuth flow: authorize -> code -> token exchange | HIGH | [Strava Authentication docs](https://developers.strava.com/docs/authentication/) |
+| `activity:read` scope returns segment_efforts | HIGH | [Strava API Reference](https://developers.strava.com/docs/reference/) |
+| segment_effort contains elapsed_time, segment.id | HIGH | [Strava Segment Efforts V3](https://strava.github.io/api/v3/efforts/) |
+| Strava `sex` field: only M/F/null, no non-binary | HIGH | [Strava developer discussion](https://groups.google.com/g/strava-api/c/_Ox4pgfiuas) |
+| Rate limits: 200/15min, 2000/day | HIGH | [Strava Rate Limits](https://developers.strava.com/docs/rate-limits/) |
+| Segment leaderboard endpoint removed (2020) | HIGH | [Strava Segment Changes](https://developers.strava.com/docs/segment-changes/) |
+| `getSegmentById` returns `xoms` with KOM/QOM times | MEDIUM | [Strava Community Hub](https://communityhub.strava.com/developers-api-7/accessing-kom-qom-data-for-segment-1999) -- needs testing |
+| Grinduro scoring = cumulative time across timed segments | HIGH | [Grinduro About](https://grinduro.com/about/), [Synergy Race Timing](https://www.synergyracetiming.com/grinduro/) |
+| Grinduro results format: Place, Name, per-segment Rank+Time, Total | HIGH | [Synergy Race Timing 2017](https://www.synergyracetiming.com/2017-grinduro/) |
+| Grinduro gender categories include "Open Gender" | HIGH | [Grinduro Race Categories](https://grinduro.com/about/race-categories/) |
+| Netlify Functions can handle OAuth flows | HIGH | [Netlify serverless OAuth blog](https://www.netlify.com/blog/2018/07/30/how-to-setup-serverless-oauth-flows-with-netlify-functions-and-intercom/) |
+| Strava brand guidelines: "Powered by Strava" + "View on Strava" | HIGH | [Strava Brand Guidelines](https://developers.strava.com/guidelines/) |
 
 ---
 
 ## Sources
 
-- [Leaflet.zoomhome — GitHub](https://github.com/torfsen/leaflet.zoomhome)
-- [Leaflet.ResetView — GitHub](https://github.com/drustack/Leaflet.ResetView)
-- [Leaflet issue #2498 — Reset view control](https://github.com/Leaflet/Leaflet/issues/2498)
-- [PhotoSwipe Methods — photoswipe.com](https://photoswipe.com/methods/)
-- [PhotoSwipe Data Sources — photoswipe.com](https://photoswipe.com/data-sources/)
-- [Leaflet-PhotoSwipe integration — DEV Community](https://dev.to/trincadev/from-leaflet-popup-marker-to-photo-gallery-image-and-back-2f6k)
-- [WCAG 2.5.5 Target Size — W3C](https://www.w3.org/WAI/WCAG21/Understanding/target-size.html)
-- [WCAG 2.5.8 Target Size Minimum — AllAccessible](https://www.allaccessible.org/blog/wcag-258-target-size-minimum-implementation-guide)
-- [Equal Height Elements: Flexbox vs Grid — ModernCSS.dev](https://moderncss.dev/equal-height-elements-flexbox-vs-grid/)
-- [CSS Grid Best Practices — MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Grid_layout/Common_grid_layouts)
-- [Grinduro About Page — grinduro.com](https://grinduro.com/about/)
-- [Grinduro California — grinduro.com](https://grinduro.com/california/)
-- [Leaflet Custom Icons — leafletjs.com](https://leafletjs.com/examples/custom-icons/)
-- [L.DivIcon reference — leafletjs.com](https://leafletjs.com/reference.html#divicon)
-- [Extending Leaflet Controls — leafletjs.com](https://leafletjs.com/examples/extending/extending-3-controls.html)
-- [RideWithGPS Elevation Profile — support.ridewithgps.com](https://support.ridewithgps.com/hc/en-us/articles/4419005868315-The-Elevation-Profile-on-Web)
-- [Leaflet Zoom Control CSS — Google Groups](https://groups.google.com/g/leaflet-js/c/smRL1O8PCuY)
+### Strava API & Legal
+- [Strava API v3 Reference](https://developers.strava.com/docs/reference/)
+- [Strava Authentication Documentation](https://developers.strava.com/docs/authentication/)
+- [Strava API Agreement (Legal)](https://www.strava.com/legal/api)
+- [Strava API Agreement Update Announcement](https://press.strava.com/articles/updates-to-stravas-api-agreement)
+- [Strava Rate Limits](https://developers.strava.com/docs/rate-limits/)
+- [Strava Segment Changes (2020)](https://developers.strava.com/docs/segment-changes/)
+- [Strava Brand Guidelines](https://developers.strava.com/guidelines/)
+- [Strava Segment Efforts V3 (legacy docs)](https://strava.github.io/api/v3/efforts/)
+- [Strava Gender Settings](https://support.strava.com/hc/en-us/articles/4424254689805-Gender-Settings-and-Leaderboard-Filters)
+- [Strava Community: Accessing KOM/QOM Data](https://communityhub.strava.com/developers-api-7/accessing-kom-qom-data-for-segment-1999)
+
+### Grinduro & Race Timing
+- [Grinduro About Page](https://grinduro.com/about/)
+- [Grinduro Race Categories](https://grinduro.com/about/race-categories/)
+- [Grinduro Race Results](https://grinduro.com/get-stoked/race-results/)
+- [Synergy Race Timing - Grinduro](https://www.synergyracetiming.com/grinduro/)
+- [Synergy Race Timing - 2017 Grinduro Results](https://www.synergyracetiming.com/2017-grinduro/)
+
+### Industry Analysis
+- [DCRainmaker: Strava's API Changes](https://www.dcrainmaker.com/2024/11/stravas-changes-to-kill-off-apps.html)
+- [VeloViewer: Opting-in to Leaderboards (GDPR)](https://blog.veloviewer.com/opting-in-to-leaderboards-and-other-things-gdpr/)
+- [GRVL Events Strava Case Study](https://partners.strava.com/case-studies/grvl-events-building-community-through-gravel-biking-events)
+- [RaceNation: Submit Results Through Strava](https://support.race-nation.com/article/186-how-to-submit-results-through-strava)
+- [Netlify: Serverless OAuth Flows](https://www.netlify.com/blog/2018/07/30/how-to-setup-serverless-oauth-flows-with-netlify-functions-and-intercom/)
+
+---
+*Feature research for: MK Ultra Gravel v5.0 -- Strava Integration + Results*
+*Researched: 2026-03-30*
