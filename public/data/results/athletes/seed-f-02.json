@@ -1,0 +1,36 @@
+{
+  "athleteId": "41738370",
+  "name": "Emily Copper",
+  "gender": "F",
+  "activityUrl": "https://www.strava.com/activities/12387100022",
+  "submittedAt": "2026-06-07T15:33:00Z",
+  "segments": {
+    "6809754": {
+      "elapsed_time": 1369
+    },
+    "16438243": {
+      "elapsed_time": 908
+    },
+    "24479270": {
+      "elapsed_time": 475
+    },
+    "24479292": {
+      "elapsed_time": 1594
+    },
+    "24479426": {
+      "elapsed_time": 1911
+    },
+    "24479467": {
+      "elapsed_time": 1165
+    },
+    "24479496": {
+      "elapsed_time": 2172
+    },
+    "34573011": {
+      "elapsed_time": 1704
+    },
+    "41126651": {
+      "elapsed_time": 590
+    }
+  }
+}

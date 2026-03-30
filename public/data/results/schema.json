@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MK Ultra Gravel Athlete Result",
+  "description": "Per-athlete result file committed via GitHub API after Strava activity submission",
+  "type": "object",
+  "required": ["athleteId", "name", "gender", "activityUrl", "submittedAt", "segments"],
+  "additionalProperties": false,
+  "properties": {
+    "athleteId": {
+      "type": "string",
+      "description": "Strava athlete ID (string, not integer, to avoid JSON precision issues)"
+    },
+    "name": {
+      "type": "string",
+      "description": "Athlete display name (first + last from Strava profile)"
+    },
+    "gender": {
+      "type": "string",
+      "enum": ["M", "F", "NB"],
+      "description": "Self-reported gender category (from submission form, not Strava profile)"
+    },
+    "activityUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "Full Strava activity URL"
+    },
+    "submittedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of submission"
+    },
+    "segments": {
+      "type": "object",
+      "description": "Segment efforts keyed by Strava segment ID (string). Only segments with matching efforts are included.",
+      "patternProperties": {
+        "^[0-9]+$": {
+          "type": "object",
+          "required": ["elapsed_time"],
+          "additionalProperties": false,
+          "properties": {
+            "elapsed_time": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Elapsed time in seconds from Strava segment_effort"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

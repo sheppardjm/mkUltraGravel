@@ -1,0 +1,36 @@
+{
+  "athleteId": "74675626",
+  "name": "Ben Houghton",
+  "gender": "M",
+  "activityUrl": "https://www.strava.com/activities/12244853519",
+  "submittedAt": "2026-06-07T16:12:00Z",
+  "segments": {
+    "6809754": {
+      "elapsed_time": 1448
+    },
+    "16438243": {
+      "elapsed_time": 1038
+    },
+    "24479270": {
+      "elapsed_time": 551
+    },
+    "24479292": {
+      "elapsed_time": 1779
+    },
+    "24479426": {
+      "elapsed_time": 1964
+    },
+    "24479467": {
+      "elapsed_time": 1235
+    },
+    "24479496": {
+      "elapsed_time": 2196
+    },
+    "34573011": {
+      "elapsed_time": 1745
+    },
+    "41126651": {
+      "elapsed_time": 670
+    }
+  }
+}

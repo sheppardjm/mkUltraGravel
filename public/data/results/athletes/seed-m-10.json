@@ -1,0 +1,36 @@
+{
+  "athleteId": "64320199",
+  "name": "Eric Negaunee",
+  "gender": "M",
+  "activityUrl": "https://www.strava.com/activities/12486948793",
+  "submittedAt": "2026-06-07T14:15:00Z",
+  "segments": {
+    "6809754": {
+      "elapsed_time": 1943
+    },
+    "16438243": {
+      "elapsed_time": 1250
+    },
+    "24479270": {
+      "elapsed_time": 669
+    },
+    "24479292": {
+      "elapsed_time": 1866
+    },
+    "24479426": {
+      "elapsed_time": 2295
+    },
+    "24479467": {
+      "elapsed_time": 1540
+    },
+    "24479496": {
+      "elapsed_time": 2920
+    },
+    "34573011": {
+      "elapsed_time": 1992
+    },
+    "41126651": {
+      "elapsed_time": 789
+    }
+  }
+}

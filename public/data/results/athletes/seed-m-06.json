@@ -1,0 +1,36 @@
+{
+  "athleteId": "92936231",
+  "name": "Ryan Koivisto",
+  "gender": "M",
+  "activityUrl": "https://www.strava.com/activities/12188706803",
+  "submittedAt": "2026-06-07T18:29:00Z",
+  "segments": {
+    "6809754": {
+      "elapsed_time": 1636
+    },
+    "16438243": {
+      "elapsed_time": 1067
+    },
+    "24479270": {
+      "elapsed_time": 526
+    },
+    "24479292": {
+      "elapsed_time": 1836
+    },
+    "24479426": {
+      "elapsed_time": 2077
+    },
+    "24479467": {
+      "elapsed_time": 1447
+    },
+    "24479496": {
+      "elapsed_time": 2374
+    },
+    "34573011": {
+      "elapsed_time": 1753
+    },
+    "41126651": {
+      "elapsed_time": 671
+    }
+  }
+}

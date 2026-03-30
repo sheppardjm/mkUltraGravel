@@ -1,0 +1,36 @@
+{
+  "athleteId": "77233353",
+  "name": "Nate Heikkinen",
+  "gender": "M",
+  "activityUrl": "https://www.strava.com/activities/12822391352",
+  "submittedAt": "2026-06-07T16:50:00Z",
+  "segments": {
+    "6809754": {
+      "elapsed_time": 1809
+    },
+    "16438243": {
+      "elapsed_time": 1071
+    },
+    "24479270": {
+      "elapsed_time": 561
+    },
+    "24479292": {
+      "elapsed_time": 1829
+    },
+    "24479426": {
+      "elapsed_time": 2059
+    },
+    "24479467": {
+      "elapsed_time": 1380
+    },
+    "24479496": {
+      "elapsed_time": 2725
+    },
+    "34573011": {
+      "elapsed_time": 2124
+    },
+    "41126651": {
+      "elapsed_time": 727
+    }
+  }
+}
