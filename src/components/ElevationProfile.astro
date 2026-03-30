@@ -31,6 +31,8 @@
 </style>
 
 <script>
+  import { starColors } from '../lib/starColors';
+
   // IntersectionObserver-based lazy init — Chart.js + route-data only load when chart scrolls into view.
   // Defers 70KB (chart.js) + 44KB (route-data.json) off the LCP critical path.
   async function initElevation() {
@@ -54,15 +56,6 @@
     x: pt.mi,
     y: pt.ele
   }));
-
-  // Sector band color scale — matches map's starColors
-  const starColors: Record<number, string> = {
-    1: '#f0c040',
-    2: '#e8962a',
-    3: '#d9641e',
-    4: '#c93a18',
-    5: '#b71c1c'
-  };
 
   // Build sector band annotation boxes from annotations.json sectors
   const annotationBoxes: Record<string, object> = {};

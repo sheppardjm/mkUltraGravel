@@ -13,13 +13,7 @@ const sectors = annotations.sectors as Array<{
   stravaSegmentId?: number;
 }>;
 
-const starColors: Record<number, string> = {
-  1: "#f0c040",
-  2: "#e8962a",
-  3: "#d9641e",
-  4: "#c93a18",
-  5: "#b71c1c",
-};
+import { starColors } from '../lib/starColors';
 ---
 
 <div class="space-y-4">

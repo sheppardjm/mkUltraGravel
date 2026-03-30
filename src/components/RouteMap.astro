@@ -38,6 +38,8 @@
 </style>
 
 <script>
+  import { starColors } from '../lib/starColors';
+
   // IntersectionObserver-based lazy init — Leaflet + route-data only load when map scrolls into view.
   // This defers 44KB (leaflet) + 44KB (route-data.json) + 10KB (plugins) off the LCP critical path.
   // rootMargin: '200px' starts loading slightly before the map is visible for a smooth experience.
@@ -124,15 +126,6 @@
   // Capture initial bounds for reset — must be stored before any user interaction
   const initialBounds = routeLine.getBounds();
   const initialPadding = [20, 20];
-
-  // Star-rating color scale — brutalist palette
-  const starColors: Record<number, string> = {
-    1: '#f0c040',   // yellow — light gravel
-    2: '#e8962a',   // gold-orange — moderate
-    3: '#d9641e',   // burnt orange — getting rough
-    4: '#c93a18',   // red-orange — hard
-    5: '#b71c1c'    // deep red — brutal
-  };
 
   // Render gravel sector overlays
   const sectorBadges = L.layerGroup();
