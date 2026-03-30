@@ -76,10 +76,10 @@ Phases 27-32 delivered: Strava segment links on all 9 cards, scoring engine (Gra
   3. 2-star and 3-star sector bands on the elevation chart are visually identical in color to their corresponding sector cards
   4. No inline `starColors` literal objects remain in `RouteMap.astro`, `ElevationProfile.astro`, or `GravelSectors.astro`
 
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 33-01: Extract starColors to src/lib/colors.js and update all three consumers
+- [ ] 33-01: Extract starColors to src/lib/starColors.ts and update all three consumers
 
 ---
 
