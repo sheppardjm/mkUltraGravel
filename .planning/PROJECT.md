@@ -95,7 +95,15 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ### Active
 
-(No active milestone — run `/gsd:new-milestone` to start next)
+## Current Milestone: v6.0 UI Polish + Dev Tools
+
+**Goal:** Fix color inconsistencies, add site navigation, label sectors on elevation profile, and build a local KOM/QOM time input tool.
+
+**Target features:**
+- Sector color consistency — map polylines + elevation bands match card colors (2-star, 3-star)
+- Site navigation — header nav for Home, Results, Submission pages
+- Sector labels on elevation profile — star ratings + names at bottom of chart, staggered
+- KOM/QOM time input tool — local dev script for entering segment times
 
 ### Out of Scope
 
@@ -180,4 +188,4 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | CSRF cookie double-submit pattern | Prevents OAuth state replay attacks | Good |
 
 ---
-*Last updated: 2026-03-30 after v5.0 milestone complete*
+*Last updated: 2026-03-30 after v6.0 milestone started*

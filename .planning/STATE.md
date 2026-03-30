@@ -5,15 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** Planning next milestone
+**Current focus:** v6.0 UI Polish + Dev Tools
 
 ## Current Position
 
-Milestone: v5.0 complete — ready for next milestone
-Phase: N/A
-Plan: N/A
-Status: Ready to plan
-Last activity: 2026-03-30 — v5.0 milestone archived
+Milestone: v6.0 UI Polish + Dev Tools
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-30 — Milestone v6.0 started
 
 Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0: 10 plans | Total: 68 plans shipped
 
@@ -47,5 +47,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-30
-Stopped at: v5.0 milestone complete — archived to milestones/
+Stopped at: Defining v6.0 requirements
 Resume file: None
