@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A website for MK Ultra Gravel — a 100-mile gravel cycling event through Marquette County, Michigan on June 7, 2026. Named after the CIA's infamous LSD experiments, the ride features rowdy, technical gravel sectors rated Paris-Roubaix style (1-5 stars) with timed Grinduro-style sectors and KOM/QOM segments. The site showcases the route with an interactive map synced to an elevation profile, photo-rich sector and KOM cards, a full gallery, brutalist animations, and event details — driving registration through BikeReg.
+A website for MK Ultra Gravel — a 100-mile gravel cycling event through Marquette County, Michigan on June 7, 2026. Named after the CIA's infamous LSD experiments, the ride features rowdy, technical gravel sectors rated Paris-Roubaix style (1-5 stars) with timed Grinduro-style sectors and KOM/QOM segments. The site showcases the route with an interactive map synced to an elevation profile, 55 geo-located photos with thumbnail markers and lightbox, photo-rich sector and KOM cards, a Grinduro format explainer, a full gallery, brutalist animations with Penrose triangle hero and Escher tessellation background, and event details — driving registration through BikeReg.
 
 Live at: https://mkultragravel.netlify.app/
 
@@ -62,22 +62,22 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 - CONT-05: All GLRC/Great Lakes Recovery Centers mentions clickable donation links — v3.0
 - VIS-14: Escher tessellation background with drift animation and reduced-motion gate — v3.0
 - VIS-15: Penrose triangle SVG favicon — v3.0
+- ROUTE-04: 100mi GPX replaces 80mi + pipeline regeneration — v4.0
+- ROUTE-05: All "80 mile" references updated to "100 miles" — v4.0
+- ROUTE-06: Sector and KOM mile markers verified against 100mi track — v4.0
+- PHOTO-01: Down Jeep photo integrated at mi 83.8 — v4.0
+- PHOTO-02: Billie Helmer B&W AVIF photo integrated at mi 22.1 — v4.0
+- MAP-09: Map reset button as custom Leaflet control — v4.0
+- MAP-10: Map zoom controls enlarged to 52px touch targets — v4.0
+- MAP-11: Photo markers display 48px thumbnail divIcons — v4.0
+- MAP-12: Photo marker click opens PhotoSwipe lightbox with swipe navigation — v4.0
+- LAYOUT-01: Gravel sector cards match KOM cards via h-[180px] — v4.0
+- LAYOUT-02: Penrose triangle SVG hero with 20s rotation animation — v4.0
+- CONT-06: Grinduro format explainer above sector cards — v4.0
 
 ### Active
 
-**Current Milestone: v4.0 — Route Update + UX Overhaul**
-
-**Goal:** Update to the 100mi route, add new photos, improve map/gallery UX, refine card layout and content, and add header Penrose triangle.
-
-**Target features:**
-- 100mi GPX route replacement + data pipeline re-run + reference updates
-- Two new photos (Down Jeep + Billie Helmer B&W) processed through pipeline
-- Map reset button below map (resets map + elevation to default view)
-- Photo map thumbnails larger + lightbox on click (replace new-tab behavior)
-- Gravel sector cards resized to match KOM cards
-- Grinduro-style event format explainer in sector section
-- Larger map zoom controls
-- Penrose triangle above page title with subtle animation
+(No active milestone — run `/gsd:new-milestone` to start next)
 
 ### Out of Scope
 
@@ -95,13 +95,15 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ## Context
 
-**Shipped v3.0** with ~2,703 LOC across Astro/CSS/JS source files and build scripts.
+**Shipped v4.0** with ~2,859 LOC across Astro/CSS/JS source files and build scripts.
 
 **Tech stack:** Astro 6, Tailwind v4, Leaflet 1.9.4, Chart.js, PhotoSwipe, sharp (thumbnails)
 
 **Deployment:** Netlify with git-triggered CI/CD from GitHub. Prebuild pipeline generates route-data.json, annotations.json, photos.json, thumbnails, card crops, and hero WebP on every deploy.
 
-**Performance:** Lighthouse mobile Performance 96, LCP 2.48s, CLS 0.054, TBT 0ms. All Core Web Vitals green. All animations compositor-safe (transform/opacity only). v3.0 Escher drift animation gated behind prefers-reduced-motion.
+**Performance:** Lighthouse mobile Performance 96, LCP 2.48s, CLS 0.054, TBT 0ms. All Core Web Vitals green. All animations compositor-safe (transform/opacity only). Escher drift and Penrose spin animations gated behind prefers-reduced-motion.
+
+**v4.0 shipped:** 100mi route replacement, 55 photos (AVIF support), photo lightbox from map, map reset control, 52px touch targets, card parity, Penrose hero, Grinduro explainer.
 
 **Event Details:**
 - Date: June 7, 2026
@@ -115,7 +117,7 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 - **Tech stack**: Static site — no backend needed, content is fixed
 - **External dependency**: BikeReg handles registration, site links out
-- **Assets**: GPX file (100mi route) and 55 route photos in repo; photos use manual mile-marker positioning (no EXIF GPS)
+- **Assets**: GPX file (100mi route) and 55 route photos in repo (1 AVIF, rest JPG); photos use manual mile-marker positioning (no EXIF GPS)
 - **Timeline**: Site needs to be live well before June 7, 2026
 
 ## Key Decisions
@@ -141,6 +143,13 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | Four `<rect>` in SVG tile, no `<use>` | Data URI can't resolve fragment identifiers | Good |
 | KOM annotations omit _baseColor | Isolates KOM from sector hover/click handlers | Good |
 | Hex fills in favicon SVG | oklch in SVG fill attribute has inconsistent browser support | Good |
+| Math.floor for distance display | 100.71 rounds to 101 with Math.round, wrong for "100 mile" event | Good |
+| Photo positioning at annotation midpoints | Guarantees Pass 1 card assignment in assign-card-photos.js | Good |
+| L.Control.extend for reset button | User feedback: reset belongs with map controls, not standalone | Good |
+| Programmatic PhotoSwipe (no gallery DOM) | Map markers have no DOM gallery; dataSource + loadAndOpen pattern | Good |
+| h-[180px] fixed image height | Decouples card image from container width; gravel col-span-2 was 2x taller | Good |
+| showHideAnimationType: 'fade' | No DOM anchor element to zoom from (lightbox opens programmatically) | Good |
+| .leaflet-bar a broadened selector | All map controls (zoom + reset) share unified dark theme | Good |
 
 ---
-*Last updated: 2026-03-29 after v4.0 milestone started*
+*Last updated: 2026-03-30 after v4.0 milestone*

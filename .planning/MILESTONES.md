@@ -1,5 +1,33 @@
 # Project Milestones: MK Ultra Gravel
 
+## v4.0 Route Update + UX Overhaul (Shipped: 2026-03-30)
+
+**Delivered:** Updated route from 80mi to 100mi with full pipeline re-run, added 2 new photos with AVIF support, and shipped 5 UX improvements — photo lightbox from map, map reset, enlarged controls, card layout parity, Penrose hero animation, and Grinduro format explainer.
+
+**Phases completed:** 22-26 (7 plans total)
+
+**Key accomplishments:**
+
+- Replaced 80mi GPX with 100mi route — full data pipeline re-run regenerating all JSON, annotations, and 55 photo positions
+- Added Down Jeep and Billie Helmer B&W photos with AVIF pipeline support, expanding gallery from 53 to 55
+- Photo map markers upgraded from cyan dots to 48px thumbnails with PhotoSwipe lightbox on click
+- Single-click map reset restores all state (bounds, highlights, popups, crosshair, elevation bands)
+- Penrose triangle hero SVG with 20s rotation animation; Grinduro format explainer above sector cards
+- Map controls enlarged to 52px, card heights equalized between gravel sectors and KOM segments
+
+**Stats:**
+
+- 41 files modified
+- ~2,859 lines of code (Astro/CSS/JS)
+- 5 phases, 7 plans, ~15 tasks
+- 4 days (2026-03-26 → 2026-03-30)
+
+**Git range:** `f03aea5` → `f29fccb`
+
+**What's next:** TBD — next milestone planning via `/gsd:new-milestone`
+
+---
+
 ## v3.0 Escher Identity + Data Fixes + UX Polish (Shipped: 2026-03-29)
 
 **Delivered:** Refined visual identity with Escher tessellation background, Penrose triangle favicon, yellow-to-red sector spectrum, corrected photo positions, bike icon crosshair, and KOM elevation bands — all 7 requirements shipped with zero new dependencies and TBT 0ms maintained.
