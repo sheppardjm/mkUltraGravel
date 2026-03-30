@@ -22,8 +22,8 @@ Requirements for v4.0 — Route Update + UX Overhaul. Each maps to roadmap phase
 
 - [x] **MAP-09**: Reset button below map returns map to default bounds and clears all active state (highlights, crosshair, popups, elevation bands)
 - [x] **MAP-10**: Map zoom controls enlarged to 44x44px minimum touch targets
-- [ ] **MAP-11**: Photo markers on map display larger thumbnails
-- [ ] **MAP-12**: Clicking a photo marker opens PhotoSwipe lightbox at that photo with swipe navigation through all route photos
+- [x] **MAP-11**: Photo markers on map display larger thumbnails
+- [x] **MAP-12**: Clicking a photo marker opens PhotoSwipe lightbox at that photo with swipe navigation through all route photos
 
 ### Layout
 
@@ -62,8 +62,8 @@ Deferred to later milestones.
 | PHOTO-02 | Phase 23 | Complete |
 | MAP-09 | Phase 25 | Complete |
 | MAP-10 | Phase 24 | Complete |
-| MAP-11 | Phase 26 | Pending |
-| MAP-12 | Phase 26 | Pending |
+| MAP-11 | Phase 26 | Complete |
+| MAP-12 | Phase 26 | Complete |
 | LAYOUT-01 | Phase 24 | Complete |
 | LAYOUT-02 | Phase 24 | Complete |
 | CONT-06 | Phase 24 | Complete |
@@ -75,4 +75,4 @@ Deferred to later milestones.
 
 ---
 *Requirements defined: 2026-03-29*
-*Last updated: 2026-03-29 after Phase 25 completion*
+*Last updated: 2026-03-30 after Phase 26 completion*

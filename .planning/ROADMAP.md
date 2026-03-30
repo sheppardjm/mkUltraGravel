@@ -14,7 +14,7 @@ Update the route from 80mi to 100mi (cascading through the entire data pipeline)
 - [x] **Phase 23: New Photos** - Process Down Jeep + Billie Helmer B&W through pipeline
 - [x] **Phase 24: CSS + Layout + Content** - Zoom controls, card sizing, Penrose hero, Grinduro explainer
 - [x] **Phase 25: Map Reset** - Reset button restores map + elevation chart to default state
-- [ ] **Phase 26: Photo Lightbox from Map** - Larger thumbnails + PhotoSwipe lightbox from map markers
+- [x] **Phase 26: Photo Lightbox from Map** - Larger thumbnails + PhotoSwipe lightbox from map markers
 
 ## Phase Details
 
@@ -90,7 +90,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 26-01-PLAN.md -- Thumbnail photo markers + programmatic PhotoSwipe lightbox from map clicks
+- [x] 26-01-PLAN.md -- Thumbnail photo markers + programmatic PhotoSwipe lightbox from map clicks
 
 ---
 
@@ -105,7 +105,7 @@ Plans:
 | 23. New Photos | v4.0 | 1/1 | ✓ Complete | 2026-03-29 |
 | 24. CSS + Layout + Content | v4.0 | 2/2 | ✓ Complete | 2026-03-30 |
 | 25. Map Reset | v4.0 | 1/1 | ✓ Complete | 2026-03-29 |
-| 26. Photo Lightbox from Map | v4.0 | 0/1 | Not started | - |
+| 26. Photo Lightbox from Map | v4.0 | 1/1 | ✓ Complete | 2026-03-30 |
 
 ---
 
