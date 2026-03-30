@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v5.0 Phase 30 — Results Page + Leaderboards
+**Current focus:** v5.0 Phase 31 — Final phase
 
 ## Current Position
 
 Milestone: v5.0 — Strava Integration + Results
-Phase: 30 of 31 (Results Page + Leaderboards)
-Plan: 01 of 2 (complete)
-Status: In progress
-Last activity: 2026-03-30 — Completed 30-01-PLAN.md (/results page with leaderboards)
+Phase: 30 of 31 (Results Page + Leaderboards) — COMPLETE
+Plan: 02 of 2 (complete)
+Status: Phase complete
+Last activity: 2026-03-30 — Completed 30-02-PLAN.md (per-segment leaderboards for all 9 segments)
 
-Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0: ███████░░░ 70% (phases 27-30.01 complete)
+Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0: ████████░░ 80% (phases 27-30 complete)
 
 ## Performance Metrics
 
@@ -54,6 +54,11 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - existsSync guard before readdirSync — graceful empty state if athletes directory missing
 - /30 suffix on KOM points = 10pts × 3 climbs max per scoring engine design
 
+**30-02 key decisions:**
+- Combined genders per segment leaderboard (no tabs) — segment boards show cross-category performance; avoids 27 mini-boards
+- Max 10 entries per segment with "and X more" overflow — keeps page compact for large post-event fields
+- buildSegmentLeaderboard typed with any[] input — consistent with rest of results.astro frontmatter
+
 ### Pending Todos
 
 None.
@@ -67,6 +72,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-30T20:21:53Z
-Stopped at: Completed 30-01-PLAN.md — /results page with Gravel Champion + KOM/QOM leaderboards, gender tabs, seed data scoring
+Last session: 2026-03-30T20:29:42Z
+Stopped at: Completed 30-02-PLAN.md — per-segment leaderboards for all 9 segments on /results
 Resume file: None
