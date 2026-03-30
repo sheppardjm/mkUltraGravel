@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v4.0 Phase 26 — Photo Lightbox from Map — In progress
+**Current focus:** v4.0 complete — all planned phases delivered
 
 ## Current Position
 
-Milestone: v4.0 — Route Update + UX Overhaul
-Phase: 26 of 26 (Photo Lightbox from Map) — In progress
-Plan: 01 of 1 — paused at checkpoint:human-verify (Task 1 complete, awaiting visual verification)
-Status: Awaiting checkpoint approval
-Last activity: 2026-03-30 — Completed 26-01 Task 1 (thumbnail photo markers + PhotoSwipe lightbox)
+Milestone: v4.0 — Route Update + UX Overhaul — COMPLETE
+Phase: 26 of 26 (Photo Lightbox from Map) — Complete
+Plan: 01 of 1 — Complete
+Status: v4.0 milestone complete
+Last activity: 2026-03-30 — Completed 26-01 (thumbnail photo markers + PhotoSwipe lightbox, human-verify approved)
 
-Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: [████████░░] 80%
+Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: [██████████] 100%
 
 ## Performance Metrics
 
@@ -78,5 +78,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-30
-Stopped at: 26-01 Task 1 complete (cb89066) — paused at checkpoint:human-verify
+Stopped at: 26-01 complete (cb89066 task + docs commit) — v4.0 milestone complete
 Resume file: None

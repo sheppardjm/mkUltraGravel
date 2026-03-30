@@ -46,20 +46,20 @@ patterns-established:
   - "Programmatic PhotoSwipe: dataSource array + pswpModule: () => import('photoswipe') + lightbox.loadAndOpen(index)"
 
 # Metrics
-duration: 2min
+duration: ~2min
 completed: 2026-03-30
 ---
 
 # Phase 26 Plan 01: Photo Lightbox from Map Summary
 
-**48x48px thumbnail divIcon photo markers replacing cyan dots, wired to programmatic PhotoSwipe lightbox via loadAndOpen(index) for all 55 route photos**
+**48x48px thumbnail divIcon photo markers replacing cyan dots, wired to programmatic PhotoSwipe lightbox via loadAndOpen(index) for all 55 route photos — MAP-11 and MAP-12 complete**
 
 ## Performance
 
 - **Duration:** ~2 min
 - **Started:** 2026-03-30T01:07:33Z
 - **Completed:** 2026-03-30T01:09:04Z
-- **Tasks:** 1 of 2 (paused at checkpoint:human-verify)
+- **Tasks:** 2 of 2 (complete — human verification approved)
 - **Files modified:** 1
 
 ## Accomplishments
@@ -70,12 +70,14 @@ completed: 2026-03-30
 - Replaced photoMarkers creation with per-photo thumbnail divIcons (48x48px, cyan border)
 - Wired each photo marker click to `lightbox.loadAndOpen(index)`
 - Added `lightbox.pswp?.close()` as first action in map:reset handler
+- Human verification approved: thumbnail markers, lightbox navigation, and reset behavior all confirmed working
 
 ## Task Commits
 
 1. **Task 1: Replace photo dot markers with thumbnail divIcons** - `cb89066` (feat)
+2. **Task 2: Human verify thumbnail markers + lightbox** - checkpoint approved
 
-**Plan metadata:** pending (plan paused at checkpoint)
+**Plan metadata:** pending (see docs commit below)
 
 ## Files Created/Modified
 - `src/components/RouteMap.astro` - Thumbnail photo markers + programmatic PhotoSwipe lightbox integration
@@ -101,10 +103,10 @@ None - no external service configuration required.
 
 ## Next Phase Readiness
 
-- Task 1 committed (cb89066) — awaiting human verification (Task 2 checkpoint)
-- After approval: plan is complete, Phase 26 complete, v4.0 MAP-11 and MAP-12 requirements satisfied
-- No blockers for verification other than needing dev server running
+- Phase 26 complete — v4.0 MAP-11 and MAP-12 requirements satisfied
+- All v4.0 planned phases complete (Phases 19-26 delivered)
+- v4.0 milestone ready for final UAT pass (v4-UAT.md)
 
 ---
 *Phase: 26-photo-lightbox-from-map*
-*Completed: 2026-03-30 (pending checkpoint approval)*
+*Completed: 2026-03-30*
