@@ -11,9 +11,9 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 
 Milestone: v6.0 UI Polish + Dev Tools
 Phase: 33 of 35 (Color Consistency)
-Plan: —
-Status: Ready to plan
-Last activity: 2026-03-30 — v6.0 roadmap created (3 phases, 10 requirements mapped)
+Plan: 1 of 1 complete
+Status: Phase complete
+Last activity: 2026-03-30 — Completed 33-01-PLAN.md (color consistency)
 
 Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0: 10 plans | Total: 68 plans shipped
 
@@ -34,6 +34,7 @@ Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0
 Decisions are logged in PROJECT.md Key Decisions table.
 
 Recent decisions affecting current work:
+- **[Phase 33]**: starColors extracted to src/lib/starColors.ts — follow src/lib/ pattern for shared constants; import in both SSR frontmatter and browser script tags
 - **[Phase 34 planning]**: Choose between annotation label sub-object (Option A) vs CSS overlay strip (Option B) for sector labels — both fully researched; Option B recommended for Paris-Roubaix aesthetic fidelity, with Option A as fallback if y-axis offset alignment proves unreliable
 
 ### Pending Todos
@@ -49,5 +50,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-30
-Stopped at: v6.0 roadmap created — ready to plan Phase 33
+Stopped at: Completed 33-01-PLAN.md — Phase 33 (Color Consistency) complete
 Resume file: None
