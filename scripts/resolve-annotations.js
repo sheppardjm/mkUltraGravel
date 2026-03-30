@@ -116,12 +116,12 @@ function findPointsForSegment(routeData, startMi, lengthMi) {
 // ---------------------------------------------------------------------------
 
 const sectors = [
-  { name: "Sandstrom", startMi: 23.4, lengthMi: 5.89, stars: 3 },
-  { name: "Akkala Rd", startMi: 39.5, lengthMi: 1.42, stars: 3 },
-  { name: "Haavisto", startMi: 43.0, lengthMi: 1.38, stars: 4 },
-  { name: "Forest Service Rd", startMi: 50.7, lengthMi: 6.45, stars: 2 },
-  { name: "C4", startMi: 58.7, lengthMi: 5.65, stars: 5 },
-  { name: "Down Jeep", startMi: 83.55, lengthMi: 0.6, stars: 5 },
+  { name: "Sandstrom",         startMi: 23.4,  lengthMi: 5.89, stars: 3, stravaSegmentId: 24479292 },
+  { name: "Akkala Rd",         startMi: 39.5,  lengthMi: 1.42, stars: 3, stravaSegmentId: 24479426 },
+  { name: "Haavisto",          startMi: 43.0,  lengthMi: 1.38, stars: 4, stravaSegmentId: 24479467 },
+  { name: "Forest Service Rd", startMi: 50.7,  lengthMi: 6.45, stars: 2, stravaSegmentId: 24479496 },
+  { name: "C4",                startMi: 58.7,  lengthMi: 5.65, stars: 5, stravaSegmentId: 34573011 },
+  { name: "Down Jeep",         startMi: 83.55, lengthMi: 0.6,  stars: 5, stravaSegmentId: 6809754  },
 ];
 
 const koms = [
@@ -131,6 +131,9 @@ const koms = [
     lengthMi: 0.69,
     grade: 6.4,
     elevFt: 236,
+    stravaSegmentId: 24479270,
+    komTime: null,
+    qomTime: null,
   },
   {
     name: "Leaving Chatham",
@@ -138,6 +141,9 @@ const koms = [
     lengthMi: 0.38,
     grade: 4.1,
     elevFt: 72,
+    stravaSegmentId: 41126651,
+    komTime: null,
+    qomTime: null,
   },
   {
     name: "Silver Creek",
@@ -145,6 +151,9 @@ const koms = [
     lengthMi: 1.6,
     grade: 4.4,
     elevFt: 373,
+    stravaSegmentId: 16438243,
+    komTime: null,
+    qomTime: null,
   },
 ];
 

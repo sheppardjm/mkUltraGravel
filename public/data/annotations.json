@@ -5,6 +5,7 @@
       "startMi": 23.4,
       "lengthMi": 5.89,
       "stars": 3,
+      "stravaSegmentId": 24479292,
       "lat": 46.4535,
       "lon": -86.98483,
       "endLat": 46.39284,
@@ -607,15 +608,14 @@
           "lat": 46.39284,
           "lon": -86.91772
         }
-      ],
-      "coverPhoto": "ocbHm30HWGIBDMhMARec4eQ86L5Bw_yNG1Sa1NtkfW0-2048x1536.jpg",
-      "stravaSegmentId": 24479292
+      ]
     },
     {
       "name": "Akkala Rd",
       "startMi": 39.5,
       "lengthMi": 1.42,
       "stars": 3,
+      "stravaSegmentId": 24479426,
       "lat": 46.35566,
       "lon": -86.960327,
       "endLat": 46.369307,
@@ -730,15 +730,14 @@
           "lat": 46.369307,
           "lon": -86.969533
         }
-      ],
-      "coverPhoto": "4DLSgkj2_jeCh_vruEj0nt7HKrZNpDsRJlCFOWm69u8-1536x2048.jpg",
-      "stravaSegmentId": 24479426
+      ]
     },
     {
       "name": "Haavisto",
       "startMi": 43,
       "lengthMi": 1.38,
       "stars": 4,
+      "stravaSegmentId": 24479467,
       "lat": 46.369271,
       "lon": -87.013627,
       "endLat": 46.37649,
@@ -869,15 +868,14 @@
           "lat": 46.3765,
           "lon": -87.03143
         }
-      ],
-      "coverPhoto": "LpoxSYsBzxnVR1Z1bNDmCMY69nbZE3Wim8gzgExAqMs-1536x2048.jpg",
-      "stravaSegmentId": 24479467
+      ]
     },
     {
       "name": "Forest Service Rd",
       "startMi": 50.7,
       "lengthMi": 6.45,
       "stars": 2,
+      "stravaSegmentId": 24479496,
       "lat": 46.349825,
       "lon": -87.116245,
       "endLat": 46.40564,
@@ -1548,15 +1546,14 @@
           "lat": 46.40564,
           "lon": -87.17945
         }
-      ],
-      "coverPhoto": "OQ3xED3f5T_KBXMhgpt-LZGU-yhIu36wFcap6uUT_is-1536x2048.jpg",
-      "stravaSegmentId": 24479496
+      ]
     },
     {
       "name": "C4",
       "startMi": 58.7,
       "lengthMi": 5.65,
       "stars": 5,
+      "stravaSegmentId": 34573011,
       "lat": 46.40626,
       "lon": -87.21178,
       "endLat": 46.46105,
@@ -2179,15 +2176,14 @@
           "lat": 46.46105,
           "lon": -87.15581
         }
-      ],
-      "coverPhoto": "2hX2RzHWb2HBzkd1bc68hqeTn0zJuV_pMnXDyFDKZOM-1536x2048.jpg",
-      "stravaSegmentId": 34573011
+      ]
     },
     {
       "name": "Down Jeep",
       "startMi": 83.55,
       "lengthMi": 0.6,
       "stars": 5,
+      "stravaSegmentId": 6809754,
       "lat": 46.51077,
       "lon": -87.40228,
       "endLat": 46.51144,
@@ -2290,9 +2286,7 @@
           "lat": 46.51144,
           "lon": -87.39059
         }
-      ],
-      "coverPhoto": "68686675_2890293017652424_6952024628709556224_n.jpg",
-      "stravaSegmentId": 6809754
+      ]
     }
   ],
   "kom": [
@@ -2302,6 +2296,9 @@
       "lengthMi": 0.69,
       "grade": 6.4,
       "elevFt": 236,
+      "stravaSegmentId": 24479270,
+      "komTime": null,
+      "qomTime": null,
       "lat": 46.47066,
       "lon": -86.99709,
       "endLat": 46.46361,
@@ -2380,11 +2377,7 @@
           "lat": 46.46361,
           "lon": -86.990215
         }
-      ],
-      "coverPhoto": "photo-1675213442182-24e1c1671387.avif",
-      "stravaSegmentId": 24479270,
-      "komTime": null,
-      "qomTime": null
+      ]
     },
     {
       "name": "Leaving Chatham",
@@ -2392,6 +2385,9 @@
       "lengthMi": 0.38,
       "grade": 4.1,
       "elevFt": 72,
+      "stravaSegmentId": 41126651,
+      "komTime": null,
+      "qomTime": null,
       "lat": 46.35064,
       "lon": -86.92891,
       "endLat": 46.355366,
@@ -2434,11 +2430,7 @@
           "lat": 46.355366,
           "lon": -86.930208
         }
-      ],
-      "coverPhoto": "leaving-chatham-rock-river-rd.png",
-      "stravaSegmentId": 41126651,
-      "komTime": null,
-      "qomTime": null
+      ]
     },
     {
       "name": "Silver Creek",
@@ -2446,6 +2438,9 @@
       "lengthMi": 1.6,
       "grade": 4.4,
       "elevFt": 373,
+      "stravaSegmentId": 16438243,
+      "komTime": null,
+      "qomTime": null,
       "lat": 46.4802,
       "lon": -87.38521,
       "endLat": 46.48151,
@@ -2656,11 +2651,7 @@
           "lat": 46.48151,
           "lon": -87.41472
         }
-      ],
-      "coverPhoto": "aI8-qjgYasaaJ3Xu6RcqyaSk5EzCVwPbNGH1xn2PwFQ-1536x2048.jpg",
-      "stravaSegmentId": 16438243,
-      "komTime": null,
-      "qomTime": null
+      ]
     }
   ],
   "restock": [
