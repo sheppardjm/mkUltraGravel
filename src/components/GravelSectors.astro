@@ -10,6 +10,7 @@ const sectors = annotations.sectors as Array<{
   lengthMi: number;
   stars: number;
   coverPhoto?: string;
+  stravaSegmentId?: number;
 }>;
 
 const starColors: Record<number, string> = {
@@ -50,6 +51,21 @@ const starColors: Record<number, string> = {
             <span>Mile {sector.startMi}</span>
             <span>{sector.lengthMi.toFixed(1)} mi</span>
           </div>
+          {sector.stravaSegmentId && (
+            <a
+              href={`https://www.strava.com/segments/${sector.stravaSegmentId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-1 text-xs text-[#FC5200] hover:opacity-80 transition-opacity mt-2"
+              aria-label={`View ${sector.name} on Strava`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor"
+                   viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M6.731 0 2 9.125h2.788L6.73 5.497l1.93 3.628h2.766zm4.694 9.125-1.372 2.756L8.66 9.125H6.547L10.053 16l3.484-6.875z"/>
+              </svg>
+              View on Strava
+            </a>
+          )}
         </div>
       </div>
     </div>

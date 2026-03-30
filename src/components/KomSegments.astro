@@ -11,6 +11,9 @@ const kom = annotations.kom as Array<{
   grade: number;
   elevFt: number;
   coverPhoto?: string;
+  stravaSegmentId?: number;
+  komTime?: string | null;
+  qomTime?: string | null;
 }>;
 ---
 
@@ -37,6 +40,27 @@ const kom = annotations.kom as Array<{
             <span>{segment.grade}% grade</span>
             <span>{segment.elevFt} ft gain</span>
           </div>
+          {segment.stravaSegmentId && (
+            <a
+              href={`https://www.strava.com/segments/${segment.stravaSegmentId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-1 text-xs text-[#FC5200] hover:opacity-80 transition-opacity mt-2"
+              aria-label={`View ${segment.name} on Strava`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor"
+                   viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M6.731 0 2 9.125h2.788L6.73 5.497l1.93 3.628h2.766zm4.694 9.125-1.372 2.756L8.66 9.125H6.547L10.053 16l3.484-6.875z"/>
+              </svg>
+              View on Strava
+            </a>
+          )}
+          {(segment.komTime || segment.qomTime) && (
+            <div class="mt-2 pt-2 border-t border-border text-xs text-text-muted space-y-0.5">
+              {segment.komTime && <div>KOM <span class="text-accent-white">{segment.komTime}</span></div>}
+              {segment.qomTime && <div>QOM <span class="text-accent-white">{segment.qomTime}</span></div>}
+            </div>
+          )}
         </div>
       </div>
     </div>
