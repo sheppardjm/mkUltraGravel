@@ -5,26 +5,27 @@
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v5.0 Phase 28 — Scoring Engine + Results Schema
+**Current focus:** v5.0 Phase 29 — Strava OAuth + Activity Submission
 
 ## Current Position
 
 Milestone: v5.0 — Strava Integration + Results
-Phase: 28 of 31 (Scoring Engine + Results Schema)
-Plan: 2 of 2 complete
-Status: Phase complete
-Last activity: 2026-03-30 — Completed 28-02-PLAN.md (JSON schema, 23 seed files, validation script)
+Phase: 29 of 31 (Strava OAuth + Activity Submission)
+Plan: —
+Status: Ready to plan
+Last activity: 2026-03-30 — Phase 28 complete (2 plans, verified 4/4 must-haves)
 
-Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0: ██████░░░░ 60% (28-01, 28-02 complete)
+Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0: ████░░░░░░ 40% (phases 27-28 complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 60
+- Total plans completed: 62
 - v1.0: 30 plans across 10 phases (2 days)
 - v2.0: 15 plans across 6 phases (3 days)
 - v3.0: 6 plans across 5 phases (2 days)
 - v4.0: 7 plans across 5 phases (4 days)
+- v5.0: 4 plans across 2 phases (1 day, in progress)
 
 ## Accumulated Context
 
@@ -44,6 +45,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-30T18:18Z
-Stopped at: Completed 28-02-PLAN.md — JSON schema, 23 seed athlete files, validation script (npm run validate passes)
+Last session: 2026-03-30
+Stopped at: Phase 28 complete, ready to plan Phase 29
 Resume file: None

@@ -38,7 +38,10 @@ Plans:
   2. Given a set of athlete segment effort times, the scoring engine produces a correct KOM/QOM Champion leaderboard awarding 10-1 points to the top 10 per climb, ranked by total points, separated by gender
   3. Seed data files (per-athlete JSON) exist in the results directory with realistic test data covering all three gender categories and enough athletes to exercise top-10 scoring
   4. The results JSON schema stores only event-owned derived data (name, category, segment times), not raw Strava API fields
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [x] 28-01-PLAN.md — TDD scoring engine (vitest + computeGravelChampion + computeKomChampion)
+- [x] 28-02-PLAN.md — Results JSON schema + 23 seed athlete files + validation script
 
 ### Phase 29: Strava OAuth + Activity Submission
 
@@ -113,7 +116,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 27. Segment Links + Scoring Explainer | 2/2 | ✓ Complete | 2026-03-30 |
-| 28. Scoring Engine + Results Schema | 0/TBD | Not started | - |
+| 28. Scoring Engine + Results Schema | 2/2 | ✓ Complete | 2026-03-30 |
 | 29. Strava OAuth + Activity Submission | 0/TBD | Not started | - |
 | 30. Results Page + Leaderboards | 0/TBD | Not started | - |
 | 31. Deauthorization Webhook + Privacy | 0/TBD | Not started | - |
