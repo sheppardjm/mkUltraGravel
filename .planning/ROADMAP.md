@@ -103,8 +103,9 @@ Plans:
   3. The built site renders Strava segment links on all 9 sector/KOM cards
   4. The built site renders segment distance and average grade on all 9 cards
   5. The built site renders KOM and QOM times on the 3 KOM cards
+**Plans:** 1 plan
 Plans:
-- [ ] 32-01-PLAN.md — Modify prebuild scripts to merge Strava fields into annotations.json
+- [ ] 32-01-PLAN.md — Add Strava fields to hardcoded arrays in resolve-annotations.js
 
 ---
 
