@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v5.0 Phase 32 — Gap closure (prebuild pipeline)
+**Current focus:** v5.0 COMPLETE — All phases 27-32 done
 
 ## Current Position
 
 Milestone: v5.0 — Strava Integration + Results
 Phase: 32 of 32 (Prebuild Pipeline — Preserve Strava Fields)
-Plan: 0 of 1
-Status: Not started — gap closure phase from audit
-Last activity: 2026-03-30 — Phase 32 added from v5.0 milestone audit
+Plan: 1 of 1
+Status: COMPLETE — v5.0 milestone fully delivered
+Last activity: 2026-03-30 — Completed 32-01-PLAN.md (prebuild Strava fields gap closure)
 
-Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0: █████████░ 90% (phases 27-31 complete, 32 pending)
+Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0: ██████████ 100% (all phases 27-32 complete)
 
 ## Performance Metrics
 
@@ -29,7 +29,9 @@ Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0
 
 **Phase 30 verified:** 5/5 must-haves passed. Results page with leaderboards, gender tabs, segment rankings.
 
-**Phase 31 complete:** Strava deauth webhook + privacy notice. v5.0 milestone complete.
+**Phase 31 complete:** Strava deauth webhook + privacy notice.
+
+**Phase 32 complete:** stravaSegmentId, komTime, qomTime embedded in resolve-annotations.js source arrays — prebuild pipeline now idempotent. v5.0 milestone fully complete.
 
 ## Accumulated Context
 
@@ -68,6 +70,12 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - All POST events return 200 immediately — Strava retries on non-2xx; deauth delete is async
 - Fire-and-forget build hook after deletion — rebuild must not block webhook response
 
+**32-01 key decisions:**
+- stravaSegmentId stored as integer in resolve-annotations.js — matches Phase 27 pattern and Strava's integer IDs
+- komTime/qomTime initialized as null — JSON.stringify drops undefined; null is JSON-serializable
+- No changes needed to assign-card-photos.js — spreads full object, Strava fields pass through automatically
+- Root-cause fix in source script (resolve-annotations.js), not manual JSON edit — ensures idempotency
+
 ### Pending Todos
 
 None.
@@ -81,6 +89,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-30 20:52 UTC
-Stopped at: Phase 31 Plan 01 complete — v5.0 milestone complete
+Last session: 2026-03-30 21:25 UTC
+Stopped at: Phase 32 Plan 01 complete — v5.0 milestone fully complete (all 32 phases done)
 Resume file: None
