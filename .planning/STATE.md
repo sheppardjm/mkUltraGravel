@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v4.0 Phase 25 — Map Reset
+**Current focus:** v4.0 Phase 25 — Map Reset — COMPLETE
 
 ## Current Position
 
 Milestone: v4.0 — Route Update + UX Overhaul
-Phase: 24 of 26 (CSS + Layout + Content) — COMPLETE
-Plan: 02 of 2 complete
+Phase: 25 of 26 (Map Reset) — COMPLETE
+Plan: 01 of 1 complete
 Status: Phase complete
-Last activity: 2026-03-30 — Completed 24-02-PLAN.md (Penrose hero animation + Grinduro format explainer)
+Last activity: 2026-03-30 — Completed 25-01-PLAN.md (Reset View button + map:reset event handlers)
 
-Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: [██████░░░░] 60%
+Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: [███████░░░] 70%
 
 ## Performance Metrics
 
@@ -30,6 +30,12 @@ Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: [████�
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
+
+**25-01 decisions:**
+- map.fitBounds (not flyTo) for reset — pixel-identical framing to initial page load
+- initialBounds captured immediately after initial fitBounds (before user interaction)
+- All map:reset listeners use AbortController signal for cleanup consistency
+- KOM annotations skipped by _baseColor guard — no state to reset (by design)
 
 **24-02 decisions:**
 - 20s rotation speed for penrose-spin (subtle but noticeable; escher-drift uses 50s)
@@ -66,5 +72,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-30
-Stopped at: Completed 24-02-PLAN.md — Phase 24 complete, ready for Phase 25
+Stopped at: Completed 25-01-PLAN.md — Phase 25 complete, ready for Phase 26
 Resume file: None
