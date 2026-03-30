@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 
 Milestone: v4.0 — Route Update + UX Overhaul
 Phase: 24 of 26 (CSS + Layout + Content)
-Plan: —
-Status: Ready to plan
-Last activity: 2026-03-29 — Phase 23 verified and complete
+Plan: 01 of 2 complete
+Status: In progress
+Last activity: 2026-03-30 — Completed 24-01-PLAN.md (CSS touch targets + card height equalization)
 
-Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: [████░░░░░░] 40%
+Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: [█████░░░░░] 50%
 
 ## Performance Metrics
 
@@ -30,6 +30,10 @@ Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: [████�
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
+
+**24-01 decisions:**
+- min-h-[280px] chosen as card equalization value — accommodates KOM 4-item grid plus aspect-video image at column widths
+- Both .leaflet-bar a and .leaflet-touch .leaflet-bar a selectors needed (covers 26px desktop default and 30px touch default)
 
 **23-01 decisions:**
 - Down Jeep photo at mi 83.8 (midpoint of sector) guarantees Pass 1 card assignment, not fallback
@@ -56,6 +60,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-29
-Stopped at: Phase 23 verified and complete, ready for Phase 24
+Last session: 2026-03-30
+Stopped at: Completed 24-01-PLAN.md — ready for 24-02
 Resume file: None
