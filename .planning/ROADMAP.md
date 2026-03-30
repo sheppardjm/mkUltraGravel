@@ -72,10 +72,10 @@ Plans:
   1. A reset button is visible below the map
   2. Clicking reset returns the map to its original zoom/bounds (same as initial page load)
   3. Clicking reset clears all active state: sector/KOM highlights, elevation band highlights, crosshair position, open popups
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 25-01: TBD
+- [ ] 25-01-PLAN.md -- Reset button + map/elevation reset handlers via CustomEvent bus
 
 ### Phase 26: Photo Lightbox from Map
 **Goal**: Clicking a photo marker on the map opens a full-screen PhotoSwipe lightbox instead of opening a new browser tab, with swipe navigation through all route photos.
