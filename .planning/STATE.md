@@ -5,22 +5,22 @@
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v5.0 Phase 27 — Segment Links + Scoring Explainer
+**Current focus:** v5.0 Phase 28 — Scoring Engine + Results Schema
 
 ## Current Position
 
 Milestone: v5.0 — Strava Integration + Results
-Phase: 27 of 31 (Segment Links + Scoring Explainer)
-Plan: 01 and 02 of 02 complete
-Status: Phase complete
-Last activity: 2026-03-30 — Completed 27-01-PLAN.md (Strava segment links on all 9 sector/KOM cards)
+Phase: 28 of 31 (Scoring Engine + Results Schema)
+Plan: —
+Status: Ready to plan
+Last activity: 2026-03-30 — Phase 27 complete (2 plans, verified 5/5 must-haves)
 
-Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0: ███░░░░░░░ 20% (2/10 plans, phase 27 complete)
+Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0: ██░░░░░░░░ 20% (phase 27 complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 58
+- Total plans completed: 60
 - v1.0: 30 plans across 10 phases (2 days)
 - v2.0: 15 plans across 6 phases (3 days)
 - v3.0: 6 plans across 5 phases (2 days)
@@ -44,6 +44,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-30T17:16:24Z
-Stopped at: Completed 27-01-PLAN.md (Strava segment links on all 9 sector/KOM cards) — Phase 27 fully complete
+Last session: 2026-03-30
+Stopped at: Phase 27 complete, ready to plan Phase 28
 Resume file: None

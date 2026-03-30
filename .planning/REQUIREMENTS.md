@@ -9,15 +9,15 @@ Requirements for v5.0 — Strava Integration + Results. Each maps to roadmap pha
 
 ### Strava Integration
 
-- [ ] **STRAVA-01**: Strava icon + link to segment page on all 9 sector/KOM cards
-- [ ] **STRAVA-02**: Segment metadata (distance, avg grade) displayed on cards
-- [ ] **STRAVA-03**: Manual KOM/QOM times displayed on 3 KOM cards
+- [x] **STRAVA-01**: Strava icon + link to segment page on all 9 sector/KOM cards
+- [x] **STRAVA-02**: Segment metadata (distance, avg grade) displayed on cards
+- [x] **STRAVA-03**: Manual KOM/QOM times displayed on 3 KOM cards
 
 ### Scoring
 
 - [ ] **SCORE-01**: Gravel Champion scoring — cumulative elapsed_time across 6 sectors, ranked by gender (men/women/non-binary)
 - [ ] **SCORE-02**: KOM/QOM Champion scoring — 10-1 points for top 10 per climb, most total points wins, ranked by gender
-- [ ] **SCORE-03**: Scoring system explainer component on site
+- [x] **SCORE-03**: Scoring system explainer component on site
 
 ### Submission
 
@@ -61,12 +61,12 @@ Deferred to later milestones.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| STRAVA-01 | Phase 27 | Pending |
-| STRAVA-02 | Phase 27 | Pending |
-| STRAVA-03 | Phase 27 | Pending |
+| STRAVA-01 | Phase 27 | Complete |
+| STRAVA-02 | Phase 27 | Complete |
+| STRAVA-03 | Phase 27 | Complete |
 | SCORE-01 | Phase 28 | Pending |
 | SCORE-02 | Phase 28 | Pending |
-| SCORE-03 | Phase 27 | Pending |
+| SCORE-03 | Phase 27 | Complete |
 | SUBMIT-01 | Phase 29 | Pending |
 | SUBMIT-02 | Phase 29 | Pending |
 | SUBMIT-03 | Phase 29 | Pending |

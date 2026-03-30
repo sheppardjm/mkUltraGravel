@@ -24,8 +24,8 @@ Integrate Strava segment data into the existing sector and KOM cards, build a Gr
   5. "Powered by Strava" attribution is visible on the site per Strava brand guidelines
 **Plans:** 2 plans
 Plans:
-- [ ] 27-01-PLAN.md — Strava segment IDs in annotations.json + Strava links on all 9 card components
-- [ ] 27-02-PLAN.md — ScoringExplainer component + Powered by Strava attribution in index.astro
+- [x] 27-01-PLAN.md — Strava segment IDs in annotations.json + Strava links on all 9 card components
+- [x] 27-02-PLAN.md — ScoringExplainer component + Powered by Strava attribution in index.astro
 
 ### Phase 28: Scoring Engine + Results Schema
 
@@ -112,7 +112,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 27. Segment Links + Scoring Explainer | 0/2 | Planned | - |
+| 27. Segment Links + Scoring Explainer | 2/2 | ✓ Complete | 2026-03-30 |
 | 28. Scoring Engine + Results Schema | 0/TBD | Not started | - |
 | 29. Strava OAuth + Activity Submission | 0/TBD | Not started | - |
 | 30. Results Page + Leaderboards | 0/TBD | Not started | - |
