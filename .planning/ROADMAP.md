@@ -55,7 +55,10 @@ Plans:
   3. On submission, the system extracts segment_efforts matching the 9 event segments from the authorized activity and rejects activities that contain no matching segment efforts
   4. A per-athlete JSON result file is committed to the repository via GitHub API, and a Netlify build hook triggers site rebuild
   5. The rider sees confirmation that their results were submitted successfully
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 29-01-PLAN.md — netlify.toml + strava-auth.js OAuth initiation + submit.astro entry form
+- [ ] 29-02-PLAN.md — strava-callback.js + submit-confirm.astro + submit-result.js (callback, confirmation, GitHub commit)
 
 ### Phase 30: Results Page + Leaderboards
 
@@ -117,7 +120,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 27. Segment Links + Scoring Explainer | 2/2 | ✓ Complete | 2026-03-30 |
 | 28. Scoring Engine + Results Schema | 2/2 | ✓ Complete | 2026-03-30 |
-| 29. Strava OAuth + Activity Submission | 0/TBD | Not started | - |
+| 29. Strava OAuth + Activity Submission | 0/2 | Planned | - |
 | 30. Results Page + Leaderboards | 0/TBD | Not started | - |
 | 31. Deauthorization Webhook + Privacy | 0/TBD | Not started | - |
 
