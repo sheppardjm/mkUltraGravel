@@ -1,6 +1,6 @@
 # Milestone v5.0: Strava Integration + Results
 
-**Status:** Gap Closure
+**Status:** Complete
 **Phases:** 27-32
 **Total Plans:** TBD
 
@@ -105,7 +105,7 @@ Plans:
   5. The built site renders KOM and QOM times on the 3 KOM cards
 **Plans:** 1 plan
 Plans:
-- [ ] 32-01-PLAN.md — Add Strava fields to hardcoded arrays in resolve-annotations.js
+- [x] 32-01-PLAN.md — Add Strava fields to hardcoded arrays in resolve-annotations.js
 
 ---
 
@@ -145,7 +145,7 @@ Plans:
 | 29. Strava OAuth + Activity Submission | 2/2 | ✓ Complete | 2026-03-30 |
 | 30. Results Page + Leaderboards | 2/2 | ✓ Complete | 2026-03-30 |
 | 31. Deauthorization Webhook + Privacy | 1/1 | ✓ Complete | 2026-03-30 |
-| 32. Prebuild Pipeline — Preserve Strava Fields | 0/1 | ◻ Not started | — |
+| 32. Prebuild Pipeline — Preserve Strava Fields | 1/1 | ✓ Complete | 2026-03-30 |
 
 ---
 
