@@ -13,7 +13,7 @@ Update the route from 80mi to 100mi (cascading through the entire data pipeline)
 - [x] **Phase 22: GPX Route Replacement** - Replace 80mi GPX with 100mi, re-run pipeline, verify all data
 - [x] **Phase 23: New Photos** - Process Down Jeep + Billie Helmer B&W through pipeline
 - [x] **Phase 24: CSS + Layout + Content** - Zoom controls, card sizing, Penrose hero, Grinduro explainer
-- [ ] **Phase 25: Map Reset** - Reset button restores map + elevation chart to default state
+- [x] **Phase 25: Map Reset** - Reset button restores map + elevation chart to default state
 - [ ] **Phase 26: Photo Lightbox from Map** - Larger thumbnails + PhotoSwipe lightbox from map markers
 
 ## Phase Details
@@ -72,10 +72,10 @@ Plans:
   1. A reset button is visible below the map
   2. Clicking reset returns the map to its original zoom/bounds (same as initial page load)
   3. Clicking reset clears all active state: sector/KOM highlights, elevation band highlights, crosshair position, open popups
-**Plans**: 1 plan
+**Plans**: 1 plan (1 complete)
 
 Plans:
-- [ ] 25-01-PLAN.md -- Reset button + map/elevation reset handlers via CustomEvent bus
+- [x] 25-01-PLAN.md -- Reset button + map/elevation reset handlers via CustomEvent bus
 
 ### Phase 26: Photo Lightbox from Map
 **Goal**: Clicking a photo marker on the map opens a full-screen PhotoSwipe lightbox instead of opening a new browser tab, with swipe navigation through all route photos.
@@ -104,7 +104,7 @@ Plans:
 | 22. GPX Route Replacement | v4.0 | 1/1 | ✓ Complete | 2026-03-29 |
 | 23. New Photos | v4.0 | 1/1 | ✓ Complete | 2026-03-29 |
 | 24. CSS + Layout + Content | v4.0 | 2/2 | ✓ Complete | 2026-03-30 |
-| 25. Map Reset | v4.0 | 0/TBD | Not started | - |
+| 25. Map Reset | v4.0 | 1/1 | ✓ Complete | 2026-03-29 |
 | 26. Photo Lightbox from Map | v4.0 | 0/TBD | Not started | - |
 
 ---
