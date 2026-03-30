@@ -79,6 +79,10 @@
   // Auto-fit map to the full route bounds
   map.fitBounds(routeLine.getBounds(), { padding: [20, 20] });
 
+  // Capture initial bounds for reset — must be stored before any user interaction
+  const initialBounds = routeLine.getBounds();
+  const initialPadding = [20, 20];
+
   // Star-rating color scale — brutalist palette
   const starColors: Record<number, string> = {
     1: '#f0c040',   // yellow — light gravel
@@ -252,6 +256,25 @@
 
   // Listen for elevation hover end — hide crosshair
   window.addEventListener('elevation:hoverEnd', (() => {
+    crosshair.setOpacity(0);
+  }) as EventListener, { signal });
+
+  // Listen for map:reset — restore map to initial state (bounds, popups, sector styles, crosshair)
+  window.addEventListener('map:reset', (() => {
+    // Restore map to initial zoom/bounds
+    map.fitBounds(initialBounds, { padding: initialPadding });
+    // Close all open popups
+    map.closePopup();
+    // Reset all sector polyline styles to original
+    sectorPolylines.forEach((p: any, i: number) => {
+      const sector = annotations.sectors[i];
+      p.setStyle({
+        color: starColors[sector.stars] || '#ffffff',
+        weight: 5,
+        opacity: 0.9
+      });
+    });
+    // Hide crosshair
     crosshair.setOpacity(0);
   }) as EventListener, { signal });
 
