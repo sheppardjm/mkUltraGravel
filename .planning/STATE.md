@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v4.0 Phase 25 — Map Reset — COMPLETE
+**Current focus:** v4.0 Phase 26 — Photo Lightbox from Map — In progress
 
 ## Current Position
 
 Milestone: v4.0 — Route Update + UX Overhaul
-Phase: 25 of 26 (Map Reset) — COMPLETE
-Plan: 01 of 1 complete
-Status: Phase complete
-Last activity: 2026-03-30 — Completed 25-01-PLAN.md (Reset View button + map:reset event handlers)
+Phase: 26 of 26 (Photo Lightbox from Map) — In progress
+Plan: 01 of 1 — paused at checkpoint:human-verify (Task 1 complete, awaiting visual verification)
+Status: Awaiting checkpoint approval
+Last activity: 2026-03-30 — Completed 26-01 Task 1 (thumbnail photo markers + PhotoSwipe lightbox)
 
-Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: [███████░░░] 70%
+Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: [████████░░] 80%
 
 ## Performance Metrics
 
@@ -30,6 +30,12 @@ Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: [████�
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
+
+**26-01 decisions:**
+- showHideAnimationType: 'fade' (not zoom) — no DOM anchor to zoom from, lightbox is programmatic
+- No photoswipe/style.css in RouteMap.astro — already in global.css @layer components (cascade conflict)
+- AVIF-safe regex /\.(jpg|jpeg|png|avif)$/i — one photo is .avif (Billie Helmer)
+- No bindPopup on photo markers — click directly invokes lightbox.loadAndOpen(index)
 
 **25-01 decisions:**
 - map.fitBounds (not flyTo) for reset — pixel-identical framing to initial page load
@@ -72,5 +78,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-30
-Stopped at: Completed 25-01-PLAN.md — Phase 25 complete, ready for Phase 26
+Stopped at: 26-01 Task 1 complete (cb89066) — paused at checkpoint:human-verify
 Resume file: None
