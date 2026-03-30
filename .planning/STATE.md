@@ -5,15 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v5.0 — Strava Integration + Results
+**Current focus:** v5.0 Phase 27 — Segment Links + Scoring Explainer
 
 ## Current Position
 
 Milestone: v5.0 — Strava Integration + Results
-Phase: Not started (defining requirements)
+Phase: 27 of 31 (Segment Links + Scoring Explainer)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-03-30 — Milestone v5.0 started
+Status: Ready to plan
+Last activity: 2026-03-30 — Roadmap created for v5.0 (5 phases, 17 requirements)
 
 Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0: ░░░░░░░░░░ 0%
 
@@ -38,13 +38,12 @@ None.
 
 ### Blockers/Concerns
 
-- **[Active]** onHover performance on mid-range Android unverified (deferred to future milestone)
 - **[Active]** Build environment: default PATH uses node@20, Astro requires node>=22. Use node@25 at /usr/local/opt/node@25/bin/
-- **[New]** Strava API TOS: previous decision to drop Strava integration was for scraping leaderboards. v5.0 uses OAuth-authorized access — needs research to confirm TOS compliance
-- **[New]** Strava API rate limits: 100 req/15min, 1000/day — need to understand impact on build-time segment data fetching
+- **[Active]** Strava API app must be registered and submitted for review NOW -- 2-4 week review blocks Phase 29 OAuth flow
+- **[Resolved]** Strava TOS concern: v5.0 uses consent-based hybrid model (VeloViewer precedent), not scraping
 
 ## Session Continuity
 
 Last session: 2026-03-30
-Stopped at: v5.0 milestone questioning complete, ready for research/requirements
+Stopped at: v5.0 roadmap created, ready to plan Phase 27
 Resume file: None

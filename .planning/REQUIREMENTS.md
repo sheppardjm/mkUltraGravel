@@ -61,30 +61,30 @@ Deferred to later milestones.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| STRAVA-01 | — | Pending |
-| STRAVA-02 | — | Pending |
-| STRAVA-03 | — | Pending |
-| SCORE-01 | — | Pending |
-| SCORE-02 | — | Pending |
-| SCORE-03 | — | Pending |
-| SUBMIT-01 | — | Pending |
-| SUBMIT-02 | — | Pending |
-| SUBMIT-03 | — | Pending |
-| SUBMIT-04 | — | Pending |
-| SUBMIT-05 | — | Pending |
-| SUBMIT-06 | — | Pending |
-| SUBMIT-07 | — | Pending |
-| RESULT-01 | — | Pending |
-| RESULT-02 | — | Pending |
-| RESULT-03 | — | Pending |
-| RESULT-04 | — | Pending |
-| RESULT-05 | — | Pending |
+| STRAVA-01 | Phase 27 | Pending |
+| STRAVA-02 | Phase 27 | Pending |
+| STRAVA-03 | Phase 27 | Pending |
+| SCORE-01 | Phase 28 | Pending |
+| SCORE-02 | Phase 28 | Pending |
+| SCORE-03 | Phase 27 | Pending |
+| SUBMIT-01 | Phase 29 | Pending |
+| SUBMIT-02 | Phase 29 | Pending |
+| SUBMIT-03 | Phase 29 | Pending |
+| SUBMIT-04 | Phase 29 | Pending |
+| SUBMIT-05 | Phase 29 | Pending |
+| SUBMIT-06 | Phase 29 | Pending |
+| SUBMIT-07 | Phase 31 | Pending |
+| RESULT-01 | Phase 30 | Pending |
+| RESULT-02 | Phase 30 | Pending |
+| RESULT-03 | Phase 30 | Pending |
+| RESULT-04 | Phase 30 | Pending |
+| RESULT-05 | Phase 30 | Pending |
 
 **Coverage:**
 - v5.0 requirements: 17 total
-- Mapped to phases: 0
-- Unmapped: 17 ⚠️
+- Mapped to phases: 17
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-30*
-*Last updated: 2026-03-30 after initial definition*
+*Last updated: 2026-03-30 after roadmap creation*
