@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 
 Milestone: v5.0 — Strava Integration + Results
 Phase: 31 of 31 (Deauthorization Webhook + Privacy)
-Plan: —
-Status: Ready to plan
-Last activity: 2026-03-30 — Phase 30 complete (2 plans, verified 5/5 must-haves)
+Plan: 1 of 1
+Status: Phase complete — v5.0 COMPLETE
+Last activity: 2026-03-30 — Completed 31-01-PLAN.md (deauth webhook + privacy notice)
 
-Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0: ████████░░ 80% (phases 27-30 complete)
+Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0: ██████████ 100% (phases 27-31 complete)
 
 ## Performance Metrics
 
@@ -28,6 +28,8 @@ Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0
 - v5.0: 8 plans across 4 phases (1 day, in progress)
 
 **Phase 30 verified:** 5/5 must-haves passed. Results page with leaderboards, gender tabs, segment rankings.
+
+**Phase 31 complete:** Strava deauth webhook + privacy notice. v5.0 milestone complete.
 
 ## Accumulated Context
 
@@ -59,6 +61,13 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - Max 10 entries per segment with "and X more" overflow — keeps page compact for large post-event fields
 - buildSegmentLeaderboard typed with any[] input — consistent with rest of results.astro frontmatter
 
+**31-01 key decisions:**
+- v1 exports.handler pattern — active Netlify v2 env var bug; consistent with all Phase 29 functions
+- String === 'false' for updates.authorized deauth detection — Strava sends string not boolean
+- athleteId = String(payload.owner_id || payload.object_id) — defensive fallback to object_id
+- All POST events return 200 immediately — Strava retries on non-2xx; deauth delete is async
+- Fire-and-forget build hook after deletion — rebuild must not block webhook response
+
 ### Pending Todos
 
 None.
@@ -72,6 +81,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-30
-Stopped at: Phase 30 verified and complete — ready for Phase 31 (Deauthorization Webhook + Privacy)
+Last session: 2026-03-30 20:52 UTC
+Stopped at: Phase 31 Plan 01 complete — v5.0 milestone complete
 Resume file: None
