@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 
 Milestone: v5.0 — Strava Integration + Results
 Phase: 30 of 31 (Results Page + Leaderboards)
-Plan: —
-Status: Ready to plan
-Last activity: 2026-03-30 — Phase 29 complete (2 plans, verified 5/5 must-haves)
+Plan: 01 of 2 (complete)
+Status: In progress
+Last activity: 2026-03-30 — Completed 30-01-PLAN.md (/results page with leaderboards)
 
-Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0: ██████░░░░ 60% (phases 27-29 complete)
+Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0: ███████░░░ 70% (phases 27-30.01 complete)
 
 ## Performance Metrics
 
@@ -48,6 +48,12 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - `activity:read_all` scope required (not `activity:read`) for `include_all_efforts=true` to work
 - STRAVA_CLIENT_SECRET only in strava-callback.js (Plan 02), not strava-auth.js
 
+**30-01 key decisions:**
+- data-section attribute scopes tab groups independently — gravel and KOM tabs don't interfere
+- details/summary HTML for sector/climb breakdowns — native expand/collapse, no JS required
+- existsSync guard before readdirSync — graceful empty state if athletes directory missing
+- /30 suffix on KOM points = 10pts × 3 climbs max per scoring engine design
+
 ### Pending Todos
 
 None.
@@ -61,6 +67,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-30
-Stopped at: Phase 29 verified and complete — ready for Phase 30 (Results Page + Leaderboards)
+Last session: 2026-03-30T20:21:53Z
+Stopped at: Completed 30-01-PLAN.md — /results page with Gravel Champion + KOM/QOM leaderboards, gender tabs, seed data scoring
 Resume file: None
