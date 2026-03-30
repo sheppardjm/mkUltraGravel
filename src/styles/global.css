@@ -274,6 +274,19 @@
   }
 }
 
+@keyframes penrose-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .penrose-hero {
+    animation: penrose-spin 20s linear infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+}
+
 @layer utilities {
   /* Scroll-reveal: hidden state only when JS has confirmed it is running.
      The IntersectionObserver script adds data-reveal-ready to <html>.
