@@ -608,7 +608,8 @@
           "lon": -86.91772
         }
       ],
-      "coverPhoto": "ocbHm30HWGIBDMhMARec4eQ86L5Bw_yNG1Sa1NtkfW0-2048x1536.jpg"
+      "coverPhoto": "ocbHm30HWGIBDMhMARec4eQ86L5Bw_yNG1Sa1NtkfW0-2048x1536.jpg",
+      "stravaSegmentId": 24479292
     },
     {
       "name": "Akkala Rd",
@@ -730,7 +731,8 @@
           "lon": -86.969533
         }
       ],
-      "coverPhoto": "4DLSgkj2_jeCh_vruEj0nt7HKrZNpDsRJlCFOWm69u8-1536x2048.jpg"
+      "coverPhoto": "4DLSgkj2_jeCh_vruEj0nt7HKrZNpDsRJlCFOWm69u8-1536x2048.jpg",
+      "stravaSegmentId": 24479426
     },
     {
       "name": "Haavisto",
@@ -868,7 +870,8 @@
           "lon": -87.03143
         }
       ],
-      "coverPhoto": "LpoxSYsBzxnVR1Z1bNDmCMY69nbZE3Wim8gzgExAqMs-1536x2048.jpg"
+      "coverPhoto": "LpoxSYsBzxnVR1Z1bNDmCMY69nbZE3Wim8gzgExAqMs-1536x2048.jpg",
+      "stravaSegmentId": 24479467
     },
     {
       "name": "Forest Service Rd",
@@ -1546,7 +1549,8 @@
           "lon": -87.17945
         }
       ],
-      "coverPhoto": "OQ3xED3f5T_KBXMhgpt-LZGU-yhIu36wFcap6uUT_is-1536x2048.jpg"
+      "coverPhoto": "OQ3xED3f5T_KBXMhgpt-LZGU-yhIu36wFcap6uUT_is-1536x2048.jpg",
+      "stravaSegmentId": 24479496
     },
     {
       "name": "C4",
@@ -2176,7 +2180,8 @@
           "lon": -87.15581
         }
       ],
-      "coverPhoto": "2hX2RzHWb2HBzkd1bc68hqeTn0zJuV_pMnXDyFDKZOM-1536x2048.jpg"
+      "coverPhoto": "2hX2RzHWb2HBzkd1bc68hqeTn0zJuV_pMnXDyFDKZOM-1536x2048.jpg",
+      "stravaSegmentId": 34573011
     },
     {
       "name": "Down Jeep",
@@ -2286,7 +2291,8 @@
           "lon": -87.39059
         }
       ],
-      "coverPhoto": "68686675_2890293017652424_6952024628709556224_n.jpg"
+      "coverPhoto": "68686675_2890293017652424_6952024628709556224_n.jpg",
+      "stravaSegmentId": 6809754
     }
   ],
   "kom": [
@@ -2375,7 +2381,10 @@
           "lon": -86.990215
         }
       ],
-      "coverPhoto": "photo-1675213442182-24e1c1671387.avif"
+      "coverPhoto": "photo-1675213442182-24e1c1671387.avif",
+      "stravaSegmentId": 24479270,
+      "komTime": null,
+      "qomTime": null
     },
     {
       "name": "Leaving Chatham",
@@ -2426,7 +2435,10 @@
           "lon": -86.930208
         }
       ],
-      "coverPhoto": "leaving-chatham-rock-river-rd.png"
+      "coverPhoto": "leaving-chatham-rock-river-rd.png",
+      "stravaSegmentId": 41126651,
+      "komTime": null,
+      "qomTime": null
     },
     {
       "name": "Silver Creek",
@@ -2645,7 +2657,10 @@
           "lon": -87.41472
         }
       ],
-      "coverPhoto": "aI8-qjgYasaaJ3Xu6RcqyaSk5EzCVwPbNGH1xn2PwFQ-1536x2048.jpg"
+      "coverPhoto": "aI8-qjgYasaaJ3Xu6RcqyaSk5EzCVwPbNGH1xn2PwFQ-1536x2048.jpg",
+      "stravaSegmentId": 16438243,
+      "komTime": null,
+      "qomTime": null
     }
   ],
   "restock": [
