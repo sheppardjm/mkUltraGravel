@@ -111,6 +111,21 @@ exports.handler = async (event) => {
     return errorPage('Invalid or missing state parameter. Please start the submission process again.');
   }
 
+  // 2b. Validate granted scope includes activity:read_all (OAUTH-05)
+  // Strava includes granted scope as a query param in the callback URL:
+  //   ?code=XXX&scope=activity%3Aread_all&state=YYY
+  // If user downgrades permissions on consent screen, scope may be
+  // "read" or "activity:read" only — the code still works but the
+  // token won't have access to private activity segment efforts.
+  const grantedScope = (params.scope || '').split(',');
+  console.log('[strava-callback] scope from callback:', params.scope);
+  if (!grantedScope.includes('activity:read_all')) {
+    return errorPage(
+      'Strava authorization requires read access to all activities. ' +
+      'Please <a href="/submit">try again</a> and make sure to accept all requested permissions on the Strava consent screen.'
+    );
+  }
+
   // 3. Exchange authorization code for access token
   if (!code) {
     return errorPage('No authorization code received from Strava. Please try again.');
@@ -129,6 +144,11 @@ exports.handler = async (event) => {
       }),
     });
     tokenData = await tokenRes.json();
+    console.log('[strava-callback] token exchange result:', {
+      hasAccessToken: !!tokenData.access_token,
+      athleteId: tokenData.athlete?.id,
+      // Do NOT log the access_token value itself
+    });
   } catch (err) {
     return errorPage('Failed to connect to Strava. Please try again.');
   }
@@ -166,6 +186,7 @@ exports.handler = async (event) => {
   const matchingEfforts = efforts.filter((effort) =>
     ALL_SEGMENT_IDS.has(String(effort.segment.id))
   );
+  console.log('[strava-callback] segment match count:', matchingEfforts.length, 'of', efforts.length, 'total efforts');
 
   if (matchingEfforts.length === 0) {
     return {
