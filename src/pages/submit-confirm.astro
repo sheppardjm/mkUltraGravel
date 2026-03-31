@@ -1,33 +1,5 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-
-// Read the base64url-encoded result payload passed from strava-callback.js
-const rawData = Astro.url.searchParams.get("data");
-
-let decoded = null;
-let decodeError = false;
-
-if (rawData) {
-  try {
-    decoded = JSON.parse(Buffer.from(rawData, "base64url").toString("utf8"));
-    // Validate required fields are present
-    if (
-      !decoded.athleteId ||
-      !decoded.name ||
-      !decoded.activityUrl ||
-      !decoded.segments
-    ) {
-      decoded = null;
-      decodeError = true;
-    }
-  } catch {
-    decodeError = true;
-  }
-} else {
-  decodeError = true;
-}
-
-const segmentCount = decoded ? Object.keys(decoded.segments).length : 0;
 ---
 
 <BaseLayout title="Confirm Your Submission — MK Ultra Gravel">
@@ -42,174 +14,220 @@ const segmentCount = decoded ? Object.keys(decoded.segments).length : 0;
         Confirm Your Submission
       </h1>
 
-      {decodeError ? (
-        <!-- Error state: no valid data param -->
-        <div
-          role="alert"
-          class="mt-6 rounded border px-4 py-4 text-sm"
-          style="border-color: var(--color-accent-red); background-color: oklch(0.14 0.06 25); color: oklch(0.85 0.01 90);"
+      <!-- Error state: shown when no valid data param -->
+      <div
+        id="error-state"
+        role="alert"
+        class="mt-6 rounded border px-4 py-4 text-sm hidden"
+        style="border-color: var(--color-accent-red); background-color: oklch(0.14 0.06 25); color: oklch(0.85 0.01 90);"
+      >
+        <p class="mb-3">
+          Something went wrong — no valid submission data found. This can happen if you navigated here directly or the session expired.
+        </p>
+        <a
+          href="/submit"
+          style="color: oklch(0.72 0.19 55); font-family: var(--font-mono);"
         >
-          <p class="mb-3">
-            Something went wrong — no valid submission data found. This can happen if you navigated here directly or the session expired.
-          </p>
-          <a
-            href="/submit"
-            style="color: oklch(0.72 0.19 55); font-family: var(--font-mono);"
-          >
-            ← Start the submission process again
-          </a>
+          ← Start the submission process again
+        </a>
+      </div>
+
+      <!-- Success state: shown when data is valid -->
+      <div id="success-state" class="hidden">
+        <p class="mb-8 text-base leading-relaxed" style="color: var(--color-text-muted);">
+          We found your segment data. Select your category and confirm consent below to submit your results.
+        </p>
+
+        <!-- Extracted data summary card -->
+        <div
+          class="rounded-lg border p-5 mb-6"
+          style="background-color: var(--color-bg-surface); border-color: var(--color-border);"
+        >
+          <dl class="space-y-3">
+            <div>
+              <dt class="text-xs uppercase tracking-widest mb-1" style="font-family: var(--font-mono); color: var(--color-text-muted);">
+                Athlete
+              </dt>
+              <dd id="athlete-name" class="text-sm" style="color: var(--color-accent-white); font-family: var(--font-mono);">
+              </dd>
+            </div>
+            <div>
+              <dt class="text-xs uppercase tracking-widest mb-1" style="font-family: var(--font-mono); color: var(--color-text-muted);">
+                Segments Matched
+              </dt>
+              <dd id="segment-count" class="text-sm" style="color: var(--color-accent-white); font-family: var(--font-mono);">
+              </dd>
+            </div>
+            <div>
+              <dt class="text-xs uppercase tracking-widest mb-1" style="font-family: var(--font-mono); color: var(--color-text-muted);">
+                Activity
+              </dt>
+              <dd class="text-sm">
+                <a
+                  id="activity-link"
+                  href="#"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style="color: oklch(0.72 0.19 55); font-family: var(--font-mono); word-break: break-all;"
+                >
+                </a>
+              </dd>
+            </div>
+          </dl>
         </div>
-      ) : (
-        <>
-          <p class="mb-8 text-base leading-relaxed" style="color: var(--color-text-muted);">
-            We found your segment data. Select your category and confirm consent below to submit your results.
-          </p>
 
-          <!-- Extracted data summary card -->
-          <div
-            class="rounded-lg border p-5 mb-6"
-            style="background-color: var(--color-bg-surface); border-color: var(--color-border);"
-          >
-            <dl class="space-y-3">
-              <div>
-                <dt class="text-xs uppercase tracking-widest mb-1" style="font-family: var(--font-mono); color: var(--color-text-muted);">
-                  Athlete
-                </dt>
-                <dd class="text-sm" style="color: var(--color-accent-white); font-family: var(--font-mono);">
-                  {decoded!.name}
-                </dd>
-              </div>
-              <div>
-                <dt class="text-xs uppercase tracking-widest mb-1" style="font-family: var(--font-mono); color: var(--color-text-muted);">
-                  Segments Matched
-                </dt>
-                <dd class="text-sm" style="color: var(--color-accent-white); font-family: var(--font-mono);">
-                  {segmentCount} of 9 event segments matched
-                </dd>
-              </div>
-              <div>
-                <dt class="text-xs uppercase tracking-widest mb-1" style="font-family: var(--font-mono); color: var(--color-text-muted);">
-                  Activity
-                </dt>
-                <dd class="text-sm">
-                  <a
-                    href={decoded!.activityUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style="color: oklch(0.72 0.19 55); font-family: var(--font-mono); word-break: break-all;"
-                  >
-                    {decoded!.activityUrl}
-                  </a>
-                </dd>
-              </div>
-            </dl>
-          </div>
+        <!-- Confirmation form -->
+        <div
+          class="rounded-lg border p-6 sm:p-8"
+          style="background-color: var(--color-bg-surface); border-color: var(--color-border);"
+        >
+          <form id="confirm-form" action="/api/submit-result" method="POST" novalidate>
 
-          <!-- Confirmation form -->
-          <div
-            class="rounded-lg border p-6 sm:p-8"
-            style="background-color: var(--color-bg-surface); border-color: var(--color-border);"
-          >
-            <form id="confirm-form" action="/api/submit-result" method="POST" novalidate>
+            <!-- Hidden: pass through the base64url payload unchanged -->
+            <input type="hidden" id="data-input" name="data" value="" />
 
-              <!-- Hidden: pass through the base64url payload unchanged -->
-              <input type="hidden" name="data" value={rawData!} />
-
-              <!-- Gender / category dropdown -->
-              <div class="mb-6">
-                <label
-                  for="gender"
-                  class="block text-xs uppercase tracking-widest mb-2"
-                  style="font-family: var(--font-mono); color: var(--color-text-muted);"
-                >
-                  Category
-                </label>
-                <select
-                  id="gender"
-                  name="gender"
-                  required
-                  class="w-full rounded border px-4 py-3 text-sm outline-none transition-colors appearance-none"
-                  style="
-                    background-color: var(--color-bg-elevated);
-                    border-color: var(--color-border);
-                    color: var(--color-accent-white);
-                    font-family: var(--font-mono);
-                  "
-                >
-                  <option value="" disabled selected>Select your category</option>
-                  <option value="M">Men</option>
-                  <option value="F">Women</option>
-                  <option value="NB">Non-binary</option>
-                </select>
-                <p
-                  id="gender-error"
-                  role="alert"
-                  class="hidden text-xs mt-1"
-                  style="color: var(--color-accent-red); font-family: var(--font-mono);"
-                >
-                  Please select a category.
-                </p>
-              </div>
-
-              <!-- Consent checkbox -->
-              <div class="mb-6">
-                <label
-                  class="flex items-start gap-3 cursor-pointer"
-                  style="font-family: var(--font-mono);"
-                >
-                  <input
-                    id="consent"
-                    name="consent"
-                    type="checkbox"
-                    value="yes"
-                    required
-                    class="mt-0.5 shrink-0"
-                    style="width: 1rem; height: 1rem; accent-color: oklch(0.72 0.19 55);"
-                  />
-                  <span class="text-sm leading-relaxed" style="color: var(--color-text-muted);">
-                    I consent to my name, category, segment times, and Strava activity link being displayed publicly on the MK Ultra Gravel results page.
-                  </span>
-                </label>
-                <p
-                  id="consent-error"
-                  role="alert"
-                  class="hidden text-xs mt-1"
-                  style="color: var(--color-accent-red); font-family: var(--font-mono);"
-                >
-                  You must consent to public display to submit your results.
-                </p>
-              </div>
-
-              <!-- Submit button -->
-              <button
-                type="submit"
-                class="w-full rounded px-6 py-3 text-sm font-bold uppercase tracking-widest transition-opacity hover:opacity-90 active:opacity-75"
+            <!-- Gender / category dropdown -->
+            <div class="mb-6">
+              <label
+                for="gender"
+                class="block text-xs uppercase tracking-widest mb-2"
+                style="font-family: var(--font-mono); color: var(--color-text-muted);"
+              >
+                Category
+              </label>
+              <select
+                id="gender"
+                name="gender"
+                required
+                class="w-full rounded border px-4 py-3 text-sm outline-none transition-colors appearance-none"
                 style="
-                  background-color: oklch(0.72 0.19 55);
-                  color: oklch(0.10 0.01 250);
+                  background-color: var(--color-bg-elevated);
+                  border-color: var(--color-border);
+                  color: var(--color-accent-white);
                   font-family: var(--font-mono);
                 "
               >
-                Submit My Results
-              </button>
+                <option value="" disabled selected>Select your category</option>
+                <option value="M">Men</option>
+                <option value="F">Women</option>
+                <option value="NB">Non-binary</option>
+              </select>
+              <p
+                id="gender-error"
+                role="alert"
+                class="hidden text-xs mt-1"
+                style="color: var(--color-accent-red); font-family: var(--font-mono);"
+              >
+                Please select a category.
+              </p>
+            </div>
 
-            </form>
-          </div>
-        </>
-      )}
+            <!-- Consent checkbox -->
+            <div class="mb-6">
+              <label
+                class="flex items-start gap-3 cursor-pointer"
+                style="font-family: var(--font-mono);"
+              >
+                <input
+                  id="consent"
+                  name="consent"
+                  type="checkbox"
+                  value="yes"
+                  required
+                  class="mt-0.5 shrink-0"
+                  style="width: 1rem; height: 1rem; accent-color: oklch(0.72 0.19 55);"
+                />
+                <span class="text-sm leading-relaxed" style="color: var(--color-text-muted);">
+                  I consent to my name, category, segment times, and Strava activity link being displayed publicly on the MK Ultra Gravel results page.
+                </span>
+              </label>
+              <p
+                id="consent-error"
+                role="alert"
+                class="hidden text-xs mt-1"
+                style="color: var(--color-accent-red); font-family: var(--font-mono);"
+              >
+                You must consent to public display to submit your results.
+              </p>
+            </div>
+
+            <!-- Submit button -->
+            <button
+              type="submit"
+              class="w-full rounded px-6 py-3 text-sm font-bold uppercase tracking-widest transition-opacity hover:opacity-90 active:opacity-75"
+              style="
+                background-color: oklch(0.72 0.19 55);
+                color: oklch(0.10 0.01 250);
+                font-family: var(--font-mono);
+              "
+            >
+              Submit My Results
+            </button>
+
+          </form>
+        </div>
+      </div>
 
     </div>
   </main>
 
-  {!decodeError && (
-    <script>
+  <script>
+    // Parse the ?data= query param client-side (static Astro build has no
+    // server-side access to request query params at runtime).
+    function initConfirmPage() {
+      const errorState = document.getElementById('error-state') as HTMLDivElement;
+      const successState = document.getElementById('success-state') as HTMLDivElement;
+
+      const params = new URLSearchParams(window.location.search);
+      const rawData = params.get('data');
+
+      if (!rawData) {
+        errorState.classList.remove('hidden');
+        return;
+      }
+
+      let decoded: { athleteId?: string; name?: string; activityUrl?: string; segments?: Record<string, unknown> } | null = null;
+      try {
+        // base64url decode: replace URL-safe chars, pad, then atob
+        const base64 = rawData.replace(/-/g, '+').replace(/_/g, '/');
+        const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+        decoded = JSON.parse(atob(padded));
+      } catch {
+        errorState.classList.remove('hidden');
+        return;
+      }
+
+      if (!decoded || !decoded.athleteId || !decoded.name || !decoded.activityUrl || !decoded.segments) {
+        errorState.classList.remove('hidden');
+        return;
+      }
+
+      // Populate the UI
+      const segmentCount = Object.keys(decoded.segments).length;
+
+      (document.getElementById('athlete-name') as HTMLElement).textContent = decoded.name;
+      (document.getElementById('segment-count') as HTMLElement).textContent =
+        `${segmentCount} of 9 event segments matched`;
+
+      const activityLink = document.getElementById('activity-link') as HTMLAnchorElement;
+      activityLink.href = decoded.activityUrl;
+      activityLink.textContent = decoded.activityUrl;
+
+      (document.getElementById('data-input') as HTMLInputElement).value = rawData;
+
+      successState.classList.remove('hidden');
+    }
+
+    // Form validation
+    function initFormValidation() {
       const form = document.getElementById('confirm-form') as HTMLFormElement;
+      if (!form) return;
+
       const genderSelect = document.getElementById('gender') as HTMLSelectElement;
       const consentCheck = document.getElementById('consent') as HTMLInputElement;
       const genderError = document.getElementById('gender-error') as HTMLParagraphElement;
       const consentError = document.getElementById('consent-error') as HTMLParagraphElement;
 
-      // Style selects on focus/blur
       genderSelect.addEventListener('focus', () => {
         genderSelect.style.borderColor = 'oklch(0.72 0.19 55)';
       });
@@ -257,6 +275,9 @@ const segmentCount = decoded ? Object.keys(decoded.segments).length : 0;
           consentError.classList.add('hidden');
         }
       });
-    </script>
-  )}
+    }
+
+    initConfirmPage();
+    initFormValidation();
+  </script>
 </BaseLayout>
