@@ -23,13 +23,13 @@ Requirements for Strava go-live. Each maps to roadmap phases.
 
 ### OAuth Flow Testing
 
-- [ ] **OAUTH-01**: Full OAuth round-trip works on deployed HTTPS URL (strava-auth → Strava consent → strava-callback → submit page)
-- [ ] **OAUTH-02**: Token exchange returns valid access token with activity:read_all scope
-- [ ] **OAUTH-03**: Segment_efforts extracted correctly from real Strava activity
-- [ ] **OAUTH-04**: Error states handled gracefully (denied consent, expired token, invalid activity URL)
-- [ ] **OAUTH-05**: Scope validation added — detect and surface partial scope acceptance
-- [ ] **OAUTH-06**: CSRF cookie double-submit pattern verified on production HTTPS
-- [ ] **OAUTH-07**: Safari/iPhone tested for SameSite cookie behavior
+- [x] **OAUTH-01**: Full OAuth round-trip works on deployed HTTPS URL (strava-auth → Strava consent → strava-callback → submit page)
+- [x] **OAUTH-02**: Token exchange returns valid access token with activity:read_all scope
+- [x] **OAUTH-03**: Segment_efforts extracted correctly from real Strava activity
+- [x] **OAUTH-04**: Error states handled gracefully (denied consent, expired token, invalid activity URL)
+- [x] **OAUTH-05**: Scope validation added — detect and surface partial scope acceptance
+- [x] **OAUTH-06**: CSRF cookie double-submit pattern verified on production HTTPS
+- [x] **OAUTH-07**: Safari/iPhone tested for SameSite cookie behavior
 
 ### Webhook & Deauthorization
 
@@ -77,13 +77,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PIPE-02 | Phase 37 | Complete |
 | PIPE-03 | Phase 37 | Complete |
 | PIPE-04 | Phase 37 | Complete |
-| OAUTH-01 | Phase 38 | Pending |
-| OAUTH-02 | Phase 38 | Pending |
-| OAUTH-03 | Phase 38 | Pending |
-| OAUTH-04 | Phase 38 | Pending |
-| OAUTH-05 | Phase 38 | Pending |
-| OAUTH-06 | Phase 38 | Pending |
-| OAUTH-07 | Phase 38 | Pending |
+| OAUTH-01 | Phase 38 | Complete |
+| OAUTH-02 | Phase 38 | Complete |
+| OAUTH-03 | Phase 38 | Complete |
+| OAUTH-04 | Phase 38 | Complete |
+| OAUTH-05 | Phase 38 | Complete |
+| OAUTH-06 | Phase 38 | Complete |
+| OAUTH-07 | Phase 38 | Complete |
 | HOOK-01 | Phase 39 | Pending |
 | HOOK-02 | Phase 39 | Pending |
 | HOOK-03 | Phase 39 | Pending |
@@ -98,4 +98,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-03-31*
-*Last updated: 2026-03-31 after Phase 36 completion (ENV-01 through ENV-04 verified)*
+*Last updated: 2026-03-31 after Phase 38 completion (OAUTH-01 through OAUTH-07 verified)*
