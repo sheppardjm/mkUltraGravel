@@ -12,9 +12,9 @@ Requirements for visual polish + content update milestone.
 - [x] **DATA-07**: MKULTRA.gpx replaces MK_Ultra.gpx as route source with full pipeline re-run
 - [x] **DATA-08**: All downstream artifacts regenerated (route-data.json, annotations.json, photos.json, elevation profile)
 - [x] **DATA-09**: Pipeline validation confirms segment/KOM mile markers correct against new GPX
-- [ ] **PHOTO-03**: 19 new route photos added to photo-manifest.js with mile-marker positions
-- [ ] **PHOTO-04**: Thumbnails and card crops regenerated for all 74 photos
-- [ ] **PHOTO-05**: Card cover photo assignments reviewed after 19-photo expansion
+- [x] **PHOTO-03**: 16 new route photos added to photo-manifest.js with mile-marker positions (3 excluded by owner)
+- [x] **PHOTO-04**: Thumbnails and card crops regenerated for all 71 photos
+- [x] **PHOTO-05**: Card cover photo assignments reviewed after 16-photo expansion (all 9 unchanged)
 
 ### Gallery
 
@@ -79,9 +79,9 @@ Deferred to post-event or future milestones.
 | DATA-07 | Phase 41 | Complete |
 | DATA-08 | Phase 41 | Complete |
 | DATA-09 | Phase 41 | Complete |
-| PHOTO-03 | Phase 42 | Pending |
-| PHOTO-04 | Phase 42 | Pending |
-| PHOTO-05 | Phase 42 | Pending |
+| PHOTO-03 | Phase 42 | Complete |
+| PHOTO-04 | Phase 42 | Complete |
+| PHOTO-05 | Phase 42 | Complete |
 | GAL-01 | Phase 43 | Pending |
 | GAL-02 | Phase 43 | Pending |
 | GAL-03 | Phase 43 | Pending |

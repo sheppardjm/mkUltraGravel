@@ -5,22 +5,22 @@
 See: .planning/PROJECT.md (updated 2026-03-31)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v8.0 Phase 42 — Photo Pipeline Expansion
+**Current focus:** v8.0 Phase 43 — Horizontal Masonry Gallery
 
 ## Current Position
 
 Milestone: v8.0 Visual Polish + Content
-Phase: 42 of 46 (Photo Pipeline Expansion)
+Phase: 43 of 46 (Horizontal Masonry Gallery)
 Plan: —
 Status: Ready to plan
-Last activity: 2026-03-31 — Phase 41 complete and verified (GPX Route Update + Pipeline Validation)
+Last activity: 2026-03-31 — Phase 42 complete and verified (Photo Pipeline Expansion)
 
-Progress: [████████████████████░░░] 79% (77/~82 total plans)
+Progress: [█████████████████████░░] 80% (78/~82 total plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 77
+- Total plans completed: 78
 - v1.0: 30 plans across 10 phases (2 days)
 - v2.0: 15 plans across 6 phases (3 days)
 - v3.0: 6 plans across 5 phases (2 days)
@@ -28,12 +28,15 @@ Progress: [████████████████████░░░
 - v5.0: 10 plans across 6 phases (4 days)
 - v6.0: 3 plans across 3 phases (1 day)
 - v7.0: 5 plans across 5 phases (1 day)
+- v8.0: 2 plans across 2 phases (1 day, in progress)
 
 ## Accumulated Context
 
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
+
+- Phase 42: Route owner excluded 3 of 19 candidate photos — final count 71, not 74. All cover photos unchanged.
 
 ### Pending Todos
 
@@ -48,5 +51,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-31
-Stopped at: Phase 41 verified complete — Phase 42 ready to plan
+Stopped at: Phase 42 verified complete — Phase 43 ready to plan
 Resume file: None
