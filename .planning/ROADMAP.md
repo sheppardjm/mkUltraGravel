@@ -46,7 +46,7 @@ See: `.planning/milestones/v7.0-ROADMAP.md`
 **Plans**: 1 plan
 
 Plans:
-- [ ] 41-01: Replace GPX source with MKULTRA.gpx, regenerate pipeline, verify artifacts, remove old GPX
+- [x] 41-01: Replace GPX source with MKULTRA.gpx, regenerate pipeline, verify artifacts, remove old GPX
 
 #### Phase 42: Photo Pipeline Expansion
 
@@ -139,7 +139,7 @@ Plans:
 | 27-32. Strava Integration + Results | v5.0 | 10/10 | Complete | 2026-03-30 |
 | 33-35. UI Polish + Dev Tools | v6.0 | 3/3 | Complete | 2026-03-30 |
 | 36-40. Strava Go-Live | v7.0 | 5/5 | Complete | 2026-03-31 |
-| 41. GPX Route Update + Pipeline Validation | v8.0 | 0/1 | Not started | - |
+| 41. GPX Route Update + Pipeline Validation | v8.0 | 1/1 | Complete | 2026-03-31 |
 | 42. Photo Pipeline Expansion | v8.0 | 0/TBD | Not started | - |
 | 43. Horizontal Masonry Gallery | v8.0 | 0/TBD | Not started | - |
 | 44. Tone Image Integration | v8.0 | 0/TBD | Not started | - |
