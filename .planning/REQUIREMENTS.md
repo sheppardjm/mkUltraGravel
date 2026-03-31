@@ -22,10 +22,10 @@ Requirements for UI Polish + Dev Tools milestone. Each maps to roadmap phases.
 
 ### Site Navigation
 
-- [ ] **NAV-01**: Fixed header nav visible on all pages
-- [ ] **NAV-02**: Nav links to Home, Results, and Submission pages
-- [ ] **NAV-03**: Active page visually indicated (build-time, no flash)
-- [ ] **NAV-04**: Nav z-index clears grain and Escher overlays
+- [x] **NAV-01**: Fixed header nav visible on all pages
+- [x] **NAV-02**: Nav links to Home, Results, and Submission pages
+- [x] **NAV-03**: Active page visually indicated (build-time, no flash)
+- [x] **NAV-04**: Nav z-index clears grain and Escher overlays
 
 ## Future Requirements
 
@@ -56,10 +56,10 @@ Deferred to later milestones.
 | ELEV-02 | Phase 34 | Complete |
 | ELEV-03 | Phase 34 | Complete |
 | ELEV-04 | Phase 34 | Complete |
-| NAV-01 | Phase 35 | Pending |
-| NAV-02 | Phase 35 | Pending |
-| NAV-03 | Phase 35 | Pending |
-| NAV-04 | Phase 35 | Pending |
+| NAV-01 | Phase 35 | Complete |
+| NAV-02 | Phase 35 | Complete |
+| NAV-03 | Phase 35 | Complete |
+| NAV-04 | Phase 35 | Complete |
 
 **Coverage:**
 - v6.0 requirements: 10 total

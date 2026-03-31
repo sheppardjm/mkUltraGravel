@@ -7,7 +7,7 @@
 - ✅ **v3.0 Escher Identity + Data Fixes + UX Polish** - Phases 17-21 (shipped 2026-03-29)
 - ✅ **v4.0 Route Update + UX Overhaul** - Phases 22-26 (shipped 2026-03-30)
 - ✅ **v5.0 Strava Integration + Results** - Phases 27-32 (shipped 2026-03-30)
-- 🚧 **v6.0 UI Polish + Dev Tools** - Phases 33-35 (in progress)
+- ✅ **v6.0 UI Polish + Dev Tools** - Phases 33-35 (shipped 2026-03-30)
 
 ## Phases
 
@@ -56,7 +56,7 @@ Phases 27-32 delivered: Strava segment links on all 9 cards, scoring engine (Gra
 
 </details>
 
-### 🚧 v6.0 UI Polish + Dev Tools (In Progress)
+### ✅ v6.0 UI Polish + Dev Tools (Shipped 2026-03-30)
 
 **Milestone Goal:** Fix color inconsistencies across map/chart/cards, label gravel sectors on the elevation profile, and add a site navigation header for wayfinding between pages.
 
@@ -88,9 +88,11 @@ Plans:
 
 ---
 
-### Phase 35: Site Navigation
+### Phase 35: Site Navigation ✅
 
 **Goal**: Every page on the site has a fixed navigation header — a user can reach Home, Results, and Submission from any page without using the browser back button, and can see at a glance which page they are on.
+
+**Completed**: 2026-03-30
 
 **Depends on**: Phase 32 (v5.0 complete; independent of Phases 33-34)
 
@@ -105,7 +107,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 35-01: Build SiteNav.astro component and integrate into BaseLayout.astro
+- [x] 35-01: Build SiteNav.astro component and integrate into BaseLayout.astro
 
 ---
 
@@ -122,4 +124,4 @@ Plans:
 | 27-32. Strava + Results | v5.0 | 10/10 | Complete | 2026-03-30 |
 | 33. Color Consistency | v6.0 | 1/1 | Complete | 2026-03-30 |
 | 34. Elevation Labels | v6.0 | 1/1 | Complete | 2026-03-30 |
-| 35. Site Navigation | v6.0 | 0/1 | Not started | - |
+| 35. Site Navigation | v6.0 | 1/1 | Complete | 2026-03-30 |
