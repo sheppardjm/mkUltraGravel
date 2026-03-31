@@ -122,4 +122,4 @@ Plans:
 | 27-32. Strava + Results | v5.0 | 10/10 | Complete | 2026-03-30 |
 | 33. Color Consistency | v6.0 | 1/1 | Complete | 2026-03-30 |
 | 34. Elevation Labels | v6.0 | 1/1 | Complete | 2026-03-30 |
-| 35. Site Navigation | v6.0 | 0/TBD | Not started | - |
+| 35. Site Navigation | v6.0 | 0/1 | Not started | - |
