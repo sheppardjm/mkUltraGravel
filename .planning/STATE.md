@@ -5,17 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-03-31)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v7.0 complete. Awaiting Strava app review approval (REVIEW-03). Planning next milestone or monitoring.
+**Current focus:** v8.0 Visual Polish + Content — tone images, lizard background, horizontal masonry gallery, topo meatball dividers, 19 new photos, updated GPX route.
 
 ## Current Position
 
-Milestone: v7.0 Strava Go-Live — COMPLETE
-Phase: 40 of 40 — all phases shipped
-Plan: All plans complete
-Status: Milestone archived. Awaiting Strava review approval.
-Last activity: 2026-03-31 — v7.0 milestone complete
-
-Progress: [████████████████████] 100% (76 plans shipped across 40 phases, 7 milestones)
+Milestone: v8.0 Visual Polish + Content
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-31 — Milestone v8.0 started
 
 ## Performance Metrics
 

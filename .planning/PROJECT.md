@@ -113,6 +113,15 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ### Active
 
+#### v8.0 Visual Polish + Content
+
+- [ ] VIS-16: Tone images integrated between sections and inside sector/KOM cards
+- [ ] VIS-17: Responsive lizard background animation (subtle, reduced-motion gated)
+- [ ] VIS-18: Horizontal masonry gallery for route photos
+- [ ] VIS-19: Hollow topographic meatball section dividers
+- [ ] PHOTO-03: 19 new route photos processed through pipeline with mile markers (55 → 74 total)
+- [ ] ROUTE-07: Updated GPX route (MKULTRA.gpx) with full pipeline re-run
+
 #### Pending External
 
 - REVIEW-03: Strava app approved and 1-athlete limit lifted (submitted 2026-03-31, awaiting review — 7-10 business days)
@@ -140,6 +149,8 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 ## Context
 
 **Shipped v7.0** with ~4,484 LOC across Astro/CSS/JS/TS source files, Netlify Functions, and build scripts. 76 plans shipped across 40 phases and 7 milestones. Strava submission pipeline fully operational — real athlete can OAuth in, submit an activity, and appear on leaderboard. Strava developer program review submitted 2026-03-31; awaiting approval (REVIEW-03 externally gated).
+
+**v8.0 in progress:** Visual polish + content update — tone images, animated lizard background, horizontal masonry gallery, topographic meatball dividers, 19 new route photos, updated GPX route. All visual additions target subtle intensity.
 
 **Tech stack:** Astro 6, Tailwind v4, Leaflet 1.9.4, Chart.js (+ annotation plugin), PhotoSwipe, sharp (thumbnails), vitest (testing), Netlify Functions v1 (Strava OAuth/API)
 
@@ -217,4 +228,4 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | sr-only "View on Strava" spans | Satisfies brand guideline + accessibility without visual change | Good |
 
 ---
-*Last updated: 2026-03-31 after v7.0 milestone*
+*Last updated: 2026-03-31 after v8.0 milestone start*
