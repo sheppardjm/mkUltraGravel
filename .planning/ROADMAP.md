@@ -123,10 +123,10 @@ Plans:
 2. The Strava developer program review form is submitted with working pipeline screenshots
 3. App approval is received and the 1-athlete limit is lifted (externally gated — tracked here, cannot be completed by code)
 
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 40-01: Verify branding compliance and submit Strava app review
+- [ ] 40-01-PLAN.md -- Fix Strava branding colors (#FC5200), add sr-only link text, deploy, and submit review form
 
 ---
 
@@ -148,4 +148,4 @@ Note: Phase 40 (review submission) should be submitted as early as Phase 38 is c
 | 37. Data Pipeline Verification | v7.0 | 1/1 | Complete | 2026-03-31 |
 | 38. OAuth Flow Testing | v7.0 | 1/1 | Complete | 2026-03-31 |
 | 39. Webhook Registration | v7.0 | 1/1 | Complete | 2026-03-31 |
-| 40. Strava App Review | v7.0 | 0/TBD | Not started | - |
+| 40. Strava App Review | v7.0 | 0/1 | Not started | - |
