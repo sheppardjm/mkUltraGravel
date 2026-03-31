@@ -104,19 +104,24 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 - NAV-03: Active page visually indicated (build-time) — v6.0
 - NAV-04: Nav z-index clears grain/Escher overlays — v6.0
 
+- ENV-01 through ENV-04: Netlify environment configuration — v7.0
+- PIPE-01 through PIPE-04: Data pipeline verification — v7.0
+- OAUTH-01 through OAUTH-07: OAuth flow testing — v7.0
+- HOOK-01 through HOOK-03: Webhook & deauthorization — v7.0
+- REVIEW-01: Strava branding compliance (#FC5200, "View on Strava", "Powered by Strava") — v7.0
+- REVIEW-02: Strava developer program review submitted (2026-03-31) — v7.0
+
 ### Active
 
-#### Current Milestone: v7.0 Strava Go-Live
+#### Pending External
 
-**Goal:** Get the Strava submission pipeline working end-to-end with real data — a real athlete can OAuth in, submit an activity, and appear on the leaderboard.
+- REVIEW-03: Strava app approved and 1-athlete limit lifted (submitted 2026-03-31, awaiting review — 7-10 business days)
 
-**Target features:**
-- Complete Netlify environment configuration (remaining env vars, Node >=22)
-- Strava API app review submission and approval handling
-- End-to-end OAuth flow testing against real Strava API
-- Full submission pipeline testing (activity → segment_efforts → JSON → rebuild → leaderboard)
-- Deauthorization webhook verification (48hr deletion flow)
-- Bug fixes for issues discovered during real-data testing
+#### Post-Event
+
+- POST-01: Real segment matching verified with actual June 7 race activities
+- POST-02: Multi-athlete concurrent submission load testing
+- POST-03: KOM/QOM times populated on cards from real race data
 
 ### Out of Scope
 
@@ -134,7 +139,7 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ## Context
 
-**Shipped v6.0** with ~11,700 LOC across Astro/CSS/JS/TS source files, Netlify Functions, and build scripts. 71 plans shipped across 35 phases and 6 milestones. **Starting v7.0** — Strava go-live: wiring up the existing OAuth/submission code to real APIs and testing end-to-end.
+**Shipped v7.0** with ~4,484 LOC across Astro/CSS/JS/TS source files, Netlify Functions, and build scripts. 76 plans shipped across 40 phases and 7 milestones. Strava submission pipeline fully operational — real athlete can OAuth in, submit an activity, and appear on leaderboard. Strava developer program review submitted 2026-03-31; awaiting approval (REVIEW-03 externally gated).
 
 **Tech stack:** Astro 6, Tailwind v4, Leaflet 1.9.4, Chart.js (+ annotation plugin), PhotoSwipe, sharp (thumbnails), vitest (testing), Netlify Functions v1 (Strava OAuth/API)
 
@@ -142,7 +147,7 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 **Performance:** Lighthouse mobile Performance 96, LCP 2.48s, CLS 0.054, TBT 0ms. All Core Web Vitals green. All animations compositor-safe (transform/opacity only). Escher drift and Penrose spin animations gated behind prefers-reduced-motion.
 
-**v6.0 shipped:** Shared starColors module for color consistency, sector name/star-rating labels on elevation profile, fixed site navigation header with build-time active link detection.
+**v7.0 shipped:** Full Strava go-live — environment configured, data pipeline verified, OAuth round-trip tested, webhook registered, branding compliance fixed (#FC5200), developer review submitted. Previous: v6.0 shipped starColors module, elevation labels, site nav header.
 
 **Event Details:**
 - Date: June 7, 2026
@@ -205,5 +210,11 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | Fire-and-forget Netlify build hook | Submission must not fail if hook is slow/unavailable | Good |
 | CSRF cookie double-submit pattern | Prevents OAuth state replay attacks | Good |
 
+| STRAVA_REDIRECT_URI = full URL, not relative | Strava OAuth validates exact URI string | Good |
+| SECRETS_SCAN_OMIT_PATHS for .planning/ | Unblocked Netlify builds failing on env var values in planning docs | Good |
+| Client-side query param parsing in static Astro | Static builds cannot read request-time query params in frontmatter | Good |
+| Exact #FC5200 for Strava branding (not oklch) | Strava brand guidelines require exact hex color | Good |
+| sr-only "View on Strava" spans | Satisfies brand guideline + accessibility without visual change | Good |
+
 ---
-*Last updated: 2026-03-31 after v7.0 milestone start*
+*Last updated: 2026-03-31 after v7.0 milestone*

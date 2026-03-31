@@ -1,5 +1,33 @@
 # Project Milestones: MK Ultra Gravel
 
+## v7.0 Strava Go-Live (Shipped: 2026-03-31)
+
+**Delivered:** Full Strava pipeline operational — environment configured, data pipeline verified end-to-end, OAuth round-trip tested on production HTTPS with real Strava account, webhook subscription registered with deauth deletion verified, branding compliance fixed, and developer program review submitted to start the approval clock.
+
+**Phases completed:** 36-40 (5 plans total)
+
+**Key accomplishments:**
+
+- All 8 Netlify env vars configured with Functions scope, Strava callback domain + GitHub PAT verified
+- End-to-end data pipeline verified: submit-result → GitHub commit → Netlify rebuild → leaderboard
+- Full OAuth round-trip on production HTTPS with scope validation, client-side data parsing fix, Safari CSRF cookie verified
+- Strava webhook subscription #338141 registered, challenge handshake verified, deauthorization deletion tested
+- Strava branding fixed to exact #FC5200 (18 oklch replacements), sr-only "View on Strava" text on all 8 links
+- Developer program review form submitted 2026-03-31 — approval pending (7-10 business days)
+
+**Stats:**
+
+- ~35 files created/modified
+- ~4,484 lines of code total (Astro/TS/JS/CSS)
+- 5 phases, 5 plans
+- 1 day (2026-03-31)
+
+**Git range:** `bbf2c21` → `e3c3c3b`
+
+**What's next:** Await Strava app review approval (REVIEW-03). If not approved by ~May 28, escalate to developers@strava.com. Project enters monitoring mode until June 7 event.
+
+---
+
 ## v6.0 UI Polish + Dev Tools (Shipped: 2026-03-30)
 
 **Delivered:** Color consistency via shared starColors module, sector name/star-rating labels on all 6 elevation profile bands, and fixed site navigation header with build-time active link detection across all pages.
