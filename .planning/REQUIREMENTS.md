@@ -9,10 +9,10 @@ Requirements for Strava go-live. Each maps to roadmap phases.
 
 ### Environment Configuration
 
-- [ ] **ENV-01**: All 8 env vars set in Netlify dashboard with Functions scope (STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET, STRAVA_REDIRECT_URI, STRAVA_VERIFY_TOKEN, GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO, NETLIFY_BUILD_HOOK)
-- [ ] **ENV-02**: Strava app Authorization Callback Domain set to production URL (mkultragravel.netlify.app)
-- [ ] **ENV-03**: GitHub PAT verified with repo write permissions for athlete JSON commits
-- [ ] **ENV-04**: Node.js version >=22 confirmed in Netlify build environment
+- [x] **ENV-01**: All 8 env vars set in Netlify dashboard with Functions scope (STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET, STRAVA_REDIRECT_URI, STRAVA_VERIFY_TOKEN, GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO, NETLIFY_BUILD_HOOK)
+- [x] **ENV-02**: Strava app Authorization Callback Domain set to production URL (mkultragravel.netlify.app)
+- [x] **ENV-03**: GitHub PAT verified with repo write permissions for athlete JSON commits
+- [x] **ENV-04**: Node.js version >=22 confirmed in Netlify build environment
 
 ### Data Pipeline Verification
 
@@ -69,10 +69,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ENV-01 | Phase 36 | Pending |
-| ENV-02 | Phase 36 | Pending |
-| ENV-03 | Phase 36 | Pending |
-| ENV-04 | Phase 36 | Pending |
+| ENV-01 | Phase 36 | Complete |
+| ENV-02 | Phase 36 | Complete |
+| ENV-03 | Phase 36 | Complete |
+| ENV-04 | Phase 36 | Complete |
 | PIPE-01 | Phase 37 | Pending |
 | PIPE-02 | Phase 37 | Pending |
 | PIPE-03 | Phase 37 | Pending |
@@ -98,4 +98,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-03-31*
-*Last updated: 2026-03-31 after roadmap creation (phases 36-40)*
+*Last updated: 2026-03-31 after Phase 36 completion (ENV-01 through ENV-04 verified)*

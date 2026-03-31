@@ -5,22 +5,22 @@
 See: .planning/PROJECT.md (updated 2026-03-31)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v7.0 Strava Go-Live — Phase 36: Environment Configuration
+**Current focus:** v7.0 Strava Go-Live — Phase 37: Data Pipeline Verification
 
 ## Current Position
 
 Milestone: v7.0 Strava Go-Live
-Phase: 36 of 40 (Environment Configuration)
-Plan: 01 of 01 (complete)
-Status: Phase complete — ready for Phase 37
-Last activity: 2026-03-31 — Completed 36-01-PLAN.md (environment configuration)
+Phase: 37 of 40 (Data Pipeline Verification)
+Plan: — (not yet planned)
+Status: Ready to plan
+Last activity: 2026-03-31 — Phase 36 verified and complete (4/4 must-haves passed)
 
 Progress: [██████████░░░░░░░░░░] ~51% (72/~85 estimated plans shipped)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 71
+- Total plans completed: 72
 - v1.0: 30 plans across 10 phases (2 days)
 - v2.0: 15 plans across 6 phases (3 days)
 - v3.0: 6 plans across 5 phases (2 days)
@@ -47,14 +47,14 @@ None.
 ### Blockers/Concerns
 
 - **[Active]** REVIEW-03 (app approved) is externally gated — 7-10 business days minimum, community reports 1-4 weeks. Submit review (Phase 40) immediately after Phase 38 completes. If not approved by ~May 28, escalate to `developers@strava.com` and prepare manual result-collection contingency.
-- **[Active]** `STRAVA_REDIRECT_URI` confirmed absent from local `.env` — must be set in Netlify dashboard during Phase 36 or OAuth will fail silently.
-- **[Active]** GitHub PAT may have been created with expiry — verify no expiry before June 7 during Phase 36.
+- **[Resolved]** `STRAVA_REDIRECT_URI` set in Netlify dashboard (Phase 36 complete).
+- **[Resolved]** GitHub PAT confirmed with Contents Read+Write, no expiry before June 7 2026 (Phase 36 complete).
 - **[Active]** Safari SameSite=Lax CSRF cookie bug (WebKit #219650) — test explicitly in Safari during Phase 38; document behavior if observed.
 - **[Resolved]** `STRAVA_VERIFY_TOKEN` generated (dfb4e6536c623010dc78e73202a19773) and set in Netlify dashboard (Phase 36 complete).
 - **[Active]** GitHub PAT expiry — user confirmed no expiry before June 7 2026, but re-verify when Phase 38 deploys if more than a month has passed.
 
 ## Session Continuity
 
-Last session: 2026-03-31T15:47Z
-Stopped at: Completed 36-01-PLAN.md (Phase 36 environment configuration complete)
+Last session: 2026-03-31
+Stopped at: Phase 36 verified and complete — ready to plan Phase 37
 Resume file: None
