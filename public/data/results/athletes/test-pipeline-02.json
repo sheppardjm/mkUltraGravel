@@ -1,0 +1,12 @@
+{
+  "athleteId": "test-pipeline-02",
+  "name": "Test Pipeline 2",
+  "gender": "M",
+  "activityUrl": "https://www.strava.com/activities/88888888",
+  "submittedAt": "2026-03-31T16:42:54.520Z",
+  "segments": {
+    "24479292": {
+      "elapsed_time": 9999
+    }
+  }
+}
