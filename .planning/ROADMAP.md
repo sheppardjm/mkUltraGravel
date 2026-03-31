@@ -8,11 +8,11 @@
 - ✅ **v4.0 Route Update + UX Overhaul** - Phases 22-26 (shipped 2026-03-30)
 - ✅ **v5.0 Strava Integration + Results** - Phases 27-32 (shipped 2026-03-30)
 - ✅ **v6.0 UI Polish + Dev Tools** - Phases 33-35 (shipped 2026-03-30)
-- 🚧 **v7.0 Strava Go-Live** - Phases 36-40 (in progress)
+- ✅ **v7.0 Strava Go-Live** - Phases 36-40 (shipped 2026-03-31)
 
 ---
 
-### 🚧 v7.0 Strava Go-Live (In Progress)
+### ✅ v7.0 Strava Go-Live (Shipped 2026-03-31)
 
 **Milestone Goal:** Get the Strava submission pipeline working end-to-end with real data — a real athlete can OAuth in, submit an activity, and appear on the leaderboard.
 
@@ -22,7 +22,7 @@ This is an operational milestone, not a build milestone. The pipeline is fully i
 - [x] **Phase 37: Data Pipeline Verification** - Verify GitHub commit → rebuild → leaderboard chain using crafted curl requests
 - [x] **Phase 38: OAuth Flow Testing** - Full OAuth round-trip on production HTTPS with real Strava account
 - [x] **Phase 39: Webhook Registration** - Register Strava webhook subscription, verify deauth deletion flow
-- [ ] **Phase 40: Strava App Review** - Verify branding compliance, submit app for developer program review
+- [x] **Phase 40: Strava App Review** - Verify branding compliance, submit app for developer program review
 
 ---
 
@@ -126,7 +126,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 40-01-PLAN.md -- Fix Strava branding colors (#FC5200), add sr-only link text, deploy, and submit review form
+- [x] 40-01: Fix Strava branding colors (#FC5200), add sr-only link text, deploy, and submit review form
 
 ---
 
@@ -148,4 +148,4 @@ Note: Phase 40 (review submission) should be submitted as early as Phase 38 is c
 | 37. Data Pipeline Verification | v7.0 | 1/1 | Complete | 2026-03-31 |
 | 38. OAuth Flow Testing | v7.0 | 1/1 | Complete | 2026-03-31 |
 | 39. Webhook Registration | v7.0 | 1/1 | Complete | 2026-03-31 |
-| 40. Strava App Review | v7.0 | 0/1 | Not started | - |
+| 40. Strava App Review | v7.0 | 1/1 | Complete | 2026-03-31 |

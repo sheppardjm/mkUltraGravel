@@ -39,9 +39,9 @@ Requirements for Strava go-live. Each maps to roadmap phases.
 
 ### Strava App Review
 
-- [ ] **REVIEW-01**: Strava branding compliance verified (Connect with Strava button, Powered by Strava attribution, View on Strava links)
-- [ ] **REVIEW-02**: App submitted to Strava developer program review
-- [ ] **REVIEW-03**: App approved and 1-athlete limit lifted
+- [x] **REVIEW-01**: Strava branding compliance verified (Connect with Strava button, Powered by Strava attribution, View on Strava links)
+- [x] **REVIEW-02**: App submitted to Strava developer program review
+- [ ] **REVIEW-03**: App approved and 1-athlete limit lifted (externally gated — submitted 2026-03-31, awaiting review)
 
 ## Future Requirements
 
@@ -87,9 +87,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | HOOK-01 | Phase 39 | Complete |
 | HOOK-02 | Phase 39 | Complete |
 | HOOK-03 | Phase 39 | Complete |
-| REVIEW-01 | Phase 40 | Pending |
-| REVIEW-02 | Phase 40 | Pending |
-| REVIEW-03 | Phase 40 | Pending |
+| REVIEW-01 | Phase 40 | Complete |
+| REVIEW-02 | Phase 40 | Complete |
+| REVIEW-03 | Phase 40 | Externally gated |
 
 **Coverage:**
 - v7.0 requirements: 21 total
@@ -98,4 +98,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-03-31*
-*Last updated: 2026-03-31 after Phase 39 completion (HOOK-01 through HOOK-03 verified)*
+*Last updated: 2026-03-31 after Phase 40 completion (REVIEW-01, REVIEW-02 verified; REVIEW-03 externally gated)*
