@@ -11,25 +11,45 @@ const photos = JSON.parse(photosRaw) as Array<{
 }>;
 ---
 
-<div id="photo-gallery" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-  {photos.map((photo, i) => (
-    <a
-      href={`/images/${photo.filename}`}
-      data-pswp-width={photo.width}
-      data-pswp-height={photo.height}
-      class="gallery-item aspect-[3/4] overflow-hidden cursor-pointer"
-      aria-label={`View route photo at mile ${photo.mi}`}
-    >
-      <img
-        src={`/images/thumbs/${photo.filename.replace(/\.(jpg|jpeg|png|avif)$/i, '.webp')}`}
-        alt={`Route photo at mile ${photo.mi}`}
-        loading="lazy"
-        decoding="async"
-        class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-      />
-    </a>
-  ))}
+<div id="photo-gallery"
+  class="flex overflow-x-auto snap-x snap-proximity overscroll-x-contain gap-1 pb-2"
+  style="height: 280px;"
+>
+  {photos.map((photo) => {
+    const aspectRatio = photo.width / photo.height;
+    const itemWidth = Math.round(280 * aspectRatio);
+    const thumbHeight = Math.round(400 / aspectRatio);
+    return (
+      <a
+        href={`/images/${photo.filename}`}
+        data-pswp-width={photo.width}
+        data-pswp-height={photo.height}
+        class="gallery-item flex-none snap-start overflow-hidden cursor-pointer"
+        style={`width: ${itemWidth}px; height: 280px;`}
+        aria-label={`View route photo at mile ${photo.mi}`}
+      >
+        <img
+          src={`/images/thumbs/${photo.filename.replace(/\.(jpg|jpeg|png|avif)$/i, '.webp')}`}
+          alt={`Route photo at mile ${photo.mi}`}
+          width={400}
+          height={thumbHeight}
+          loading="lazy"
+          decoding="async"
+          class="w-full h-full object-cover"
+        />
+      </a>
+    );
+  })}
 </div>
+
+<style>
+  #photo-gallery {
+    scrollbar-width: none;
+  }
+  #photo-gallery::-webkit-scrollbar {
+    display: none;
+  }
+</style>
 
 <script>
 import PhotoSwipeLightbox from 'photoswipe/lightbox';
