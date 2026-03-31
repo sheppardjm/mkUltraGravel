@@ -1,469 +1,662 @@
 # Domain Pitfalls
 
-**Domain:** UI polish + dev tools additions to existing Astro 6 static cycling event site
-**Project:** MK Ultra Gravel — next milestone
-**Researched:** 2026-03-30
-**Confidence:** HIGH (annotation plugin verified via GitHub issues + official docs; color pitfall verified via Chart.js issue tracker; Astro patterns verified via official docs)
+**Domain:** Strava OAuth + Netlify Functions + GitHub API — go-live deployment
+**Project:** MK Ultra Gravel — Strava OAuth submission milestone
+**Researched:** 2026-03-31
+**Confidence:** HIGH (primary sources: Strava official docs, Netlify official docs, GitHub community discussions, direct code inspection)
 
 ---
 
 ## Context
 
-This file covers pitfalls specific to ADDING these four features to the existing system:
+This file covers pitfalls specific to taking the existing Strava OAuth submission flow from
+development to production. The codebase already exists: four Netlify Functions v1 (`strava-auth.js`,
+`strava-callback.js`, `submit-result.js`, `strava-webhook.js`) using the CSRF double-submit cookie
+pattern, a GitHub Contents API commit flow, and a fire-and-forget Netlify build hook trigger.
 
-1. Chart.js annotation labels (KOM elevation profile labels, responsive behavior)
-2. Multi-page navigation in Astro (shared nav component, active state)
-3. Color consistency across Leaflet, Chart.js canvas, and Tailwind CSS (oklch mismatch)
-4. Local dev tools that write to JSON data files (KOM/QOM time input, data integrity)
-
-The existing system uses `chartjs-plugin-annotation` v3.1, Astro 6, Leaflet 1.9, Tailwind v4 with oklch design tokens, and a prebuild pipeline (`scripts/generate-data.js`) that overwrites `public/data/annotations.json` on every run.
+The risk area is configuration — specifically the gap between local dev (where env vars come from
+`.env`, functions run via `netlify dev`, and OAuth redirects to localhost) and production (where env
+vars must be set in Netlify dashboard, the callback domain must match Strava's registration, and
+CSRF cookies must survive the Strava round-trip in all browsers).
 
 ---
 
 ## Critical Pitfalls
 
-These mistakes cause silent failures, data loss, or irreversible damage.
+Mistakes that silently break the OAuth flow or prevent submission from working at all.
 
 ---
 
-### Pitfall 1: Chart.js Annotation Plugin Fails Silently If Registered After Chart Instantiation
+### Pitfall 1: STRAVA_REDIRECT_URI Not Set in Netlify Dashboard — Breaks Every OAuth Attempt
 
 **What goes wrong:**
-`AnnotationPlugin` must be registered with `Chart.register(AnnotationPlugin)` BEFORE `new Chart(...)` is called. If the import and register happen after the Chart constructor — or if the dynamic import resolves asynchronously and the Chart was already created — annotations are silently absent. There is no runtime error, no warning, no visual indicator. The chart renders normally; the annotation boxes simply do not appear.
+`strava-auth.js` reads `process.env.STRAVA_REDIRECT_URI` to build the Strava authorization URL.
+The local `.env` file (confirmed by inspection) does NOT contain `STRAVA_REDIRECT_URI` — only
+`STRAVA_CLIENT_ID` and `STRAVA_CLIENT_SECRET` are present. If `STRAVA_REDIRECT_URI` is also missing
+from the Netlify dashboard environment variables, `process.env.STRAVA_REDIRECT_URI` is `undefined`,
+and the Strava authorization URL is built with `redirect_uri=undefined`. Strava rejects this with a
+`redirect_uri invalid` error before the user even sees the consent screen.
 
 **Why it happens:**
-Adding a new annotation type (e.g., labels) often means revisiting the plugin registration code. Developers move imports around, accidentally reorder awaits, or add the new annotation config without realizing the register call is positioned correctly relative to the Chart constructor.
+Developers correctly know to set `STRAVA_CLIENT_ID` and `STRAVA_CLIENT_SECRET` because those are
+the obvious Strava credentials. `STRAVA_REDIRECT_URI` is easy to overlook because it feels like a
+URL you choose yourself rather than a secret — but it must be a Netlify environment variable because
+it changes between local (`http://localhost:8888/.netlify/functions/strava-callback`) and production
+(`https://mkultragravel.netlify.app/.netlify/functions/strava-callback`).
 
 **Warning signs:**
-- Chart renders without any annotation boxes despite config being present
-- `console.log(Chart.registry.plugins)` does not include `annotation`
-- No JavaScript errors in the console
+- Strava shows "redirect_uri invalid" or "Bad Request" immediately after being redirected to the
+  consent page — before the user can click anything
+- The Strava authorization URL in the browser address bar contains `redirect_uri=undefined`
+- No error visible in Netlify Function logs (the function executes and redirects fine — the
+  rejection happens on Strava's side)
 
 **Prevention:**
-Keep the register call immediately adjacent to the import, in a fixed block:
-```typescript
-const { default: AnnotationPlugin } = await import('chartjs-plugin-annotation');
-Chart.register(AnnotationPlugin);
-// ... fetch data, build annotationBoxes ...
-const chartInstance = new Chart(canvas, { ... });
-```
-Never move the `Chart.register()` call below `new Chart(...)`. Add a comment explaining the ordering requirement (as already exists in ElevationProfile.astro at the `AnnotationPlugin must be registered BEFORE new Chart()` comment).
+Set all five required environment variables in Netlify dashboard under Site > Environment variables
+with scope "Functions" (not Build-only):
+- `STRAVA_CLIENT_ID`
+- `STRAVA_CLIENT_SECRET`
+- `STRAVA_REDIRECT_URI` = `https://mkultragravel.netlify.app/.netlify/functions/strava-callback`
+- `GITHUB_TOKEN`
+- `GITHUB_OWNER`
+- `GITHUB_REPO`
+- `NETLIFY_BUILD_HOOK`
+- `STRAVA_VERIFY_TOKEN` (webhook only)
 
-**Phase:** Chart annotation label phase. The existing codebase already handles this correctly — the risk is introducing a regression during edits.
-
-**Confidence:** HIGH — documented in chartjs-plugin-annotation official docs and in the existing codebase comment.
-
----
-
-### Pitfall 2: KOM Annotation Labels with `drawTime: 'beforeDatasetsDraw'` Are Covered by the Dataset Line
-
-**What goes wrong:**
-The KOM band annotations use `drawTime: 'beforeDatasetsDraw'` so the elevation line renders on top of them (correct for the band fill/border). However, **labels drawn at the same time as their parent annotation are also drawn before the dataset**, meaning the elevation line renders on top of the label text. At 9px font size, a chartreuse label obscured by a white/cream line stroke (1.5px) is invisible at the overlap point.
-
-This was a known issue resolved in chartjs-plugin-annotation via PR #275, which added an independent `label.drawTime` property. The fix is to set `label.drawTime: 'afterDatasetsDraw'` separately from the box's `drawTime`, so the band renders beneath the line but the label renders above it.
-
-**Why it happens:**
-The intuitive assumption is that if the box is configured with `drawTime: 'beforeDatasetsDraw'`, its label will be drawn after the dataset (to ensure visibility). The opposite is true — labels inherit their parent's drawTime by default in older versions, and without explicit override, both render at the same lifecycle point.
-
-**Warning signs:**
-- KOM band labels are invisible or partially obscured at positions where the elevation line crosses through them
-- Labels at the left edge of a band (`position: 'start'`) are visible on narrow bands but disappear on bands where the line immediately crosses the start
-
-**Prevention:**
-Add `label.drawTime: 'afterDatasetsDraw'` to all KOM box annotations that use `drawTime: 'beforeDatasetsDraw'`:
-
-```typescript
-annotationBoxes[`kom_${i}`] = {
-  type: 'box',
-  drawTime: 'beforeDatasetsDraw',   // band renders beneath elevation line
-  // ...
-  label: {
-    display: true,
-    drawTime: 'afterDatasetsDraw',  // label renders above elevation line
-    content: kom.name,
-    // ...
-  },
-};
+Verify by adding a minimal validation log at function startup:
+```javascript
+const required = ['STRAVA_CLIENT_ID', 'STRAVA_CLIENT_SECRET', 'STRAVA_REDIRECT_URI'];
+const missing = required.filter(k => !process.env[k]);
+if (missing.length) console.error('Missing env vars:', missing);
 ```
 
-**Phase:** KOM elevation profile labels phase.
+**Phase:** Environment setup — must be done before any live testing.
 
-**Confidence:** HIGH — verified via chartjs-plugin-annotation GitHub issue #243 and PR #275 resolution.
-
----
-
-### Pitfall 3: oklch Color Strings Fail in Chart.js Animation and Color Interpolation
-
-**What goes wrong:**
-Chart.js's internal color system (used for hover state transitions, animation interpolation, and some tooltip rendering) cannot parse CSS Level 4 color syntax including `oklch(...)`. While solid oklch colors passed as strings to `borderColor` or `backgroundColor` render correctly as-is in Canvas, any code path that tries to *parse and interpolate* the color (e.g., during a transition from one color to another) throws or silently produces `rgba(0,0,0,0)`.
-
-This is documented in Chart.js GitHub issue #12101 (opened July 2025, unresolved as of research date). The specific failure scenario for this project: if `chart.update('none')` is replaced with `chart.update()` (with animation), any annotation whose color is an oklch string will fail to animate and may render black or transparent.
-
-**Why it happens:**
-The existing codebase correctly uses `chart.update('none')` for annotation highlight/restore operations — this bypasses the animation system entirely, so oklch strings work safely. The pitfall is introduced if someone changes `update('none')` to `update()` for smoother animations, not realizing it breaks oklch color parsing.
-
-Additionally, the `darkBgPlugin` in ElevationProfile.astro uses `ctx.fillStyle = 'oklch(0.14 0.01 250)'` directly on the Canvas 2D context. This is fine — browsers support oklch in Canvas API `fillStyle`. The issue is *Chart.js's own color parsing*, not the Canvas API itself.
-
-**Warning signs:**
-- Sector annotation bands flash black or disappear during hover/click transitions
-- `chart.update()` calls produce visual artifacts on annotations with oklch colors
-- Console error mentioning unsupported color format
-
-**Prevention:**
-- Keep all `chart.update()` calls as `chart.update('none')` for annotation-only updates (no data changes, no animation needed)
-- Use hex colors (`#RRGGBB` or `#RRGGBBAA`) for all annotation `backgroundColor` and `borderColor` values — not oklch strings. The existing codebase already does this correctly (`'#7fff0018'`, `starColors[sector.stars] + '22'`, etc.)
-- Do not use oklch for annotation colors even if Tailwind CSS variables are oklch. Convert to hex at the point of annotation configuration
-- Reserve oklch for CSS-only contexts (Tailwind utilities, `global.css`) where the browser resolves them natively
-
-**Phase:** Any phase touching annotation colors or adding animation. The existing codebase is safe — risk is introducing a regression.
-
-**Confidence:** HIGH — verified via Chart.js GitHub issue #12101 and direct inspection of existing ElevationProfile.astro which uses hex for all annotation colors.
+**Confidence:** HIGH — confirmed by direct inspection of `.env` (only 4 vars present, STRAVA_REDIRECT_URI absent) and `strava-auth.js` line 37 (`redirect_uri: process.env.STRAVA_REDIRECT_URI`).
 
 ---
 
-### Pitfall 4: `resolve-annotations.js` Overwrites `annotations.json` on Every Pipeline Run, Erasing Manually-Entered KOM/QOM Times
+### Pitfall 2: Strava Authorization Callback Domain Mismatch — OAuth Rejects Redirect URI
 
 **What goes wrong:**
-`scripts/resolve-annotations.js` reads hardcoded `koms` array (with `komTime: null, qomTime: null`), resolves GPS coordinates, and writes the complete `public/data/annotations.json` file. If a KOM/QOM input tool saves times directly into `annotations.json` (the common naive approach), those times are erased the next time `npm run dev`, `npm run build`, or `node scripts/generate-data.js` runs.
+Strava's app settings have an "Authorization Callback Domain" field that acts as a domain allowlist.
+The `redirect_uri` you pass in the OAuth request must be within this registered domain. If the
+Callback Domain is set to `localhost` (for development) and not updated to `mkultragravel.netlify.app`
+for production, every OAuth attempt from the live site returns `redirect_uri invalid`.
 
-The pipeline runs automatically on `npm run dev` (line 8 of package.json: `"dev": "node scripts/generate-data.js && astro dev"`). A developer who starts the dev server after entering KOM times will silently lose all entered data.
+The Strava community has documented two additional sub-pitfalls:
+1. **Subdomain requirement**: The domain field must contain exactly one subdomain. You cannot use a
+   wildcard. `mkultragravel.netlify.app` must be entered exactly — `netlify.app` alone does not cover it.
+2. **Propagation delay**: After updating the Authorization Callback Domain in the Strava developer
+   console, changes can take time to propagate. Some developers report intermittent failures for
+   minutes to hours after updating.
 
 **Why it happens:**
-`annotations.json` is treated as a build artifact (generated file), not a data source. The pipeline overwrites it completely every run. A KOM/QOM input tool that targets the generated output file is writing to the wrong layer — it needs to write to the source (the `koms` array in `resolve-annotations.js`) or to a separate input file that the pipeline reads.
+Developers set Callback Domain to `localhost` during development, ship to production, and forget to
+update it. Or they update it but test immediately before propagation completes.
 
 **Warning signs:**
-- KOM/QOM times appear in the UI, then disappear after the next dev server restart
-- `public/data/annotations.json` shows all `null` komTime/qomTime values despite having entered data
-- Git diff shows `annotations.json` being updated to remove times
+- Strava shows `redirect_uri invalid` on the live site but not locally
+- Error appears after updating the domain, then disappears later (propagation)
+- URL in Strava auth page address bar shows the correct redirect_uri but Strava still rejects
 
 **Prevention:**
-The KOM/QOM input tool must write to the authoritative source, not the generated output:
+1. Before any live end-to-end test, verify `strava.com/settings/api` → "Authorization Callback
+   Domain" = `mkultragravel.netlify.app` (no `https://`, no path, no trailing slash)
+2. After updating, wait 5 minutes before testing
+3. Test from a private/incognito window to avoid any cached OAuth state
 
-Option A (RECOMMENDED): Keep a separate `data/kom-times.json` file in source control:
-```json
-{
-  "Billie Helmer": { "komTime": "4:12", "qomTime": "5:33" },
-  "Leaving Chatham": { "komTime": null, "qomTime": null },
-  "Silver Creek": { "komTime": null, "qomTime": null }
-}
-```
-`resolve-annotations.js` reads this file and merges times into the output. The input tool writes to `data/kom-times.json`. The pipeline can run as many times as needed without losing times.
+**Phase:** Environment setup, before first live end-to-end test.
 
-Option B: `resolve-annotations.js` reads from a separate env-var-configured source or from a fixed path that is not overwritten by the pipeline.
-
-Option C (Least safe): Modify `resolve-annotations.js` to read existing `annotations.json` before overwriting, extract current komTime/qomTime values, and re-apply them. Fragile — if the pipeline ever fails halfway through, times are lost.
-
-**The key constraint:** `annotations.json` must be treated as a generated artifact. The input tool must write to source, and the pipeline merges source into output.
-
-**Phase:** KOM/QOM time input tool phase. Must be designed before writing any tool code.
-
-**Confidence:** HIGH — verified by reading `scripts/resolve-annotations.js` (directly writes output from hardcoded `koms` array) and `package.json` (pipeline runs on every `npm run dev`).
+**Confidence:** HIGH — Strava official docs confirm domain field requirement; community discussions
+confirm subdomain specificity requirement and propagation delays (Source: Strava Community Hub
+threads on Authorization Callback Domain).
 
 ---
 
-### Pitfall 5: Leaflet Polyline Colors Do Not Accept CSS Variables or oklch Strings
+### Pitfall 3: Netlify Functions v1 Env Vars Scoped to "Build" Instead of "Functions" — Process.env Returns Undefined
 
 **What goes wrong:**
-Leaflet's polyline `color` option is passed directly to the Canvas 2D context as a stroke style. Leaflet does not resolve CSS custom properties (e.g., `var(--color-accent-green)`) or modern color functions like `oklch(...)`. Passing these as `color` produces either a transparent stroke or no stroke at all, with no error.
+Netlify has two relevant scopes for environment variables: "Build" (available during `npm run build`
+on the build image) and "Functions" (available at runtime in deployed functions). An env var set with
+Build scope only is NOT available in functions at request time — `process.env.GITHUB_TOKEN` returns
+`undefined` even though the variable is set in the dashboard.
 
-If color consistency work involves updating sector polylines or KOM polylines to reference Tailwind design tokens, using CSS variable syntax will silently fail.
+This is separate from the confirmed Netlify Functions v2 env var bug (where variables intermittently
+return undefined). Functions v1 (`exports.handler`) is stable for env var access, but only if the
+scope is set correctly.
 
 **Why it happens:**
-CSS custom property resolution (`var(--x)`) is a browser CSS engine feature. The Canvas API on which Leaflet is built does not run through the CSS resolver — it accepts only resolved color values (hex, rgb, rgba, hsl, hsla, or named colors).
+The Netlify dashboard defaults may prompt you to select scope, and "Build" is the first option.
+Developers not familiar with the scope distinction set all variables to Build scope.
 
 **Warning signs:**
-- Leaflet polylines are invisible (transparent) despite `color` being set
-- No JavaScript error in console
-- Works fine when the color is set to a hex value, fails with `var(--...)` or `oklch(...)`
+- Function logs show `Missing required GitHub environment variables` despite having set them
+- The submission succeeds locally (`.env` file) but fails in production with 500 errors
+- `console.log(process.env.GITHUB_TOKEN)` in function logs prints `undefined`
 
 **Prevention:**
-- Keep all Leaflet `color` values as hex strings (`'#7fff00'`, `'#f0c040'`, etc.)
-- Do not attempt to reference Tailwind CSS variables inside Leaflet option objects
-- If you need to sync Leaflet colors with Tailwind tokens, use `getComputedStyle(document.documentElement).getPropertyValue('--color-accent-green')` to resolve at runtime, then pass the resolved hex/rgb value to Leaflet
+- Set all function-runtime env vars with scope "Functions" (or "All" if unsure)
+- Netlify official docs: env vars for functions must not be restricted to Build scope only
+- After setting, trigger a new deploy — env var changes to functions require a fresh deployment
+  to take effect
 
-**Phase:** Any phase touching Leaflet polyline or marker colors. The existing codebase is safe — starColors and KOM colors are all hardcoded hex.
+**Phase:** Environment setup.
 
-**Confidence:** HIGH — verified by Leaflet documentation (color options accept HTML color strings: hex, rgb/rgba, named) and confirmed via inspection of existing RouteMap.astro which uses hex throughout.
+**Confidence:** HIGH — Netlify official docs explicitly state functions env vars are separate from
+build env vars; confirmed by Netlify community (Source: Netlify Docs "Environment variables and
+functions").
+
+---
+
+### Pitfall 4: CSRF Cookie Not Sent on Strava Callback in Safari — CSRF Check Fails for Some Users
+
+**What goes wrong:**
+The CSRF pattern works as follows: `strava-auth.js` sets `strava_oauth_state` cookie with
+`SameSite=Lax`, the user is redirected to Strava (cross-site), and when Strava redirects back,
+`strava-callback.js` expects the cookie to be present to verify the nonce.
+
+`SameSite=Lax` is supposed to allow cookies on top-level GET navigations (exactly what OAuth
+redirects are). However, WebKit/Safari has a confirmed bug where `SameSite=Lax` cookies are NOT
+sent on cross-site redirects in certain circumstances. This causes the CSRF nonce check to fail
+(`cookieNonce !== nonce`) and the user gets the "Invalid or missing state parameter" error page —
+even when the OAuth flow succeeded on Strava's side.
+
+The bug was reported in WebKit and marked "CONFIGURATION CHANGED" (June 2021) but continued to
+be reproduced in Safari 15.1 and later versions according to community reports.
+
+**Why it happens:**
+The OAuth redirect chain is: `mkultragravel.netlify.app` → `strava.com` → (redirect back) →
+`mkultragravel.netlify.app/.netlify/functions/strava-callback`. The final redirect is technically
+a cross-site navigation from strava.com, and Safari's Lax handling differs from Chrome/Firefox.
+
+**Warning signs:**
+- "Invalid or missing state parameter" error page reported by users on iPhone/Mac Safari
+- The error is reproducible on Safari but not on Chrome or Firefox
+- Your own testing passes (if you tested on Chrome) but a real user on Safari fails
+
+**Prevention:**
+The existing implementation uses `SameSite=Lax`, which is correct for OAuth and is the recommended
+setting. The Safari issue is a browser bug, not a code bug. Mitigation options:
+
+Option A (Lowest risk): Accept the Safari edge case and provide clear user messaging: "If you see
+this error on Safari, try again — the second attempt usually succeeds." The OAuth state cookie is
+re-created fresh each time the user starts a new OAuth flow from /submit.
+
+Option B (Eliminates bug): Replace cookie-based CSRF with state-only verification. Since the
+state parameter already encodes the nonce in a signed/opaque base64url payload, and Strava sends
+the state back verbatim, you can verify CSRF by comparing the state payload's nonce against a
+short-term in-memory or KV store. However, this requires server-side state storage and adds
+complexity.
+
+Option C (Partial mitigation): Add an HTML meta refresh or JavaScript intermediate page at the
+callback that re-triggers the cookie request from a first-party context. Adds latency.
+
+For a low-traffic event with self-service submissions, Option A is likely acceptable. Document
+the behavior so support queries can be answered.
+
+**Phase:** Testing phase — test explicitly in Safari before launch.
+
+**Confidence:** MEDIUM — WebKit bug #219650 confirmed and still unresolved through Safari 15.1;
+SameSite=Lax cookie behavior in OAuth redirects is a known cross-browser issue.
+
+---
+
+### Pitfall 5: GitHub Contents API 409 Conflict on Simultaneous Submissions — Athlete Update Lost
+
+**What goes wrong:**
+`submit-result.js` uses a GET-then-PUT pattern to update an athlete's JSON file. If the same
+athlete submits twice in rapid succession (double-click, browser refresh, tab duplicate), two
+function invocations run concurrently. Both GET the file (or both see 404), both attempt PUT with
+the same SHA (or both attempt create). The second PUT returns 409 Conflict. The code handles this
+case (returns a 409 page to the user), but the user's second submission is silently dropped.
+
+More critically: if two DIFFERENT athletes submit at the same time and each triggers a GitHub
+commit, the commits can conflict if GitHub's internal state sees a branch divergence. The Contents
+API is designed for serial use — GitHub documentation explicitly states that parallel calls to the
+contents create/update endpoint will conflict and must be serialized.
+
+**Why it happens:**
+Each Netlify Function invocation is independent. There is no shared mutex or queue. Ten athletes
+submitting at 9:00 AM on event day triggers ten simultaneous GitHub API calls.
+
+**Warning signs:**
+- Some athletes report their submission page showed success but they don't appear in results
+- 409 errors visible in Netlify Function logs
+- Git history shows fewer commits than submission attempts
+
+**Prevention:**
+- The existing 409 handler (line 226 of `submit-result.js`) correctly shows a "try again" page —
+  this is the right behavior for the user-facing case
+- For the broader race condition: per-athlete files (`athletes/{athleteId}.json`) means two
+  DIFFERENT athletes writing DIFFERENT files do NOT conflict at the GitHub API level — each PUT
+  targets a different path. The 409 only occurs if the same athlete submits twice concurrently.
+- This means the actual production risk is low unless a single athlete double-submits
+- For the event scenario (50-200 submissions, spread over weeks), serial conflicts are unlikely
+- Explicitly test the retry path: submit, get the 409 conflict page, click "Try Again", verify
+  the second attempt succeeds
+
+**Phase:** Testing — verify the 409 retry path works before launch.
+
+**Confidence:** HIGH — GitHub documentation explicitly confirms parallel Contents API calls conflict;
+direct code inspection confirms per-athlete file paths (which eliminates cross-athlete conflicts).
 
 ---
 
 ## Moderate Pitfalls
 
-Mistakes that cause delays or rework but are recoverable.
+Mistakes that cause delays, failed submissions, or user confusion — but are recoverable.
 
 ---
 
-### Pitfall 6: Chart.js Annotation Label Text Overflows Narrow Segment Bands
+### Pitfall 6: Strava Webhook Subscription Registration Fails Silently — Deauthorization Data Not Deleted
 
 **What goes wrong:**
-KOM segment widths on the elevation chart vary significantly: "Leaving Chatham" spans only 0.38 miles, which at a 100-mile x-axis is about 0.38% of the chart width. At a 600px-wide chart, that is roughly 2.3px. The label text "Leaving Chatham" at 9px monospace font requires approximately 130px. The label is positioned `'start'` within the box, but the text renders outside the box boundary with no clipping or wrapping — it simply draws over adjacent chart content.
+The `strava-webhook.js` function handles deauthorization events and deletes athlete data. But the
+webhook subscription itself must be registered via a one-time curl command AFTER the function is
+deployed. If this step is skipped, the function exists but Strava never sends events to it. Athletes
+who deauthorize the app will NOT have their data deleted within the required 48-hour TOS window.
+
+Additionally, Strava enforces "one subscription per application" — if a subscription was registered
+previously (e.g., during development with a different callback URL), attempting to re-register
+returns a 422 error. The old subscription points to the wrong URL and must be deleted first.
 
 **Why it happens:**
-`chartjs-plugin-annotation` has no built-in overflow detection, text truncation, or automatic repositioning for labels that are wider than their parent annotation box. The label is drawn at the anchor point regardless of whether it fits. Setting `clip: false` (the global Chart.js option) makes the situation worse on narrow bands near the chart edge.
+The webhook subscription registration is a manual operational step documented only in the function's
+source code comment. It is easy to miss when following a deployment checklist. There is no
+automated verification that the subscription exists.
 
 **Warning signs:**
-- Label text for narrow segments visually overlaps with tick labels, grid lines, or other annotation labels
-- Two adjacent KOM segment labels collide (e.g., if future segments are added close together)
-- Label is not visible at all at small chart widths (e.g., mobile, 320px) because it renders outside the canvas
+- Running `curl https://www.strava.com/api/v3/push_subscriptions -H "Authorization: Bearer ACCESS_TOKEN"`
+  returns an empty array (no subscription)
+- Or returns a subscription with a callback_url pointing to a development URL
+- Athlete data persists in GitHub after they deauthorize the app
 
 **Prevention:**
-For the three current KOM segments, check the rendered pixel width of each band at the minimum expected chart width (320px mobile). Calculate the pixel width: `(endMi - startMi) / totalMi * chartWidth`. If less than ~80px, the label will overflow.
+Include webhook subscription verification as an explicit step in the go-live deployment checklist:
 
-Mitigations (in order of preference):
-1. Use short names or abbreviations where labels will be narrow: `"Chatham"` instead of `"Leaving Chatham"` for narrow bands
-2. Rotate the label 90 degrees for narrow bands: `rotation: 90` — vertical text fits within a narrow vertical band
-3. Use `position: { x: 'start', y: 'start' }` with a negative `yAdjust` to float the label above the band
-4. Conditionally hide labels below a pixel-width threshold using a scriptable `display` option:
-```typescript
-label: {
-  display: (ctx) => {
-    const chart = ctx.chart;
-    const pixelWidth = chart.scales.x.getPixelForValue(kom.endMi)
-      - chart.scales.x.getPixelForValue(kom.startMi);
-    return pixelWidth > 50;
-  },
-  content: kom.name,
-}
+```bash
+# Verify current subscription (should show mkultragravel.netlify.app callback URL)
+curl https://www.strava.com/api/v3/push_subscriptions \
+  -H "Authorization: Bearer STRAVA_ACCESS_TOKEN"
+
+# If no subscription or wrong URL, delete old (if exists) and re-register:
+# DELETE: curl -X DELETE "https://www.strava.com/api/v3/push_subscriptions/ID" ...
+# CREATE: curl -X POST https://www.strava.com/api/v3/push_subscriptions \
+#   -F client_id=CLIENT_ID -F client_secret=CLIENT_SECRET \
+#   -F callback_url=https://mkultragravel.netlify.app/.netlify/functions/strava-webhook \
+#   -F verify_token=STRAVA_VERIFY_TOKEN
 ```
 
-**Phase:** KOM elevation profile labels phase.
+Test the handshake by triggering a validation GET manually and checking function logs for the
+`hub.challenge` echo response.
 
-**Confidence:** HIGH — verified via chartjs-plugin-annotation documentation (no overflow handling documented) and direct geometry calculation for the three KOM segments.
+**Phase:** Post-deploy checklist.
+
+**Confidence:** HIGH — Strava official webhook docs confirm one subscription limit and 422 behavior;
+the function code comment documents the registration curl command.
 
 ---
 
-### Pitfall 7: Astro `Astro.url.pathname` Requires Explicit Passing to Navigation Component
+### Pitfall 7: Strava Webhook Handshake Fails Due to STRAVA_VERIFY_TOKEN Mismatch — Subscription Can't Be Registered
 
 **What goes wrong:**
-In Astro 6, `Astro.url` (and its `.pathname`) is only available in the frontmatter code fence (the `---` block) of `.astro` files. It is NOT available as a global in `<script>` tags, and it does NOT automatically propagate into child components.
+During webhook subscription registration, Strava immediately sends a GET request to the callback URL
+with the `hub.verify_token` value you provided in the registration curl. The function must respond
+200 with `{"hub.challenge": "..."}` within 2 seconds. If `STRAVA_VERIFY_TOKEN` in the Netlify
+dashboard does not match the value used in the registration curl command, the function returns 403
+and the subscription registration fails entirely.
 
-When building a shared `Nav.astro` component placed inside `BaseLayout.astro`, the component does NOT automatically know which page it is currently rendering on. If the Nav component tries to use `Astro.url` directly in its own frontmatter, it does get the current URL — but only if the component is evaluated in a per-page context (which components in layouts are). This works correctly at build time. The pitfall is assuming the Nav component needs to receive the current URL as a prop and threading it unnecessarily.
-
-The REAL pitfall is the inverse: forgetting that `Astro.url.pathname` is available in a child component's frontmatter and instead trying to determine active state in a `<script>` tag using `window.location.pathname`. This works at runtime but produces a flash of unstyled navigation (FUN) — the active state is not applied on initial server-rendered HTML, then snaps on after JS runs.
+Because Netlify Functions can have a cold start (the container is not warm), the first invocation
+of the function may take 1-3 seconds just to initialize — eating into the 2-second window.
 
 **Why it happens:**
-Developers coming from React or Vue assume that "current route" is a client-side concept requiring JavaScript. In Astro's static build model, every page's HTML is rendered at build time with full knowledge of `Astro.url.pathname`, so active state should be determined at build time, not runtime.
+The verify token is chosen by the developer. If the Netlify env var is set to one value but the
+registration curl uses a different string (typo, copy-paste error, mismatch between what was set
+in the dashboard vs what was used in the terminal), the handshake fails.
 
 **Warning signs:**
-- Navigation active state appears with a brief flash/jump when page loads
-- Navigation looks inactive on first paint, then highlights the correct link
-- DevTools shows the active class being added after DOMContentLoaded
+- Webhook registration curl returns an error like "Invalid verify_token"
+- Netlify Function logs show the GET was received but returned 403 (wrong verify token)
+- No logs at all (function cold started after the 2-second window expired)
 
 **Prevention:**
-Determine active state at build time in the component's frontmatter, not in a `<script>` tag:
+1. Set `STRAVA_VERIFY_TOKEN` in Netlify dashboard BEFORE running the registration curl
+2. Copy the exact value from the Netlify dashboard into the curl command — do not type it
+3. If the registration fails, the function is already deployed (warm), so retry immediately
+4. Verify the function is returning 200 for a known-good verify token before running the
+   registration curl: `curl "https://mkultragravel.netlify.app/.netlify/functions/strava-webhook?hub.mode=subscribe&hub.verify_token=YOUR_TOKEN&hub.challenge=testchallenge123"` — should return `{"hub.challenge":"testchallenge123"}`
 
-```astro
----
-const currentPath = Astro.url.pathname;
-const navLinks = [
-  { href: '/', label: 'Event' },
-  { href: '/results', label: 'Results' },
-];
----
-<nav>
-  {navLinks.map(link => (
-    <a
-      href={link.href}
-      aria-current={currentPath === link.href ? 'page' : undefined}
-      class={currentPath === link.href ? 'nav-active' : ''}
-    >
-      {link.label}
-    </a>
-  ))}
-</nav>
-```
+**Phase:** Post-deploy checklist.
 
-Use `aria-current="page"` for accessibility. Style the active state with `a[aria-current="page"]` in CSS.
-
-**Phase:** Navigation component phase.
-
-**Confidence:** HIGH — verified via Astro official docs (routing, layouts) and the `Astro.url` API reference.
+**Confidence:** HIGH — Strava webhook docs confirm 2-second window; function code inspection confirms
+exact string match is required for the verify token check.
 
 ---
 
-### Pitfall 8: Adding Navigation to BaseLayout Breaks Pages With Custom `<head>` Content
+### Pitfall 8: Strava Rate Limits Reached During High-Traffic Event Day — Submissions Return 429
 
 **What goes wrong:**
-`BaseLayout.astro` uses a named slot `<slot name="head" />` for pages to inject page-specific head content. When adding navigation to the layout, a common mistake is restructuring the `<body>` in a way that removes or wraps the default `<slot />` (unnamed slot). Pages that pass content to the unnamed slot then render only the layout shell with no page content.
+Strava rate limits are per-application (not per-user): 100 read requests per 15 minutes, 1,000 per
+day. Each athlete submission triggers two API calls: one token exchange POST (`/oauth/token`) and one
+activity GET (`/activities/{id}?include_all_efforts=true`).
 
-The subtler version: adding a sticky navigation bar that uses `position: fixed` or `position: sticky` changes the layout's stacking context. The map (which uses Leaflet with `z-index: 0`) and the grain/escher overlays (which use `z-index: 9998` and `z-index: 9999`) may render on top of a fixed navigation bar unless the nav has a higher z-index.
+At 200 submissions/day, that is 200 activity GETs plus 200 token POSTs = 400 total API calls, well
+within the 1,000/day daily limit. However, if many athletes submit within the same 15-minute window
+(e.g., after the race finish line), 50+ concurrent submissions would each make 1 GET = 50+ requests
+in 15 minutes, approaching the 100 GET/15-minute window.
 
-**Why it happens:**
-`BaseLayout.astro` is a simple shell with no visual chrome. Adding navigation as a structural element changes the document flow. The fixed overlays (`grain-overlay` at z-index 9999, `escher-overlay` at z-index 9998) were designed for a chromeless layout and will cover a fixed nav unless accounted for.
-
-**Warning signs:**
-- Pages render blank or show only the navigation bar after layout refactoring
-- Navigation bar is partially or fully covered by the grain or escher overlay texture
-- Leaflet popup appears behind the navigation bar on scroll
-
-**Prevention:**
-- When adding navigation to BaseLayout, keep the `<slot />` and `<slot name="head" />` unchanged
-- Give the nav bar `z-index: 10000` (one above `grain-overlay` at 9999) to ensure it renders above all overlays
-- After adding the nav, verify each page (index.astro, results.astro, submit.astro, submit-confirm.astro) still renders its content correctly
-- Check that Leaflet popups appear above the page content but below the nav bar at typical z-index values
-
-**Phase:** Navigation component phase.
-
-**Confidence:** MEDIUM — based on inspection of existing BaseLayout.astro z-index values and Astro layout slot behavior (official docs).
-
----
-
-### Pitfall 9: Color Drift Between oklch Token (Tailwind) and Hex Approximation (Chart.js / Leaflet)
-
-**What goes wrong:**
-The design uses `--color-accent-green: oklch(0.85 0.24 145)`. When this color needs to appear in Chart.js annotations or Leaflet markers (which require hex), a developer eyeballs the hex equivalent as `#7fff00` (chartreuse) or uses an online converter. The converted hex may visually match on the developer's display but differ on wide-gamut displays (P3, Rec2020) where oklch values outside the sRGB gamut are clipped differently by different browsers.
-
-More concretely: `oklch(0.85 0.24 145)` is a vivid yellow-green that sits outside the sRGB gamut on P3 displays. Its sRGB approximation (used by most converters) is approximately `#6eff4a`. The project currently uses chartreuse (`#7fff00`) for KOM markers, which is a different hue. These are intentionally different colors (green for accent, chartreuse for KOM), but if someone tries to "match" the Tailwind accent green in Chart.js using hex, they will get a color that diverges visually between standard and wide-gamut displays.
+The current code does not read or log the `X-RateLimit-Usage` response headers from Strava, making
+it impossible to diagnose rate limit issues in production without instrumenting them.
 
 **Why it happens:**
-CSS resolves oklch natively at display time with gamut mapping. The Canvas API receives a fixed color string that cannot gamut-map. The two rendering systems produce different results for colors at the edge of sRGB.
+Event-driven submission patterns create burst traffic. Race finishers tend to check their times and
+submit immediately, clustering submissions in short windows.
 
 **Warning signs:**
-- Annotation colors look different on MacBook Retina (P3) vs standard display
-- "The chart color doesn't match the card border color" — both using the same design token concept but different rendering paths
-- Hex color in Chart.js annotation looks slightly more saturated or different hue than the Tailwind utility class on the same page
+- Activity fetch returns 429 or a JSON error body with `message: "Rate Limit Exceeded"`
+- The callback function shows "Failed to fetch activity from Strava" errors in logs without
+  a clear cause
+- Errors cluster in 15-minute windows, then stop
 
 **Prevention:**
-- Accept that Chart.js/Leaflet canvas colors will be sRGB approximations of oklch tokens. Document this explicitly.
-- For the existing project, the colors are intentionally different across surfaces (yellow-to-red for sectors, chartreuse for KOM, accent-green for general UI). Do not attempt to use oklch tokens directly in Chart.js or Leaflet — use the hardcoded hex values that are already correct for their purpose.
-- When adding new colors that need to match between CSS and Canvas, define both values explicitly:
+- Add `X-RateLimit-Usage` header logging in `strava-callback.js` when the activity fetch responds:
+  ```javascript
+  console.log('Strava rate limit:', activityRes.headers.get('X-RateLimit-Usage'));
   ```
-  // In global.css @theme
-  --color-kom: oklch(0.85 0.24 120);         // CSS contexts
-  --color-kom-hex: #7fff00;                   // Canvas contexts (approximation)
+- For the event scale (50-200 total submissions), rate limits are unlikely to be a problem
+- If rate limits become an issue post-event (bulk re-submissions, debugging runs), space out
+  manual test submissions across 15-minute windows
+- The 1,000/day limit resets at midnight UTC — large batch testing should span multiple days
+
+**Phase:** Testing — add rate limit header logging before production testing.
+
+**Confidence:** HIGH — Strava official docs confirm rate limits (100 GETs/15min, 1000/day per-app);
+the specific numbers are low enough that normal event traffic is fine but burst traffic can be a concern.
+
+---
+
+### Pitfall 9: Athlete Activity Not Visible to Their Own OAuth Token — 403 on Activity Fetch
+
+**What goes wrong:**
+`strava-callback.js` fetches the activity using the athlete's own access token. This works for
+activities the athlete owns. However, there are edge cases where the fetch returns 403:
+
+1. **Activity set to "Only You" visibility**: The activity exists but the `activity:read_all` scope
+   is required (which is already requested) — however, if the athlete's Strava account has a
+   restriction (e.g., under-18 account), API access may be limited.
+2. **Activity does not belong to the authenticated athlete**: The athlete submits someone else's
+   activity URL. The token is for Athlete A but the activity ID belongs to Athlete B — Strava
+   returns 403.
+3. **Segment matching disabled at account level**: Athletes can disable segment matching entirely
+   in their Strava settings. In this case, `segment_efforts` in the API response is present but
+   may be empty even for an activity recorded on the exact course.
+
+The third case is the most likely to confuse athletes submitting legitimate rides.
+
+**Why it happens:**
+The submission form only validates the activity URL format, not whether the URL matches the
+authenticated athlete's account. Athletes may copy the wrong URL (a friend's activity, a Strava
+route page rather than an activity).
+
+**Warning signs:**
+- User sees "Failed to fetch activity" error after successful OAuth consent
+- User sees "No Matching Event Segments Found" for what looks like a valid course activity
+- Netlify function logs show 403 from the activity fetch endpoint
+
+**Prevention:**
+- The current 403 handling is correct: returns an error page with instructions to verify the
+  activity URL belongs to their account
+- Add a check: after a successful token exchange, compare `tokenData.athlete.id` against the
+  activity's owner (the activity response includes an `athlete.id` field) — if they don't match,
+  return a specific "This activity does not belong to your Strava account" error
+- For the segment matching disabled case: the error message "No Matching Event Segments Found"
+  already lists "GPS data and segment matching enabled on Strava" as a thing to check. This is
+  adequate.
+
+**Phase:** Testing — add the athlete ID cross-check if time permits; otherwise the existing error
+messages are serviceable.
+
+**Confidence:** MEDIUM — 403 behavior for own-account private activities is verified in Strava docs;
+segment matching disabled case is inferred from Strava support documentation (segment matching can
+be toggled per-user).
+
+---
+
+### Pitfall 10: GitHub PAT Expires Before Event Day — All Submissions Fail With 401
+
+**What goes wrong:**
+The `GITHUB_TOKEN` environment variable holds a fine-grained Personal Access Token (PAT). GitHub
+fine-grained PATs can be created with or without an expiry. If created with a 30, 60, or 90-day
+expiry and not rotated before event day (June 7, 2026), every `submit-result.js` call to the GitHub
+Contents API returns 401 Unauthorized. Submissions fail silently from the user's perspective (they
+see "Failed to save results").
+
+GitHub does send email notifications when PATs are about to expire, but those emails can be missed.
+
+**Why it happens:**
+PATs are created during initial setup, then forgotten. If the token was created in, say, March 2026
+with a 90-day expiry, it expires before event day.
+
+**Warning signs:**
+- GitHub Contents API returns 401 in function logs
+- "Failed to save results" error shown to submitting athletes
+- No entries appearing in the GitHub repo despite successful OAuth
+
+**Prevention:**
+- Create the GitHub PAT with NO expiry (fine-grained PATs on personal accounts support no-expiry
+  as of late 2024 GA)
+- Or create with a 1-year expiry and calendar a rotation reminder for May 2027 (after event day)
+- Required permissions: Repository "Contents" = Read and Write on the mkUltraGravel repo only
+- Verify the token works before launch by making a test GET to the GitHub API:
+  ```bash
+  curl -H "Authorization: Bearer GITHUB_TOKEN" \
+    https://api.github.com/repos/Sheppardjm/mkUltraGravel/contents/public/data/results/athletes/
   ```
-- Never compute the hex from the oklch at runtime via `getComputedStyle` and pass it to Leaflet — `getComputedStyle` returns the resolved oklch string, not a hex, and Leaflet cannot use it.
+  Should return 200 (empty array if no files yet).
 
-**Phase:** Any phase touching new colors across both CSS and canvas surfaces.
+**Phase:** Environment setup.
 
-**Confidence:** MEDIUM — verified via Chart.js issue #12101 (confirms no oklch support in Chart.js), Leaflet docs (hex/rgb required), and oklch gamut behavior (Evil Martians oklch reference).
-
----
-
-### Pitfall 10: KOM/QOM Input Tool Has No Validation — Invalid Times Corrupt Build
-
-**What goes wrong:**
-A dev tool that writes KOM/QOM times to a source JSON file can write invalid values (e.g., `"4:62"`, `"abc"`, `""`, or `null` formatted as a string). These propagate through the pipeline into `annotations.json`, which is then used at build time by `KomSegments.astro` (reads the JSON in its frontmatter at SSG time) and at runtime by `ElevationProfile.astro` (fetches via `/data/annotations.json`). An invalid time string like `"4:62"` does not crash the build but renders incorrectly in the UI. A value like `null` stored as the string `"null"` would display as literal text.
-
-**Why it happens:**
-Dev tools are often written quickly without full validation. The format for time strings (`"M:SS"` or `"H:MM:SS"`) is not enforced anywhere in the current system.
-
-**Warning signs:**
-- KOM time displays as `null` or `"null"` in the UI
-- KOM time shows as a number (seconds) instead of formatted time
-- Build succeeds but site shows garbled time values
-- `npm run validate` (which validates athlete result files) does not validate annotation JSON
-
-**Prevention:**
-The KOM/QOM input tool must validate before writing:
-```javascript
-// Valid time formats: "M:SS", "MM:SS", "H:MM:SS"
-const TIME_REGEX = /^\d{1,2}:\d{2}(:\d{2})?$/;
-
-function validateTime(value) {
-  if (value === null) return true;  // null is allowed (no time set)
-  if (typeof value !== 'string') return false;
-  if (!TIME_REGEX.test(value)) return false;
-  // Validate seconds are 0-59
-  const parts = value.split(':');
-  const seconds = parseInt(parts[parts.length - 1]);
-  return seconds >= 0 && seconds <= 59;
-}
-```
-
-Also run `npm run validate` (or extend it) after writing to catch downstream issues before committing. Consider adding annotation JSON validation to `scripts/validate-results.mjs` or as a separate `npm run validate-data` script.
-
-**Phase:** KOM/QOM time input tool phase.
-
-**Confidence:** HIGH — verified by reading `KomSegments.astro` (uses komTime/qomTime directly as display strings), `resolve-annotations.js` (no validation of time strings), and `validate-results.mjs` (validates athlete JSONs only, not annotations.json).
+**Confidence:** HIGH — GitHub changelog confirms no-expiry option for personal fine-grained PATs
+(GA October 2024); token expiry is a documented production failure mode.
 
 ---
 
-### Pitfall 11: `npm run dev` Runs the Full Pipeline Including Image Processing — Dev Loop Is Slow
+### Pitfall 11: /api/* Rewrite Sends Strava's Callback to Wrong URL — redirect_uri Mismatch
 
 **What goes wrong:**
-`generate-data.js` runs ALL pipeline steps sequentially, including `generate-thumbnails.js` (uses Sharp to generate WebP thumbnails for all photos) and `assign-card-photos.js` (generates card crops). These steps are expensive and depend on the `images/` directory. If a developer is only iterating on annotation data (e.g., refining KOM/QOM times), they wait for the full photo processing pipeline on every `npm run dev` restart.
+The `netlify.toml` rewrite rule maps `/api/*` to `/.netlify/functions/:splat` with status 200. This
+is an internal server-side rewrite — the browser address bar shows `/api/strava-callback` but the
+function is `/.netlify/functions/strava-callback`.
 
-More critically for dev tools: if the KOM/QOM tool is a standalone script (`node scripts/set-kom-times.js`), it should NOT trigger the full pipeline. But if it is wired as `npm run dev` (like the existing dev script), every KOM time update reruns image processing unnecessarily.
+`STRAVA_REDIRECT_URI` is set to `https://mkultragravel.netlify.app/.netlify/functions/strava-callback`
+(direct function URL). Strava redirects to this exact URL, bypassing the `/api/*` rewrite. This is
+correct. The pitfall occurs if someone sets `STRAVA_REDIRECT_URI` to
+`https://mkultragravel.netlify.app/api/strava-callback` (the rewritten path).
+
+With `STRAVA_REDIRECT_URI=/api/strava-callback`, here is what happens: Strava redirects to
+`/api/strava-callback`, the Netlify rewrite transparently serves `/.netlify/functions/strava-callback`,
+the function receives the code and state parameters, and the flow works. BUT: the cookie set by
+`strava-auth.js` uses `Path=/`, which covers all paths. The CSRF cookie IS sent. This particular
+combination may actually work.
+
+However, if the domain the user is on when starting the OAuth differs from the redirect domain
+(e.g., using a Netlify preview deploy URL for the start but the production URL for the callback),
+the redirect_uri would not match what Strava has registered.
 
 **Why it happens:**
-`generate-data.js` has no incremental/skip logic for steps whose inputs have not changed. Sharp thumbnail generation is idempotent (it skips existing files) but still runs the file system checks.
+The two equivalent paths (`/api/strava-callback` vs `/.netlify/functions/strava-callback`) can
+cause confusion when setting env vars. The rewrite is transparent to the function but the redirect_uri
+must match exactly what Strava expects.
 
 **Warning signs:**
-- Dev server takes 10-30 seconds to start because it processes photos every time
-- Running a quick data edit requires waiting for the full image pipeline
+- redirect_uri invalid from Strava on production but not locally
+- The URL in the Strava consent page address bar differs from what is registered
 
 **Prevention:**
-- The KOM/QOM input tool should be a standalone script (`node scripts/set-kom-times.js`) that ONLY modifies the source time file and optionally calls `node scripts/resolve-annotations.js` to update `annotations.json`. It should NOT invoke the full `generate-data.js`.
-- Wire it to a dedicated npm script: `"times": "node scripts/set-kom-times.js"` — separate from `npm run dev`
-- For the dev loop on annotation data, use `npm run data` (which already runs `node scripts/generate-data.js` directly) and know that photo steps are idempotent
+- Use the direct function URL `https://mkultragravel.netlify.app/.netlify/functions/strava-callback`
+  as the value of `STRAVA_REDIRECT_URI` — not the `/api/` alias
+- This matches the function's actual URL and avoids any ambiguity about rewrite behavior
+- Register this exact same URL in `strava.com/settings/api` Authorization Callback Domain
 
-**Phase:** KOM/QOM time input tool phase.
+**Phase:** Environment setup.
 
-**Confidence:** HIGH — verified by reading `package.json` (dev script runs full pipeline) and `generate-data.js` (all steps run unconditionally).
+**Confidence:** HIGH — verified by reading `netlify.toml` (status 200 rewrite, not 302 redirect)
+and `strava-auth.js` (uses `process.env.STRAVA_REDIRECT_URI` directly).
+
+---
+
+### Pitfall 12: Netlify Functions v2 Env Var Bug — Do Not Migrate to v2 During This Milestone
+
+**What goes wrong:**
+As of March 27-28, 2026, a confirmed Netlify bug causes user-defined environment variables to be
+intermittently absent from `process.env` in Functions v2 (ES module `export default` style). This
+means `GITHUB_TOKEN`, `STRAVA_CLIENT_SECRET`, and all other credentials return `undefined` on some
+invocations, causing unpredictable failures.
+
+The existing codebase already uses Functions v1 (`exports.handler`) throughout, with comments
+documenting this decision. The pitfall is inadvertently converting a function to v2 syntax during
+refactoring (e.g., changing `exports.handler = async (event) =>` to `export default async (event) =>`
+or adding an `export` keyword).
+
+**Why it happens:**
+Refactoring for style consistency, auto-complete suggestions, or following newer Netlify documentation
+examples can introduce v2 syntax without realizing it.
+
+**Warning signs:**
+- A function that worked starts failing intermittently with "Server configuration error"
+- `process.env` values are undefined on some invocations but not others
+- No deterministic failure pattern — it passes testing but fails in production randomly
+
+**Prevention:**
+- All functions must use `exports.handler = async (event) => {` — not `export default`
+- Add a lint rule or CI check: `grep -r "export default" netlify/functions/` should return nothing
+- The netlify.toml `node_bundler = "esbuild"` handles CommonJS fine — no reason to migrate to ESM
+
+**Phase:** Any refactoring phase.
+
+**Confidence:** HIGH — directly confirmed via Netlify support forum thread from 2026-03-28 about
+the v2 env var bug; codebase already uses v1 throughout with documented rationale.
 
 ---
 
 ## Minor Pitfalls
 
-Mistakes that cause annoyance or visual imperfection but are fixable without data loss.
+Mistakes that cause friction or edge-case failures but do not break the core flow.
 
 ---
 
-### Pitfall 12: Astro Component `<style>` Scoping Does Not Apply to Dynamically-Injected Leaflet DOM
+### Pitfall 13: Netlify Build Hook Triggers Rebuild Before GitHub Commit Fully Propagates
 
 **What goes wrong:**
-Leaflet creates DOM elements outside the Astro component's render scope (popup content, `divIcon` elements, cluster bubbles). Astro's scoped CSS (styles in a component's `<style>` block) adds a unique data attribute like `data-astro-cid-xxx` to elements rendered in the component template, then scopes CSS selectors to that attribute. DOM injected by Leaflet at runtime has no such attribute and receives no component-scoped styles.
+`submit-result.js` fires the Netlify build hook immediately after the GitHub PUT succeeds. However,
+GitHub's CDN for raw file serving (`raw.githubusercontent.com`) may not reflect the new commit for
+several seconds after the API returns success. The Astro prebuild script reads athlete JSON files
+from the repository — if the build starts before GitHub propagates the new file, the new athlete
+may be absent from the built site.
 
-This is already handled in `RouteMap.astro` via `:global()` wrappers (`.bike-crosshair`, `.sector-badge`, etc.). The pitfall is forgetting this pattern when adding NEW marker or popup types and then wondering why the styles don't apply.
+The build hook is intentionally fire-and-forget. If a build is already in progress when the hook
+fires, Netlify queues the request and runs one additional build after the current one completes.
+This natural queuing means the propagation issue is actually mitigated by the build queue delay.
 
 **Why it happens:**
-Component-scoped CSS is a build-time transformation. Runtime DOM injection bypasses it. The pattern is non-obvious to developers unfamiliar with Astro's scoping model.
+The GitHub Contents API returns 201 Created/200 OK as soon as the commit is recorded, but file
+serving through Netlify's `raw.githubusercontent.com` fetch path (used by the prebuild script) has
+a propagation delay.
 
 **Warning signs:**
-- New Leaflet marker or popup element has no styling despite style rules existing in the component
-- Styles work in browser DevTools when added via the inspector but not from source
-- Style is only applied to the first render (Astro template) but not to Leaflet-injected copies
+- Newly submitted athletes are absent from the deployed site immediately after submission
+- The next rebuild (triggered by a subsequent submission) correctly includes them
+- This is a transient issue that self-heals on the next build
 
 **Prevention:**
-All Leaflet-injected styles (markers, popups, badges) must use `:global()` in the component's `<style>` block, or be defined in `global.css`. The existing codebase uses `:global()` for all five divIcon classes — follow this pattern for any new marker types.
+- The fire-and-forget pattern is correct — do not add a delay or polling loop before triggering
+  the hook (doing so would block the user's success page)
+- If the prebuild script uses the GitHub API directly (rather than raw file serving), propagation
+  is not an issue — the API reflects commits immediately
+- Accept that there may be a 1-2 build lag for newly submitted athletes on days with very low
+  submission volume (where the next build is far in the future)
 
-**Phase:** Any phase adding new Leaflet marker or popup types.
+**Phase:** Post-launch monitoring.
 
-**Confidence:** HIGH — verified by reading RouteMap.astro style block (all Leaflet elements use `:global()`) and Astro scoped CSS documentation.
+**Confidence:** MEDIUM — GitHub API propagation behavior is consistent with general CDN propagation
+patterns; direct confirmation of the specific timing is LOW confidence.
 
 ---
 
-### Pitfall 13: Navigation `aria-current` Must Be Exact Path Match — Trailing Slash Gotcha
+### Pitfall 14: Node Version Mismatch Between Build and Functions Runtime
 
 **What goes wrong:**
-`Astro.url.pathname` for the index page may return `/` or may return an empty string depending on the Astro version and base configuration. A comparison like `currentPath === '/'` works for the index page root, but `currentPath === '/results'` fails if Astro normalizes the path to `/results/` (with trailing slash) depending on the `trailingSlash` configuration.
+The project uses Volta (`"node": "22.22.2"` in `package.json`) and `.nvmrc` (pinned to `22`).
+Netlify's default build image now uses Node 22 (upgraded February 2026). The functions runtime
+also defaults to Node 22 for builds using Node 22.
 
-Astro 6 defaults to `'ignore'` for `trailingSlash`, meaning `/results` and `/results/` are treated the same. But `Astro.url.pathname` for a page at `src/pages/results.astro` returns `/results` (no trailing slash) in the default configuration. This is usually fine, but if base path or output configuration changes, the exact string match breaks silently.
+However, if Netlify uses a different Node version for the build than for the function runtime —
+for example, if `AWS_LAMBDA_JS_RUNTIME` is explicitly set to `nodejs20.x` in the dashboard — the
+esbuild bundle compiled under Node 22 may have incompatible native module expectations. For this
+project, all functions use only built-in Node modules (no native addons), so version mismatch is
+lower risk.
 
-**Why it happens:**
-Path comparison against string literals is fragile. Configuration changes alter what `Astro.url.pathname` returns without triggering errors.
+The more practical risk: if the `AWS_LAMBDA_JS_RUNTIME` environment variable was explicitly set to
+an older value during a previous configuration and not cleaned up, functions may run on Node 18 or
+20 rather than 22.
 
 **Warning signs:**
-- Active nav state stopped working after changing `astro.config.mjs`
-- Active state applies to EVERY page (over-matching) because of a logic error in the comparison
-- Active state applies to NO pages (under-matching) because of trailing slash mismatch
+- Function startup logs show Node version in stack traces that differs from expected
+- Syntax errors in function runtime for features used that require newer Node (e.g., if any
+  code path uses Node 22+ features)
 
 **Prevention:**
-Use a normalizing comparison: strip trailing slashes before comparing, and handle the root path explicitly:
-```astro
----
-const rawPath = Astro.url.pathname;
-const currentPath = rawPath.endsWith('/') && rawPath.length > 1
-  ? rawPath.slice(0, -1)
-  : rawPath;
----
-```
-Or use `startsWith` for section-based matching where sub-routes should also highlight the nav item (though this site has flat routing, so exact match is fine).
+- Do not set `AWS_LAMBDA_JS_RUNTIME` manually unless needed
+- Verify the Node version in function logs on first successful invocation
+- The existing codebase only uses `Buffer`, `crypto`, `fetch` (all available in Node 18+), so
+  version mismatch would not cause functional failures for this specific implementation
 
-**Phase:** Navigation component phase.
+**Phase:** Environment setup verification.
 
-**Confidence:** MEDIUM — based on Astro documentation for `trailingSlash` and `Astro.url` behavior.
+**Confidence:** MEDIUM — Netlify announced Node 22 default upgrade for February 2026; the functions
+use no Node version-specific features, so this is low-severity even if it occurs.
+
+---
+
+### Pitfall 15: approval_prompt=auto — Returning Athletes Skip Consent Screen, Previous Scope Accepted
+
+**What goes wrong:**
+`approval_prompt=auto` (the current value in `strava-auth.js` line 39) means: if the athlete
+previously authorized this app with `activity:read_all`, Strava skips the consent screen and
+immediately redirects back with an authorization code. This is desirable for re-submissions.
+
+The potential issue: if an athlete originally authorized the app with a different (narrower) scope
+(e.g., during a previous version of the app that used `activity:read`), `approval_prompt=auto`
+will NOT show the consent screen again even though the requested scope has changed. The returned
+access token will have the OLD narrower scope. The activity fetch will succeed (if the activity is
+public) but `include_all_efforts` may return limited data.
+
+In practice: the current app has always requested `activity:read_all`. This pitfall only applies
+if scope was previously different.
+
+**Why it happens:**
+Strava caches the athlete's consent for a given app. `auto` means "use cached consent if available."
+Scope upgrades require `approval_prompt=force` to force the consent screen to reappear.
+
+**Warning signs:**
+- Athlete reports successful OAuth but the activity has fewer matching segments than expected
+- The token exchange response includes a `scope` field — log it and verify it includes
+  `activity:read_all`
+- This would manifest as "No Matching Event Segments Found" for valid course activities
+
+**Prevention:**
+- Log the `scope` field from the token exchange response to verify `activity:read_all` is included:
+  ```javascript
+  console.log('Token scope:', tokenData.scope);
+  ```
+- If scope issues appear, use `approval_prompt=force` to require re-consent
+- For a new app registration (no existing authorized users), this pitfall cannot occur
+
+**Phase:** Testing.
+
+**Confidence:** MEDIUM — Strava official docs confirm `approval_prompt` behavior; scope inheritance
+behavior on re-authorization is consistent with standard OAuth 2.0 semantics.
 
 ---
 
@@ -471,55 +664,70 @@ Or use `startsWith` for section-based matching where sub-routes should also high
 
 | Phase Topic | Likely Pitfall | Mitigation |
 |-------------|----------------|------------|
-| KOM elevation profile labels | Pitfall 2: label obscured by dataset line | Add `label.drawTime: 'afterDatasetsDraw'` |
-| KOM elevation profile labels | Pitfall 6: label overflows narrow band | Test at 320px width; use short names or `rotation: 90` |
-| KOM elevation profile labels | Pitfall 1: annotation plugin register order | Do not reorder imports/awaits during edits |
-| Navigation component | Pitfall 7: flash of unstyled active state | Use build-time `Astro.url.pathname` comparison, not client JS |
-| Navigation component | Pitfall 8: z-index conflict with overlays | Nav z-index must exceed grain-overlay at 9999 |
-| Navigation component | Pitfall 13: trailing slash mismatch | Normalize pathname before comparison |
-| Color consistency work | Pitfall 3: oklch in Chart.js | Keep annotation colors as hex; keep `update('none')` |
-| Color consistency work | Pitfall 5: oklch in Leaflet | Keep polyline colors as hex strings |
-| Color consistency work | Pitfall 9: canvas vs CSS color drift | Accept approximation; document hex equivalents |
-| KOM/QOM time input tool | Pitfall 4: pipeline overwrites input | Write to source file, not `annotations.json` |
-| KOM/QOM time input tool | Pitfall 10: invalid time format | Validate with regex before writing |
-| KOM/QOM time input tool | Pitfall 11: slow full pipeline | Standalone script, not wired to `npm run dev` |
-| New Leaflet markers/popups | Pitfall 12: scoped CSS misses Leaflet DOM | Use `:global()` for all Leaflet-injected elements |
+| Environment setup | Pitfall 1: STRAVA_REDIRECT_URI not set | Set all 8 env vars in Netlify dashboard, Functions scope |
+| Environment setup | Pitfall 2: Strava Callback Domain not updated | Update `strava.com/settings/api` to `mkultragravel.netlify.app` |
+| Environment setup | Pitfall 3: env var scoped to Build only | Set scope to Functions or All |
+| Environment setup | Pitfall 10: GitHub PAT expires | Create with no expiry on personal account |
+| Environment setup | Pitfall 12: v2 syntax introduced | Verify all functions use `exports.handler` |
+| Pre-deploy testing | Pitfall 4: Safari CSRF cookie bug | Test in Safari; document known edge case |
+| Pre-deploy testing | Pitfall 9: 403 on activity fetch | Test with activity URL from wrong account |
+| Pre-deploy testing | Pitfall 15: approval_prompt=auto scope | Log token scope field on exchange |
+| Post-deploy ops | Pitfall 6: webhook subscription not registered | Run verification curl after first deploy |
+| Post-deploy ops | Pitfall 7: verify token mismatch at registration | Pre-warm function, copy token exactly |
+| Production monitoring | Pitfall 5: 409 conflict on simultaneous submit | Confirm 409 retry path works end-to-end |
+| Production monitoring | Pitfall 8: Strava rate limits | Log X-RateLimit-Usage on activity fetch |
+| Production monitoring | Pitfall 13: build hook before commit propagates | Accept 1-build lag; fire-and-forget is correct |
+| Any refactoring | Pitfall 11: redirect_uri uses /api/ alias | Use direct /.netlify/functions/ URL only |
+| Any refactoring | Pitfall 14: Node version mismatch | Don't set AWS_LAMBDA_JS_RUNTIME manually |
 
 ---
 
 ## Sources
 
-**Chart.js / chartjs-plugin-annotation (HIGH confidence):**
-- [chartjs-plugin-annotation Box Annotations](https://www.chartjs.org/chartjs-plugin-annotation/latest/guide/types/box.html) — label options, drawTime behavior
-- [chartjs-plugin-annotation Options](https://www.chartjs.org/chartjs-plugin-annotation/latest/guide/options.html) — drawTime lifecycle positions
-- [GitHub Issue #243: Labels with drawTime: beforeDatasetsDraw](https://github.com/chartjs/chartjs-plugin-annotation/issues/243) — dataset covers labels; resolved via independent label.drawTime
-- [GitHub Issue #151: Annotation label cuts off when positioned right](https://github.com/chartjs/chartjs-plugin-annotation/issues/151) — clip and xAdjust workarounds
-- [GitHub Issue #12101: CSS Level 4 Color Syntax support](https://github.com/chartjs/Chart.js/issues/12101) — oklch fails in Chart.js animation/interpolation paths
-- [chartjs-plugin-annotation Label Annotations](https://www.chartjs.org/chartjs-plugin-annotation/latest/guide/types/label.html) — display, font, position options
+**Strava Official Documentation (HIGH confidence):**
+- [Strava Authentication Docs](https://developers.strava.com/docs/authentication/) — redirect URI, approval_prompt, scope, token expiry
+- [Strava Rate Limits](https://developers.strava.com/docs/rate-limits/) — 100 GETs/15min, 1000/day, headers, 429 behavior
+- [Strava Webhook Events API](https://developers.strava.com/docs/webhooks/) — 2-second validation window, 3 retry attempts, one subscription per app
+- [Strava Segment Changes](https://developers.strava.com/docs/segment-changes/) — leaderboard access restrictions
 
-**Astro (HIGH confidence):**
-- [Astro Docs: Layouts](https://docs.astro.build/en/basics/layouts/) — slot behavior, BaseLayout patterns
-- [Astro Docs: Routing](https://docs.astro.build/en/guides/routing/) — pathname behavior, trailingSlash config
-- [Astro Tutorial: Navigation Component](https://docs.astro.build/en/tutorial/3-components/1/) — active state pattern
-- [Highlight Nav Link for Current Page in Astro](https://www.cyishere.dev/blog/astro-active-nav-item) — Astro.url.pathname pattern, aria-current
+**Strava Community (MEDIUM confidence — multiple reports corroborating):**
+- [Strava Community: Authorization Callback Domain — subdomain only](https://communityhub.strava.com/developers-api-7/strava-authorization-callback-domain-only-allowing-top-level-domain-issue-1778)
+- [Strava Community: Changing Authorization Callback Domain](https://communityhub.strava.com/developers-api-7/changing-authorization-callback-domain-11523)
+- [Strava Community: approval_prompt behavior](https://communityhub.strava.com/developers-api-7/strava-oauth-approval-prompt-1604)
+- [Strava Community: Token Exchange Error](https://communityhub.strava.com/developers-api-7/token-exchange-error-9439)
 
-**Leaflet (HIGH confidence):**
-- [Leaflet Docs: Polyline](https://leafletjs.com/reference.html#polyline) — color option accepts hex/rgb/named, not CSS variables
-- Existing `RouteMap.astro` inspection — all colors hardcoded as hex
+**Netlify Official Documentation (HIGH confidence):**
+- [Netlify: Environment Variables and Functions](https://docs.netlify.com/build/functions/environment-variables/) — scope distinction, build vs functions
+- [Netlify: Build Environment Variables](https://docs.netlify.com/build/configure-builds/environment-variables/) — scope options
+- [Netlify: Functions Overview](https://docs.netlify.com/build/functions/overview/) — 60-second execution limit
+- [Netlify: Build Hooks](https://docs.netlify.com/build/configure-builds/build-hooks/) — build hook triggering
+- [Netlify: Node.js Default Upgrade to v22](https://answers.netlify.com/t/builds-functions-plugins-default-node-js-version-upgrade-to-22/135981) — February 2026 upgrade
 
-**Tailwind / CSS Color (MEDIUM confidence):**
-- [Tailwind v4.0 blog post](https://tailwindcss.com/blog/tailwindcss-v4) — oklch in @theme, CSS-first config
-- [OKLCH in CSS: why we moved from RGB and HSL](https://evilmartians.com/chronicles/oklch-in-css-why-quit-rgb-hsl) — gamut behavior, sRGB approximation
+**Netlify Community (MEDIUM confidence — confirmed multiple reports):**
+- [Netlify: Functions v2 env var bug (March 2026)](https://answers.netlify.com/t/process-env-user-defined-variables-missing-in-scheduled-background-functions-and-async-workloads/160922)
+- [Netlify: Functions v2 env var missing intermittently](https://answers.netlify.com/t/functions-v2-export-default-intermittently-missing-all-user-defined-env-vars-at-runtime/160958)
+- [Netlify: Build deduplification behavior](https://answers.netlify.com/t/how-do-concurrent-builds-work/20086)
 
-**Project source code (HIGH confidence — direct inspection):**
-- `scripts/resolve-annotations.js` — overwrites annotations.json from hardcoded source
-- `package.json` — dev script runs full pipeline
-- `src/components/ElevationProfile.astro` — existing annotation pattern, hex colors, `update('none')`
-- `src/components/KomSegments.astro` — renders komTime/qomTime as display strings
-- `src/layouts/BaseLayout.astro` — slot structure, overlay z-index values
-- `src/styles/global.css` — z-index values for grain-overlay (9999) and escher-overlay (9998)
+**GitHub Official Documentation (HIGH confidence):**
+- [GitHub: Fine-grained PAT no-expiry option](https://github.blog/changelog/2024-10-18-new-pat-rotation-policies-preview-and-optional-expiration-for-fine-grained-pats/)
+- [GitHub: Contents API conflict behavior](https://github.com/orgs/community/discussions/62198)
+
+**WebKit Bug Tracker (MEDIUM confidence):**
+- [WebKit Bug #219650: SameSite=Lax cookies not sent in Safari OAuth redirects](https://bugs.webkit.org/show_bug.cgi?id=219650)
+
+**Auth0 Cross-Reference (MEDIUM confidence):**
+- [Auth0: SameSite cookie attribute changes in OAuth flows](https://auth0.com/docs/manage-users/cookies/samesite-cookie-attribute-changes)
+
+**Project Source Code (HIGH confidence — direct inspection):**
+- `netlify/functions/strava-auth.js` — env var usage, cookie settings, STRAVA_REDIRECT_URI dependency
+- `netlify/functions/strava-callback.js` — CSRF cookie check, activity fetch, 403/409 handling
+- `netlify/functions/submit-result.js` — GitHub GET-then-PUT pattern, fire-and-forget build hook
+- `netlify/functions/strava-webhook.js` — verify_token check, deauth deletion, one-subscription constraint
+- `netlify.toml` — `/api/*` rewrite with status 200
+- `.env` — confirmed STRAVA_REDIRECT_URI is NOT in local env file (only 4 Strava vars present)
+- `package.json` — volta node 22.22.2
 
 ---
 
-*Pitfalls research for: UI polish + navigation + dev tools additions to MK Ultra Gravel*
-*Researched: 2026-03-30*
+*Pitfalls research for: Strava OAuth go-live deployment on Netlify*
+*Researched: 2026-03-31*

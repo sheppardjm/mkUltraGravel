@@ -1,305 +1,287 @@
-# Technology Stack — v6.0 UI Polish + Dev Tools
+# Technology Stack — Strava Go-Live Deployment
 
 **Project:** MK Ultra Gravel
-**Milestone:** v6.0 — Sector labels on elevation profile, site navigation, color consistency, KOM/QOM input tool
-**Researched:** 2026-03-30
-**Scope:** Stack additions/changes for 4 specific features only. All existing dependencies (Astro 6, Tailwind v4, Leaflet, Chart.js, PhotoSwipe, sharp, vitest, Netlify Functions) are unchanged and out of scope for this research.
-**Confidence:** HIGH — all findings verified against installed package source or official Astro documentation
+**Milestone:** Strava OAuth go-live — getting existing integration code working end-to-end in production
+**Researched:** 2026-03-31
+**Scope:** Deployment configuration only. The code is built (v5.0). This research covers what must change in Netlify and Strava settings to make it work against the real API.
+**Confidence:** HIGH — primary findings from official Strava developer documentation, Netlify official docs, and confirmed bug reports.
 
 ---
 
 ## Executive Summary
 
-This milestone requires **zero new npm dependencies**. All 4 features are buildable with what's already installed. The work is configuration and code changes, not dependency additions.
+Three independent configuration domains must be resolved before the Strava integration is live:
 
-The key finding: `chartjs-plugin-annotation` v3.1.0 (already installed) supports labels on box annotations with `position: {x: 'center', y: 'end'}` plus `yAdjust` to push labels below the box boundary into the chart's bottom margin. No label plugin additions needed.
+1. **Strava app review** — The app starts locked to 1 athlete (the developer). Every additional athlete gets a 403 until the app is approved. Review takes 7-10 business days. Submit immediately.
 
-The color duplication problem (starColors defined identically in 3 files) is solvable by extracting to a shared JS module in `src/lib/`. This is preferable to CSS custom properties because the colors are used at runtime in Chart.js annotation config and Leaflet polyline options — neither of which reads CSS variables. A `src/lib/colors.js` file is the right abstraction.
+2. **Netlify environment variables** — 7 env vars must be set via the Netlify UI (not netlify.toml). All must have scope set to "Functions". `STRAVA_REDIRECT_URI` must point to the production domain. The v2 env var bug that motivated v1 syntax choice was fixed 2026-03-30 but v1 remains the right choice for stability.
 
-The navigation component uses `Astro.url.pathname` (built-in, no library) to set `aria-current="page"` on the active link. This is the standard Astro pattern confirmed by official docs.
+3. **Strava callback domain** — The "Authorization Callback Domain" in the Strava API app settings must be changed from `localhost` to the production domain (no protocol, no path).
 
-The KOM/QOM input tool is a plain Node.js CLI script that updates `resolve-annotations.js` directly (or a separate `kom-times.json` data file). No new tooling — it fits the existing `scripts/` directory pattern.
-
----
-
-## Feature 1: Sector Labels on Elevation Profile
-
-### What's needed
-
-The elevation profile needs sector name + star rating labels rendered at the **bottom** of each sector's box annotation, staggered vertically to prevent overlap on narrow sectors.
-
-### Stack verdict: No new dependencies
-
-`chartjs-plugin-annotation` v3.1.0 already supports this via the box annotation's `label` sub-object.
-
-### Verified API (from installed source at `node_modules/chartjs-plugin-annotation/dist/chartjs-plugin-annotation.esm.js`)
-
-Box annotation label positioning uses `calculateY` which calls `getRelativePosition(availableSize, position.y)`:
-
-| `position.y` value | Result |
-|--------------------|--------|
-| `'start'` | Top of box (0 offset into available space) |
-| `'center'` | Middle of box (default) |
-| `'end'` | Bottom of box (full available space offset) |
-
-The `yAdjust` property is **added on top** of the position calculation. Setting `position: { x: 'center', y: 'end' }` with a positive `yAdjust` (e.g., `yAdjust: 12`) pushes the label **below the box** into the chart's bottom padding area.
-
-### Recommended label configuration per sector annotation
-
-```js
-label: {
-  display: true,
-  content: ['★★★', 'Sandstrom'],     // array = two-line label
-  color: starColors[sector.stars] + 'cc',
-  font: [
-    { size: 8, family: 'Space Mono, monospace' },   // star line
-    { size: 7, family: 'Space Mono, monospace' },   // name line
-  ],
-  position: { x: 'center', y: 'end' },
-  yAdjust: 10,   // pixels below box bottom edge
-  padding: 2,
-}
-```
-
-### Staggering to avoid overlap
-
-Narrow sectors (e.g., Down Jeep at 0.6 mi, Haavisto at 1.38 mi) will have labels that crowd or overlap adjacent sector labels at full chart width. Two approaches:
-
-**Option A: Alternate yAdjust** — odd-indexed sectors get `yAdjust: 10`, even-indexed get `yAdjust: 24`. Simple, no dynamic sizing needed.
-
-**Option B: Conditional display** — measure sector width in pixels at chart render time and only show labels for sectors wider than a threshold. More precise, but requires a post-render step or the `afterDraw` plugin hook.
-
-**Recommendation:** Option A (alternate yAdjust) for phase implementation. The chart is fixed height (140px mobile, 180px desktop) and the bottom padding needs to accommodate the tallest label offset. Add `layout.padding.bottom: 32` to the chart options to prevent labels from being clipped.
-
-### Integration point
-
-Modify `src/components/ElevationProfile.astro`, specifically the `annotationBoxes` construction in the `initElevation()` function. Sector annotations already have `name` and `stars` available in the loop — the label config is purely additive.
+Node.js version is already correct: the project has `.node-version: 22` and `"node": "22.22.2"` in volta config. Netlify's default since February 2025 is Node 22. No Node version config needed.
 
 ---
 
-## Feature 2: Site Navigation Component
+## Critical Finding: Athlete Limit Blocks Go-Live
 
-### What's needed
+**This is the most important finding in this document.**
 
-A header `<nav>` with links to Home (`/`), Results (`/results`), and Submit (`/submit`). Active state based on current page. Consistent across all pages via `BaseLayout.astro`.
+All new Strava API apps start in "Single Player Mode" with a hard limit of **1 connected athlete** — the developer. Any additional athlete who attempts OAuth authorization receives:
 
-### Stack verdict: No new dependencies
-
-Astro's built-in `Astro.url.pathname` (confirmed in official API reference at `docs.astro.build/en/reference/api-reference/#astrourl`) provides current page path at build time for static generation.
-
-### Verified API
-
-`Astro.url` is a standard `URL` object. `Astro.url.pathname` returns the path segment (e.g., `/`, `/results`, `/submit`).
-
-```astro
----
-const currentPath = Astro.url.pathname;
-const navLinks = [
-  { label: 'Home', href: '/' },
-  { label: 'Results', href: '/results' },
-  { label: 'Submit', href: '/submit' },
-];
----
-<nav>
-  {navLinks.map(link => (
-    <a
-      href={link.href}
-      aria-current={currentPath === link.href ? 'page' : undefined}
-    >
-      {link.label}
-    </a>
-  ))}
-</nav>
+```
+HTTP 403 Forbidden
+{"message": "Limit of connected athletes exceeded"}
 ```
 
-`aria-current="page"` is the semantic HTML standard for indicating the current page in navigation (WCAG 2.1 requirement). CSS targets `[aria-current="page"]` for active styling.
+This limit is enforced at Strava's authorization server, not in the app code. There is no workaround. The app **cannot accept any athlete submissions until the app is approved**.
 
-### Integration point
+After approval, Strava increases the limit to 999 connected athletes.
 
-Create `src/components/SiteNav.astro`. Add `<SiteNav />` to `src/layouts/BaseLayout.astro` inside `<body>`, before `<slot />`. The component receives no props — it reads `Astro.url.pathname` internally.
-
-### Note on static generation
-
-Because this is a static site (Astro fully static, no adapter), `Astro.url.pathname` is evaluated at **build time** for each page. Each page's HTML gets its own pre-rendered nav with the correct active state — no JavaScript required.
+**Action required now:** Submit the app for review immediately. Do not wait until the rest of go-live is complete. Review takes 7-10 business days and is the longest-lead-time item on the critical path.
 
 ---
 
-## Feature 3: Color Consistency Fix
+## Domain 1: Strava API App Review
 
-### What's needed
+### Submission
 
-`starColors` is currently defined identically in three separate files:
-- `src/components/RouteMap.astro` (client-side `<script>` tag)
-- `src/components/ElevationProfile.astro` (client-side `<script>` tag)
-- `src/components/GravelSectors.astro` (Astro frontmatter, build-time)
+Submit at: `https://share.hsforms.com/1VXSwPUYqSH6IxK0y51FjHwcnkd8`
 
-The three definitions are byte-for-byte identical today, so there is no actual color inconsistency in the rendered output. The "inconsistency" risk is future divergence: any future star rating color change requires updating 3 files.
+Required in the form:
+- App description: what the app does and the problem it solves for athletes
+- Expected number of connected users (be honest — this is a ~100-person cycling event)
+- Confirmation of compliance with API Agreement and Brand Guidelines
 
-### Stack verdict: No new dependencies
+Strava documentation notes: "Thorough, detailed submissions move through the process most efficiently." Include:
+- Screenshot showing where Strava data appears in the app (the submit/results pages)
+- Clear use-case: "Athletes submit their MK Ultra Gravel event activity for automatic scoring"
+- No AI usage to disclose
 
-Extract to `src/lib/colors.js` — a shared ES module. This file already exists as a directory containing `scoring.js` and `scoring.test.js`, confirming the pattern for shared utilities.
+Timeline: 7-10 business days. If no response after 10 business days, follow up at developers@strava.com with submission date and Client ID.
 
-### Recommended approach
+### Branding Requirements (must be in place before or at launch)
 
-**Option A: Shared JS module (recommended)**
+The Strava API Agreement requires these be implemented in the live site:
 
-```js
-// src/lib/colors.js
-export const STAR_COLORS = {
-  1: '#f0c040',
-  2: '#e8962a',
-  3: '#d9641e',
-  4: '#c93a18',
-  5: '#b71c1c',
-};
+| Requirement | Where | Specifics |
+|-------------|-------|-----------|
+| "Connect with Strava" button | Submit page OAuth entry point | Must use official button asset from developers.strava.com/guidelines. Links to `https://www.strava.com/oauth/authorize`. Available in orange and white, PNG/SVG. |
+| "Powered by Strava" or "Compatible with Strava" logo | Any page displaying Strava data (results, submit-confirm) | Official asset, not modified. Must be separate from and less prominent than the site's own branding. |
+| "View on Strava" link | Anywhere the activity is displayed | Links back to the original Strava activity. Must be legible, identifiable as a link via bold, underline, or orange (#FC5200). |
+
+**Not allowed:**
+- Using "Strava" in the app name (MK Ultra Gravel passes this test)
+- Suggesting official Strava endorsement
+- Modifying Strava logos
+
+Assets available at: `https://developers.strava.com/guidelines/`
+
+### Dev Mode vs Approved App
+
+There is no separate sandbox environment. Strava has one API. The only difference between a new (unapproved) app and an approved app is the athlete capacity limit:
+
+| State | Athlete Limit | Behavior |
+|-------|--------------|----------|
+| New app (unapproved) | 1 (developer only) | All other OAuth attempts return 403 |
+| Approved app | 999 | Full OAuth flow works for all athletes |
+| High-scale (>999) | Negotiated | Requires partner program contact |
+
+During review: if athletes try to connect, they will see a 403. This is expected and resolves upon approval.
+
+After approval: the limit increase is automatic. No code changes needed. The same client ID and secret continue working.
+
+### Rate Limits (production, applies to all apps)
+
+Rate limits apply per-application regardless of approval status:
+
+| Limit type | 15-minute window | Daily |
+|------------|-----------------|-------|
+| Overall requests | 200 | 2,000 |
+| Non-upload read requests | 100 | 1,000 |
+
+Windows reset at 0, 15, 30, 45 minutes past the hour. Daily resets at midnight UTC.
+
+**Impact on submission flow:** Each athlete submission uses approximately 2-3 API calls:
+1. Token exchange (POST `/oauth/token`) — counts against overall limit
+2. Activity fetch (GET `/activities/{id}?include_all_efforts=true`) — counts against both overall and read limit
+
+At the 100-person event scale, all submissions in a single day = ~200-300 calls. Well within the 1,000/day read limit and 2,000/day overall limit. Rate limits are not a concern at this scale.
+
+**Monitoring:** Every API response includes rate limit headers:
+```
+X-RateLimit-Limit: 100,1000
+X-RateLimit-Usage: 3,47
+X-ReadRateLimit-Limit: 100,1000
+X-ReadRateLimit-Usage: 3,47
 ```
 
-Import in Astro frontmatter (build-time):
-```astro
----
-import { STAR_COLORS } from '../lib/colors.js';
----
-```
-
-Import in `<script>` tags (client-side, Vite bundles):
-```js
-import { STAR_COLORS } from '../lib/colors.js';
-```
-
-Astro's Vite bundler handles both import contexts. The `<script>` imports are bundled by Vite at build time — this is a documented Astro pattern from `docs.astro.build/en/guides/client-side-scripts/`.
-
-**Option B: CSS custom properties**
-
-Define `--color-star-1` through `--color-star-5` in `global.css` `@theme` block. CSS-only components could read them, but Chart.js annotation config and Leaflet polyline options take hex strings — they cannot read CSS custom properties. This option requires the JS fallback anyway, making it a partial solution.
-
-**Recommendation:** Option A only. CSS custom properties for star colors add complexity without benefit given the JS-centric consumers.
-
-### Integration point
-
-1. Create `src/lib/colors.js` with `STAR_COLORS` export
-2. Update `GravelSectors.astro` frontmatter to import and use it
-3. Update `RouteMap.astro` `<script>` to import and use it
-4. Update `ElevationProfile.astro` `<script>` to import and use it
-
-This is a refactor with no behavior change — a good candidate for a single focused phase.
-
----
-
-## Feature 4: Local KOM/QOM Time Input Tool
-
-### What's needed
-
-A dev-only tool for entering KOM and QOM times for the 3 KOM segments. Currently `komTime: null` and `qomTime: null` in `scripts/resolve-annotations.js`. The times need to be stored and reflected in the built `public/data/annotations.json` so they appear on the KOM cards in `KomSegments.astro`.
-
-### Stack verdict: No new dependencies
-
-The existing `scripts/` directory pattern (plain Node.js CJS scripts, no framework) is the right model.
-
-### Architecture of KOM time data
-
-The data flow is:
-```
-scripts/resolve-annotations.js  (source of truth, hardcoded koms array)
-  → runs via npm run data / prebuild
-  → writes public/data/annotations.json
-    → read by KomSegments.astro at build time
-    → read by ElevationProfile.astro at runtime (fetch)
-    → read by RouteMap.astro at runtime (fetch)
-```
-
-The `komTime` and `qomTime` fields are `null` in the `koms` array in `resolve-annotations.js`. The KomSegments component already handles rendering them when non-null:
-
-```astro
-{(segment.komTime || segment.qomTime) && (
-  <div class="mt-2 pt-2 border-t border-border text-xs text-text-muted space-y-0.5">
-    {segment.komTime && <div>KOM <span class="text-accent-white">{segment.komTime}</span></div>}
-    {segment.qomTime && <div>QOM <span class="text-accent-white">{segment.qomTime}</span></div>}
-  </div>
-)}
-```
-
-### Recommended approach: Separate data file + merge script
-
-**Do NOT edit komTime/qomTime directly in `resolve-annotations.js`.**
-
-The `resolve-annotations.js` comment says `data.md` is the human-readable reference and `resolve-annotations.js` is the source of truth. KOM times are event data (updated post-event), not route geometry data. Separating them from route geometry concerns is cleaner.
-
-**Option A: `scripts/kom-times.json` (recommended)**
-
-```json
-{
-  "24479270": { "komTime": "3:42", "qomTime": "4:18" },
-  "41126651": { "komTime": "1:09", "qomTime": "1:22" },
-  "16438243": { "komTime": "7:15", "qomTime": "8:03" }
-}
-```
-
-`resolve-annotations.js` reads this file and merges times into the koms array by `stravaSegmentId`. When `kom-times.json` entries are absent, times remain `null`.
-
-**Option B: CLI update script**
-
-A `scripts/set-kom-times.js` script that accepts segment name + times as arguments:
-
-```bash
-node scripts/set-kom-times.js "Billie Helmer" 3:42 4:18
-```
-
-This script reads `kom-times.json`, updates the entry, writes it back, then runs `resolve-annotations.js` to regenerate `annotations.json`.
-
-**Recommendation:** Option A alone is sufficient for the first pass. The KOM times will be updated once (post-event day). An interactive CLI is nice-to-have. The JSON data file approach is simpler, auditable (git-trackable), and matches the existing pattern (`data.md` as human-readable reference).
-
-### Integration point
-
-1. Create `scripts/kom-times.json` with null-initialized entries (or empty object)
-2. Modify `scripts/resolve-annotations.js` to read and merge `kom-times.json`
-3. `npm run data` regenerates `annotations.json` with merged times
-
-The `generate-data.js` prebuild script already calls `resolve-annotations.js` in sequence with other pipeline steps — no changes to `package.json` scripts needed.
+The existing code should log or return these if a 429 occurs. A 429 from rate limiting at event scale would indicate a bug (e.g., retry loop), not a capacity problem.
 
 ---
 
-## What NOT to Add
+## Domain 2: Netlify Deployment Configuration
 
-| Temptation | Why Not |
-|------------|---------|
-| `chartjs-plugin-datalabels` | chartjs-plugin-annotation v3.1.0 (already installed) handles box labels natively. A second annotation/label plugin creates ordering conflicts and adds 15KB. |
-| `astro-navbar` or similar nav library | A 3-link static nav with aria-current is ~20 lines of Astro. Any nav library adds bundle weight and prop API to learn for zero functionality gain. |
-| Nano Stores (`nanostores`) | Sharing starColors between components does NOT require reactive state. A static ES module export is the correct pattern — no reactivity needed. |
-| CSS custom properties for star colors | Chart.js and Leaflet consume hex strings, not CSS variables. A CSS-only solution doesn't solve the actual problem for these consumers. |
-| An interactive CLI with `inquirer` or `prompts` | KOM times are updated once per year. A simple JSON file is lower friction than a CLI for a one-time data entry task. |
-| `commander` or `minimist` for CLI arg parsing | If a set-kom-times script is desired, `process.argv` parsing is 5 lines for 3 segments × 2 values. No argument parser needed. |
+### Environment Variables
+
+All 7 env vars must be set in the Netlify UI (Site configuration → Environment variables). **Do not put them in `netlify.toml`** — env vars in netlify.toml are NOT available to Functions at runtime.
+
+When setting each variable, verify the scope includes **"Functions"**. The Netlify UI allows per-scope assignment; if a variable is scoped only to "Builds" it will be undefined in function code at runtime.
+
+| Variable | Value | Notes |
+|----------|-------|-------|
+| `STRAVA_CLIENT_ID` | From Strava API settings | Numeric string, e.g. "12345" |
+| `STRAVA_CLIENT_SECRET` | From Strava API settings | Secret — never in code or git |
+| `STRAVA_REDIRECT_URI` | `https://mkultragravel.netlify.app/api/strava-callback` | Full URL including path. Must match what strava-auth.js constructs. |
+| `GITHUB_TOKEN` | Personal access token or fine-grained token | Needs repo contents write permission for `sheppardjm/mkUltraGravel` |
+| `GITHUB_OWNER` | `sheppardjm` | GitHub username |
+| `GITHUB_REPO` | `mkUltraGravel` | Repository name |
+| `NETLIFY_BUILD_HOOK` | Build hook URL from Netlify | Format: `https://api.netlify.com/build_hooks/{id}` |
+
+**STRAVA_REDIRECT_URI construction:** The existing `strava-auth.js` constructs the redirect URI from this env var. It must exactly match a URI that falls under the "Authorization Callback Domain" registered in the Strava API app settings. The callback domain in Strava's settings is just the domain (no protocol, no path) — but the redirect_uri parameter in the OAuth request must be the full URL.
+
+### Authorization Callback Domain
+
+In Strava API app settings (strava.com/settings/api):
+
+- **During development:** Set to `localhost`
+- **For production:** Change to `mkultragravel.netlify.app`
+
+The field accepts only the domain name — no `https://`, no `/api/strava-callback` path. Strava validates that the `redirect_uri` parameter in each authorization request has a host that matches this registered domain.
+
+**If using a custom domain (e.g., mkultragravel.com):** Update this field to the custom domain and update `STRAVA_REDIRECT_URI` env var to match. The two must stay in sync.
+
+**Note on localhost + production:** The Strava app settings appear to accept only one callback domain at a time. Switching to production means local OAuth testing will fail (localhost would get "invalid redirect_uri"). Recommended approach: create a second Strava API app for development use, keeping the main app set to the production domain.
+
+### Node.js Version
+
+**No action required.** The project already has the correct Node version configured.
+
+Evidence:
+- `.node-version` file: `22` (in repo root)
+- `package.json` volta config: `"node": "22.22.2"`
+- Netlify's default build Node version has been v22 since February 24, 2025
+
+Netlify Functions runtime automatically matches the build Node version. Since build uses Node 22 (from `.node-version`), functions run on `nodejs22.x` — AWS Lambda's Node 22 runtime. No `AWS_LAMBDA_JS_RUNTIME` environment variable needed.
+
+**Note on AWS Lambda Node 20 EOL:** AWS Lambda's `nodejs20.x` runtime reaches end-of-security-patches and will block new function creation after August 2026. This project is already on Node 22 — no action needed.
+
+### netlify.toml — Current Configuration is Correct
+
+```toml
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+```
+
+This configuration is correct and complete for the go-live milestone:
+
+- `functions = "netlify/functions"` — points to the correct directory
+- `node_bundler = "esbuild"` — correct; esbuild bundles faster and produces smaller artifacts. CommonJS `exports.handler` syntax is compatible with esbuild bundling.
+- The `/api/*` redirect is what makes `STRAVA_REDIRECT_URI` use `/api/strava-callback` instead of `/.netlify/functions/strava-callback`.
+
+**No changes to netlify.toml needed.**
+
+### Netlify Functions v1 vs v2 — Decision Stands
+
+The project uses v1 (`exports.handler`) syntax. This was chosen due to an active v2 env var bug where user-defined `process.env` vars returned `undefined` intermittently.
+
+**Current status of the bug:** Netlify confirmed a fix was rolled out on 2026-03-30. The original reporter confirmed resolution on 2026-03-31.
+
+**Recommendation: Keep v1 syntax.** The fix is 24 hours old as of this research. There is no benefit to migrating to v2 before go-live — it introduces risk with zero functional gain. The v1 syntax is fully supported, not deprecated, and works correctly with Node 22 and esbuild bundling.
+
+If/when migration to v2 is desired post-launch, the migration is mechanical: `exports.handler = async (event) =>` becomes `export default async (request, context) =>` with Request/Response API changes.
 
 ---
 
-## Stack Summary (v6.0 additions)
+## Domain 3: OAuth Scope
 
-| Area | Technology | Version | Change |
-|------|-----------|---------|--------|
-| Elevation labels | chartjs-plugin-annotation | 3.1.0 | No change — use existing `label` sub-object on box annotations |
-| Site navigation | Astro.url.pathname | Built-in | No change — new component, no dep |
-| Color tokens | src/lib/colors.js | N/A | New file — extract existing hex values |
-| KOM times | scripts/kom-times.json | N/A | New data file — read by resolve-annotations.js |
+**No changes needed.** The `activity:read_all` scope is correct.
 
-**Net new npm dependencies: 0**
-**Files added: 2** (`src/lib/colors.js`, `scripts/kom-times.json`)
-**Files modified: 4** (`BaseLayout.astro`, `ElevationProfile.astro`, `RouteMap.astro`, `GravelSectors.astro`, `resolve-annotations.js`)
+Verification of why `activity:read_all` is required (not `activity:read`):
+
+- `activity:read` — access to activities the athlete has set as public or followers-only, excluding privacy zones
+- `activity:read_all` — same as above, **plus** activities set to "Only You" visibility, **plus** privacy zone data
+
+MK Ultra Gravel participants may have their activity set to private ("Only You"). The event requires reading the activity regardless. `activity:read_all` is the correct scope.
+
+Additionally, `include_all_efforts=true` on the activity fetch — which retrieves all segment efforts including those on hidden segments — requires the athlete to be the owner of the activity (which they always are in this OAuth flow). The scope does not affect this; ownership does. This is confirmed as working correctly for the activity owner regardless of scope.
+
+---
+
+## Deployment Checklist
+
+In dependency order:
+
+### Immediate (do now, 7-10 business day lead time)
+- [ ] Submit app for Strava review at the HubSpot form URL above
+- [ ] Add branding assets to the live site (Connect with Strava button, Powered by Strava logo, View on Strava links)
+
+### Configuration (can do in parallel with waiting for review)
+- [ ] Update Strava API app settings: change "Authorization Callback Domain" from `localhost` to `mkultragravel.netlify.app`
+- [ ] Set all 7 env vars in Netlify UI with scope "Functions":
+  - [ ] `STRAVA_CLIENT_ID`
+  - [ ] `STRAVA_CLIENT_SECRET`
+  - [ ] `STRAVA_REDIRECT_URI` = `https://mkultragravel.netlify.app/api/strava-callback`
+  - [ ] `GITHUB_TOKEN`
+  - [ ] `GITHUB_OWNER`
+  - [ ] `GITHUB_REPO`
+  - [ ] `NETLIFY_BUILD_HOOK`
+- [ ] Verify Netlify build hook URL is created (Site configuration → Build & deploy → Build hooks)
+
+### Testing (requires approved app)
+- [ ] Trigger a test OAuth flow with a real Strava account (after approval)
+- [ ] Verify the callback function receives the token and fetches the activity
+- [ ] Verify the per-athlete JSON file is written to GitHub
+- [ ] Verify the Netlify build hook triggers a rebuild
+- [ ] Verify the rebuilt site shows the new athlete's result
+
+---
+
+## What Doesn't Need to Change
+
+| Item | Status | Reason |
+|------|--------|--------|
+| `netlify.toml` | No change | Correct as-is |
+| Node.js version | No change | `.node-version: 22` already pins Node 22 |
+| Functions v1 syntax | Keep | v2 fix is too recent; no benefit to migrating before go-live |
+| `activity:read_all` scope | Keep | Required for private activity access |
+| OAuth state pattern | Keep | base64url JSON {nonce, activityUrl} is correct |
+| CSRF cookie double-submit | Keep | Correct security pattern |
+| Segment IDs | Keep | Verified in v5.0 implementation |
+| npm dependencies | No change | No new libraries needed for deployment |
 
 ---
 
 ## Sources
 
-### chartjs-plugin-annotation (HIGH confidence — installed package source)
-- Installed at `node_modules/chartjs-plugin-annotation/dist/chartjs-plugin-annotation.esm.js`
-- `getRelativePosition` function (line 281): `'start'` returns 0, `'end'` returns `size`, confirms bottom-of-box positioning
-- `calculateY` function (line 1164): `yAdjust` is added to position, enabling below-box overflow
-- `BoxLabelOptions` interface: confirmed via `https://www.chartjs.org/chartjs-plugin-annotation/latest/api/interfaces/BoxLabelOptions.html`
-- Current version 3.1.0 is the latest release (GitHub releases verified: last release October 16, 2024)
+### Strava API (HIGH confidence — official documentation and community hub)
+- Rate limits: [developers.strava.com/docs/rate-limits](https://developers.strava.com/docs/rate-limits/)
+- Authentication/scopes: [developers.strava.com/docs/authentication](https://developers.strava.com/docs/authentication/)
+- Getting started / callback domain: [developers.strava.com/docs/getting-started](https://developers.strava.com/docs/getting-started/)
+- Branding guidelines: [developers.strava.com/guidelines](https://developers.strava.com/guidelines/)
+- Developer program (athlete limits, review process): [Strava Community Hub — Our Developer Program](https://communityhub.strava.com/developers-knowledge-base-14/our-developer-program-3203)
+- Athlete limit = 1 for new apps: [Strava Community Hub — Number of athletes allowed to connect](https://communityhub.strava.com/developers-api-7/number-of-athletes-allowed-to-connect-1-11078)
+- App review FAQ: [Strava API FAQ](https://communityhub.strava.com/developers-knowledge-base-14/strava-api-faq-12906)
 
-### Astro API (HIGH confidence — official documentation)
-- `Astro.url.pathname`: `https://docs.astro.build/en/reference/api-reference/#astrourl`
-- Client-side script imports: `https://docs.astro.build/en/guides/client-side-scripts/`
+### Netlify (HIGH confidence — official documentation)
+- Environment variables in functions (scope requirement): [docs.netlify.com/build/functions/environment-variables](https://docs.netlify.com/build/functions/environment-variables/)
+- Node.js version management: [docs.netlify.com/build/configure-builds/manage-dependencies](https://docs.netlify.com/build/configure-builds/manage-dependencies/)
+- Functions optional configuration (AWS_LAMBDA_JS_RUNTIME format): [docs.netlify.com/build/functions/optional-configuration](https://docs.netlify.com/build/functions/optional-configuration/)
+- Default Node.js upgrade to v22 (Feb 24, 2025): [Netlify Support Forums](https://answers.netlify.com/t/builds-functions-plugins-default-node-js-version-upgrade-to-22/135981)
+- v2 env var bug resolution (2026-03-30): [Netlify Support Forums — Functions v2 env vars undefined](https://answers.netlify.com/t/functions-v2-scheduled-functions-user-defined-environment-variables-are-undefined-at-runtime/160961)
 
-### Existing codebase (HIGH confidence — direct inspection)
-- `src/lib/` directory pattern: `scoring.js` already establishes shared ES module pattern
-- `GravelSectors.astro`, `RouteMap.astro`, `ElevationProfile.astro`: verified identical starColors hex values
-- `scripts/resolve-annotations.js`: komTime/qomTime are null in koms array source; `KomSegments.astro` already has conditional render for non-null times
+### Project codebase (HIGH confidence — direct inspection)
+- `netlify.toml` — confirmed correct configuration
+- `netlify/functions/strava-auth.js` — confirmed v1 exports.handler syntax
+- `netlify/functions/strava-callback.js` — confirmed v1 exports.handler syntax
+- `.node-version` — confirmed value `22`
+- `package.json` volta config — confirmed `"node": "22.22.2"`

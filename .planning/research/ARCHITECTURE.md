@@ -1,454 +1,461 @@
-# Architecture Patterns -- v6.0 UI Polish + Dev Tools
+# Architecture: Strava Integration End-to-End Testing
 
-**Domain:** UI polish + developer tooling on an existing Astro 6 static site
-**Project:** MK Ultra Gravel
-**Researched:** 2026-03-30
-**Focus:** How 4 new features integrate with the existing Astro + Chart.js + Leaflet architecture
-**Overall confidence:** HIGH — all findings derived from direct codebase inspection
-
----
-
-## Existing Architecture Snapshot (v5.0 Baseline)
-
-### Component Inventory
-
-| Component | File | Init Pattern | Data Source |
-|-----------|------|--------------|-------------|
-| RouteMap | `src/components/RouteMap.astro` | Lazy scroll/IntersectionObserver → `initMap()` async | Runtime `fetch()` of route-data.json, annotations.json, photos.json |
-| ElevationProfile | `src/components/ElevationProfile.astro` | Lazy scroll/IntersectionObserver → `initElevation()` async | Runtime `fetch()` of route-data.json, annotations.json |
-| GravelSectors | `src/components/GravelSectors.astro` | Build-time SSR | `annotations.json` via `readFileSync` |
-| KomSegments | `src/components/KomSegments.astro` | Build-time SSR | `annotations.json` via `readFileSync` |
-| PhotoGallery | `src/components/PhotoGallery.astro` | SSR template + runtime PhotoSwipe | `photos.json` via `readFileSync` |
-| BaseLayout | `src/layouts/BaseLayout.astro` | Static HTML shell | None |
-| CountdownTimer | `src/components/CountdownTimer.astro` | Runtime JS | None (hardcoded date) |
-| RestockPoints | `src/components/RestockPoints.astro` | Build-time SSR | `annotations.json` via `readFileSync` |
-
-### Pages Inventory
-
-| Page | File | Navigation | Back link |
-|------|------|------------|-----------|
-| Home | `src/pages/index.astro` | None — no nav | None |
-| Results | `src/pages/results.astro` | None — `← Back to MK Ultra Gravel` hardcoded anchor | Manual |
-| Submit | `src/pages/submit.astro` | None — `← Back to MK Ultra Gravel` hardcoded anchor | Manual |
-| Submit Confirm | `src/pages/submit-confirm.astro` | None | Manual |
-
-### Data Pipeline (Current)
-
-```
-scripts/generate-data.js (prebuild coordinator):
-  1. copy images/ → public/images/
-  2. parse-gpx.js         → public/data/route-data.json
-  3. resolve-annotations.js → public/data/annotations.json
-  4. match-photos.js      → public/data/photos.json
-  5. generate-thumbnails.js → public/images/thumbs/*.webp
-  6. assign-card-photos.js  → annotations.json (coverPhoto) + public/images/cards/*.webp
-  7. convert-hero.js      → public/images/hero.webp
-  8. convert-tone-images.js → public/tone/*.webp
-```
-
-KOM/QOM times are hardcoded in `scripts/resolve-annotations.js` as `komTime: null, qomTime: null`
-for all 3 KOM segments (Billie Helmer, Leaving Chatham, Silver Creek). The script writes these
-values to annotations.json, which is then consumed by KomSegments.astro at build time.
-
-### Color Token System
-
-Star-rating colors are defined **in three separate places** with identical hex values:
-
-| Location | File | Usage |
-|----------|------|-------|
-| `starColors` const | `src/components/RouteMap.astro` (line 129) | Map sector polylines + badge icons |
-| `starColors` const | `src/components/ElevationProfile.astro` (line 59) | Elevation band annotations |
-| `starColors` const | `src/components/GravelSectors.astro` (line 16) | Card star rating display |
-
-All three use the same hex values: `{1:'#f0c040', 2:'#e8962a', 3:'#d9641e', 4:'#c93a18', 5:'#b71c1c'}`.
-No shared token file exists — the values are duplicated across components.
-
-### CustomEvent Bus
-
-Window-level events decouple RouteMap and ElevationProfile:
-
-```
-map:sectorHover  { sectorIndex: number|null }  → elevation highlights band
-map:sectorClick  { sectorIndex: number }         → elevation dims others, highlights clicked
-map:reset        {}                              → all components restore default state
-elevation:hover  { lat, lon }                    → map moves bike crosshair
-elevation:hoverEnd {}                            → map hides bike crosshair
-elevation:sectorClick { sectorIndex: number }    → map flies to sector bounds
-```
+**Domain:** OAuth integration testing — serverless functions with real third-party APIs
+**Project:** MK Ultra Gravel — v7.0 Strava Go-Live
+**Researched:** 2026-03-31
+**Focus:** How to test the existing Strava OAuth/submission pipeline end-to-end
+**Overall confidence:** HIGH — findings from codebase inspection + Strava official docs + Netlify CLI docs
 
 ---
 
-## Feature 1: Elevation Profile Sector Labels
+## System Map (Existing Architecture)
 
-### What It Is
+The submission pipeline spans 4 Netlify Functions v1 across 4 external service boundaries:
 
-Add text labels at the bottom of the Chart.js elevation chart showing sector names and star
-ratings. One label per sector (6 sectors). Labels are staggered vertically to avoid overlap
-since several sectors are adjacent on the mileage axis.
+```
+Browser
+  │
+  │ GET /?activityUrl=...
+  ▼
+[strava-auth.js]
+  │  validates activityUrl format
+  │  generates CSRF nonce (crypto.randomBytes)
+  │  encodes state = base64url({nonce, activityUrl})
+  │  sets HttpOnly cookie strava_oauth_state=nonce
+  └─► 302 → https://www.strava.com/oauth/authorize?...
+               │
+               │ user grants scope: activity:read_all
+               ▼
+[strava-callback.js]
+  │  verifies CSRF: state nonce == cookie nonce
+  │  POSTs to Strava /api/v3/oauth/token (code exchange)
+  │  GETs Strava /api/v3/activities/{id}?include_all_efforts=true
+  │  filters to 9 event segment IDs
+  │  rejects if 0 matching efforts
+  │  encodes payload = base64url({athleteId, name, activityUrl, segments})
+  │  clears CSRF cookie
+  └─► 302 → /submit-confirm?data=<payload>
+               │
+               │ user fills gender + consent form, submits POST
+               ▼
+[submit-result.js]
+  │  validates consent + gender
+  │  decodes payload
+  │  builds athlete JSON (Phase 28 schema)
+  │  GET GitHub /repos/.../contents/{athleteId}.json (retrieve SHA)
+  │  PUT GitHub /repos/.../contents/{athleteId}.json (create/update)
+  │  fire-and-forget POST to NETLIFY_BUILD_HOOK
+  └─► 200 success HTML page
 
-### Integration Point
-
-`ElevationProfile.astro` — the `annotationBoxes` object that drives `chartjs-plugin-annotation`.
-
-The existing sector forEach loop (lines 69–84) already builds `annotationBoxes` with `sector_N`
-keys as box annotations. Labels are added by adding a `label` sub-object to each existing box
-annotation — the same pattern already used by KOM annotations (lines 87–105).
-
-### chartjs-plugin-annotation Label API
-
-The current KOM annotations already use `label` objects within box annotations:
-```js
-label: {
-  display: true,
-  content: kom.name,
-  color: '#7fff00cc',
-  font: { size: 9, family: 'Space Mono, monospace' },
-  position: 'start',
-}
+Strava
+  │
+  │ POST (deauth event: aspect_type=delete, updates.authorized='false')
+  ▼
+[strava-webhook.js]
+  │  GET handler: subscription handshake (echoes hub.challenge)
+  │  POST handler: responds 200 immediately
+  │  if deauth event: deleteAthleteData(athleteId)
+  │    GET GitHub SHA → DELETE file → trigger rebuild
 ```
 
-For sector labels, the same structure applies. `position` controls where within the box the
-label anchors — `'start'`, `'center'`, `'end'`, or `{x: pct, y: pct}`. To pin labels to the
-bottom of the chart area rather than to the annotation box top, the label needs to be placed
-at the bottom of the box with `position: {x: 'center', y: 'end'}` or using the `yAdjust`
-offset property.
+### Function Inventory
 
-**Stagger pattern for overlapping sectors:** Adjacent sectors (e.g., Sandstrom ends at mi ~29
-and Akkala Rd starts at mi 39.5) may have labels that run close. Staggering by alternating
-`yAdjust` values (e.g., 0 and -20) on even/odd sector indices prevents overlap without
-layout logic.
+| File | Handler | Purpose | External calls |
+|------|---------|---------|----------------|
+| `strava-auth.js` | GET | OAuth initiation | None (all local) |
+| `strava-callback.js` | GET (redirect from Strava) | Token exchange + activity fetch | Strava oauth/token, Strava activities API |
+| `submit-result.js` | POST | GitHub commit + rebuild | GitHub Contents API, Netlify Build Hook |
+| `strava-webhook.js` | GET + POST | Strava subscription + deauth | GitHub Contents API, Netlify Build Hook |
 
-### New vs Modified
+All functions use v1 syntax (`exports.handler`) due to active Netlify Functions v2 env var bug (confirmed 2026-03-28).
 
-**Modified:** `src/components/ElevationProfile.astro`
-- Add `label` property to each existing `sector_N` annotation in the `forEach` loop
-- No new components, no new data dependencies, no new script imports
+### Environment Variables
 
-### Data Flow
+| Variable | Required by | Set in |
+|----------|-------------|--------|
+| `STRAVA_CLIENT_ID` | strava-auth, strava-callback | Netlify dashboard (NOT netlify.toml) |
+| `STRAVA_CLIENT_SECRET` | strava-callback | Netlify dashboard |
+| `STRAVA_REDIRECT_URI` | strava-auth | Netlify dashboard |
+| `STRAVA_VERIFY_TOKEN` | strava-webhook | Netlify dashboard |
+| `GITHUB_TOKEN` | submit-result, strava-webhook | Netlify dashboard |
+| `GITHUB_OWNER` | submit-result, strava-webhook | Netlify dashboard |
+| `GITHUB_REPO` | submit-result, strava-webhook | Netlify dashboard |
+| `NETLIFY_BUILD_HOOK` | submit-result, strava-webhook | Netlify dashboard |
 
-No change. `annotations.json` already provides `sector.name` and `sector.stars`. Both are
-already consumed inside the `forEach` loop that builds `annotationBoxes`.
+Local `.env` file currently has `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_ACCESS_TOKEN`, and `STRAVA_REFRESH_TOKEN`. The remaining 5 vars are not yet present locally.
 
 ---
 
-## Feature 2: Shared Site Navigation
+## Strava API Constraints for Testing
 
-### What It Is
+### The 1-Athlete Limit (Critical)
 
-A persistent navigation component shared across index.astro, results.astro, submit.astro, and
-submit-confirm.astro. Provides links: Home (/), Results (/results), Submit (/submit).
+Before Strava app review, the app is in "Single Player Mode":
 
-### Integration Point
+- **Only the developer's Strava account can authenticate.** If any other athlete attempts OAuth, Strava returns 403 "Limit of connected athletes exceeded."
+- App review is required to lift this limit and allow additional athletes.
+- Review timeline is 7-10 business days per Strava documentation.
 
-`BaseLayout.astro` is the single shared layout used by all 4 pages. It currently renders only
-`<html>`, `<head>`, and `<body>` with two fixed overlay divs (`grain-overlay`, `escher-overlay`)
-plus `<slot />`. Nav belongs in BaseLayout, rendering before `<slot />`.
+**Implication:** End-to-end testing before app review is limited to the developer's own Strava account. This is sufficient to verify the full pipeline — token exchange, activity fetch, segment filtering, GitHub commit, rebuild, and leaderboard display — using a real activity.
 
-### New vs Modified
+### No Sandbox Environment
 
-**New component:** `src/components/Nav.astro` — nav markup with active-state logic
-**Modified:** `src/layouts/BaseLayout.astro` — import and render `<Nav />`
+Strava provides no separate sandbox or staging API. All OAuth testing uses the real production Strava API with the developer's own account data.
 
-Alternatively, the nav HTML can be inlined directly in BaseLayout rather than extracting to
-a component. Given the nav is small (3 links) and BaseLayout has no other component imports,
-inlining is simpler and avoids an unnecessary file. The tradeoff: if nav grows beyond 3 links,
-a dedicated component is easier to maintain. Either approach works.
+### Localhost Redirect URIs Are Allowed
 
-### Active Page Detection
+Strava explicitly whitelists `localhost` and `127.0.0.1` as callback domains. HTTP (not HTTPS) localhost is accepted. This enables local testing via `netlify dev`.
 
-Astro provides `Astro.url.pathname` in the frontmatter of any `.astro` file. When nav is in
-BaseLayout, the pattern is:
+**Critical constraint:** The Strava app has a single "Authorization Callback Domain" field. It cannot hold two simultaneous values (e.g., `localhost` and `mkultragravel.netlify.app`). Switching between local and production testing requires editing the Strava app settings at `https://www.strava.com/settings/api`.
 
-```astro
----
-const { pathname } = Astro.url;
----
-<nav>
-  <a href="/" class={pathname === '/' ? 'active' : ''}>Home</a>
-  <a href="/results" class={pathname === '/results' ? 'active' : ''}>Results</a>
-  <a href="/submit" class={pathname === '/submit' ? 'active' : ''}>Submit</a>
-</nav>
-```
+### Rate Limits
 
-This works because BaseLayout is an Astro component with access to Astro.url at build time.
+- 200 requests per 15 minutes, 2,000 per day (per application, not per athlete)
+- Integration testing generates 2-4 requests per submission attempt (token exchange + activity fetch)
+- Rate limits are not a concern for manual testing
 
-### Layout Conflict with Existing Pages
+### Webhook Registration
 
-The current results.astro and submit.astro each have a hardcoded `← Back to MK Ultra Gravel`
-back link at the top of `<main>`. Adding a global nav means these back links become redundant —
-both should be removed when nav is added, since Home is one click away.
-
-Index.astro has no back link (it is the home page). No layout conflict there.
-
-### Style Constraints
-
-The existing design uses no visible nav — pages are full-bleed scroll experiences. A nav must
-not interfere with the hero section's `min-h-screen` full-viewport layout on the home page.
-Options:
-- Fixed/sticky nav with `z-index` above content (requires `padding-top` on main to avoid
-  content being obscured behind the nav bar)
-- Inline nav at top of layout before `<slot />` (simplest — no z-index math, hero section
-  naturally flows below it)
-
-The home page hero uses `min-h-screen` with `flex items-center justify-center`. An inline nav
-above `<slot />` will push content down, so the hero would no longer start at viewport top.
-A fixed/sticky position nav avoids this — the hero still fills the viewport — but requires
-`padding-top` on inner pages where the nav would otherwise cover content.
-
-The cleanest approach for this codebase: fixed nav at top, 48-64px tall, with a matching
-`padding-top` on `<main>` elements on the non-hero pages (results, submit). Index.astro's
-hero already handles vertical centering so padding does not break it.
-
-### Data Flow
-
-No data dependencies. Nav is purely structural HTML with pathname-based active state.
+- One active webhook subscription per Strava app
+- Webhook URL must be publicly accessible (not localhost)
+- Subscription registration requires a one-time curl command to Strava's push_subscriptions API
+- After subscription, Strava sends a GET handshake to the callback URL — the endpoint must respond with `{"hub.challenge": "..."}` within 2 seconds
 
 ---
 
-## Feature 3: Color Consistency
+## Local Testing Architecture (netlify dev)
 
-### What It Is
+### How netlify dev Works
 
-Ensure sector colors are consistent across all three surfaces: map polylines, elevation chart
-bands, and sector cards. Currently 2-star and 3-star colors may be visually inconsistent
-because each surface defines colors independently in its own script.
+`netlify dev` provides a local proxy at `http://localhost:8888` that:
+- Serves all 4 functions at `/.netlify/functions/<name>` (and via `/api/*` redirect from netlify.toml)
+- Injects environment variables from the linked Netlify site OR from a local `.env` file
+- Handles the `[[redirects]]` rules defined in netlify.toml
 
-### Root Cause Diagnosis
+Functions run locally as Node.js processes — no Lambda cold starts, no deployment cycle.
 
-All three `starColors` objects use the same hex values as of the last code inspection:
-```js
-{ 1:'#f0c040', 2:'#e8962a', 3:'#d9641e', 4:'#c93a18', 5:'#b71c1c' }
+### HTTPS Constraint for Cookies
+
+The `strava-auth.js` function sets the CSRF cookie with `Secure` and `SameSite=Lax` attributes:
+
 ```
-If colors appear inconsistent, the issue is likely that one of the three files diverged during
-a prior edit (e.g., a fix applied to RouteMap was not propagated to ElevationProfile or
-GravelSectors).
-
-### Integration Point
-
-The three locations that hold `starColors` definitions:
-
-1. `src/components/RouteMap.astro` — line 129, inside `initMap()` async function (runtime)
-2. `src/components/ElevationProfile.astro` — line 59, inside `initElevation()` async function (runtime)
-3. `src/components/GravelSectors.astro` — line 16, in frontmatter (build time)
-
-### Refactor Options
-
-**Option A: Single source of truth in a shared JS module**
-
-Create `src/lib/star-colors.js`:
-```js
-export const starColors = {
-  1: '#f0c040',
-  2: '#e8962a',
-  3: '#d9641e',
-  4: '#c93a18',
-  5: '#b71c1c',
-};
+Set-Cookie: strava_oauth_state=<nonce>; HttpOnly; Secure; SameSite=Lax; Max-Age=600; Path=/
 ```
 
-RouteMap and ElevationProfile use `import` in their `<script>` tags. GravelSectors uses it in
-the frontmatter `---` block.
+**Problem:** `netlify dev` runs HTTP by default. Browsers reject `Secure` cookies over HTTP connections. When Strava redirects back to `strava-callback.js`, the cookie will be absent, causing CSRF verification to fail.
 
-**Constraint:** RouteMap and ElevationProfile use `async function initMap()` / `async function
-initElevation()` inside `<script>` tags that use dynamic `import()` for Leaflet/Chart.js.
-Static `import` at the top of a `<script>` tag in Astro works fine — Astro/Vite bundles it.
-This is the cleaner option.
+**Resolution options:**
+1. Configure local HTTPS in netlify.toml with `mkcert`-generated certificates (cleanest, no code changes)
+2. Strip `Secure` from cookie in development (code change in strava-auth.js, requires env-based condition)
+3. Test only on deployed production URL (no local OAuth testing — simplest to set up, slowest iteration)
+4. Use the `/api/` redirect path which goes through netlify dev's proxy, which may handle the Secure issue
 
-**Option B: CSS custom properties via @theme**
+The Strava OAuth callback returns to whatever `redirect_uri` was specified in the authorization URL. If testing locally, `STRAVA_REDIRECT_URI` must point to `http://localhost:8888/.netlify/functions/strava-callback`, and the Strava app's Authorization Callback Domain must be set to `localhost`.
 
-Define star colors as CSS tokens in `global.css` under `@theme`:
-```css
---color-star-1: #f0c040;
---color-star-2: #e8962a;
-```
-GravelSectors can use these as Tailwind utility classes. But RouteMap and ElevationProfile
-need hex values in JavaScript (passed to Chart.js and Leaflet APIs) — `getComputedStyle()`
-could read CSS variables at runtime, but this is more complex than a JS module.
+**Recommendation:** Start with production testing (deployed site) to avoid the HTTPS/cookie complication. Use local testing only for functions that don't involve the OAuth cookie round-trip (webhook, submit-result POST).
 
-**Recommendation: Option A** — a shared `src/lib/star-colors.js` module. It eliminates
-divergence risk, is the simplest refactor, and matches the existing pattern of `src/lib/scoring.js`.
-GravelSectors already imports from `src/lib/scoring.js` (results.astro), establishing this
-pattern as acceptable.
+### netlify dev Environment Variable Injection
 
-### New vs Modified
+Two sources, in priority order:
+1. Linked Netlify site: run `netlify link` and `netlify dev` pulls dashboard env vars automatically
+2. Local `.env` file: read by netlify dev without additional configuration
 
-**New file:** `src/lib/star-colors.js`
-**Modified:** `src/components/RouteMap.astro`, `src/components/ElevationProfile.astro`,
-`src/components/GravelSectors.astro` — remove local `starColors` const, import from shared module
+For v7.0, `netlify link` is the preferred approach — it ensures local functions use the same variables as production, including secrets that should not be in `.env`.
 
 ---
 
-## Feature 4: KOM/QOM Time Input Tool
+## Testing Strategy: Three Tiers
 
-### What It Is
+### Tier 1: Unit Tests (Already Exist)
 
-A local developer script (not deployed) that allows entering KOM and QOM times for the 3 KOM
-segments. Reads the current state of `scripts/resolve-annotations.js`, prompts for time
-strings (or accepts them via CLI flags), writes updated values back, and optionally re-runs
-the pipeline.
+The scoring engine (`src/lib/scoring.js`) has vitest tests at `src/lib/scoring.test.js`. These tests are pure function tests — no external calls, no OAuth, no filesystem.
 
-### Current Data Flow for KOM Times
+**Run:** `npm run test`
 
-```
-scripts/resolve-annotations.js (source of truth)
-  koms array → komTime: null, qomTime: null
-       ↓
-  annotationBoxes + resolvedKoms.map()
-       ↓
-  public/data/annotations.json → { kom: [{ komTime, qomTime, ... }, ...] }
-       ↓
-  src/components/KomSegments.astro (build-time readFileSync)
-       ↓
-  Rendered HTML: conditional block shows times if truthy
+These tests verify the scoring logic is correct before any real-data testing. They should pass green as a baseline before any other testing begins.
+
+### Tier 2: Function-Level Manual Tests
+
+Functions that do not require the full OAuth round-trip can be tested directly with curl against `netlify dev` or the deployed URL.
+
+**strava-webhook.js — GET handshake:**
+```bash
+curl "http://localhost:8888/.netlify/functions/strava-webhook?\
+hub.mode=subscribe&hub.challenge=testchallenge123&hub.verify_token=YOUR_VERIFY_TOKEN"
+# Expected: {"hub.challenge":"testchallenge123"}
 ```
 
-The `resolve-annotations.js` script is the source of truth. The times live as hardcoded
-values in the koms array. Updating them requires editing the source array, then re-running
-`npm run data` to regenerate annotations.json.
-
-### Tool Design Options
-
-**Option A: Direct JSON editor (simplest)**
-
-A script that reads `public/data/annotations.json` directly, prompts for updated
-`komTime`/`qomTime` values per segment, writes back the JSON. Skips the pipeline entirely.
-
-Advantage: Immediate — no pipeline re-run needed.
-Risk: Next `npm run data` (or `npm run build`) overwrites the JSON with `null` values from
-`resolve-annotations.js`. Changes are lost at next pipeline run. This is a footgun.
-
-**Option B: Edit resolve-annotations.js source (correct approach)**
-
-A script that reads the koms array from `scripts/resolve-annotations.js` using
-`fs.readFileSync`, uses regex or AST manipulation to update `komTime` / `qomTime` values for
-named segments, writes the file back, then optionally runs `node scripts/resolve-annotations.js`
-to regenerate annotations.json.
-
-Advantage: Durable — times survive subsequent pipeline runs.
-Risk: Editing JS source with regex is fragile if the file format changes.
-
-**Option C: External config file (cleanest)**
-
-Extract the time values into a separate `scripts/kom-times.json`:
-```json
-{
-  "Billie Helmer":    { "komTime": null, "qomTime": null },
-  "Leaving Chatham":  { "komTime": null, "qomTime": null },
-  "Silver Creek":     { "komTime": null, "qomTime": null }
-}
+**strava-webhook.js — POST deauth simulation:**
+```bash
+curl -X POST https://mkultragravel.netlify.app/.netlify/functions/strava-webhook \
+  -H 'Content-Type: application/json' \
+  -d '{"object_type":"athlete","aspect_type":"delete","object_id":99999,"owner_id":99999,"updates":{"authorized":"false"},"event_time":1749000000,"subscription_id":1}'
+# Expected: "EVENT_RECEIVED" with status 200
+# Side effect: attempts GitHub file GET for athlete 99999 (will 404 gracefully)
 ```
-`resolve-annotations.js` reads this file and merges the time values into the koms array.
-The input tool simply edits `kom-times.json`.
 
-Advantage: Cleanest separation — times are data, not code. Tool is trivial (JSON write).
-Survives pipeline runs automatically.
+**submit-result.js — POST with crafted payload:**
+The function accepts a `data` field (base64url-encoded JSON) plus `gender` and `consent`. A test payload can be constructed without going through OAuth:
+```bash
+DATA=$(node -e "console.log(Buffer.from(JSON.stringify({athleteId:'TEST001',name:'Test Athlete',activityUrl:'https://www.strava.com/activities/12345',segments:{'24479292':{elapsed_time:1200}}})).toString('base64url'))")
+curl -X POST https://mkultragravel.netlify.app/.netlify/functions/submit-result \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d "data=$DATA&gender=M&consent=yes"
+# Expected: success HTML page + creates/updates athletes/TEST001.json in GitHub
+```
 
-**Recommendation: Option C** — the external config file pattern. It has the cleanest data
-boundary: times are data (belong in a JSON file), not source code. The input tool becomes
-a simple interactive prompt that writes JSON. The pipeline becomes idempotent with respect
-to time data.
+**strava-auth.js — parameter validation:**
+```bash
+# Missing activityUrl → 400
+curl "http://localhost:8888/.netlify/functions/strava-auth"
+# Invalid activityUrl → 400
+curl "http://localhost:8888/.netlify/functions/strava-auth?activityUrl=https://example.com"
+# Valid → 302 to Strava (response header Location should be strava.com URL)
+curl -v "http://localhost:8888/.netlify/functions/strava-auth?activityUrl=https://www.strava.com/activities/12345"
+```
 
-### Tool Implementation Pattern
+### Tier 3: Full End-to-End (Requires Real Strava Account)
 
-Following existing scripts in `scripts/`:
-- Node.js CommonJS (`require`/`module.exports`)
-- `readline` for interactive prompts (stdlib, no dependency)
-- Or accept `--segment "Billie Helmer" --kom "0:36:42" --qom "0:44:01"` CLI flags for
-  non-interactive use (useful for scripting)
-- Write to `scripts/kom-times.json`
-- Optionally re-run `node scripts/resolve-annotations.js` via `child_process.execSync`
+This is the critical path for v7.0. It requires:
+- Strava app's Authorization Callback Domain set to `mkultragravel.netlify.app`
+- All 8 env vars configured in Netlify dashboard
+- A real Strava activity from the developer's account that includes at least one of the 9 event segment IDs
 
-### New vs Modified
-
-**New file:** `scripts/kom-times.json` (initial state: all null)
-**New file:** `scripts/set-kom-times.js` (input tool)
-**Modified:** `scripts/resolve-annotations.js` — read `kom-times.json` and merge into koms array
+**Full pipeline test sequence:**
+1. Navigate to `https://mkultragravel.netlify.app/submit`
+2. Enter activity URL and click "Connect with Strava"
+3. Confirm redirect to `https://www.strava.com/oauth/authorize`
+4. Authorize the app — confirm scope shows `activity:read_all`
+5. Confirm redirect to `/submit-confirm` with decoded activity data
+6. Select gender, check consent, submit
+7. Confirm success page
+8. Check GitHub repo — `public/data/results/athletes/{athleteId}.json` should be committed
+9. Wait for Netlify rebuild (1-3 minutes) — triggered by build hook
+10. Navigate to `/results` — athlete should appear in the leaderboard
 
 ---
 
-## Suggested Build Order
+## Verification Sequence: What to Check First
 
-### Phase ordering rationale
+Testing dependencies create a required ordering. Each step gates the next.
 
-1. **Color consistency first** — It is a prerequisite audit. Before adding sector labels to
-   the elevation chart, confirm that the label colors (derived from `starColors`) match the
-   band colors. If colors are inconsistent, fixing them after labels are added risks visual
-   regression. This phase also introduces `src/lib/star-colors.js`, which the labels phase
-   can then import.
+### Step 1: Env Vars Present (Prerequisite)
 
-2. **Elevation sector labels second** — Depends on correct colors (Phase 1). Self-contained
-   change to ElevationProfile.astro with no new dependencies beyond chartjs-plugin-annotation
-   (already installed). Highest visual impact of the 4 features.
+Before any function will work, all env vars must be set. Verify in Netlify dashboard that all 8 variables exist for the production context.
 
-3. **Site navigation third** — Self-contained change to BaseLayout.astro and optionally a
-   new Nav.astro. Does not depend on Phases 1 or 2. Could run in parallel with Phase 2 but
-   ordering it after reduces active change surface.
+**How to verify:** Check Netlify dashboard → Site configuration → Environment variables. Confirm `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_REDIRECT_URI`, `STRAVA_VERIFY_TOKEN`, `GITHUB_TOKEN`, `GITHUB_OWNER`, `GITHUB_REPO`, `NETLIFY_BUILD_HOOK` are all present.
 
-4. **KOM/QOM input tool last** — Pure developer tooling with no impact on the deployed site.
-   Does not depend on any other phase. Safe to defer to end of milestone.
+### Step 2: GitHub API Access
 
-### Dependency graph
+The GitHub token must have `Contents: Read and Write` permission on the repo. Verify independently before running the submission pipeline.
 
+**How to verify:**
+```bash
+curl -H "Authorization: Bearer $GITHUB_TOKEN" \
+  -H "Accept: application/vnd.github+json" \
+  https://api.github.com/repos/Sheppardjm/mkUltraGravel/contents/public/data/results/athletes/
+# Expected: 200 with JSON array of files
 ```
-Phase 1 (star-colors.js) ──→ Phase 2 (sector labels use consistent colors)
-Phase 3 (nav) ─────────────→ independent of 1 and 2
-Phase 4 (KOM tool) ─────────→ independent of 1, 2, and 3
+
+### Step 3: Netlify Build Hook
+
+Confirm the build hook URL is reachable and triggers a build.
+
+**How to verify:**
+```bash
+curl -X POST "$NETLIFY_BUILD_HOOK"
+# Expected: Netlify dashboard shows a new deploy triggered
 ```
+
+### Step 4: strava-auth Redirect
+
+Verify strava-auth generates a valid Strava authorization URL with the correct client_id and redirect_uri.
+
+**How to verify:** Visit `https://mkultragravel.netlify.app/.netlify/functions/strava-auth?activityUrl=https://www.strava.com/activities/12345`. Confirm the 302 Location header points to `https://www.strava.com/oauth/authorize` with correct params. Check CSRF cookie is set.
+
+### Step 5: Strava Token Exchange
+
+The most likely failure point. Token exchange fails if `STRAVA_CLIENT_SECRET` is wrong, if the app is not yet approved, or if the authorization code expired (codes are single-use with short TTL).
+
+**How to verify:** Complete the full OAuth flow. If `strava-callback.js` returns the error page "Token exchange failed," check function logs in Netlify dashboard for the raw Strava error response.
+
+### Step 6: Activity Fetch + Segment Matching
+
+Activity fetch succeeds but segment matching may return 0 results if the activity has no data for the 9 event segment IDs. This is expected for a non-event test activity — the developer should use an activity that actually rode the MK Ultra course, or use a synthetic test via Tier 2 (crafted submit-result POST).
+
+### Step 7: GitHub Commit
+
+After successful segment matching, `submit-result.js` commits to GitHub. Verify by checking the repo for a new commit.
+
+### Step 8: Rebuild and Leaderboard
+
+Netlify deploy logs show the build triggered by the hook. After deploy, the athlete appears in `/results`.
 
 ---
 
-## Component Boundaries Summary
+## Deauthorization Webhook Testing
 
-| Feature | New Components | Modified Components | New Data Files |
-|---------|---------------|--------------------|----|
-| Sector labels | None | `ElevationProfile.astro` | None |
-| Navigation | `Nav.astro` (optional) | `BaseLayout.astro`, `results.astro`, `submit.astro` | None |
-| Color consistency | None | `RouteMap.astro`, `ElevationProfile.astro`, `GravelSectors.astro` | `src/lib/star-colors.js` |
-| KOM/QOM tool | `scripts/set-kom-times.js` | `scripts/resolve-annotations.js` | `scripts/kom-times.json` |
+The webhook requires a one-time subscription registration. This is separate from the OAuth flow and must be done after deploy.
+
+### Registering the Subscription
+
+```bash
+curl -X POST https://www.strava.com/api/v3/push_subscriptions \
+  -F client_id=11267 \
+  -F client_secret=$STRAVA_CLIENT_SECRET \
+  -F callback_url=https://mkultragravel.netlify.app/.netlify/functions/strava-webhook \
+  -F verify_token=$STRAVA_VERIFY_TOKEN
+```
+
+Strava immediately sends a GET to the callback_url with `hub.challenge`. The function must be deployed and responding before registration is attempted. If it responds correctly, Strava returns the subscription ID.
+
+**Verify subscription exists:**
+```bash
+curl "https://www.strava.com/api/v3/push_subscriptions?client_id=11267&client_secret=$STRAVA_CLIENT_SECRET"
+```
+
+### Testing Deauth Without Real Revocation
+
+To test the deauth handler without revoking an actual athlete's access, send a simulated deauth POST directly to the webhook:
+
+```bash
+curl -X POST https://mkultragravel.netlify.app/.netlify/functions/strava-webhook \
+  -H 'Content-Type: application/json' \
+  -d '{"object_type":"athlete","aspect_type":"delete","object_id":32711065,"owner_id":32711065,"updates":{"authorized":"false"},"event_time":1749000000,"subscription_id":1}'
+```
+
+Use the `athleteId` of a test file that was committed during Tier 3 testing. Verify the file is deleted from GitHub and a rebuild is triggered.
+
+---
+
+## Data Pipeline Verification
+
+After a successful submission, verify the full chain:
+
+### GitHub Commit
+
+File `public/data/results/athletes/{athleteId}.json` should:
+- Conform to `public/data/results/schema.json`
+- Have all required fields: `athleteId`, `name`, `gender`, `activityUrl`, `submittedAt`, `segments`
+- Have `segments` keyed by string segment IDs (not integers)
+- Have `elapsed_time` as integer (seconds)
+
+### Build Output
+
+After Netlify rebuild, the results page reads athlete JSON files at build time. The scoring engine (`src/lib/scoring.js`) computes rankings from all athlete files in the `athletes/` directory. The athlete should appear in the appropriate gender tab in both the Gravel Champion and KOM/QOM Champion leaderboards (if they have segment times for the relevant segments).
+
+**Verify scoring correctness:** The existing vitest test suite covers the scoring engine. Seed data in `public/data/results/athletes/` (20+ files) is already processed by the build and appears in the leaderboard. A real submission adds to these.
+
+---
+
+## Architecture: Production vs Local Testing Comparison
+
+| Aspect | Local (netlify dev) | Production (deployed) |
+|--------|---------------------|----------------------|
+| OAuth CSRF cookie | **Broken** — Secure cookie fails over HTTP | Works — HTTPS throughout |
+| Environment variables | Via `netlify link` or `.env` file | Netlify dashboard |
+| Strava callback domain | Must change Strava app settings to `localhost` | `mkultragravel.netlify.app` |
+| Webhook testing | Not feasible — localhost not reachable by Strava | Feasible after subscription registered |
+| Iteration speed | Fast — no deploy cycle | Slow — 1-3 min deploy per change |
+| Function logs | Terminal output | Netlify dashboard → Functions tab |
+| Suitable for | Auth param validation, webhook curl tests, submit-result POST tests | Full OAuth round-trip, webhook subscription |
+
+**Recommendation:** Use production (deployed) for the full OAuth integration test. Use `netlify dev` only for the Tier 2 function-level tests that don't involve the CSRF cookie round-trip.
 
 ---
 
 ## Anti-Patterns to Avoid
 
-### Editing annotations.json directly for KOM times
+### Testing webhook subscription with localhost
 
-Annotations.json is a generated artifact. Manual edits are silently overwritten by the next
-`npm run data` or `npm run build`. All durable data must live in the source files that
-generate it — in this case, `scripts/resolve-annotations.js` or a sibling config file it reads.
+Strava's subscription handshake is a real HTTP GET from Strava's servers. They cannot reach `localhost:8888`. Register the subscription only after the function is deployed to production.
 
-### Using CSS variables for JavaScript-consumed colors
+### Switching Strava app callback domain repeatedly
 
-The `starColors` hex values are passed directly to Chart.js and Leaflet APIs as string
-arguments. Reading them via `getComputedStyle(document.documentElement).getPropertyValue()`
-at runtime is possible but adds indirection. A shared JS module is the right tool for values
-consumed by JavaScript.
+The Strava app settings at `https://www.strava.com/settings/api` have a single "Authorization Callback Domain" field. Every time you switch between `localhost` and `mkultragravel.netlify.app`, you must manually edit this field. Plan testing to minimize switches: do all local validation first, then set it to `mkultragravel.netlify.app` for the real end-to-end test and leave it there.
 
-### Adding nav directly to index.astro's `<main>`
+### Using a non-event Strava activity for segment matching
 
-Navigation belongs in BaseLayout, not in individual pages. Duplicating nav markup in each
-page creates a sync problem — three pages to update on every nav change instead of one.
+`strava-callback.js` filters to the 9 event segment IDs (`ALL_SEGMENT_IDS`). Any Strava activity that was not ridden on the MK Ultra Gravel course will return 0 matching efforts and show the error page. For Tier 3 testing, you need either:
+- An activity recorded on the actual MK Ultra Gravel course with GPS segment matching enabled, OR
+- A direct POST to `submit-result.js` with a crafted payload (bypasses segment matching entirely)
 
-### Putting sector label text at the annotation box top
+The crafted POST approach (Tier 2) is the pragmatic path for verifying the GitHub commit + rebuild pipeline when a real course activity is not available.
 
-chartjs-plugin-annotation label positions are relative to the annotation box, not the chart
-area. A sector box spans from the x-axis up to the dataset line height. `position: 'start'`
-places the label at the top-left of the box, which is at varying heights depending on
-elevation at that point on the route. Use `yAdjust` with a positive offset to push labels
-toward the bottom of the chart, keeping them in a consistent visual band regardless of
-terrain height.
+### Expecting instant leaderboard update
+
+The rebuild is fire-and-forget from `submit-result.js`. Netlify builds take 1-3 minutes. The leaderboard is a static site — it does not update in real time. This is by design. Do not treat a missing athlete on the leaderboard as a bug until the build has completed.
+
+### Committing athlete data for fake/test athletes that shouldn't appear
+
+Test submissions using crafted payloads will commit real files to the GitHub repo (`athletes/TEST001.json`). These files will appear in the leaderboard after rebuild. Have a cleanup plan: delete the test files via GitHub UI or curl before the real event, or use an obviously-fake athleteId prefix that can be filtered during build.
+
+---
+
+## Suggested Phase Structure for v7.0
+
+Based on testing dependencies:
+
+**Phase A: Environment Configuration**
+- Confirm all 8 env vars in Netlify dashboard
+- Add missing vars: `STRAVA_REDIRECT_URI`, `STRAVA_VERIFY_TOKEN`, `NETLIFY_BUILD_HOOK`
+- Confirm GitHub token permissions
+- Run Tier 1 unit tests: `npm run test` (scoring engine baseline)
+
+**Phase B: GitHub API + Submit Pipeline**
+- Execute Tier 2 submit-result test: crafted POST → GitHub commit → verify file created
+- Trigger build hook manually → verify rebuild → athlete appears in leaderboard
+- Delete test file, verify rebuild removes athlete from leaderboard
+- Covers the data pipeline without needing OAuth at all
+
+**Phase C: Full OAuth Round-Trip**
+- Set Strava app callback domain to `mkultragravel.netlify.app`
+- Run Tier 3 full end-to-end test with developer's own Strava account
+- Verify each step: redirect, consent, callback, segment matching (or crafted activity test)
+- Submit confirmation page → GitHub commit → rebuild → leaderboard
+
+**Phase D: Webhook Registration + Deauth**
+- Register Strava webhook subscription via curl
+- Verify subscription registered (GET push_subscriptions)
+- Test deauth with crafted POST using test athlete ID
+- Verify file deleted + rebuild triggered
+
+**Phase E: App Review Submission**
+- Prepare screenshots of working pipeline for Strava review
+- Submit app for review (required to allow non-developer athletes)
+- 7-10 business day wait
+
+**Rationale for this order:**
+- Phases A-D can be completed with only the developer's Strava account (1-athlete limit is not a constraint)
+- Phase B comes before Phase C because it verifies GitHub + rebuild independently, so failures in Phase C can be isolated to the OAuth layer
+- Phase D comes last because webhook requires a deployed, verified endpoint
+- Phase E is last because screenshots showing a working pipeline support the review application
+
+---
+
+## Confidence Assessment
+
+| Area | Confidence | Source |
+|------|------------|--------|
+| Strava 1-athlete limit | HIGH | Strava official FAQ + developers.strava.com docs |
+| Localhost redirect URI allowed | HIGH | Strava authentication docs ("localhost and 127.0.0.1 are white-listed") |
+| Single callback domain per app | MEDIUM | Community forum discussion; one official confirmation |
+| netlify dev HTTP-only default | HIGH | Netlify CLI docs — HTTPS requires cert configuration |
+| Secure cookie failure over HTTP | HIGH | MDN spec + community reports |
+| GitHub API rate limits (5000/hr) | HIGH | GitHub REST API docs |
+| Webhook subscription process | HIGH | Strava webhook docs + community confirmation |
+| App review timeline (7-10 days) | MEDIUM | Strava docs; actual timing may vary |
 
 ---
 
 ## Sources
 
-All findings are from direct inspection of the codebase at commit `e24cd44`:
-- `src/components/ElevationProfile.astro` — annotation structure, KOM label pattern
-- `src/components/RouteMap.astro` — starColors definition, CustomEvent bus
-- `src/components/GravelSectors.astro` — starColors definition, build-time data consumption
-- `src/components/KomSegments.astro` — komTime/qomTime rendering logic
-- `src/layouts/BaseLayout.astro` — shared layout structure
-- `scripts/resolve-annotations.js` — komTime source values, koms array
-- `src/styles/global.css` — design tokens (@theme), no star colors defined there
-- `src/pages/index.astro`, `results.astro`, `submit.astro` — page structure, back link pattern
-
-Confidence: HIGH — architecture findings are based on live code, not documentation or training data.
+- [Strava Authentication Docs](https://developers.strava.com/docs/authentication/) — OAuth flow, localhost whitelist, scope requirements
+- [Strava Getting Started](https://developers.strava.com/docs/getting-started/) — Rate limits, default constraints
+- [Strava Webhook Events API](https://developers.strava.com/docs/webhooks/) — Subscription registration, handshake protocol
+- [Strava API FAQ](https://communityhub.strava.com/developers-knowledge-base-14/strava-api-faq-12906) — 1-athlete limit, single player mode
+- [Strava Callback Domain Discussion](https://communityhub.strava.com/developers-api-7/callback-domain-localhost-vs-staging-12001) — Single domain constraint
+- [Netlify CLI Local Development](https://docs.netlify.com/cli/local-development/) — netlify dev behavior, port, HTTPS config
+- [Netlify Functions Environment Variables](https://docs.netlify.com/build/functions/environment-variables/) — Variable injection in functions
+- Direct codebase inspection: `netlify/functions/strava-auth.js`, `strava-callback.js`, `submit-result.js`, `strava-webhook.js`
+- Direct codebase inspection: `src/lib/scoring.js`, `public/data/results/schema.json`, `netlify.toml`

@@ -1,136 +1,257 @@
-# Feature Landscape
+# Feature Landscape: Strava OAuth Go-Live
 
-**Domain:** Cycling event website — UI polish, navigation, and admin tooling milestone
+**Domain:** Strava OAuth integration — production readiness and end-to-end testing
 **Project:** MK Ultra Gravel
-**Researched:** 2026-03-30
-**Scope:** Elevation profile segment labeling, multi-page navigation, color consistency, local KOM/QOM data entry
+**Milestone:** v7.0 Strava Go-Live
+**Researched:** 2026-03-31
 
 ---
 
-## Existing Feature Baseline (Already Built)
+## Context: What Is Already Built
 
-Before categorizing new features, what exists matters. This milestone adds polish on top of:
+The following is fully implemented and deployed to Netlify but untested against real Strava API:
 
-- Single-page site (index.astro) with anchor sections: #route, #sectors, #photos, #info
-- Separate pages: results.astro, submit.astro, submit-confirm.astro
-- No navigation header exists today — the site has no way to jump between sections
-- Elevation profile: Chart.js with sector bands (yellow-to-red box annotations) + KOM bands (dashed chartreuse box annotations)
-- KOM bands already have inline labels via chartjs-plugin-annotation (`label.position: 'start'`, top of band, 9px Space Mono)
-- Sector bands have NO labels — only colored rectangles, no names, no star ratings shown on chart
-- Sector cards: name, stars (★ glyphs), mile marker, Strava link
-- KOM cards: name, grade, elevation, komTime/qomTime fields (from annotations.json)
-- Results page with Gravel Champion + KOM/QOM Champion leaderboards
-- Strava OAuth submission flow
-- Dark brutalist design: Space Mono + Special Elite fonts, oklch dark palette
-- Established color system: sector stars (1=#f0c040 to 5=#b71c1c), KOM=#7fff00 chartreuse
-- Data managed via node scripts in scripts/ — annotations.json is the source of truth
+- `strava-auth.js` — validates activity URL, generates CSRF nonce, sets HttpOnly cookie, redirects to Strava OAuth
+- `strava-callback.js` — verifies CSRF state, exchanges code for token, fetches activity with `include_all_efforts=true`, filters to 9 event segment IDs, redirects to `/submit-confirm`
+- `strava-webhook.js` — handles subscription handshake (GET) and deauth events (POST), deletes athlete JSON via GitHub API
+- `submit-result.js` — validates gender/consent, builds athlete result object per schema, commits JSON to GitHub via Contents API (GET-SHA → PUT), triggers Netlify build hook
+- `/submit` page — activity URL input form with client-side validation, denial alert for `?submit=denied`
+- `/submit-confirm` page — shows athlete name, matched segment count, activity link; gender dropdown + consent checkbox; POSTs to `/api/submit-result`
+- Schema: `public/data/results/schema.json` and seed data in `public/data/results/athletes/`
+- Scope: `activity:read_all` (required for `include_all_efforts=true`)
+- Pattern: `approval_prompt: 'auto'` (returning users skip re-consent)
+- CSRF: double-submit cookie pattern with 10-minute nonce TTL
+
+**The code is considered correct and complete. This milestone's scope is: configure, test, verify, and fix bugs found during real-data testing.**
 
 ---
 
 ## Table Stakes
 
-Features users expect for this type of site and context. Missing = the site feels incomplete or confusing.
+Features/behaviors that must work correctly before any real athlete can submit. Missing = pipeline is broken.
 
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| Sector labels on elevation profile | Professional cycling reference sites (Paris-Roubaix roadbooks, race altimetry) label each zone directly on or immediately below the profile. Without labels, the colored sector bands are anonymous. A rider looking at the chart cannot tell which band is "Sandstrom" or know a sector is 3-star. | Medium | Must appear below the chart canvas — within-band labels compete with the elevation line, are already used for KOM names, and are too small to carry both name and star rating. The correct pattern is a horizontal label strip beneath the canvas. Chart.js annotation positioning (verified via chartjs-plugin-annotation docs) is constrained to within-box boundaries; no below-canvas support. |
-| Navigation header with section + page links | The site has five named sections and a separate /results page with no navigation to any of them. Any multi-section single-page site needs wayfinding. Without nav, users on mobile must scroll the entire page to find content. | Low-Medium | Sticky/fixed header. Must account for scroll-padding-top offset so anchor jumps don't hide content under the nav bar (verified UX pattern from NN/G and CSS-Tricks). Must link to both in-page sections and the /results page. |
-| Active nav state on scroll | Standard expectation for sticky single-page navigation. Users need to know which section they are currently in. Implemented with IntersectionObserver (same API already used for scroll-reveal animations in this codebase). | Low | IntersectionObserver pattern is well established in this codebase. Add section-aware callback that marks the current nav item. |
-| Color consistency: map = chart = cards | The sector star colors and KOM chartreuse are already defined as a shared system. The v3.0 UAT explicitly verified this (Test #2: "pass"). Future work must not break this invariant. | Low | Already implemented. Any new surface that shows sector data must import from the same starColors record. |
-| KOM/QOM times visible and correct on KOM cards | komTime and qomTime are already rendered in KomSegments.astro. Table stakes: they must be correct. Currently they are null/empty in annotations.json and render as nothing. | Low | Display is already implemented. The issue is data entry — times must be set in annotations.json. |
+| Feature | Why It's Table Stakes | Complexity | Notes |
+|---------|----------------------|------------|-------|
+| Netlify environment variables set correctly | Functions won't work without `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_REDIRECT_URI`, `GITHUB_TOKEN`, `GITHUB_OWNER`, `GITHUB_REPO`, `NETLIFY_BUILD_HOOK`, `STRAVA_VERIFY_TOKEN` | Low | Must be set in Netlify dashboard UI (not netlify.toml — env vars in toml are NOT accessible to functions). Confirm each var is set in the correct deploy context (production). |
+| Strava app "Authorization Callback Domain" set to production domain | OAuth redirect will fail if callback domain doesn't match the registered app domain | Low | In Strava developer dashboard: set to `mkultragravel.netlify.app`. During dev/test with `netlify dev`, `localhost` is whitelisted automatically. |
+| Strava app athlete limit increased beyond 1 | New apps default to 1 connected athlete ("Single Player Mode"). Any second athlete attempting OAuth gets 403 "Limit of connected athletes exceeded" | HIGH | Must submit app for review (Strava developer program form). Timeline: 7-10 business days officially; real-world 1-4 weeks. Approval increases limit to 999. This is the most time-sensitive blocker. |
+| GitHub fine-grained PAT with correct permissions | `submit-result.js` and `strava-webhook.js` call GitHub Contents API for read + write. Incorrect permissions = 403 or 401 on file commit/delete | Low | PAT needs: Contents: Read and Write on `mkUltraGravel` repo. No other permissions needed. Verify token scope in GitHub Settings. |
+| Netlify build hook URL configured | Submission triggers rebuild. Missing or wrong URL = submission "succeeds" but leaderboard never updates | Low | Create/verify build hook in Netlify dashboard → Site Settings → Build & Deploy → Build hooks. Copy URL to `NETLIFY_BUILD_HOOK` env var. |
+| Webhook subscription registered with Strava | Deauth events won't arrive until the one-time subscription POST is made to `https://www.strava.com/api/v3/push_subscriptions` | Medium | The `strava-webhook.js` GET handler (challenge response) must be live and deployed BEFORE running the curl command. One subscription per app — idempotent once registered. The curl command is documented in `strava-webhook.js` header comments. |
+| CSRF cookie survives OAuth round-trip | Cookie is set by `strava-auth.js`, read by `strava-callback.js`. If it's dropped (browser blocks third-party cookies, SameSite mismatch, etc.) = "Invalid or missing state parameter" error on callback | Medium | Verify with real browser on production URL. The `SameSite=Lax` setting allows cookies on top-level GET redirects (correct for OAuth). Must be HTTPS for `Secure` flag. |
+| Activity fetch returns `segment_efforts` | `strava-callback.js` requires `activity.segment_efforts` to be non-empty and contain at least one of the 9 event segment IDs | Medium | Depends on: (1) correct scope (`activity:read_all`), (2) activity has GPS data, (3) athlete rode the actual MK Ultra Gravel course segments, (4) Strava segment matching succeeded for that GPS track |
 
 ---
 
-## Differentiators
+## OAuth Flow States: All Paths That Must Be Tested
 
-Features that are not universally expected but create competitive advantage or reinforce the site's identity.
+### Happy Path
+
+1. Rider enters valid Strava activity URL (`https://www.strava.com/activities/\d+`) → clicks "Connect with Strava"
+2. Client-side JS validates URL format → redirects to `/api/strava-auth?activityUrl=...`
+3. `strava-auth.js` sets CSRF cookie, redirects to Strava authorization page
+4. Rider sees Strava consent screen (first time) or is auto-approved (`approval_prompt: 'auto'`, returning user)
+5. Strava redirects to `/api/strava-callback?code=...&state=...`
+6. `strava-callback.js` verifies CSRF nonce, exchanges code for token, fetches activity, filters segments
+7. Rider lands on `/submit-confirm?data=...` — sees their name, segment count, activity link
+8. Rider selects gender category and checks consent → clicks "Submit My Results"
+9. `submit-result.js` validates, commits JSON to GitHub, triggers build hook
+10. Rider sees success page: "Results Submitted! The site will rebuild shortly."
+11. GitHub commit triggers Netlify build → athlete appears on `/results` leaderboard
+
+**Expected duration:** OAuth round-trip ~5-10 seconds; GitHub commit + rebuild ~2-3 minutes until leaderboard updates.
+
+### Error Paths That Must Be Tested
+
+| Scenario | Expected Behavior | How to Trigger |
+|----------|------------------|----------------|
+| User clicks "Cancel" on Strava consent screen | Redirected to `/submit?submit=denied`; denial alert shown with dismiss button | Click Cancel on Strava OAuth page |
+| Strava activity URL belongs to a different athlete | `strava-callback.js` fetches activity with the OAuth token; Strava returns 403 — `activityRes.ok` is false → "Failed to fetch activity from Strava. Make sure the activity URL is correct and belongs to your account." | Use valid Strava URL that belongs to a different Strava account than the one that OAuth'd |
+| Activity has zero matching event segments | "No Matching Event Segments Found" error page with checklist | Submit a Strava activity that did not include the MK Ultra Gravel course segments |
+| CSRF cookie expired (>10 minutes in OAuth flow) | "Invalid or missing state parameter" error page | Let OAuth flow sit for 10+ minutes before completing |
+| Direct navigation to `/submit-confirm` without valid `data` param | "Something went wrong — no valid submission data found" error with link back to `/submit` | Navigate to `/submit-confirm` directly with no query param |
+| Invalid/tampered `data` param on `/submit-confirm` | Same error as above | Navigate to `/submit-confirm?data=garbage` |
+| Submit without selecting gender | Client-side validation prevents submit; "Please select a category." error shown | Click Submit without selecting gender |
+| Submit without checking consent | Client-side validation prevents submit; "You must consent to public display..." error shown | Click Submit without checking consent |
+| Duplicate submission (same athlete submits again) | `submit-result.js` GETs existing file SHA, PUTs updated content → overwrites previous result | Submit same athlete twice; second submission should update the JSON file |
+| GitHub API returns 409 conflict | "There was a conflict saving your results. Please try submitting again." with link back to `/submit` | Race condition (two simultaneous submissions for same athlete) — difficult to trigger manually, but code handles it |
+| Partial scope accepted (user unchecks `activity:read_all` on consent screen) | Strava allows users to uncheck individual scopes. The token exchange succeeds, but the activity fetch with `include_all_efforts=true` will return 403 or empty `segment_efforts` because `activity:read_all` is required | On Strava consent screen, uncheck the activity access scope |
+| Strava API rate limit hit (429) | Current code: `activityRes.ok` is false → "Failed to fetch activity from Strava. Please try again." | Unlikely at event scale (200 req/15min limit; event has ~50 finishers expected) |
+
+---
+
+## Environment Configuration: Full Variable Checklist
+
+Every environment variable required for the pipeline to work end-to-end:
+
+| Variable | Function(s) Using It | Purpose | Where to Get It |
+|----------|----------------------|---------|----------------|
+| `STRAVA_CLIENT_ID` | strava-auth.js, strava-callback.js | OAuth app identification | Strava developer dashboard → "My API Application" |
+| `STRAVA_CLIENT_SECRET` | strava-callback.js | OAuth token exchange | Strava developer dashboard → "My API Application" |
+| `STRAVA_REDIRECT_URI` | strava-auth.js | OAuth callback URL | `https://mkultragravel.netlify.app/api/strava-callback` |
+| `STRAVA_VERIFY_TOKEN` | strava-webhook.js | Webhook subscription handshake verification | Self-generated secret string; must match what you pass in the subscription curl |
+| `GITHUB_TOKEN` | submit-result.js, strava-webhook.js | GitHub Contents API auth | GitHub → Settings → Developer settings → Fine-grained PAT (Contents: R+W on mkUltraGravel) |
+| `GITHUB_OWNER` | submit-result.js, strava-webhook.js | GitHub repo owner | `Sheppardjm` |
+| `GITHUB_REPO` | submit-result.js, strava-webhook.js | GitHub repo name | `mkUltraGravel` |
+| `NETLIFY_BUILD_HOOK` | submit-result.js, strava-webhook.js | Rebuild trigger after data change | Netlify dashboard → Site Settings → Build & Deploy → Build hooks |
+
+**Important:** All variables must be set in Netlify UI, NOT netlify.toml. Variables in netlify.toml are NOT accessible to Netlify Functions at runtime. (Confirmed as root cause of v2 env var issues; v1 syntax was the fix, but variable placement still matters.)
+
+---
+
+## Strava App Review: The Time-Sensitive Blocker
+
+This is the highest-urgency item because it has an external approval dependency.
+
+**Problem:** New Strava apps default to 1 connected athlete. Any second athlete who attempts OAuth gets HTTP 403 "Limit of connected athletes exceeded". The event expects ~50+ finishers who will all need to submit.
+
+**Solution:** Submit the Strava developer program review form.
+
+**What Strava reviews:**
+- App purpose and use case
+- Where Strava data appears in the app (screenshots needed)
+- Expected user scale
+- Compliance with Strava Brand Guidelines (Strava logo/attribution displayed correctly)
+- No TOS violations (no scraping, no unauthorized data display)
+
+**What to include in submission:**
+- Clear description: gravel cycling event results submission tool
+- Screenshots of `/submit` page, `/submit-confirm` page, `/results` page showing Strava attribution
+- Expected user scale: ~50-100 athletes (single-event, annual)
+- Confirm that consent is explicit and revocation/deletion is implemented (within 48 hours via webhook)
+
+**Timeline:** Official: 7-10 business days. Actual: 1-4 weeks reported in community. **Submit immediately.**
+
+**After approval:** Athlete limit raised to 999. Rate limits remain at 200 req/15min, 2000/day — adequate for this event scale.
+
+---
+
+## Webhook Registration: One-Time Setup
+
+The `strava-webhook.js` function exists and handles the challenge handshake correctly, but the webhook subscription must be manually registered with Strava via curl.
+
+**Sequence:**
+1. Deploy `strava-webhook.js` (confirm it's live at `https://mkultragravel.netlify.app/.netlify/functions/strava-webhook`)
+2. Verify the GET handler works: `curl "https://mkultragravel.netlify.app/.netlify/functions/strava-webhook?hub.mode=subscribe&hub.challenge=test&hub.verify_token=YOUR_VERIFY_TOKEN"` should return `{"hub.challenge":"test"}`
+3. Register subscription:
+```bash
+curl -X POST https://www.strava.com/api/v3/push_subscriptions \
+  -F client_id=YOUR_CLIENT_ID \
+  -F client_secret=YOUR_CLIENT_SECRET \
+  -F callback_url=https://mkultragravel.netlify.app/.netlify/functions/strava-webhook \
+  -F verify_token=YOUR_STRAVA_VERIFY_TOKEN
+```
+4. Strava immediately sends a GET to the callback URL with `hub.challenge`. Your function must respond with `{"hub.challenge":"..."}` within 2 seconds.
+5. If successful, Strava returns a subscription ID. Store it.
+
+**Important:** Only one webhook subscription per Strava app is allowed. If one already exists, delete it before creating a new one (or use `GET /push_subscriptions` to check).
+
+**Retry behavior:** Strava retries webhook events up to 3 times if the callback returns non-200. The function correctly returns 200 for all POST events, including deauth.
+
+---
+
+## Testing Scenarios: Manual Test Matrix
+
+### Pre-Testing Setup Verification
+
+| Test | Pass Condition |
+|------|---------------|
+| GET `/.netlify/functions/strava-auth?activityUrl=https://www.strava.com/activities/12345` | Returns 302 redirect to `strava.com/oauth/authorize` with `client_id`, `redirect_uri`, `scope=activity:read_all`, `state` in URL |
+| GET `/.netlify/functions/strava-auth` (no param) | Returns 400 with plain text error |
+| GET `/.netlify/functions/strava-auth?activityUrl=notstrava` | Returns 400 with plain text error |
+| GET `/.netlify/functions/strava-webhook?hub.mode=subscribe&hub.challenge=ABC&hub.verify_token=CORRECT` | Returns 200 with `{"hub.challenge":"ABC"}` |
+| GET `/.netlify/functions/strava-webhook?hub.mode=subscribe&hub.challenge=ABC&hub.verify_token=WRONG` | Returns 403 |
+| POST `/.netlify/functions/submit-result` with missing consent | Returns 400 error HTML page |
+| POST `/.netlify/functions/submit-result` with invalid gender | Returns 400 error HTML page |
+
+### Full Happy Path Test (requires real Strava account + real activity on MK Ultra Gravel course)
+
+Because the event hasn't happened yet (June 7, 2026), no real MK Ultra Gravel activities exist. Testing options:
+
+1. **Developer self-test (recommended):** The app developer's own Strava account is always allowed regardless of athlete limit. Record a test ride on any of the 9 event segment IDs (or fabricate a test using Strava's segment tools). Submit via the full OAuth flow.
+2. **Synthetic test:** Create a Strava activity with GPS points that cross the 9 segment boundaries. Segment matching requires GPS accuracy — this is difficult to fake reliably.
+3. **Modified segment test:** Test the pipeline end-to-end by temporarily modifying `ALL_SEGMENT_IDS` in `strava-callback.js` to include a segment from a real activity you own. **Revert before go-live.**
+
+### GitHub API Write Test
+
+| Test | Pass Condition |
+|------|---------------|
+| POST `/.netlify/functions/submit-result` with valid data payload, gender, consent | New file `public/data/results/athletes/{athleteId}.json` appears in GitHub repo |
+| Second submission for same athlete | File is overwritten (not duplicated), SHA lookup succeeds |
+| Netlify build triggered | A new build appears in Netlify dashboard immediately after submission |
+
+### Deauthorization Test
+
+| Test | Pass Condition |
+|------|---------------|
+| POST `/.netlify/functions/strava-webhook` with deauth payload: `{"object_type":"athlete","aspect_type":"delete","owner_id":ATHLETE_ID,"updates":{"authorized":"false"}}` | File `public/data/results/athletes/{ATHLETE_ID}.json` is deleted from GitHub repo |
+| POST with unrecognized event type | Returns 200 `EVENT_RECEIVED`, no side effects |
+| POST with missing body | Returns 200 `EVENT_RECEIVED` (malformed body acknowledged, not retried) |
+
+### User Experience Verification
+
+| State | Expected UX |
+|-------|------------|
+| Fresh visit to `/submit` | Clean form, no error alert |
+| Visit `/submit?submit=denied` | Denial alert shown in red; dismissable with × button |
+| `/submit-confirm?data=VALID` | Shows athlete name, segment count "X of 9 event segments matched", clickable activity URL |
+| `/submit-confirm` (no data param) | Error state with "Start the submission process again" link back to `/submit` |
+| Successful submission | Success page shows name + category label (Men/Women/Non-binary); links to Home + "Submit another activity" |
+| `approval_prompt: 'auto'` returning user | Second submission from same Strava account skips the OAuth consent screen (Strava shows "You've already authorized..." and auto-redirects) |
+
+---
+
+## Differentiators (Nice-to-Have If Issues Found During Testing)
+
+Features not required for go-live but worth addressing if discovered during testing:
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Sector label strip with star ratings below elevation profile | Professional cycling altimetry (Paris-Roubaix official materials, procyclingmaps.com) uses a horizontal band below the elevation curve that contains sector identifiers — not embedded in the elevation line. This treatment directly echoes the Paris-Roubaix roadbook aesthetic that the site's star rating system references. No generic cycling app does this. | Medium | Implementation: absolutely positioned HTML div below the Chart.js canvas. Each child div width = `(sector.endMi - sector.startMi) / totalMi * 100%`. Contains sector name + star rating with the starColors palette. Not a Chart.js feature — a CSS overlay aligned to the chart's x-axis range. A left-offset equal to the Chart.js y-axis width is needed to align properly. |
-| Local KOM/QOM input CLI script | There is no Strava API or timing chip source for pre-race KOM/QOM benchmarks. The race director needs to enter known times (from prior ride data or local knowledge) as the initial records displayed on KOM cards. A dedicated node script avoids the risk of manually editing JSON and breaking the schema. | Low | `scripts/set-kom-times.js` that takes segment name + time string as arguments and patches annotations.json. Must run before `npm run build` to affect the live site. Follows the established pattern of data management scripts in this codebase (resolve-annotations.js, generate-data.js, etc.). |
-| Navigation link to /results page | The results page exists but is entirely undiscoverable without a direct URL. Post-race, it becomes the primary content of the site. A nav item in the header pointing to /results transforms it from a hidden route into a featured destination. | Low | Static `<a href="/results">` in the header component. |
-| Nav item visual styling consistent with brutalist design system | Most sticky navs are light-colored and utilitarian. Keeping the nav within the dark brutalist palette (dark background, accent-green highlights, Space Mono font) reinforces the site identity rather than breaking it. | Low | Apply existing design tokens: bg-bg-surface, border-border, text-accent-green for active state. |
+| Scope validation in strava-callback.js | Strava allows users to uncheck scopes on the consent screen. If `activity:read_all` is unchecked, `include_all_efforts=true` will fail silently or return 403. Currently the code checks `activityRes.ok` but doesn't inspect the actual granted scope. A check of `tokenData.scope` against `activity:read_all` would give a better error message. | Low | `tokenData.scope` in the token exchange response contains the comma-separated list of accepted scopes. Check if it includes `activity:read_all` before proceeding. |
+| Partial segment match feedback | Currently shows "X of 9 event segments matched" at confirm step, which is good. But the user has no indication of WHICH segments were matched. If only 3 of 9 matched, they may not have actually ridden the course. | Medium | Would require passing segment names (from route-data or a lookup table) into the payload. Adds complexity. Useful post-event if disputes arise. |
+| Submission loading state | When user clicks "Submit My Results", the page does nothing visible while the GitHub API call runs (can take 2-4 seconds). No spinner or disabled state on the button. | Low | Add `disabled` attribute and button text change on submit event. Prevents double-submit and improves perceived performance. |
+| Resubmission handling | Users can submit multiple times (code overwrites by athlete ID). The success page says "Submit another activity" which implies one activity per athlete. No guard against submitting a different (non-event) activity later and overwriting their real times. | Low-Medium | Could add a warning on the success page that resubmission overwrites the previous result. Not a security concern — the overwrite is keyed by authenticated Strava athlete ID. |
 
 ---
 
 ## Anti-Features
 
-Features to explicitly NOT build. Common mistakes in this domain.
+Things to deliberately NOT build for this milestone:
 
-| Anti-Feature | Why Avoid | What to Do Instead |
-|--------------|-----------|-------------------|
-| Web-based admin UI for KOM/QOM times | A web form with auth, form validation, API routes, and persistence is enormous scope for editing 6 time strings twice a year on a local grassroots event. | A node CLI script (`scripts/set-kom-times.js`) that patches annotations.json. Same result, zero surface area. Consistent with existing scripts/ pattern. |
-| Chart.js annotation labels for sector names (within-band) | `label.position: 'end'` places labels inside the box at the bottom edge, verified by chartjs-plugin-annotation documentation. At 140px chart height, this overlaps the elevation fill. It also cannot display both name and star glyphs readably at the required 9px font size. KOM bands already occupy the top of the chart with inline labels — adding sector labels inside bands would create visual collision. | CSS overlay strip below the canvas: sector name + star rating in a flex row proportional to mile widths. |
-| Hamburger-only mobile nav | Event sites with ~5 named sections benefit from a visible compact nav. Hidden hamburgers add interaction cost for no benefit — the user has to discover the menu exists before accessing it. | A compact horizontal nav that uses abbreviated section names on small screens (e.g., "Route" instead of "The Route"). |
-| Separate admin page at /admin | A route accessible by anyone with the URL, requiring its own auth or security, for an operation that happens twice a year. | The CLI script runs locally and never touches the web surface. |
-| Dynamic KOM/QOM times fetched from Strava API at build time for this milestone | Phase 32 (already complete) established a prebuild pipeline that preserves fields from annotations.json through the build. Adding Strava API fetching here creates new dependencies and rate-limit concerns outside this milestone's scope. | Set known times via the CLI script into annotations.json before build. The prebuild pipeline already ensures those values survive. |
-| Full navigation redesign with hamburger + dropdown + mega-menu | The site has 5 sections and 1 results page. A complex nav is overkill and conflicts with the brutalist aesthetic (flat, direct, no decoration). | A single horizontal strip with 5-6 items. If it wraps on small screens, that's fine. |
-| Animated elevation profile labels | CSS animations on the label strip add complexity and can create jank during Chart.js resize events. The site already has scroll-reveal and background animations — the elevation area should stay calm and informative. | Static CSS layout for the label strip. |
+| Anti-Feature | Why Avoid |
+|--------------|-----------|
+| Admin moderation UI for submitted results | A web form to review/approve submissions is weeks of work. The event is small (~50 finishers), results are public on the leaderboard, and any disputes are handled by the race director manually editing JSON files in the repo. |
+| Token storage / refresh logic | This integration is a one-shot OAuth flow: get token, use it once to fetch activity, discard. No persistent storage of tokens is needed. The 6-hour token expiry is irrelevant because the activity fetch happens within seconds. Adding refresh logic creates a security surface with no benefit. |
+| Strava webhook for activity creates/updates | The webhook is implemented to receive all event types, but only acts on deauth. Activity create/update events arrive but are acknowledged and ignored. This is correct — do NOT add logic to auto-process new activity events because it would require storing athlete tokens, which the current architecture explicitly avoids. |
+| Strava API rate limit handling with retry | At event scale (50-100 athletes, each making 1 token exchange + 1 activity fetch = ~200 API calls total), the 2000/day limit will not be approached. Adding retry/backoff logic would complicate the functions with no practical benefit. |
+| Offline mode / queue for Netlify build hook failures | The build hook is fire-and-forget. If it fails, a build can be manually triggered from the Netlify dashboard. For a 50-athlete event, this is not worth engineering. |
+| GDPR-compliant deletion confirmation email | Deauth events automatically delete the athlete file within 48 hours. No email is required for this event's scale and scope. |
 
 ---
 
-## Feature Dependencies
-
-Dependencies between new features and the existing codebase:
+## Feature Dependencies for This Milestone
 
 ```
-Sector label strip below elevation chart
-  depends on: ElevationProfile.astro (canvas structure — label strip aligns with canvas x-axis)
-  depends on: annotations.json (sectors[].name, .stars, .startMi, .endMi, .endMi for width calc)
-  depends on: global.css starColors scale (must match chart band colors exactly)
-  depends on: route-data.json meta.totalMi (to calculate proportional widths)
-  does NOT require: any new JS — pure CSS + Astro server-side rendering
-  blocks nothing downstream
+Strava app review approval
+  blocks: any test with a second athlete account
+  unblocks: full event-scale testing
 
-Navigation header
-  depends on: BaseLayout.astro (nav must insert before <slot /> to appear on all pages)
-  depends on: index.astro section IDs (#route, #sectors, #photos, #info — already exist)
-  requires: scroll-padding-top CSS on html or body to offset sticky nav height
-  enables: /results page discovery
-  may affect: existing scroll-reveal IntersectionObserver (rootMargin may need adjustment)
+Netlify env vars configured (all 8)
+  blocks: all function testing
+  prerequisite for everything else
 
-KOM/QOM input script
-  depends on: annotations.json schema (komTime/qomTime string fields already present, currently null)
-  depends on: KomSegments.astro (already renders komTime/qomTime — no changes needed)
-  depends on: Phase 32 prebuild pipeline (already preserves these fields — verified)
-  blocks nothing; must run before `npm run build` to affect the live site
+GitHub PAT with correct permissions
+  blocks: submit-result.js commit, strava-webhook.js delete
+  testable independently: curl the GitHub API with the token
+
+Webhook subscription registration
+  blocks: deauth event delivery
+  requires: strava-webhook.js deployed and responding to GET challenge
+
+CSRF cookie behavior on production HTTPS
+  testable: full OAuth flow test with a real browser on the production URL
+  risk: cannot be tested with localhost redirect (different cookie domain)
 ```
-
----
-
-## Implementation Notes for Sector Label Strip
-
-The sector label strip is the most technically nuanced feature in this milestone. Based on research into chartjs-plugin-annotation documentation and professional cycling altimetry patterns:
-
-**The constraint (verified):** chartjs-plugin-annotation box annotation labels are positioned within box boundaries only. The `position` option accepts `'start'`, `'center'`, `'end'` or percentage strings — all relative to the annotation box interior. `yAdjust` shifts within the box. There is no mechanism to render outside the canvas. Source: chartjs-plugin-annotation Box Annotations documentation (official, current).
-
-**The pattern (observed):** Paris-Roubaix official materials and procyclingmaps.com place sector identifiers as a horizontal band below the elevation curve — a separate visual register from the altitude line. This is the target.
-
-**Recommended implementation:**
-
-1. Wrap the `<canvas>` in a container div that also holds a label strip div.
-2. The label strip is a flex row positioned below the canvas.
-3. Each child div's flex-grow (or explicit width percentage) is calculated as `(sector.endMi - sector.startMi) / totalMi`.
-4. Each child contains the sector name and star glyphs, colored with the sector's starColor.
-5. Left offset: Chart.js renders a y-axis that takes ~40-50px on the left. The label strip needs a matching left margin/padding to align with mile 0 on the chart.
-6. This is server-rendered by Astro using annotations.json data — no JavaScript required.
-
-**Risk:** The Chart.js y-axis width is not a fixed pixel value; it depends on the rendered tick label widths. If the offset is hardcoded and tick label widths change, labels will drift. Mitigation: use a CSS variable or `padding-left` value that matches the chart's `scales.y.padding` + tick label estimate, then verify visually.
-
----
-
-## MVP Recommendation
-
-Minimum viable set that delivers the most visible impact for this milestone:
-
-1. **Navigation header** — highest user-facing impact. The site has sections and a separate results page with no way to reach them. This is the most noticeable gap.
-2. **Sector labels below elevation profile** — directly addresses the stated milestone goal. Colored bands with no names is a recognized incompleteness for anyone familiar with professional cycling altimetry.
-3. **KOM/QOM input script** — low effort, enables correct time display on KOM cards. Currently null/empty is a visible gap.
-
-Defer to post-MVP:
-- Animation polish on the nav (scroll-triggered shrink, etc.) — adds complexity, minimal value before race day
-- Results page enhancements — empty pre-race, polish is only visible post-June 7
 
 ---
 
@@ -138,22 +259,24 @@ Defer to post-MVP:
 
 | Area | Confidence | Basis |
 |------|------------|-------|
-| chartjs-plugin-annotation label positioning constraints | HIGH | Direct documentation fetch from official chartjs.org |
-| Sector label strip as CSS overlay pattern | HIGH | Derived from Paris-Roubaix roadbook design pattern + annotation constraint verification |
-| Sticky nav with scroll-padding-top | HIGH | NN/G research, CSS-Tricks, multiple verified sources |
-| IntersectionObserver active state pattern | HIGH | CSS-Tricks (multiple implementations), already used in this codebase |
-| CLI script for annotations.json patching | HIGH | Direct codebase inspection — scripts/ pattern established, komTime/qomTime fields confirmed in schema |
-| KomSegments.astro already renders komTime/qomTime | HIGH | Direct source code inspection |
-| Phase 32 prebuild preserves komTime/qomTime | HIGH | Phase 32 SUMMARY and code inspection |
+| OAuth flow states and error paths | HIGH | Direct code inspection of all 4 Netlify functions + official Strava auth docs |
+| Athlete limit as go-live blocker | HIGH | Multiple Strava community forum threads confirming default=1, review required for expansion |
+| Environment variable placement (Netlify UI vs toml) | HIGH | Official Netlify docs + existing decision log in PROJECT.md (v2 env var bug context) |
+| Webhook setup and deauth event format | HIGH | Official Strava webhook docs, code inspection confirms correct `authorized: "false"` string check |
+| Partial scope acceptance risk | MEDIUM | Official Strava docs confirm users can uncheck scopes; current code doesn't validate accepted scope list |
+| Segment matching edge cases (GPS accuracy, privacy zones) | MEDIUM | Strava support docs on segment matching; exact behavior with `include_all_efforts=true` unverified against real data |
+| Review approval timeline (1-4 weeks) | MEDIUM | Community forum reports; official says 7-10 business days but actual experience varies |
 
 ---
 
 ## Sources
 
-- [chartjs-plugin-annotation Box Annotations](https://www.chartjs.org/chartjs-plugin-annotation/latest/guide/types/box.html) — label positioning constraints verified (HIGH confidence)
-- [Paris-Roubaix Sector Ratings (official)](https://www.paris-roubaix.fr/en/news/2023/paris-roubaix-sector-ratings/3925) — star rating methodology and roadbook presentation (HIGH confidence)
-- [Sticky Headers UX — NN/G](https://www.nngroup.com/articles/sticky-headers/) — sticky nav best practices, active state (HIGH confidence)
-- [Anchors and In-Page Links — NN/G](https://www.nngroup.com/articles/in-page-links/) — anchor navigation patterns (HIGH confidence)
-- [CSS-Tricks Sticky Smooth Active Nav](https://css-tricks.com/sticky-smooth-active-nav/) — IntersectionObserver active state implementation (MEDIUM confidence)
-- Project codebase: ElevationProfile.astro, GravelSectors.astro, KomSegments.astro, index.astro, BaseLayout.astro, global.css, annotations.json, scripts/ (HIGH confidence — ground truth)
-- v3-UAT.md: Color consistency test #2 passing confirmed (HIGH confidence)
+- [Strava OAuth Documentation](https://developers.strava.com/docs/authentication/) — flow states, scopes, approval_prompt, access_denied (HIGH confidence)
+- [Strava API Reference: getActivityById](https://developers.strava.com/docs/reference/#api-Activities-getActivityById) — include_all_efforts parameter (HIGH confidence)
+- [Strava Webhook Events API](https://developers.strava.com/docs/webhooks/) — subscription setup, deauth event format, retry behavior (HIGH confidence)
+- [Strava API FAQ](https://communityhub.strava.com/developers-knowledge-base-14/strava-api-faq-12906) — athlete limits, rate limits, token management (HIGH confidence)
+- [Strava Rate Limits](https://developers.strava.com/docs/rate-limits/) — 200 req/15min, 2000/day, X-RateLimit headers (HIGH confidence)
+- [Strava Community: Athlete Limit](https://communityhub.strava.com/developers-api-7/help-to-solve-error-403-limit-of-connected-athletes-exceeded-1699) — limit of connected athletes behavior and resolution (MEDIUM confidence)
+- [Strava App Review Timeline](https://communityhub.strava.com/developers-api-7/api-review-form-response-time-2887) — 7-10 business days official, 1-4 weeks actual (MEDIUM confidence)
+- [Netlify Functions Environment Variables](https://docs.netlify.com/build/functions/environment-variables/) — vars must be set in UI not netlify.toml (HIGH confidence)
+- Project codebase: `netlify/functions/strava-auth.js`, `strava-callback.js`, `submit-result.js`, `strava-webhook.js`, `src/pages/submit.astro`, `src/pages/submit-confirm.astro`, `public/data/results/schema.json` (HIGH confidence — ground truth)
