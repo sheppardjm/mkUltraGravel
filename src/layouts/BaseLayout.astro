@@ -1,6 +1,7 @@
 ---
 import { Font } from "astro:assets";
 import "../styles/global.css";
+import SiteNav from "../components/SiteNav.astro";
 
 interface Props {
   title?: string;
@@ -30,7 +31,8 @@ const {
     <link rel="preconnect" href="https://d.basemaps.cartocdn.com" />
     <slot name="head" />
   </head>
-  <body>
+  <body class="pt-12">
+    <SiteNav />
     <div class="grain-overlay" aria-hidden="true"></div>
     <div class="escher-overlay" aria-hidden="true"></div>
     <slot />

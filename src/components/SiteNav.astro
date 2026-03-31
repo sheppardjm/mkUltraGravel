@@ -1,0 +1,83 @@
+---
+const rawPath = Astro.url.pathname;
+const pathname = rawPath === "/" ? "/" : rawPath.replace(/\/$/, "");
+
+const navLinks = [
+  { href: "/", label: "Home" },
+  { href: "/results", label: "Results" },
+  { href: "/submit", label: "Submit" },
+];
+
+function isActive(href: string): boolean {
+  if (href === "/submit") {
+    return pathname === "/submit" || pathname.startsWith("/submit-confirm");
+  }
+  return pathname === href;
+}
+---
+
+<nav class="site-nav">
+  <a href="/" class="nav-brand">MK Ultra Gravel</a>
+  <div class="nav-links">
+    {navLinks.map((link) => (
+      <a
+        href={link.href}
+        class="nav-link"
+        aria-current={isActive(link.href) ? "page" : undefined}
+      >
+        {link.label}
+      </a>
+    ))}
+  </div>
+</nav>
+
+<style>
+  .site-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.5rem;
+    background-color: oklch(0.10 0.01 250 / 0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--color-border);
+    font-family: var(--font-mono);
+  }
+
+  .nav-brand {
+    font-family: var(--font-display);
+    color: var(--color-accent-white);
+    text-decoration: none;
+    font-size: 1rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  .nav-link {
+    color: var(--color-text-muted);
+    text-decoration: none;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: color 0.15s ease;
+  }
+
+  .nav-link:hover {
+    color: var(--color-accent-white);
+  }
+
+  .nav-link[aria-current="page"] {
+    color: var(--color-accent-green);
+    border-bottom: 2px solid var(--color-accent-green);
+    padding-bottom: 2px;
+  }
+</style>
