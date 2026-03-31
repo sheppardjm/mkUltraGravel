@@ -60,6 +60,13 @@
   // Build sector band annotation boxes from annotations.json sectors
   const annotationBoxes: Record<string, object> = {};
   annotations.sectors.forEach((sector: { name: string; startMi: number; endMi: number; stars: number }, i: number) => {
+    const widthMi = sector.endMi - sector.startMi;
+    const isNarrow = widthMi < 1.0;
+    const starsStr = '\u2605'.repeat(sector.stars);
+    const labelContent: string[] = isNarrow
+      ? [starsStr]
+      : [sector.name, starsStr];
+
     annotationBoxes[`sector_${i}`] = {
       type: 'box',
       xMin: sector.startMi,
@@ -68,6 +75,15 @@
       borderColor: starColors[sector.stars] + '66',       // ~40% opacity border
       borderWidth: 1,
       _baseColor: starColors[sector.stars],               // stored for highlight/restore
+      label: {
+        display: true,
+        content: labelContent,
+        position: { x: 'center', y: 'end' },
+        color: starColors[sector.stars] + 'cc',
+        font: { size: 9, family: 'Space Mono, monospace' },
+        yAdjust: i % 2 === 0 ? 0 : -16,
+        rotation: isNarrow ? -90 : 0,
+      },
       click: () => {
         window.dispatchEvent(new CustomEvent('elevation:sectorClick', {
           detail: { sectorIndex: i }
