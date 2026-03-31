@@ -90,7 +90,7 @@ Plans:
   4. On narrow or adjacent sectors, labels are staggered vertically so no two labels overlap
   5. Labels remain visible at the chart's default rendered size (no clipping at chart edges)
 
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
 - [ ] 34-01: Add sector label annotations to ElevationProfile.astro with stagger strategy
@@ -111,7 +111,7 @@ Plans:
   3. The link for the current page is visually distinguished (active state) on page load with no flash of unstyled content
   4. The nav renders above the grain texture overlay and Escher background on all pages
 
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
 - [ ] 35-01: Build SiteNav.astro component and integrate into BaseLayout.astro
@@ -130,5 +130,5 @@ Plans:
 | 22-26. Route Update | v4.0 | 7/7 | Complete | 2026-03-30 |
 | 27-32. Strava + Results | v5.0 | 10/10 | Complete | 2026-03-30 |
 | 33. Color Consistency | v6.0 | 1/1 | Complete | 2026-03-30 |
-| 34. Elevation Labels | v6.0 | 0/TBD | Not started | - |
+| 34. Elevation Labels | v6.0 | 0/1 | Not started | - |
 | 35. Site Navigation | v6.0 | 0/TBD | Not started | - |
