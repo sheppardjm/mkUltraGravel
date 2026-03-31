@@ -15,10 +15,10 @@ Requirements for UI Polish + Dev Tools milestone. Each maps to roadmap phases.
 
 ### Elevation Profile Labels
 
-- [ ] **ELEV-01**: Each gravel sector displays its name on the elevation profile
-- [ ] **ELEV-02**: Each gravel sector displays its star rating on the elevation profile
-- [ ] **ELEV-03**: Labels positioned at bottom of chart (below elevation line)
-- [ ] **ELEV-04**: Labels staggered to avoid overlap on narrow/adjacent sectors
+- [x] **ELEV-01**: Each gravel sector displays its name on the elevation profile
+- [x] **ELEV-02**: Each gravel sector displays its star rating on the elevation profile
+- [x] **ELEV-03**: Labels positioned at bottom of chart (below elevation line)
+- [x] **ELEV-04**: Labels staggered to avoid overlap on narrow/adjacent sectors
 
 ### Site Navigation
 
@@ -52,10 +52,10 @@ Deferred to later milestones.
 | CLR-01 | Phase 33 | Complete |
 | CLR-02 | Phase 33 | Complete |
 | CLR-03 | Phase 33 | Complete |
-| ELEV-01 | Phase 34 | Pending |
-| ELEV-02 | Phase 34 | Pending |
-| ELEV-03 | Phase 34 | Pending |
-| ELEV-04 | Phase 34 | Pending |
+| ELEV-01 | Phase 34 | Complete |
+| ELEV-02 | Phase 34 | Complete |
+| ELEV-03 | Phase 34 | Complete |
+| ELEV-04 | Phase 34 | Complete |
 | NAV-01 | Phase 35 | Pending |
 | NAV-02 | Phase 35 | Pending |
 | NAV-03 | Phase 35 | Pending |
