@@ -1,287 +1,392 @@
-# Technology Stack — Strava Go-Live Deployment
+# Technology Stack — v8.0 Visual Polish
 
 **Project:** MK Ultra Gravel
-**Milestone:** Strava OAuth go-live — getting existing integration code working end-to-end in production
+**Milestone:** v8.0 visual polish + content
 **Researched:** 2026-03-31
-**Scope:** Deployment configuration only. The code is built (v5.0). This research covers what must change in Netlify and Strava settings to make it work against the real API.
-**Confidence:** HIGH — primary findings from official Strava developer documentation, Netlify official docs, and confirmed bug reports.
+**Scope:** NEW stack decisions only. Existing Astro 6 + Tailwind v4 + Leaflet + Chart.js + PhotoSwipe + sharp stack is validated and unchanged.
+**Confidence:** HIGH — primary findings from MDN official docs, web.dev, Andy Barefoot's own Medium post, sharp official changelog, and direct codebase inspection.
 
 ---
 
 ## Executive Summary
 
-Three independent configuration domains must be resolved before the Strava integration is live:
+v8.0 introduces six new visual features. Most require zero new dependencies. The two that most resemble "needs a library" questions — masonry gallery layout and CodePen animation adaptation — resolve cleanly to CSS-only or minimal-JS CSS Grid patterns already compatible with the existing stack.
 
-1. **Strava app review** — The app starts locked to 1 athlete (the developer). Every additional athlete gets a 403 until the app is approved. Review takes 7-10 business days. Submit immediately.
+**Bottom line for each feature:**
 
-2. **Netlify environment variables** — 7 env vars must be set via the Netlify UI (not netlify.toml). All must have scope set to "Functions". `STRAVA_REDIRECT_URI` must point to the production domain. The v2 env var bug that motivated v1 syntax choice was fixed 2026-03-30 but v1 remains the right choice for stability.
+| Feature | Approach | New dependency? |
+|---------|----------|-----------------|
+| Horizontal masonry gallery | CSS Grid + ~50 lines of inline JS | No |
+| Lizard background animation | Inline SVG Astro component + CSS keyframes | No |
+| Topo meatball dividers | Inline SVG Astro component + CSS | No |
+| Tone image integration | `public/tone/` + existing `.tone-image` class | No |
+| 19 new route photos | Existing sharp pipeline, no changes needed | No |
+| Updated GPX file | Drop-in replacement, existing pipeline handles it | No |
 
-3. **Strava callback domain** — The "Authorization Callback Domain" in the Strava API app settings must be changed from `localhost` to the production domain (no protocol, no path).
-
-Node.js version is already correct: the project has `.node-version: 22` and `"node": "22.22.2"` in volta config. Netlify's default since February 2025 is Node 22. No Node version config needed.
-
----
-
-## Critical Finding: Athlete Limit Blocks Go-Live
-
-**This is the most important finding in this document.**
-
-All new Strava API apps start in "Single Player Mode" with a hard limit of **1 connected athlete** — the developer. Any additional athlete who attempts OAuth authorization receives:
-
-```
-HTTP 403 Forbidden
-{"message": "Limit of connected athletes exceeded"}
-```
-
-This limit is enforced at Strava's authorization server, not in the app code. There is no workaround. The app **cannot accept any athlete submissions until the app is approved**.
-
-After approval, Strava increases the limit to 999 connected athletes.
-
-**Action required now:** Submit the app for review immediately. Do not wait until the rest of go-live is complete. Review takes 7-10 business days and is the longest-lead-time item on the critical path.
+No new npm dependencies are needed for v8.0.
 
 ---
 
-## Domain 1: Strava API App Review
+## Feature 1: Horizontal Masonry Gallery
 
-### Submission
+### What "horizontal masonry" means here
 
-Submit at: `https://share.hsforms.com/1VXSwPUYqSH6IxK0y51FjHwcnkd8`
+The goal is a gallery where photos scroll horizontally and have a masonry feel — adjacent photos of different natural heights are displayed at a uniform row height, with widths proportionally derived from each photo's aspect ratio. This produces a dense, film-strip visual rather than the traditional Pinterest vertical column masonry.
 
-Required in the form:
-- App description: what the app does and the problem it solves for athletes
-- Expected number of connected users (be honest — this is a ~100-person cycling event)
-- Confirmation of compliance with API Agreement and Brand Guidelines
+This is NOT traditional masonry (variable height in vertical columns). It is a fixed-height horizontal strip where widths vary by aspect ratio.
 
-Strava documentation notes: "Thorough, detailed submissions move through the process most efficiently." Include:
-- Screenshot showing where Strava data appears in the app (the submit/results pages)
-- Clear use-case: "Athletes submit their MK Ultra Gravel event activity for automatic scoring"
-- No AI usage to disclose
+### CSS Native Masonry: Not viable
 
-Timeline: 7-10 business days. If no response after 10 business days, follow up at developers@strava.com with submission date and Client ID.
+As of March 2026, CSS native masonry (`grid-template-rows: masonry` / `display: grid-lanes`) is experimental in all browsers and available only behind flags in Firefox, Safari Technology Preview, and Chrome/Edge 140. No stable browser ships it unflagged. Using it would break the gallery in production. (Source: [MDN Masonry Layout](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Grid_layout/Masonry_layout), [Chrome for Developers — Brick by brick](https://developer.chrome.com/blog/masonry-update))
 
-### Branding Requirements (must be in place before or at launch)
+### Masonry.js / Isotope: Rejected
 
-The Strava API Agreement requires these be implemented in the live site:
+Masonry.js (`masonry-layout` on npm) is at version 4.2.2, last published 8 years ago. It does absolute-position layout and requires imagesLoaded as a companion. It adds ~16KB (min+gz) and was designed for vertical column masonry — not horizontal strip scrolling. Isotope is heavier still. Both are unnecessary. (Source: [npm masonry-layout](https://www.npmjs.com/package/masonry-layout))
 
-| Requirement | Where | Specifics |
-|-------------|-------|-----------|
-| "Connect with Strava" button | Submit page OAuth entry point | Must use official button asset from developers.strava.com/guidelines. Links to `https://www.strava.com/oauth/authorize`. Available in orange and white, PNG/SVG. |
-| "Powered by Strava" or "Compatible with Strava" logo | Any page displaying Strava data (results, submit-confirm) | Official asset, not modified. Must be separate from and less prominent than the site's own branding. |
-| "View on Strava" link | Anywhere the activity is displayed | Links back to the original Strava activity. Must be legible, identifiable as a link via bold, underline, or orange (#FC5200). |
+### Recommended: CSS Grid with aspect-ratio + overflow-x scroll
 
-**Not allowed:**
-- Using "Strava" in the app name (MK Ultra Gravel passes this test)
-- Suggesting official Strava endorsement
-- Modifying Strava logos
+This is a pure-CSS approach for fixed-height horizontal strip layout, with a small amount of JavaScript only if natural aspect-ratio scroll behavior is wanted. The core technique:
 
-Assets available at: `https://developers.strava.com/guidelines/`
+```css
+/* Container: horizontal scroll strip */
+.photo-strip {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  height: 280px;         /* fixed row height */
+}
 
-### Dev Mode vs Approved App
+/* Items: width determined by natural aspect ratio */
+.photo-strip-item {
+  flex-shrink: 0;
+  height: 100%;
+  aspect-ratio: var(--photo-ar); /* set in Astro template from photo.width/photo.height */
+  scroll-snap-align: start;
+  overflow: hidden;
+  cursor: pointer;
+}
 
-There is no separate sandbox environment. Strava has one API. The only difference between a new (unapproved) app and an approved app is the athlete capacity limit:
-
-| State | Athlete Limit | Behavior |
-|-------|--------------|----------|
-| New app (unapproved) | 1 (developer only) | All other OAuth attempts return 403 |
-| Approved app | 999 | Full OAuth flow works for all athletes |
-| High-scale (>999) | Negotiated | Requires partner program contact |
-
-During review: if athletes try to connect, they will see a 403. This is expected and resolves upon approval.
-
-After approval: the limit increase is automatic. No code changes needed. The same client ID and secret continue working.
-
-### Rate Limits (production, applies to all apps)
-
-Rate limits apply per-application regardless of approval status:
-
-| Limit type | 15-minute window | Daily |
-|------------|-----------------|-------|
-| Overall requests | 200 | 2,000 |
-| Non-upload read requests | 100 | 1,000 |
-
-Windows reset at 0, 15, 30, 45 minutes past the hour. Daily resets at midnight UTC.
-
-**Impact on submission flow:** Each athlete submission uses approximately 2-3 API calls:
-1. Token exchange (POST `/oauth/token`) — counts against overall limit
-2. Activity fetch (GET `/activities/{id}?include_all_efforts=true`) — counts against both overall and read limit
-
-At the 100-person event scale, all submissions in a single day = ~200-300 calls. Well within the 1,000/day read limit and 2,000/day overall limit. Rate limits are not a concern at this scale.
-
-**Monitoring:** Every API response includes rate limit headers:
-```
-X-RateLimit-Limit: 100,1000
-X-RateLimit-Usage: 3,47
-X-ReadRateLimit-Limit: 100,1000
-X-ReadRateLimit-Usage: 3,47
+.photo-strip-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 ```
 
-The existing code should log or return these if a 429 occurs. A 429 from rate limiting at event scale would indicate a bug (e.g., retry loop), not a capacity problem.
+In the Astro template, `--photo-ar` is set inline from the `photo.width / photo.height` values already in `photos.json`. PhotoSwipe lightbox wiring (existing) wraps the items as it does today in `PhotoGallery.astro`. No JS layout calculation needed. Scroll-snap adds momentum-scroll feel at no TBT cost (CSS-only, compositor-handled).
+
+**This approach is entirely compositor-safe and adds TBT 0ms.** Flexbox layout, overflow scrolling, and scroll-snap are all handled in the browser's layout/composite pass with no main-thread blocking.
+
+**Why not the traditional CSS Grid span technique from Andy Barefoot's Medium article?**
+Barefoot's technique (`grid-auto-rows: 10px` + JS `grid-row-end: span N`) is designed for vertical column masonry (items of variable height in multiple columns). For a horizontal photo strip with a fixed row height, it adds complexity without benefit. The flex + aspect-ratio approach is simpler and more readable. (Source: [Andy Barefoot — Masonry style layout using CSS Grid](https://medium.com/@andybarefoot/a-masonry-style-layout-using-css-grid-8c663d355ebb))
+
+**Integration with existing PhotoGallery.astro:**
+The `photo.width` and `photo.height` fields are already populated in `photos.json` by `generate-thumbnails.js`. The Astro component reads `photos.json` at build time. No data format changes needed.
 
 ---
 
-## Domain 2: Netlify Deployment Configuration
+## Feature 2: Lizard Background Animation (from codepen.io/andybarefoot/pen/MEbORa)
 
-### Environment Variables
+### What the CodePen does
 
-All 7 env vars must be set in the Netlify UI (Site configuration → Environment variables). **Do not put them in `netlify.toml`** — env vars in netlify.toml are NOT available to Functions at runtime.
+Andy Barefoot's "Animated Responsive Lizards — CSS Grid" creates an Escher-tessellation background using CSS Grid diagonal layout with SVG or CSS-clipped tile elements. The grid fills the viewport, JS resizes the grid on window resize to maintain tile count, and CSS handles tile coloring and transitions. The pen is titled "Animated Responsive Lizards" and uses CSS Grid with JS for grid resizing. (Source: web search of CodePen title; full pen source not fetchable due to 403, but Andy Barefoot's own Medium/blog confirms the CSS Grid + JS resize approach for his tessellation pens.)
 
-When setting each variable, verify the scope includes **"Functions"**. The Netlify UI allows per-scope assignment; if a variable is scoped only to "Builds" it will be undefined in function code at runtime.
+**This project already has an Escher tessellation.** The `escher-overlay` in `global.css` is a fixed `position: fixed` SVG background tile with `animation: escher-drift 50s linear infinite` — a CSS transform animation that's already compositor-safe. The existing implementation IS the Escher pattern.
 
-| Variable | Value | Notes |
-|----------|-------|-------|
-| `STRAVA_CLIENT_ID` | From Strava API settings | Numeric string, e.g. "12345" |
-| `STRAVA_CLIENT_SECRET` | From Strava API settings | Secret — never in code or git |
-| `STRAVA_REDIRECT_URI` | `https://mkultragravel.netlify.app/api/strava-callback` | Full URL including path. Must match what strava-auth.js constructs. |
-| `GITHUB_TOKEN` | Personal access token or fine-grained token | Needs repo contents write permission for `sheppardjm/mkUltraGravel` |
-| `GITHUB_OWNER` | `sheppardjm` | GitHub username |
-| `GITHUB_REPO` | `mkUltraGravel` | Repository name |
-| `NETLIFY_BUILD_HOOK` | Build hook URL from Netlify | Format: `https://api.netlify.com/build_hooks/{id}` |
+### Adaptation strategy: Astro component with inline SVG + CSS keyframes
 
-**STRAVA_REDIRECT_URI construction:** The existing `strava-auth.js` constructs the redirect URI from this env var. It must exactly match a URI that falls under the "Authorization Callback Domain" registered in the Strava API app settings. The callback domain in Strava's settings is just the domain (no protocol, no path) — but the redirect_uri parameter in the OAuth request must be the full URL.
+The CodePen adaptation does NOT require copying its JavaScript. The correct approach for this project:
 
-### Authorization Callback Domain
+1. Extract the SVG tile definition from the CodePen as an inline SVG.
+2. Create a new Astro component (e.g. `LizardBackground.astro`) that renders the inline SVG as a `position: fixed` background layer, styled like the existing `escher-overlay`.
+3. Animate using CSS keyframes on `transform` only — same pattern as `escher-drift`.
 
-In Strava API app settings (strava.com/settings/api):
+```astro
+---
+// LizardBackground.astro — no script block needed
+---
+<div class="lizard-overlay" aria-hidden="true">
+  <!-- SVG tile from CodePen extracted inline -->
+</div>
 
-- **During development:** Set to `localhost`
-- **For production:** Change to `mkultragravel.netlify.app`
+<style>
+  .lizard-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.04;     /* subtle, not distracting */
+    background-image: url("data:image/svg+xml,..."); /* lizard tile encoded */
+    background-repeat: repeat;
+    background-size: [tile-size];
+    z-index: 9997;     /* below escher-overlay (9998) and grain-overlay (9999) */
+    will-change: transform;
+  }
 
-The field accepts only the domain name — no `https://`, no `/api/strava-callback` path. Strava validates that the `redirect_uri` parameter in each authorization request has a host that matches this registered domain.
+  @media (prefers-reduced-motion: no-preference) {
+    .lizard-overlay {
+      animation: lizard-drift 70s linear infinite;
+    }
+  }
 
-**If using a custom domain (e.g., mkultragravel.com):** Update this field to the custom domain and update `STRAVA_REDIRECT_URI` env var to match. The two must stay in sync.
-
-**Note on localhost + production:** The Strava app settings appear to accept only one callback domain at a time. Switching to production means local OAuth testing will fail (localhost would get "invalid redirect_uri"). Recommended approach: create a second Strava API app for development use, keeping the main app set to the production domain.
-
-### Node.js Version
-
-**No action required.** The project already has the correct Node version configured.
-
-Evidence:
-- `.node-version` file: `22` (in repo root)
-- `package.json` volta config: `"node": "22.22.2"`
-- Netlify's default build Node version has been v22 since February 24, 2025
-
-Netlify Functions runtime automatically matches the build Node version. Since build uses Node 22 (from `.node-version`), functions run on `nodejs22.x` — AWS Lambda's Node 22 runtime. No `AWS_LAMBDA_JS_RUNTIME` environment variable needed.
-
-**Note on AWS Lambda Node 20 EOL:** AWS Lambda's `nodejs20.x` runtime reaches end-of-security-patches and will block new function creation after August 2026. This project is already on Node 22 — no action needed.
-
-### netlify.toml — Current Configuration is Correct
-
-```toml
-[build]
-  command = "npm run build"
-  publish = "dist"
-  functions = "netlify/functions"
-
-[functions]
-  node_bundler = "esbuild"
-
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
+  @keyframes lizard-drift {
+    from { transform: translate(0, 0); }
+    to   { transform: translate(-[tile-width]px, -[tile-height]px); }
+  }
+</style>
 ```
 
-This configuration is correct and complete for the go-live milestone:
+**Performance characteristics:**
+- `transform` animation: compositor-safe, TBT 0ms, no layout/paint (confirmed: [web.dev animations guide](https://web.dev/articles/animations-guide))
+- `position: fixed` + `will-change: transform`: promotes to GPU layer — same pattern as existing `escher-overlay`
+- `opacity: 0.04`: matches site aesthetic, subtle
 
-- `functions = "netlify/functions"` — points to the correct directory
-- `node_bundler = "esbuild"` — correct; esbuild bundles faster and produces smaller artifacts. CommonJS `exports.handler` syntax is compatible with esbuild bundling.
-- The `/api/*` redirect is what makes `STRAVA_REDIRECT_URI` use `/api/strava-callback` instead of `/.netlify/functions/strava-callback`.
+**What NOT to do:** Do not copy the CodePen's JavaScript grid-resizing code. That code is for an interactive viewport-filling grid. This project needs a repeating background tile — the CSS `background-repeat` approach covers this with zero JS.
 
-**No changes to netlify.toml needed.**
-
-### Netlify Functions v1 vs v2 — Decision Stands
-
-The project uses v1 (`exports.handler`) syntax. This was chosen due to an active v2 env var bug where user-defined `process.env` vars returned `undefined` intermittently.
-
-**Current status of the bug:** Netlify confirmed a fix was rolled out on 2026-03-30. The original reporter confirmed resolution on 2026-03-31.
-
-**Recommendation: Keep v1 syntax.** The fix is 24 hours old as of this research. There is no benefit to migrating to v2 before go-live — it introduces risk with zero functional gain. The v1 syntax is fully supported, not deprecated, and works correctly with Node 22 and esbuild bundling.
-
-If/when migration to v2 is desired post-launch, the migration is mechanical: `exports.handler = async (event) =>` becomes `export default async (request, context) =>` with Request/Response API changes.
+**Astro integration:** Inline SVG in `.astro` component is idiomatic Astro — SVG is just HTML, no special tooling needed. No `postcss-inline-svg` or `astro-icon` library required.
 
 ---
 
-## Domain 3: OAuth Scope
+## Feature 3: Topographic Meatball Section Dividers (from codepen.io/hollandblumer/pen/RNGLjNQ)
 
-**No changes needed.** The `activity:read_all` scope is correct.
+### What the CodePen likely does
 
-Verification of why `activity:read_all` is required (not `activity:read`):
+The pen title suggests hollow circular section dividers with topographic contour line styling (concentric rings suggesting elevation). Full source is not accessible (CodePen returns 403 to non-browser fetches), but topographic/contour SVG dividers are a well-understood pattern: concentric SVG `<circle>` elements with stroke-only fills (hollow), possibly with a `<clipPath>` to create the meatball/disc shape.
 
-- `activity:read` — access to activities the athlete has set as public or followers-only, excluding privacy zones
-- `activity:read_all` — same as above, **plus** activities set to "Only You" visibility, **plus** privacy zone data
+### Adaptation strategy: Astro component with inline SVG
 
-MK Ultra Gravel participants may have their activity set to private ("Only You"). The event requires reading the activity regardless. `activity:read_all` is the correct scope.
+```astro
+---
+// TopoMeatball.astro
+interface Props {
+  label?: string;
+}
+const { label } = Astro.props;
+---
+<div class="topo-divider" aria-hidden="true">
+  <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+    <!-- Concentric circles — stroke only, no fill (hollow) -->
+    <circle cx="60" cy="60" r="55" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+    <circle cx="60" cy="60" r="45" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+    <circle cx="60" cy="60" r="35" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+    <circle cx="60" cy="60" r="25" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+    <circle cx="60" cy="60" r="15" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+  </svg>
+  {label && <span class="sr-only">{label}</span>}
+</div>
+```
 
-Additionally, `include_all_efforts=true` on the activity fetch — which retrieves all segment efforts including those on hidden segments — requires the athlete to be the owner of the activity (which they always are in this OAuth flow). The scope does not affect this; ownership does. This is confirmed as working correctly for the activity owner regardless of scope.
+The exact ring shapes, distortion, and irregular topographic curves must be extracted manually from the CodePen (open in browser, copy the SVG source). The component shell is the same regardless of the exact SVG content.
+
+**No JavaScript needed.** Section dividers are static visual elements. If the CodePen uses JavaScript for animation, that animation should be evaluated against the compositor-safe criterion — only adopt it if it uses `transform`/`opacity` keyframes.
+
+**No new library needed.** Inline SVG in Astro components requires no tooling. Static SVG dividers are HTML.
 
 ---
 
-## Deployment Checklist
+## Feature 4: Tone Image Integration
 
-In dependency order:
+### Current state
 
-### Immediate (do now, 7-10 business day lead time)
-- [ ] Submit app for Strava review at the HubSpot form URL above
-- [ ] Add branding assets to the live site (Connect with Strava button, Powered by Strava logo, View on Strava links)
+The site already has:
+- `public/tone/` directory with WebP-converted images
+- `.tone-image` CSS class in `global.css` (`opacity: 0.12; mix-blend-mode: lighten; filter: grayscale(100%) contrast(1.3)`)
+- `convert-tone-images.js` pipeline script that processes source images in `images/tone/` into `public/tone/`
 
-### Configuration (can do in parallel with waiting for review)
-- [ ] Update Strava API app settings: change "Authorization Callback Domain" from `localhost` to `mkultragravel.netlify.app`
-- [ ] Set all 7 env vars in Netlify UI with scope "Functions":
-  - [ ] `STRAVA_CLIENT_ID`
-  - [ ] `STRAVA_CLIENT_SECRET`
-  - [ ] `STRAVA_REDIRECT_URI` = `https://mkultragravel.netlify.app/api/strava-callback`
-  - [ ] `GITHUB_TOKEN`
-  - [ ] `GITHUB_OWNER`
-  - [ ] `GITHUB_REPO`
-  - [ ] `NETLIFY_BUILD_HOOK`
-- [ ] Verify Netlify build hook URL is created (Site configuration → Build & deploy → Build hooks)
+The `images/tone/` directory already contains 32 images of varying formats (JPEG, WebP, AVIF, PNG).
 
-### Testing (requires approved app)
-- [ ] Trigger a test OAuth flow with a real Strava account (after approval)
-- [ ] Verify the callback function receives the token and fetches the activity
-- [ ] Verify the per-athlete JSON file is written to GitHub
-- [ ] Verify the Netlify build hook triggers a rebuild
-- [ ] Verify the rebuilt site shows the new athlete's result
+### What needs to happen
+
+The `convert-tone-images.js` script currently only processes 3 hardcoded images. To integrate additional CIA/MK Ultra themed tone images into sectors and KOM cards, the script must be extended or the images placed directly into `public/tone/` as WebP.
+
+**Recommended approach:** Extend `TONE_IMAGES` array in `convert-tone-images.js` for any new source images that need processing. For images already in `images/tone/` that are already WebP and reasonably sized, copy them directly to `public/tone/` (they'll be served as-is).
+
+**Placement in templates:** Use the existing `.tone-image` class. For sector/KOM card overlays, add a `position: relative` wrapper and place the tone image with `position: absolute`. The existing CSS class handles opacity, blend mode, and grayscale — it's already designed for this use case.
+
+**No new libraries needed.** The existing sharp pipeline and CSS class handle everything.
 
 ---
 
-## What Doesn't Need to Change
+## Feature 5: 19 New Route Photos
 
-| Item | Status | Reason |
-|------|--------|--------|
-| `netlify.toml` | No change | Correct as-is |
-| Node.js version | No change | `.node-version: 22` already pins Node 22 |
-| Functions v1 syntax | Keep | v2 fix is too recent; no benefit to migrating before go-live |
-| `activity:read_all` scope | Keep | Required for private activity access |
-| OAuth state pattern | Keep | base64url JSON {nonce, activityUrl} is correct |
-| CSRF cookie double-submit | Keep | Correct security pattern |
-| Segment IDs | Keep | Verified in v5.0 implementation |
-| npm dependencies | No change | No new libraries needed for deployment |
+### Current pipeline behavior
+
+`generate-data.js` orchestrates the full pipeline:
+1. Copies all images from `images/` to `public/images/`
+2. Runs `match-photos.js` to build `photos.json` (GPS-matched photo manifest)
+3. Runs `generate-thumbnails.js`: clears all stale thumbnails, regenerates 400px-wide WebP for each photo in `photos.json`
+4. Runs `assign-card-photos.js`: assigns cover photos to sector/KOM cards, generates 600×338 WebP card crops
+
+**The pipeline is already idempotent and handles new photos automatically.** Dropping 19 new JPEGs into `images/` and re-running `npm run prebuild` will:
+- Auto-detect them via the `images/` directory scan
+- Add them to `photos.json` via GPS coordinate matching
+- Generate thumbnails for all (the stale-clear-then-regenerate logic means all thumbs are rebuilt)
+- Potentially update cover photos for sectors if better photos are now available
+
+### No pipeline changes needed
+
+The sharp API used by the pipeline (`resize()`, `.webp({ quality, effort })`, `.toFile()`) is unchanged in sharp 0.34.x. The 0.34.x changelog shows no breaking API changes from the JPEG/WebP thumbnail workflow. (Source: [sharp changelog v0.34.5](https://sharp.pixelplumbing.com/changelog/v0.34.5/))
+
+The existing `devDependencies: { "sharp": "^0.34.5" }` is already current.
+
+**One consideration:** `generate-thumbnails.js` clears ALL thumbnails before regenerating. With 55+19=74 photos, regeneration is still fast (sharp is ~50-100ms per image at 400px WebP). No performance concern.
+
+---
+
+## Feature 6: Updated GPX Route File
+
+The pipeline already handles GPX replacement via `parse-gpx.js`, which reads `MK_Ultra.gpx` (or `MKULTRA.gpx` — both exist in root). Dropping in an updated GPX and running `npm run prebuild` regenerates `public/data/route-data.json` automatically. No code changes needed.
+
+---
+
+## Performance Budget Analysis
+
+**TBT budget: 0ms (must maintain)**
+
+| Feature | TBT Impact | Reason |
+|---------|------------|--------|
+| Horizontal masonry gallery | 0ms | CSS flex layout + overflow-x, no JS layout calculations |
+| Lizard background CSS animation | 0ms | `transform` only, compositor thread |
+| Topo meatball SVGs | 0ms | Static SVG, no animation unless transform-only CSS added |
+| Tone image integration | 0ms | Static img elements with CSS class |
+| 19 new photos (lazy loaded) | 0ms | `loading="lazy" decoding="async"` already on all gallery imgs |
+
+**Caveat on `clip-path` animations:** If the topo meatball or other features use `clip-path` animations, be aware that `clip-path` is not compositor-safe in Firefox as of March 2026 (causes 24.5% CPU increase in Firefox per performance research). Avoid animating `clip-path`. Use `transform: scale()` or `opacity` instead. (Source: [Chrome hardware-accelerated animations blog](https://developer.chrome.com/blog/hardware-accelerated-animations))
+
+**Caveat on `filter` animations:** `filter` is compositor-safe in Chrome but the behavior varies. The existing `filter: grayscale(100%) contrast(1.3)` on `.tone-image` is not animated — it's a static filter. This is fine. Do not add animated `filter` values.
+
+---
+
+## What NOT to Add and Why
+
+| Library | Why Rejected |
+|---------|-------------|
+| GSAP | Animation JS library; adds ~30KB and blocks main thread for JS-driven animations. Existing CSS-only approach achieves 0ms TBT. Project constraint: no JS animation libraries. |
+| Masonry.js / Isotope | Designed for vertical column masonry. 8-year-old codebase, absolute-position based. The horizontal strip layout needed here is better served by CSS flex + aspect-ratio. |
+| Swiper.js | Carousel library; 40KB+ min+gz. CSS scroll-snap achieves equivalent horizontal scroll UX at 0KB. |
+| Isotope | Heavy (filtering/sorting grid). Not needed — gallery is display-only. |
+| `@appnest/masonry-layout` | Web component; even at 1KB adds a custom element registration and mutation observer. Not needed for fixed-height strip. |
+| `postcss-inline-svg` | PostCSS plugin for inlining SVGs in CSS. Not needed — Astro supports inline SVG in `.astro` files natively. |
+| `astro-icon` | Overkill for adding 2-3 new SVG components. Direct inline SVG in Astro components is the idiomatic approach for custom shapes. |
+
+---
+
+## Dependency Summary
+
+**No new dependencies are needed for v8.0.**
+
+Existing stack that v8.0 builds on:
+
+| Dependency | Version in package.json | v8.0 role |
+|-----------|------------------------|-----------|
+| `astro` | ^6.1.1 | Astro component shells for LizardBackground, TopoMeatball |
+| `tailwindcss` | ^4.2.2 | Tailwind utilities for scroll container, spacing |
+| `photoswipe` | ^5.4.4 | Existing lightbox — PhotoGallery.astro reuse |
+| `sharp` (devDep) | ^0.34.5 | Existing — handles 19 new photos unchanged |
+
+---
+
+## Integration Points
+
+### global.css additions
+
+Three new CSS blocks in `@layer components`:
+
+```css
+/* Lizard background tile */
+.lizard-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,...");
+  background-repeat: repeat;
+  background-size: [extracted-tile-size];
+  z-index: 9997;
+  will-change: transform;
+}
+
+/* Topo meatball divider */
+.topo-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-accent-green);
+  width: 80px;
+  height: 80px;
+  margin: 2rem auto;
+}
+
+/* Horizontal photo strip (replaces grid in PhotoGallery.astro) */
+.photo-strip {
+  display: flex;
+  gap: 3px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  height: 280px;
+}
+.photo-strip-item {
+  flex-shrink: 0;
+  height: 100%;
+  scroll-snap-align: start;
+  overflow: hidden;
+  cursor: pointer;
+}
+```
+
+Add to `@keyframes` section:
+
+```css
+@keyframes lizard-drift {
+  from { transform: translate(0, 0); }
+  to   { transform: translate(-[tile-w]px, -[tile-h]px); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lizard-overlay { animation: lizard-drift 70s linear infinite; }
+}
+```
+
+### New Astro components
+
+| File | Purpose | Dependencies |
+|------|---------|-------------|
+| `src/components/LizardBackground.astro` | Fixed bg animation tile | None — inline SVG + CSS |
+| `src/components/TopoMeatball.astro` | Section divider SVG | None — inline SVG |
+
+Both components: no `<script>` block, no imports, no new npm packages.
+
+### Modified Astro components
+
+| File | Change |
+|------|--------|
+| `src/components/PhotoGallery.astro` | Replace `<div id="photo-gallery" class="grid grid-cols-2...">` with `<div class="photo-strip">` flex container; set `style="aspect-ratio: {photo.width}/{photo.height}"` on each item; keep existing PhotoSwipe lightbox JS unchanged |
+| `src/components/GravelSectors.astro` | Add `.tone-image` positioned inside card where desired |
+| `src/components/KomSegments.astro` | Add `.tone-image` positioned inside card where desired |
+
+### Pipeline changes
+
+| Script | Change |
+|--------|--------|
+| `scripts/convert-tone-images.js` | Extend `TONE_IMAGES` array for any new source images in `images/tone/` that need conversion |
+| All other scripts | No changes |
 
 ---
 
 ## Sources
 
-### Strava API (HIGH confidence — official documentation and community hub)
-- Rate limits: [developers.strava.com/docs/rate-limits](https://developers.strava.com/docs/rate-limits/)
-- Authentication/scopes: [developers.strava.com/docs/authentication](https://developers.strava.com/docs/authentication/)
-- Getting started / callback domain: [developers.strava.com/docs/getting-started](https://developers.strava.com/docs/getting-started/)
-- Branding guidelines: [developers.strava.com/guidelines](https://developers.strava.com/guidelines/)
-- Developer program (athlete limits, review process): [Strava Community Hub — Our Developer Program](https://communityhub.strava.com/developers-knowledge-base-14/our-developer-program-3203)
-- Athlete limit = 1 for new apps: [Strava Community Hub — Number of athletes allowed to connect](https://communityhub.strava.com/developers-api-7/number-of-athletes-allowed-to-connect-1-11078)
-- App review FAQ: [Strava API FAQ](https://communityhub.strava.com/developers-knowledge-base-14/strava-api-faq-12906)
-
-### Netlify (HIGH confidence — official documentation)
-- Environment variables in functions (scope requirement): [docs.netlify.com/build/functions/environment-variables](https://docs.netlify.com/build/functions/environment-variables/)
-- Node.js version management: [docs.netlify.com/build/configure-builds/manage-dependencies](https://docs.netlify.com/build/configure-builds/manage-dependencies/)
-- Functions optional configuration (AWS_LAMBDA_JS_RUNTIME format): [docs.netlify.com/build/functions/optional-configuration](https://docs.netlify.com/build/functions/optional-configuration/)
-- Default Node.js upgrade to v22 (Feb 24, 2025): [Netlify Support Forums](https://answers.netlify.com/t/builds-functions-plugins-default-node-js-version-upgrade-to-22/135981)
-- v2 env var bug resolution (2026-03-30): [Netlify Support Forums — Functions v2 env vars undefined](https://answers.netlify.com/t/functions-v2-scheduled-functions-user-defined-environment-variables-are-undefined-at-runtime/160961)
-
-### Project codebase (HIGH confidence — direct inspection)
-- `netlify.toml` — confirmed correct configuration
-- `netlify/functions/strava-auth.js` — confirmed v1 exports.handler syntax
-- `netlify/functions/strava-callback.js` — confirmed v1 exports.handler syntax
-- `.node-version` — confirmed value `22`
-- `package.json` volta config — confirmed `"node": "22.22.2"`
+| Source | Confidence | What it informed |
+|--------|------------|-----------------|
+| [MDN CSS Masonry Layout](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Grid_layout/Masonry_layout) | HIGH | CSS native masonry is not production-ready (experimental, flag-only) |
+| [Chrome for Developers — Brick by brick help us build CSS Masonry](https://developer.chrome.com/blog/masonry-update) | HIGH | Chrome 140+ testing; still behind flag |
+| [Andy Barefoot — Masonry style layout using CSS Grid](https://medium.com/@andybarefoot/a-masonry-style-layout-using-css-grid-8c663d355ebb) | HIGH | CSS Grid span technique for vertical masonry; confirmed JS-dependent |
+| [web.dev — How to create high-performance CSS animations](https://web.dev/articles/animations-guide) | HIGH | Only `transform` and `opacity` are compositor-safe; verified `will-change: transform` pattern |
+| [Chrome for Developers — Hardware-accelerated animations](https://developer.chrome.com/blog/hardware-accelerated-animations) | MEDIUM | `clip-path` coming to compositor but not fully there in Firefox (24.5% CPU cost) |
+| [npm masonry-layout](https://www.npmjs.com/package/masonry-layout) | HIGH | Version 4.2.2, 8 years since last publish |
+| [sharp changelog v0.34.5](https://sharp.pixelplumbing.com/changelog/v0.34.5/) | HIGH | No breaking API changes in 0.34.x affecting JPEG→WebP thumbnail workflow |
+| [CSS Tricks — Making a Masonry Layout That Works Today](https://css-tricks.com/making-a-masonry-layout-that-works-today/) | MEDIUM | JS polyfill approach for masonry; confirms no pure CSS cross-browser solution today |
+| [MDN CSS Scroll Snap](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Scroll_snap) | HIGH | `scroll-snap-type: x mandatory` is CSS-only, compositor-handled |
+| [Tobias Ahlin — Masonry with CSS](https://tobiasahlin.com/blog/masonry-with-css/) | MEDIUM | Flexbox + nth-child order technique; confirmed not suited for horizontal strip gallery |
+| Direct codebase inspection | HIGH | Confirmed existing `photos.json` already has `width`/`height`; confirmed `.tone-image` CSS class; confirmed escher/grain overlay z-index layer ordering; confirmed sharp pipeline is already fully parameterized for new photos |
