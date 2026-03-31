@@ -5,28 +5,29 @@
 See: .planning/PROJECT.md (updated 2026-03-31)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v7.0 Strava Go-Live — Phase 37: Data Pipeline Verification
+**Current focus:** v7.0 Strava Go-Live — Phase 38: OAuth Flow Testing
 
 ## Current Position
 
 Milestone: v7.0 Strava Go-Live
-Phase: 37 of 40 (Data Pipeline Verification)
+Phase: 38 of 40 (OAuth Flow Testing)
 Plan: — (not yet planned)
 Status: Ready to plan
-Last activity: 2026-03-31 — Phase 36 verified and complete (4/4 must-haves passed)
+Last activity: 2026-03-31 — Phase 37 verified and complete (4/4 must-haves passed)
 
-Progress: [██████████░░░░░░░░░░] ~51% (72/~85 estimated plans shipped)
+Progress: [███████████░░░░░░░░░] ~53% (73/~85 estimated plans shipped)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 72
+- Total plans completed: 73
 - v1.0: 30 plans across 10 phases (2 days)
 - v2.0: 15 plans across 6 phases (3 days)
 - v3.0: 6 plans across 5 phases (2 days)
 - v4.0: 7 plans across 5 phases (4 days)
 - v5.0: 10 plans across 6 phases (4 days)
 - v6.0: 3 plans across 3 phases (1 day)
+- v7.0: 2 plans across 2 phases (1 day, in progress)
 
 ## Accumulated Context
 
@@ -39,6 +40,7 @@ Recent decisions affecting v7.0:
 - `STRAVA_REDIRECT_URI` must use direct function URL (`/.netlify/functions/strava-callback`), not the `/api/` rewrite alias
 - `STRAVA_VERIFY_TOKEN` = dfb4e6536c623010dc78e73202a19773 (generated Phase 36, set in Netlify)
 - GitHub PAT stored in Netlify env vars only (not local) — all 8 v7.0 env vars confirmed set (Phase 36)
+- Added SECRETS_SCAN_OMIT_PATHS=".planning/" and SECRETS_SCAN_OMIT_KEYS="GITHUB_REPO,GITHUB_OWNER" to netlify.toml — Netlify secrets scanning was blocking builds due to env var values in .planning/ docs (Phase 37)
 
 ### Pending Todos
 
@@ -50,11 +52,12 @@ None.
 - **[Resolved]** `STRAVA_REDIRECT_URI` set in Netlify dashboard (Phase 36 complete).
 - **[Resolved]** GitHub PAT confirmed with Contents Read+Write, no expiry before June 7 2026 (Phase 36 complete).
 - **[Active]** Safari SameSite=Lax CSRF cookie bug (WebKit #219650) — test explicitly in Safari during Phase 38; document behavior if observed.
-- **[Resolved]** `STRAVA_VERIFY_TOKEN` generated (dfb4e6536c623010dc78e73202a19773) and set in Netlify dashboard (Phase 36 complete).
+- **[Resolved]** `STRAVA_VERIFY_TOKEN` generated and set in Netlify dashboard (Phase 36 complete).
+- **[Resolved]** Netlify secrets scanning blocking builds — fixed with SECRETS_SCAN_OMIT_PATHS/KEYS in netlify.toml (Phase 37 complete).
 - **[Active]** GitHub PAT expiry — user confirmed no expiry before June 7 2026, but re-verify when Phase 38 deploys if more than a month has passed.
 
 ## Session Continuity
 
 Last session: 2026-03-31
-Stopped at: Phase 36 verified and complete — ready to plan Phase 37
+Stopped at: Phase 37 verified and complete — ready to plan Phase 38
 Resume file: None

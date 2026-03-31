@@ -16,10 +16,10 @@ Requirements for Strava go-live. Each maps to roadmap phases.
 
 ### Data Pipeline Verification
 
-- [ ] **PIPE-01**: submit-result function accepts crafted payload and commits athlete JSON to GitHub repo
-- [ ] **PIPE-02**: Netlify build hook triggers site rebuild after athlete JSON commit
-- [ ] **PIPE-03**: Leaderboard renders submitted athlete data correctly after rebuild
-- [ ] **PIPE-04**: Scoring engine produces correct rankings from real athlete JSON files
+- [x] **PIPE-01**: submit-result function accepts crafted payload and commits athlete JSON to GitHub repo
+- [x] **PIPE-02**: Netlify build hook triggers site rebuild after athlete JSON commit
+- [x] **PIPE-03**: Leaderboard renders submitted athlete data correctly after rebuild
+- [x] **PIPE-04**: Scoring engine produces correct rankings from real athlete JSON files
 
 ### OAuth Flow Testing
 
@@ -73,10 +73,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ENV-02 | Phase 36 | Complete |
 | ENV-03 | Phase 36 | Complete |
 | ENV-04 | Phase 36 | Complete |
-| PIPE-01 | Phase 37 | Pending |
-| PIPE-02 | Phase 37 | Pending |
-| PIPE-03 | Phase 37 | Pending |
-| PIPE-04 | Phase 37 | Pending |
+| PIPE-01 | Phase 37 | Complete |
+| PIPE-02 | Phase 37 | Complete |
+| PIPE-03 | Phase 37 | Complete |
+| PIPE-04 | Phase 37 | Complete |
 | OAUTH-01 | Phase 38 | Pending |
 | OAUTH-02 | Phase 38 | Pending |
 | OAUTH-03 | Phase 38 | Pending |
