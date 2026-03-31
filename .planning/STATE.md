@@ -2,18 +2,18 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-30)
+See: .planning/PROJECT.md (updated 2026-03-31)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** Planning next milestone
+**Current focus:** v7.0 Strava Go-Live — getting submission pipeline working end-to-end
 
 ## Current Position
 
-Milestone: v6.0 UI Polish + Dev Tools — SHIPPED
-Phase: 35 of 35 (all phases complete across 6 milestones)
-Plan: N/A
-Status: Ready for next milestone
-Last activity: 2026-03-30 — v6.0 milestone archived
+Milestone: v7.0 Strava Go-Live
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-31 — Milestone v7.0 started
 
 Progress: v1.0: 30 plans | v2.0: 15 plans | v3.0: 6 plans | v4.0: 7 plans | v5.0: 10 plans | v6.0: 3 plans | Total: 71 plans shipped
 
@@ -46,6 +46,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-30
-Stopped at: v6.0 milestone archived — ready for next milestone
+Last session: 2026-03-31
+Stopped at: v7.0 milestone started — defining requirements
 Resume file: None

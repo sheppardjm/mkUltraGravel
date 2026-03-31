@@ -106,7 +106,17 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ### Active
 
-(None — planning next milestone)
+#### Current Milestone: v7.0 Strava Go-Live
+
+**Goal:** Get the Strava submission pipeline working end-to-end with real data — a real athlete can OAuth in, submit an activity, and appear on the leaderboard.
+
+**Target features:**
+- Complete Netlify environment configuration (remaining env vars, Node >=22)
+- Strava API app review submission and approval handling
+- End-to-end OAuth flow testing against real Strava API
+- Full submission pipeline testing (activity → segment_efforts → JSON → rebuild → leaderboard)
+- Deauthorization webhook verification (48hr deletion flow)
+- Bug fixes for issues discovered during real-data testing
 
 ### Out of Scope
 
@@ -124,7 +134,7 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ## Context
 
-**Shipped v6.0** with ~11,700 LOC across Astro/CSS/JS/TS source files, Netlify Functions, and build scripts. 71 plans shipped across 35 phases and 6 milestones.
+**Shipped v6.0** with ~11,700 LOC across Astro/CSS/JS/TS source files, Netlify Functions, and build scripts. 71 plans shipped across 35 phases and 6 milestones. **Starting v7.0** — Strava go-live: wiring up the existing OAuth/submission code to real APIs and testing end-to-end.
 
 **Tech stack:** Astro 6, Tailwind v4, Leaflet 1.9.4, Chart.js (+ annotation plugin), PhotoSwipe, sharp (thumbnails), vitest (testing), Netlify Functions v1 (Strava OAuth/API)
 
@@ -196,4 +206,4 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | CSRF cookie double-submit pattern | Prevents OAuth state replay attacks | Good |
 
 ---
-*Last updated: 2026-03-30 after v6.0 milestone*
+*Last updated: 2026-03-31 after v7.0 milestone start*
