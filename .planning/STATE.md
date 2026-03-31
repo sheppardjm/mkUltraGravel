@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 
 Milestone: v7.0 Strava Go-Live
 Phase: 36 of 40 (Environment Configuration)
-Plan: — (not yet planned)
-Status: Ready to plan
-Last activity: 2026-03-31 — v7.0 roadmap created (5 phases, 21 requirements mapped)
+Plan: 01 of 01 (complete)
+Status: Phase complete — ready for Phase 37
+Last activity: 2026-03-31 — Completed 36-01-PLAN.md (environment configuration)
 
-Progress: [██████████░░░░░░░░░░] ~50% (71/~85 estimated plans shipped)
+Progress: [██████████░░░░░░░░░░] ~51% (72/~85 estimated plans shipped)
 
 ## Performance Metrics
 
@@ -37,6 +37,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting v7.0:
 - Netlify Functions v1 (`exports.handler`) kept as-is — v2 env var bug fix only 24 hours old at research time; migration introduces risk with zero functional gain before go-live
 - `STRAVA_REDIRECT_URI` must use direct function URL (`/.netlify/functions/strava-callback`), not the `/api/` rewrite alias
+- `STRAVA_VERIFY_TOKEN` = dfb4e6536c623010dc78e73202a19773 (generated Phase 36, set in Netlify)
+- GitHub PAT stored in Netlify env vars only (not local) — all 8 v7.0 env vars confirmed set (Phase 36)
 
 ### Pending Todos
 
@@ -48,10 +50,11 @@ None.
 - **[Active]** `STRAVA_REDIRECT_URI` confirmed absent from local `.env` — must be set in Netlify dashboard during Phase 36 or OAuth will fail silently.
 - **[Active]** GitHub PAT may have been created with expiry — verify no expiry before June 7 during Phase 36.
 - **[Active]** Safari SameSite=Lax CSRF cookie bug (WebKit #219650) — test explicitly in Safari during Phase 38; document behavior if observed.
-- **[Active]** `STRAVA_VERIFY_TOKEN` may not exist yet — choose a value, set in Netlify dashboard during Phase 36, record securely.
+- **[Resolved]** `STRAVA_VERIFY_TOKEN` generated (dfb4e6536c623010dc78e73202a19773) and set in Netlify dashboard (Phase 36 complete).
+- **[Active]** GitHub PAT expiry — user confirmed no expiry before June 7 2026, but re-verify when Phase 38 deploys if more than a month has passed.
 
 ## Session Continuity
 
-Last session: 2026-03-31
-Stopped at: v7.0 roadmap created — ready to plan Phase 36
+Last session: 2026-03-31T15:47Z
+Stopped at: Completed 36-01-PLAN.md (Phase 36 environment configuration complete)
 Resume file: None
