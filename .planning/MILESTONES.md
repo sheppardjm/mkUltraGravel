@@ -1,5 +1,32 @@
 # Project Milestones: MK Ultra Gravel
 
+## v6.0 UI Polish + Dev Tools (Shipped: 2026-03-30)
+
+**Delivered:** Color consistency via shared starColors module, sector name/star-rating labels on all 6 elevation profile bands, and fixed site navigation header with build-time active link detection across all pages.
+
+**Phases completed:** 33-35 (3 plans total)
+
+**Key accomplishments:**
+
+- Extracted starColors shared module — single source of truth eliminates color drift between map, chart, and cards
+- Added sector name + star-rating labels to all 6 elevation profile bands with stagger strategy
+- Built fixed SiteNav header with build-time active link detection (no JS, no FOUC)
+- Removed ad-hoc back links — unified navigation replaces per-page workarounds
+- Milestone audit scored 100% on all four dimensions (requirements, phases, integration, E2E flows)
+
+**Stats:**
+
+- 24 files created/modified
+- +2,121 / -116 lines of code (Astro/TS/CSS)
+- 3 phases, 3 plans, 7 tasks
+- 1 day (2026-03-30)
+
+**Git range:** `46e52cb` → `2ac1d9b`
+
+**What's next:** TBD — next milestone planning via `/gsd:new-milestone`
+
+---
+
 ## v5.0 Strava Integration + Results (Shipped: 2026-03-30)
 
 **Delivered:** Full Strava integration — segment links on all 9 cards, TDD scoring engine, OAuth activity submission via Netlify Functions, results page with dual leaderboards and gender tabs, deauthorization webhook for TOS compliance, and prebuild pipeline gap closure.

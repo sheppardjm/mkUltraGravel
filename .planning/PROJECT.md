@@ -92,18 +92,21 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 - RESULT-03: Individual segment leaderboards — v5.0
 - RESULT-04: Per-segment time breakdowns in gravel rows — v5.0
 - RESULT-05: Strava activity links on result rows — v5.0
+- CLR-01: Shared starColors module extracted — v6.0
+- CLR-02: Map polylines match sector card colors — v6.0
+- CLR-03: Elevation bands match sector card colors — v6.0
+- ELEV-01: Sector names on elevation profile — v6.0
+- ELEV-02: Star ratings on elevation profile — v6.0
+- ELEV-03: Labels at bottom of chart — v6.0
+- ELEV-04: Labels staggered to avoid overlap — v6.0
+- NAV-01: Fixed header nav on all pages — v6.0
+- NAV-02: Links to Home, Results, Submit — v6.0
+- NAV-03: Active page visually indicated (build-time) — v6.0
+- NAV-04: Nav z-index clears grain/Escher overlays — v6.0
 
 ### Active
 
-## Current Milestone: v6.0 UI Polish + Dev Tools
-
-**Goal:** Fix color inconsistencies, add site navigation, label sectors on elevation profile, and build a local KOM/QOM time input tool.
-
-**Target features:**
-- Sector color consistency — map polylines + elevation bands match card colors (2-star, 3-star)
-- Site navigation — header nav for Home, Results, Submission pages
-- Sector labels on elevation profile — star ratings + names at bottom of chart, staggered
-- KOM/QOM time input tool — local dev script for entering segment times
+(None — planning next milestone)
 
 ### Out of Scope
 
@@ -121,15 +124,15 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ## Context
 
-**Shipped v5.0** with ~11,500 LOC across Astro/CSS/JS source files, Netlify Functions, and build scripts.
+**Shipped v6.0** with ~11,700 LOC across Astro/CSS/JS/TS source files, Netlify Functions, and build scripts. 71 plans shipped across 35 phases and 6 milestones.
 
-**Tech stack:** Astro 6, Tailwind v4, Leaflet 1.9.4, Chart.js, PhotoSwipe, sharp (thumbnails), vitest (testing), Netlify Functions v1 (Strava OAuth/API)
+**Tech stack:** Astro 6, Tailwind v4, Leaflet 1.9.4, Chart.js (+ annotation plugin), PhotoSwipe, sharp (thumbnails), vitest (testing), Netlify Functions v1 (Strava OAuth/API)
 
 **Deployment:** Netlify with git-triggered CI/CD from GitHub. Prebuild pipeline generates route-data.json, annotations.json, photos.json, thumbnails, card crops, and hero WebP on every deploy. Strava OAuth submission triggers GitHub API commit + Netlify build hook for rebuild.
 
 **Performance:** Lighthouse mobile Performance 96, LCP 2.48s, CLS 0.054, TBT 0ms. All Core Web Vitals green. All animations compositor-safe (transform/opacity only). Escher drift and Penrose spin animations gated behind prefers-reduced-motion.
 
-**v5.0 shipped:** Strava segment links on all 9 cards, scoring engine (Gravel Champion + KOM/QOM Champion), Strava OAuth activity submission (4 Netlify Functions), results page with dual leaderboards and gender tabs, deauthorization webhook + privacy notice, prebuild pipeline gap closure.
+**v6.0 shipped:** Shared starColors module for color consistency, sector name/star-rating labels on elevation profile, fixed site navigation header with build-time active link detection.
 
 **Event Details:**
 - Date: June 7, 2026
@@ -166,6 +169,11 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | Two-div pattern for card-hover + overflow-hidden | CSS Overflow Module Level 3 clips box-shadow; structural fix | Good |
 | Strava leaderboard permanently dropped | TOS prohibits displaying user data; endpoint blocked since June 2020 | ✓ Revisited — v5.0 uses consent-based OAuth, not scraping |
 
+| starColors extracted to src/lib/starColors.ts | Single source of truth; follows src/lib/ pattern for shared constants | Good |
+| Annotation label sub-object (not CSS overlay) | y-axis alignment reliable; logic co-located with annotation data | Good |
+| Astro.url.pathname for active link detection | No client JS, no FOUC, fully static-safe; aria-current="page" as CSS hook | Good |
+| z-index 10000 for nav | Must clear grain (9999) and Escher (9998) overlays | Good |
+| /submit-confirm grouped with /submit in isActive() | Both are part of submission flow | Good |
 | Four `<rect>` in SVG tile, no `<use>` | Data URI can't resolve fragment identifiers | Good |
 | KOM annotations omit _baseColor | Isolates KOM from sector hover/click handlers | Good |
 | Hex fills in favicon SVG | oklch in SVG fill attribute has inconsistent browser support | Good |
@@ -188,4 +196,4 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | CSRF cookie double-submit pattern | Prevents OAuth state replay attacks | Good |
 
 ---
-*Last updated: 2026-03-30 after v6.0 milestone started*
+*Last updated: 2026-03-30 after v6.0 milestone*
