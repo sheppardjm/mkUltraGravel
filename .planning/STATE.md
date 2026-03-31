@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-31)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v7.0 Strava Go-Live — Phase 39 complete, Phase 40 in progress (awaiting Task 2 checkpoint)
+**Current focus:** v7.0 Strava Go-Live — ALL PHASES COMPLETE. Awaiting Strava app review approval (externally gated, submitted 2026-03-31).
 
 ## Current Position
 
 Milestone: v7.0 Strava Go-Live
-Phase: 40 of 40 (Strava App Review) — IN PROGRESS
-Plan: 01 of 01 — Task 1 complete, paused at Task 2 checkpoint:human-action
-Status: Awaiting user: deploy push + athlete re-submit + screenshots + Strava review form
-Last activity: 2026-03-31 — Completed 40-01 Task 1 (Strava branding fix: #FC5200 colors + sr-only links)
+Phase: 40 of 40 (Strava App Review) — COMPLETE
+Plan: 01 of 01 — COMPLETE
+Status: All plans shipped. Monitoring for Strava review approval.
+Last activity: 2026-03-31 — Completed 40-01 (Strava branding fix + review form submitted)
 
-Progress: [█████████████░░░░░░░] ~59% (76/~85 estimated plans shipped)
+Progress: [████████████████████] ~100% (77/~77 plans shipped)
 
 ## Performance Metrics
 
@@ -44,7 +44,7 @@ Recent decisions affecting v7.0:
 - Static Astro pages receiving server redirect data must parse query params client-side, not in frontmatter (Phase 38)
 - Strava webhook subscription ID = 338141 (registered 2026-03-31); callback URL = https://mkultragravel.netlify.app/.netlify/functions/strava-webhook (Phase 39)
 - Deauth simulation deleted athlete 2262684 JSON — must re-submit via /submit before Phase 40 app review screenshots (Phase 40 Task 2)
-- Strava branding fixes committed (70f494b) — push to main to trigger Netlify deploy before screenshots (Phase 39)
+- Strava review form submitted 2026-03-31 — review clock started. If not approved by ~May 28 2026, escalate to developers@strava.com
 
 ### Pending Todos
 
@@ -52,8 +52,8 @@ None.
 
 ### Blockers/Concerns
 
-- **[Active]** REVIEW-03 (app approved) is externally gated — 7-10 business days minimum, community reports 1-4 weeks. Submit review (Phase 40) immediately. If not approved by ~May 28, escalate to `developers@strava.com` and prepare manual result-collection contingency.
-- **[Action Required]** Athlete 2262684 (Jamison Sheppard) data deleted by deauth simulation. Must re-submit via `/submit` (OAuth flow) before Phase 40 app review screenshots to restore leaderboard entry.
+- **[Active]** REVIEW-03 (app approved) is externally gated — submitted 2026-03-31, 7-10 business day minimum (community reports 1-4 weeks). If not approved by ~May 28, escalate to `developers@strava.com` and prepare manual result-collection contingency.
+- **[Resolved]** Athlete 2262684 (Jamison Sheppard) re-submitted via /submit OAuth flow on 2026-03-31 — leaderboard entry restored.
 - **[Resolved]** `STRAVA_REDIRECT_URI` set in Netlify dashboard — updated to full URL during Phase 38 testing.
 - **[Resolved]** GitHub PAT confirmed with Contents Read+Write, no expiry before June 7 2026 (Phase 36 complete).
 - **[Resolved]** Safari SameSite=Lax CSRF cookie — works correctly on iPhone 13 / iOS 26.3.1, no WebKit #219650 workaround needed (Phase 38 verified).
@@ -64,5 +64,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-31
-Stopped at: 40-01-PLAN.md Task 2 checkpoint:human-action — awaiting deploy + re-submit + screenshots + Strava review form
+Stopped at: 40-01-PLAN.md complete — all tasks done, SUMMARY.md created, STATE.md updated
 Resume file: None
