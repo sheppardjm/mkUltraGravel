@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-31)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v7.0 Strava Go-Live — Phase 38 complete, ready for Phase 39
+**Current focus:** v7.0 Strava Go-Live — Phase 39 complete, Phase 40 in progress (awaiting Task 2 checkpoint)
 
 ## Current Position
 
 Milestone: v7.0 Strava Go-Live
-Phase: 39 of 40 (Webhook Registration) — COMPLETE
-Plan: 01 of 01 complete
-Status: Phase 39 complete — ready for Phase 40 (App Review)
-Last activity: 2026-03-31 — Completed 39-01-PLAN.md (webhook registration + deauth simulation)
+Phase: 40 of 40 (Strava App Review) — IN PROGRESS
+Plan: 01 of 01 — Task 1 complete, paused at Task 2 checkpoint:human-action
+Status: Awaiting user: deploy push + athlete re-submit + screenshots + Strava review form
+Last activity: 2026-03-31 — Completed 40-01 Task 1 (Strava branding fix: #FC5200 colors + sr-only links)
 
-Progress: [█████████████░░░░░░░] ~58% (75/~85 estimated plans shipped)
+Progress: [█████████████░░░░░░░] ~59% (76/~85 estimated plans shipped)
 
 ## Performance Metrics
 
@@ -43,7 +43,8 @@ Recent decisions affecting v7.0:
 - Added SECRETS_SCAN_OMIT_PATHS=".planning/" and SECRETS_SCAN_OMIT_KEYS="GITHUB_REPO,GITHUB_OWNER" to netlify.toml — Netlify secrets scanning was blocking builds due to env var values in .planning/ docs (Phase 37)
 - Static Astro pages receiving server redirect data must parse query params client-side, not in frontmatter (Phase 38)
 - Strava webhook subscription ID = 338141 (registered 2026-03-31); callback URL = https://mkultragravel.netlify.app/.netlify/functions/strava-webhook (Phase 39)
-- Deauth simulation deleted athlete 2262684 JSON — must re-submit via /submit before Phase 40 app review screenshots (Phase 39)
+- Deauth simulation deleted athlete 2262684 JSON — must re-submit via /submit before Phase 40 app review screenshots (Phase 40 Task 2)
+- Strava branding fixes committed (70f494b) — push to main to trigger Netlify deploy before screenshots (Phase 39)
 
 ### Pending Todos
 
@@ -63,5 +64,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-31
-Stopped at: Completed 39-01-PLAN.md — webhook subscription 338141 active, deauth deletion verified
+Stopped at: 40-01-PLAN.md Task 2 checkpoint:human-action — awaiting deploy + re-submit + screenshots + Strava review form
 Resume file: None
