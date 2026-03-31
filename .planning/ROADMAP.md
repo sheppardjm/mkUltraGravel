@@ -61,10 +61,10 @@ Plans:
 3. The athlete from the crafted payload appears correctly on the `/results` leaderboard after the rebuild completes
 4. The scoring engine ranks athletes correctly when multiple athlete JSON files are present
 
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 37-01: Verify GitHub commit → rebuild → leaderboard pipeline via crafted curl
+- [ ] 37-01: Verify full data pipeline via crafted curl POST to production submit-result
 
 ---
 
@@ -145,7 +145,7 @@ Note: Phase 40 (review submission) should be submitted as early as Phase 38 is c
 | 27-32. Strava Integration + Results | v5.0 | 10/10 | Complete | 2026-03-30 |
 | 33-35. UI Polish + Dev Tools | v6.0 | 3/3 | Complete | 2026-03-30 |
 | 36. Environment Configuration | v7.0 | 1/1 | Complete | 2026-03-31 |
-| 37. Data Pipeline Verification | v7.0 | 0/TBD | Not started | - |
+| 37. Data Pipeline Verification | v7.0 | 0/1 | Not started | - |
 | 38. OAuth Flow Testing | v7.0 | 0/TBD | Not started | - |
 | 39. Webhook Registration | v7.0 | 0/TBD | Not started | - |
 | 40. Strava App Review | v7.0 | 0/TBD | Not started | - |
