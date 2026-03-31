@@ -33,9 +33,9 @@ Requirements for Strava go-live. Each maps to roadmap phases.
 
 ### Webhook & Deauthorization
 
-- [ ] **HOOK-01**: Strava webhook subscription registered via API
-- [ ] **HOOK-02**: GET challenge/response handshake verified (Strava subscription validation)
-- [ ] **HOOK-03**: Deauthorization POST from Strava triggers athlete data deletion flow
+- [x] **HOOK-01**: Strava webhook subscription registered via API
+- [x] **HOOK-02**: GET challenge/response handshake verified (Strava subscription validation)
+- [x] **HOOK-03**: Deauthorization POST from Strava triggers athlete data deletion flow
 
 ### Strava App Review
 
@@ -84,9 +84,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OAUTH-05 | Phase 38 | Complete |
 | OAUTH-06 | Phase 38 | Complete |
 | OAUTH-07 | Phase 38 | Complete |
-| HOOK-01 | Phase 39 | Pending |
-| HOOK-02 | Phase 39 | Pending |
-| HOOK-03 | Phase 39 | Pending |
+| HOOK-01 | Phase 39 | Complete |
+| HOOK-02 | Phase 39 | Complete |
+| HOOK-03 | Phase 39 | Complete |
 | REVIEW-01 | Phase 40 | Pending |
 | REVIEW-02 | Phase 40 | Pending |
 | REVIEW-03 | Phase 40 | Pending |
@@ -98,4 +98,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-03-31*
-*Last updated: 2026-03-31 after Phase 38 completion (OAUTH-01 through OAUTH-07 verified)*
+*Last updated: 2026-03-31 after Phase 39 completion (HOOK-01 through HOOK-03 verified)*

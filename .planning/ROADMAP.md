@@ -21,7 +21,7 @@ This is an operational milestone, not a build milestone. The pipeline is fully i
 - [x] **Phase 36: Environment Configuration** - Set all 8 Netlify env vars, verify GitHub PAT, confirm Strava callback domain
 - [x] **Phase 37: Data Pipeline Verification** - Verify GitHub commit → rebuild → leaderboard chain using crafted curl requests
 - [x] **Phase 38: OAuth Flow Testing** - Full OAuth round-trip on production HTTPS with real Strava account
-- [ ] **Phase 39: Webhook Registration** - Register Strava webhook subscription, verify deauth deletion flow
+- [x] **Phase 39: Webhook Registration** - Register Strava webhook subscription, verify deauth deletion flow
 - [ ] **Phase 40: Strava App Review** - Verify branding compliance, submit app for developer program review
 
 ---
@@ -106,7 +106,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 39-01-PLAN.md — Register webhook, verify handshake, simulate deauth deletion
+- [x] 39-01: Register webhook, verify handshake, simulate deauth deletion
 
 ---
 
@@ -147,5 +147,5 @@ Note: Phase 40 (review submission) should be submitted as early as Phase 38 is c
 | 36. Environment Configuration | v7.0 | 1/1 | Complete | 2026-03-31 |
 | 37. Data Pipeline Verification | v7.0 | 1/1 | Complete | 2026-03-31 |
 | 38. OAuth Flow Testing | v7.0 | 1/1 | Complete | 2026-03-31 |
-| 39. Webhook Registration | v7.0 | 0/1 | Not started | - |
+| 39. Webhook Registration | v7.0 | 1/1 | Complete | 2026-03-31 |
 | 40. Strava App Review | v7.0 | 0/TBD | Not started | - |
