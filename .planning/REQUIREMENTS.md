@@ -69,33 +69,33 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ENV-01 | Pending | Pending |
-| ENV-02 | Pending | Pending |
-| ENV-03 | Pending | Pending |
-| ENV-04 | Pending | Pending |
-| PIPE-01 | Pending | Pending |
-| PIPE-02 | Pending | Pending |
-| PIPE-03 | Pending | Pending |
-| PIPE-04 | Pending | Pending |
-| OAUTH-01 | Pending | Pending |
-| OAUTH-02 | Pending | Pending |
-| OAUTH-03 | Pending | Pending |
-| OAUTH-04 | Pending | Pending |
-| OAUTH-05 | Pending | Pending |
-| OAUTH-06 | Pending | Pending |
-| OAUTH-07 | Pending | Pending |
-| HOOK-01 | Pending | Pending |
-| HOOK-02 | Pending | Pending |
-| HOOK-03 | Pending | Pending |
-| REVIEW-01 | Pending | Pending |
-| REVIEW-02 | Pending | Pending |
-| REVIEW-03 | Pending | Pending |
+| ENV-01 | Phase 36 | Pending |
+| ENV-02 | Phase 36 | Pending |
+| ENV-03 | Phase 36 | Pending |
+| ENV-04 | Phase 36 | Pending |
+| PIPE-01 | Phase 37 | Pending |
+| PIPE-02 | Phase 37 | Pending |
+| PIPE-03 | Phase 37 | Pending |
+| PIPE-04 | Phase 37 | Pending |
+| OAUTH-01 | Phase 38 | Pending |
+| OAUTH-02 | Phase 38 | Pending |
+| OAUTH-03 | Phase 38 | Pending |
+| OAUTH-04 | Phase 38 | Pending |
+| OAUTH-05 | Phase 38 | Pending |
+| OAUTH-06 | Phase 38 | Pending |
+| OAUTH-07 | Phase 38 | Pending |
+| HOOK-01 | Phase 39 | Pending |
+| HOOK-02 | Phase 39 | Pending |
+| HOOK-03 | Phase 39 | Pending |
+| REVIEW-01 | Phase 40 | Pending |
+| REVIEW-02 | Phase 40 | Pending |
+| REVIEW-03 | Phase 40 | Pending |
 
 **Coverage:**
 - v7.0 requirements: 21 total
-- Mapped to phases: 0
-- Unmapped: 21 ⚠️
+- Mapped to phases: 21
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-31*
-*Last updated: 2026-03-31 after initial definition*
+*Last updated: 2026-03-31 after roadmap creation (phases 36-40)*
