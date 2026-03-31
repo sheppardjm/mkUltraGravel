@@ -74,10 +74,10 @@ Plans:
   3. The right edge of the last visible image is partially cropped, providing a visual affordance that more images exist beyond the viewport
   4. No layout shift occurs as photos load — CLS contribution from the gallery remains below 0.05
   5. Clicking any gallery photo opens the PhotoSwipe full-screen lightbox with swipe navigation unchanged from v7.0
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 43-01: Refactor PhotoGallery.astro to CSS flexbox horizontal strip with scroll-snap
+- [ ] 43-01-PLAN.md — Refactor PhotoGallery.astro to CSS flexbox horizontal strip with scroll-snap
 
 #### Phase 44: Tone Image Integration
 
@@ -141,7 +141,7 @@ Plans:
 | 36-40. Strava Go-Live | v7.0 | 5/5 | Complete | 2026-03-31 |
 | 41. GPX Route Update + Pipeline Validation | v8.0 | 1/1 | Complete | 2026-03-31 |
 | 42. Photo Pipeline Expansion | v8.0 | 1/1 | Complete | 2026-03-31 |
-| 43. Horizontal Masonry Gallery | v8.0 | 0/TBD | Not started | - |
+| 43. Horizontal Masonry Gallery | v8.0 | 0/1 | Not started | - |
 | 44. Tone Image Integration | v8.0 | 0/TBD | Not started | - |
 | 45. Topographic Meatball Dividers | v8.0 | 0/TBD | Not started | - |
 | 46. Lizard Background Animation | v8.0 | 0/TBD | Not started | - |
