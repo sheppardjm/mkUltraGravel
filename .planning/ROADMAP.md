@@ -40,7 +40,7 @@ This is an operational milestone, not a build milestone. The pipeline is fully i
 3. GitHub PAT responds to a test API call with 200 and confirms Contents read+write access with no expiry before June 7, 2026
 4. Node.js version shown in a Netlify deploy log is >=22
 
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
 - [ ] 36-01: Configure Netlify environment and verify all external credentials
@@ -144,7 +144,7 @@ Note: Phase 40 (review submission) should be submitted as early as Phase 38 is c
 | 22-26. Route Update + UX Overhaul | v4.0 | 7/7 | Complete | 2026-03-30 |
 | 27-32. Strava Integration + Results | v5.0 | 10/10 | Complete | 2026-03-30 |
 | 33-35. UI Polish + Dev Tools | v6.0 | 3/3 | Complete | 2026-03-30 |
-| 36. Environment Configuration | v7.0 | 0/TBD | Not started | - |
+| 36. Environment Configuration | v7.0 | 0/1 | Planned | - |
 | 37. Data Pipeline Verification | v7.0 | 0/TBD | Not started | - |
 | 38. OAuth Flow Testing | v7.0 | 0/TBD | Not started | - |
 | 39. Webhook Registration | v7.0 | 0/TBD | Not started | - |
