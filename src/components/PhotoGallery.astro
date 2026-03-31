@@ -11,43 +11,104 @@ const photos = JSON.parse(photosRaw) as Array<{
 }>;
 ---
 
-<div id="photo-gallery"
-  class="flex overflow-x-auto snap-x snap-proximity overscroll-x-contain gap-1 pb-2"
-  style="height: 280px;"
->
+<div id="photo-gallery" class="masonry-gallery">
   {photos.map((photo) => {
-    const aspectRatio = photo.width / photo.height;
-    const itemWidth = Math.round(280 * aspectRatio);
-    const thumbHeight = Math.round(400 / aspectRatio);
+    const thumbFilename = photo.filename.replace(/\.(jpg|jpeg|png|avif)$/i, '.webp');
+    // Thumbs are generated at 400px wide; compute proportional height
+    const thumbWidth = 400;
+    const thumbHeight = Math.round(400 * (photo.height / photo.width));
     return (
       <a
         href={`/images/${photo.filename}`}
         data-pswp-width={photo.width}
         data-pswp-height={photo.height}
-        class="gallery-item flex-none snap-start overflow-hidden cursor-pointer"
-        style={`width: ${itemWidth}px; height: 280px;`}
+        class="gallery-item"
         aria-label={`View route photo at mile ${photo.mi}`}
       >
         <img
-          src={`/images/thumbs/${photo.filename.replace(/\.(jpg|jpeg|png|avif)$/i, '.webp')}`}
+          src={`/images/thumbs/${thumbFilename}`}
           alt={`Route photo at mile ${photo.mi}`}
-          width={400}
+          width={thumbWidth}
           height={thumbHeight}
           loading="lazy"
           decoding="async"
-          class="w-full h-full object-cover"
+          class="gallery-img"
         />
+        <span class="gallery-mile">mi {photo.mi}</span>
       </a>
     );
   })}
 </div>
 
 <style>
-  #photo-gallery {
-    scrollbar-width: none;
+  .masonry-gallery {
+    columns: 2 160px;
+    column-gap: 6px;
   }
-  #photo-gallery::-webkit-scrollbar {
-    display: none;
+
+  @media (min-width: 480px) {
+    .masonry-gallery {
+      columns: 3 180px;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .masonry-gallery {
+      columns: 4 200px;
+      column-gap: 8px;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .masonry-gallery {
+      columns: 5 220px;
+    }
+  }
+
+  .gallery-item {
+    display: block;
+    break-inside: avoid;
+    margin-bottom: 6px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  @media (min-width: 768px) {
+    .gallery-item {
+      margin-bottom: 8px;
+    }
+  }
+
+  .gallery-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    transition: opacity 0.2s ease;
+  }
+
+  .gallery-item:hover .gallery-img {
+    opacity: 0.85;
+  }
+
+  .gallery-mile {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 4px 6px;
+    font-size: 0.65rem;
+    font-family: var(--font-mono, monospace);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: rgba(255, 255, 255, 0.75);
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.55));
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .gallery-item:hover .gallery-mile {
+    opacity: 1;
   }
 </style>
 
