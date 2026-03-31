@@ -83,10 +83,10 @@ Plans:
 4. Denying Strava consent, providing an invalid activity URL, and submitting with zero matching segments each produce a clear error message (not a silent failure or 500)
 5. The CSRF cookie double-submit pattern completes without error on Chrome and Safari (iPhone), with known Safari SameSite behavior documented if observed
 
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 38-01: Execute OAuth round-trip on production and verify all error paths + Safari behavior
+- [ ] 38-01: Patch scope validation, execute OAuth round-trip, verify all error paths + Safari behavior
 
 ---
 
