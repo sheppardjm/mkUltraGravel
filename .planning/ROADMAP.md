@@ -103,10 +103,10 @@ Plans:
 2. The GET challenge/response handshake succeeds (Strava confirms the subscription is valid)
 3. A POST simulating a deauthorization event causes the athlete's JSON file to be deleted from the repo and a rebuild to trigger
 
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 39-01: Register Strava webhook and verify deauth deletion flow
+- [ ] 39-01-PLAN.md — Register webhook, verify handshake, simulate deauth deletion
 
 ---
 
@@ -147,5 +147,5 @@ Note: Phase 40 (review submission) should be submitted as early as Phase 38 is c
 | 36. Environment Configuration | v7.0 | 1/1 | Complete | 2026-03-31 |
 | 37. Data Pipeline Verification | v7.0 | 1/1 | Complete | 2026-03-31 |
 | 38. OAuth Flow Testing | v7.0 | 1/1 | Complete | 2026-03-31 |
-| 39. Webhook Registration | v7.0 | 0/TBD | Not started | - |
+| 39. Webhook Registration | v7.0 | 0/1 | Not started | - |
 | 40. Strava App Review | v7.0 | 0/TBD | Not started | - |
