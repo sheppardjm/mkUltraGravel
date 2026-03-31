@@ -58,7 +58,7 @@ Plans:
   2. Thumbnails and card crops for all 74 photos exist in `public/thumbs/` and `public/card-crops/`
   3. Card cover photo assignments have been reviewed after the 19-photo expansion — any undesirable changes are corrected
   4. Prebuild runs cleanly with 74 photos and no unassigned or missing-thumbnail warnings
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
 - [ ] 42-01: Add 19 photos to manifest and regenerate pipeline artifacts
@@ -140,7 +140,7 @@ Plans:
 | 33-35. UI Polish + Dev Tools | v6.0 | 3/3 | Complete | 2026-03-30 |
 | 36-40. Strava Go-Live | v7.0 | 5/5 | Complete | 2026-03-31 |
 | 41. GPX Route Update + Pipeline Validation | v8.0 | 1/1 | Complete | 2026-03-31 |
-| 42. Photo Pipeline Expansion | v8.0 | 0/TBD | Not started | - |
+| 42. Photo Pipeline Expansion | v8.0 | 0/1 | Not started | - |
 | 43. Horizontal Masonry Gallery | v8.0 | 0/TBD | Not started | - |
 | 44. Tone Image Integration | v8.0 | 0/TBD | Not started | - |
 | 45. Topographic Meatball Dividers | v8.0 | 0/TBD | Not started | - |
