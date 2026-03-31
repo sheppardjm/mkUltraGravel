@@ -76,40 +76,40 @@ Deferred to post-event or future milestones.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DATA-07 | TBD | Pending |
-| DATA-08 | TBD | Pending |
-| DATA-09 | TBD | Pending |
-| PHOTO-03 | TBD | Pending |
-| PHOTO-04 | TBD | Pending |
-| PHOTO-05 | TBD | Pending |
-| GAL-01 | TBD | Pending |
-| GAL-02 | TBD | Pending |
-| GAL-03 | TBD | Pending |
-| GAL-04 | TBD | Pending |
-| GAL-05 | TBD | Pending |
-| GAL-06 | TBD | Pending |
-| TONE-01 | TBD | Pending |
-| TONE-02 | TBD | Pending |
-| TONE-03 | TBD | Pending |
-| TONE-04 | TBD | Pending |
-| TOPO-01 | TBD | Pending |
-| TOPO-02 | TBD | Pending |
-| TOPO-03 | TBD | Pending |
-| TOPO-04 | TBD | Pending |
-| LIZD-01 | TBD | Pending |
-| LIZD-02 | TBD | Pending |
-| LIZD-03 | TBD | Pending |
-| LIZD-04 | TBD | Pending |
-| LIZD-05 | TBD | Pending |
-| PERF-03 | TBD | Pending |
-| PERF-04 | TBD | Pending |
-| PERF-05 | TBD | Pending |
+| DATA-07 | Phase 41 | Pending |
+| DATA-08 | Phase 41 | Pending |
+| DATA-09 | Phase 41 | Pending |
+| PHOTO-03 | Phase 42 | Pending |
+| PHOTO-04 | Phase 42 | Pending |
+| PHOTO-05 | Phase 42 | Pending |
+| GAL-01 | Phase 43 | Pending |
+| GAL-02 | Phase 43 | Pending |
+| GAL-03 | Phase 43 | Pending |
+| GAL-04 | Phase 43 | Pending |
+| GAL-05 | Phase 43 | Pending |
+| GAL-06 | Phase 43 | Pending |
+| TONE-01 | Phase 44 | Pending |
+| TONE-02 | Phase 44 | Pending |
+| TONE-03 | Phase 44 | Pending |
+| TONE-04 | Phase 44 | Pending |
+| TOPO-01 | Phase 45 | Pending |
+| TOPO-02 | Phase 45 | Pending |
+| TOPO-03 | Phase 45 | Pending |
+| TOPO-04 | Phase 45 | Pending |
+| LIZD-01 | Phase 46 | Pending |
+| LIZD-02 | Phase 46 | Pending |
+| LIZD-03 | Phase 46 | Pending |
+| LIZD-04 | Phase 46 | Pending |
+| LIZD-05 | Phase 46 | Pending |
+| PERF-03 | Phase 46 | Pending |
+| PERF-04 | Phase 46 | Pending |
+| PERF-05 | Phase 46 | Pending |
 
 **Coverage:**
 - v8.0 requirements: 25 total
-- Mapped to phases: 0 ⚠️
-- Unmapped: 25
+- Mapped to phases: 25 ✓
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-31*
-*Last updated: 2026-03-31 after initial definition*
+*Last updated: 2026-03-31 after v8.0 roadmap creation*
