@@ -26,7 +26,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         </p>
         <a
           href="/submit"
-          style="color: oklch(0.72 0.19 55); font-family: var(--font-mono);"
+          style="color: #FC5200; font-family: var(--font-mono);"
         >
           ← Start the submission process again
         </a>
@@ -68,7 +68,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                   href="#"
                   target="_blank"
                   rel="noopener noreferrer"
-                  style="color: oklch(0.72 0.19 55); font-family: var(--font-mono); word-break: break-all;"
+                  style="color: #FC5200; font-family: var(--font-mono); word-break: break-all;"
                 >
                 </a>
               </dd>
@@ -135,7 +135,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                   value="yes"
                   required
                   class="mt-0.5 shrink-0"
-                  style="width: 1rem; height: 1rem; accent-color: oklch(0.72 0.19 55);"
+                  style="width: 1rem; height: 1rem; accent-color: #FC5200;"
                 />
                 <span class="text-sm leading-relaxed" style="color: var(--color-text-muted);">
                   I consent to my name, category, segment times, and Strava activity link being displayed publicly on the MK Ultra Gravel results page.
@@ -156,7 +156,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
               type="submit"
               class="w-full rounded px-6 py-3 text-sm font-bold uppercase tracking-widest transition-opacity hover:opacity-90 active:opacity-75"
               style="
-                background-color: oklch(0.72 0.19 55);
+                background-color: #FC5200;
                 color: oklch(0.10 0.01 250);
                 font-family: var(--font-mono);
               "
@@ -229,7 +229,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       const consentError = document.getElementById('consent-error') as HTMLParagraphElement;
 
       genderSelect.addEventListener('focus', () => {
-        genderSelect.style.borderColor = 'oklch(0.72 0.19 55)';
+        genderSelect.style.borderColor = '#FC5200';
       });
       genderSelect.addEventListener('blur', () => {
         genderSelect.style.borderColor = 'var(--color-border)';

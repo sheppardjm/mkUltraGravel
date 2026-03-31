@@ -91,7 +91,7 @@ const submitDenied = Astro.url.searchParams.get("submit") === "denied";
               type="submit"
               class="w-full rounded px-6 py-3 text-sm font-bold uppercase tracking-widest transition-opacity hover:opacity-90 active:opacity-75"
               style="
-                background-color: oklch(0.72 0.19 55);
+                background-color: #FC5200;
                 color: oklch(0.10 0.01 250);
                 font-family: var(--font-mono);
               "
@@ -109,7 +109,7 @@ const submitDenied = Astro.url.searchParams.get("submit") === "denied";
             Your segment times are stored publicly on the results page. You may revoke
             access at any time via your
             <a href="https://www.strava.com/settings/apps" target="_blank" rel="noopener noreferrer"
-               style="color: oklch(0.72 0.19 55);">Strava settings</a>
+               style="color: #FC5200;">Strava settings</a>
             — your data will be deleted within 48 hours of deauthorization.
           </p>
         </form>
@@ -127,7 +127,7 @@ const submitDenied = Astro.url.searchParams.get("submit") === "denied";
 
     // Highlight input on focus/blur to match the dark theme
     input.addEventListener('focus', () => {
-      input.style.borderColor = 'oklch(0.72 0.19 55)';
+      input.style.borderColor = '#FC5200';
     });
     input.addEventListener('blur', () => {
       input.style.borderColor = 'var(--color-border)';
@@ -148,7 +148,7 @@ const submitDenied = Astro.url.searchParams.get("submit") === "denied";
 
       // Clear any previous error
       errorEl.classList.add('hidden');
-      input.style.borderColor = 'oklch(0.72 0.19 55)';
+      input.style.borderColor = '#FC5200';
 
       // Redirect to strava-auth function with the validated activity URL
       window.location.href = `/api/strava-auth?activityUrl=${encodeURIComponent(url)}`;
