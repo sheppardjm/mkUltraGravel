@@ -1,100 +1,147 @@
 ---
-// Topographic meatball divider — hollow concentric rings that draw in on scroll
-// Placed between page sections to reinforce gravel/elevation aesthetic
+// Topographic metaball divider — animated hollow topographic rings via canvas + SVG filter
+// Adapted from codepen/metaballs reference: orbiting blobs + discrete alpha filter = contour rings
+const filterId = `topo-${Math.random().toString(36).slice(2, 8)}`;
 ---
-<svg
-  class="topo-divider"
-  data-topo-divider
-  aria-hidden="true"
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 200 200"
-  width="200"
-  height="200"
->
-  <circle class="ring ring-1" cx="100" cy="100" r="18" fill="none" stroke="currentColor" stroke-width="1.5" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" />
-  <circle class="ring ring-2" cx="100" cy="100" r="34" fill="none" stroke="currentColor" stroke-width="1.5" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" />
-  <circle class="ring ring-3" cx="100" cy="100" r="52" fill="none" stroke="currentColor" stroke-width="1.5" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" />
-  <circle class="ring ring-4" cx="100" cy="100" r="70" fill="none" stroke="currentColor" stroke-width="1.5" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" />
-  <circle class="ring ring-5" cx="100" cy="100" r="88" fill="none" stroke="currentColor" stroke-width="1.2" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" />
-</svg>
+<div class="topo-divider-wrap" data-topo-divider aria-hidden="true">
+  <canvas class="topo-canvas" data-filter-id={filterId}></canvas>
+  <svg class="topo-filter-defs" aria-hidden="true">
+    <defs>
+      <filter id={filterId} x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="20" result="blur" />
+        <feComponentTransfer in="blur" result="rings">
+          <feFuncA type="discrete" tableValues="0 1 0 1 0 1 0 1 0 1 0 1 0 1 0" />
+        </feComponentTransfer>
+        <feFlood flood-color="currentColor" result="colorFill" />
+        <feComposite in="colorFill" in2="rings" operator="in" />
+      </filter>
+    </defs>
+  </svg>
+</div>
 
 <style>
-  .topo-divider {
-    display: block;
-    margin: 0 auto;
+  .topo-divider-wrap {
+    position: relative;
+    width: 100%;
+    height: 120px;
+    overflow: hidden;
     color: var(--color-accent-green);
-    opacity: 0.5;
+    opacity: 0.4;
   }
 
-  .topo-divider .ring {
-    stroke-dashoffset: 1;
-    transition: stroke-dashoffset 1s ease-out;
+  .topo-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
   }
 
-  .topo-divider.is-drawn .ring-1 {
-    stroke-dashoffset: 0;
-    transition-delay: 0ms;
-  }
-
-  .topo-divider.is-drawn .ring-2 {
-    stroke-dashoffset: 0;
-    transition-delay: 100ms;
-  }
-
-  .topo-divider.is-drawn .ring-3 {
-    stroke-dashoffset: 0;
-    transition-delay: 200ms;
-  }
-
-  .topo-divider.is-drawn .ring-4 {
-    stroke-dashoffset: 0;
-    transition-delay: 300ms;
-  }
-
-  .topo-divider.is-drawn .ring-5 {
-    stroke-dashoffset: 0;
-    transition-delay: 400ms;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .topo-divider .ring {
-      stroke-dashoffset: 0;
-      transition: none;
-    }
+  .topo-filter-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
   }
 </style>
 
 <script>
   function initTopoDividers() {
-    // Respect prefers-reduced-motion — CSS handles static display, skip observer
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      return;
-    }
+    var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    const topoObserver = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-drawn");
-            topoObserver.unobserve(entry.target);
-          }
-        });
-      },
-      {
-        rootMargin: "0px 0px -60px 0px",
-        threshold: 0.1,
+    document.querySelectorAll("[data-topo-divider]").forEach(function (wrap) {
+      var canvas = wrap.querySelector("canvas");
+      if (!canvas || canvas.dataset.init) return;
+      canvas.dataset.init = "1";
+
+      var filterId = canvas.dataset.filterId;
+      if (filterId) canvas.style.filter = "url(#" + filterId + ")";
+
+      var ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      var DOT_COUNT = 6;
+      var dots = [];
+      var animId = null;
+      var visible = false;
+
+      function resize() {
+        var rect = wrap.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
       }
-    );
 
-    document.querySelectorAll("[data-topo-divider]").forEach((el) => {
-      topoObserver.observe(el);
+      function seed() {
+        dots = [];
+        var w = canvas.width;
+        var h = canvas.height;
+        for (var i = 0; i < DOT_COUNT; i++) {
+          dots.push({
+            baseX: (w / (DOT_COUNT + 1)) * (i + 1) + (Math.random() - 0.5) * (w / DOT_COUNT) * 0.4,
+            baseY: h / 2 + (Math.random() - 0.5) * h * 0.3,
+            x: 0, y: 0,
+            radius: 40 + Math.random() * 50,
+            angle: Math.random() * Math.PI * 2,
+            speed: 0.003 + Math.random() * 0.005,
+            rangeX: 40 + Math.random() * 60,
+            rangeY: 15 + Math.random() * 25,
+          });
+        }
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (var i = 0; i < dots.length; i++) {
+          var d = dots[i];
+          d.x = d.baseX + Math.cos(d.angle) * d.rangeX;
+          d.y = d.baseY + Math.sin(d.angle) * d.rangeY;
+          ctx.fillStyle = "white";
+          ctx.beginPath();
+          ctx.arc(d.x, d.y, d.radius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      function tick() {
+        if (!visible) return;
+        for (var i = 0; i < dots.length; i++) dots[i].angle += dots[i].speed;
+        draw();
+        animId = requestAnimationFrame(tick);
+      }
+
+      resize();
+      seed();
+
+      if (reducedMotion) {
+        draw();
+        return;
+      }
+
+      var io = new IntersectionObserver(
+        function (entries) {
+          for (var i = 0; i < entries.length; i++) {
+            if (entries[i].isIntersecting) {
+              visible = true;
+              tick();
+            } else {
+              visible = false;
+              if (animId !== null) {
+                cancelAnimationFrame(animId);
+                animId = null;
+              }
+            }
+          }
+        },
+        { rootMargin: "50px 0px", threshold: 0 }
+      );
+      io.observe(wrap);
+
+      window.addEventListener("resize", function () {
+        resize();
+        seed();
+        if (visible) draw();
+      }, { passive: true });
     });
   }
 
-  // Support Astro View Transitions
   document.addEventListener("astro:page-load", initTopoDividers);
-  // Fallback for non-View-Transitions pages
-  if (!document.querySelector("[data-astro-transition]")) {
-    initTopoDividers();
-  }
+  if (!document.querySelector("[data-astro-transition]")) initTopoDividers();
 </script>
