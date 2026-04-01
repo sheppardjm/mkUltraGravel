@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-31)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v8.0 Phase 43 — Horizontal Masonry Gallery
+**Current focus:** v8.0 Phase 44 — (next phase)
 
 ## Current Position
 
 Milestone: v8.0 Visual Polish + Content
 Phase: 43 of 46 (Horizontal Masonry Gallery)
-Plan: —
-Status: Ready to plan
-Last activity: 2026-03-31 — Phase 42 complete and verified (Photo Pipeline Expansion)
+Plan: 01 of 01
+Status: Phase complete
+Last activity: 2026-03-31 — Completed 43-01-PLAN.md (Masonry Gallery)
 
-Progress: [█████████████████████░░] 80% (78/~82 total plans)
+Progress: [█████████████████████░░] 81% (79/~82 total plans)
 
 ## Performance Metrics
 
@@ -37,6 +37,7 @@ Progress: [█████████████████████░░
 Decisions are logged in PROJECT.md Key Decisions table.
 
 - Phase 42: Route owner excluded 3 of 19 candidate photos — final count 71, not 74. All cover photos unchanged.
+- Phase 43: Original horizontal flex strip rejected at checkpoint; switched to CSS columns masonry grid. CLS prevention via aspect-ratio placeholders. PhotoSwipe lightbox preserved.
 
 ### Pending Todos
 
@@ -51,5 +52,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-31
-Stopped at: Phase 42 verified complete — Phase 43 ready to plan
+Stopped at: Phase 43 plan 01 complete and verified — Phase 44 ready to plan
 Resume file: None
