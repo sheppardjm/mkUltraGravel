@@ -92,7 +92,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 44-01-PLAN.md — Pipeline Escher tone image, add section background to #sectors, add card accents to 2 sector + 1 KOM card
+- [x] 44-01-PLAN.md — SVG lizard tessellation on #sectors, card accents on 2 sector + 1 KOM card
 
 #### Phase 45: Topographic Meatball Dividers
 
@@ -142,6 +142,6 @@ Plans:
 | 41. GPX Route Update + Pipeline Validation | v8.0 | 1/1 | Complete | 2026-03-31 |
 | 42. Photo Pipeline Expansion | v8.0 | 1/1 | Complete | 2026-03-31 |
 | 43. Horizontal Masonry Gallery | v8.0 | 1/1 | Complete | 2026-03-31 |
-| 44. Tone Image Integration | v8.0 | 0/1 | Not started | - |
+| 44. Tone Image Integration | v8.0 | 1/1 | Complete | 2026-03-31 |
 | 45. Topographic Meatball Dividers | v8.0 | 0/TBD | Not started | - |
 | 46. Lizard Background Animation | v8.0 | 0/TBD | Not started | - |

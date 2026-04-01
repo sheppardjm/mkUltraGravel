@@ -27,10 +27,10 @@ Requirements for visual polish + content update milestone.
 
 ### Decorative — Tone Images
 
-- [ ] **TONE-01**: Tone images placed between major page sections as full-width dividers
-- [ ] **TONE-02**: Tone images as card accents inside sector and/or KOM cards
-- [ ] **TONE-03**: mix-blend-mode: lighten at opacity ~0.12, with isolation: isolate on card containers
-- [ ] **TONE-04**: Reduced-motion: tone images static (no animation) by default
+- [x] **TONE-01**: Tone images placed between major page sections as full-width dividers
+- [x] **TONE-02**: Tone images as card accents inside sector and/or KOM cards
+- [x] **TONE-03**: mix-blend-mode: lighten at opacity ~0.12, with isolation: isolate on card containers
+- [x] **TONE-04**: Reduced-motion: tone images static (no animation) by default
 
 ### Decorative — Topographic Dividers
 
@@ -88,10 +88,10 @@ Deferred to post-event or future milestones.
 | GAL-04 | Phase 43 | Complete |
 | GAL-05 | Phase 43 | Complete |
 | GAL-06 | Phase 43 | Complete |
-| TONE-01 | Phase 44 | Pending |
-| TONE-02 | Phase 44 | Pending |
-| TONE-03 | Phase 44 | Pending |
-| TONE-04 | Phase 44 | Pending |
+| TONE-01 | Phase 44 | Complete |
+| TONE-02 | Phase 44 | Complete |
+| TONE-03 | Phase 44 | Complete |
+| TONE-04 | Phase 44 | Complete |
 | TOPO-01 | Phase 45 | Pending |
 | TOPO-02 | Phase 45 | Pending |
 | TOPO-03 | Phase 45 | Pending |
