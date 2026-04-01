@@ -81,18 +81,18 @@ Plans:
 
 #### Phase 44: Tone Image Integration
 
-**Goal**: Tone images appear as full-width interstitial dividers between major sections and as subtle card accents inside 2–3 sector or KOM cards — the one major section currently without a tone image gains atmospheric texture.
+**Goal**: Tone images appear as full-width interstitial dividers between major sections and as subtle card accents inside 2-3 sector or KOM cards — the one major section currently without a tone image gains atmospheric texture.
 **Depends on**: Phase 41 (pipeline clean; tone image pipeline script uses same prebuild chain)
 **Requirements**: TONE-01, TONE-02, TONE-03, TONE-04
 **Success Criteria** (what must be TRUE):
   1. At least one tone image appears as a full-width band between the sectors section and an adjacent section
-  2. 2–3 sector or KOM cards display a tone image accent at `mix-blend-mode: lighten; opacity ~0.12`
+  2. 2-3 sector or KOM cards display a tone image accent at `mix-blend-mode: lighten; opacity ~0.12`
   3. Card hover states and PhotoSwipe lightbox open correctly after tone image CSS is applied (no z-index or stacking context regression)
   4. With `prefers-reduced-motion: reduce` active, all tone images are static — no animation
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 44-01: Add tone images to sectors section and card accents
+- [ ] 44-01-PLAN.md — Pipeline Escher tone image, add section background to #sectors, add card accents to 2 sector + 1 KOM card
 
 #### Phase 45: Topographic Meatball Dividers
 
@@ -142,6 +142,6 @@ Plans:
 | 41. GPX Route Update + Pipeline Validation | v8.0 | 1/1 | Complete | 2026-03-31 |
 | 42. Photo Pipeline Expansion | v8.0 | 1/1 | Complete | 2026-03-31 |
 | 43. Horizontal Masonry Gallery | v8.0 | 1/1 | Complete | 2026-03-31 |
-| 44. Tone Image Integration | v8.0 | 0/TBD | Not started | - |
+| 44. Tone Image Integration | v8.0 | 0/1 | Not started | - |
 | 45. Topographic Meatball Dividers | v8.0 | 0/TBD | Not started | - |
 | 46. Lizard Background Animation | v8.0 | 0/TBD | Not started | - |
