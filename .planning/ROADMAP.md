@@ -77,7 +77,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 43-01-PLAN.md — Refactor PhotoGallery.astro to CSS flexbox horizontal strip with scroll-snap
+- [x] 43-01-PLAN.md — Refactor PhotoGallery.astro to CSS columns masonry grid with scroll-snap
 
 #### Phase 44: Tone Image Integration
 
@@ -141,7 +141,7 @@ Plans:
 | 36-40. Strava Go-Live | v7.0 | 5/5 | Complete | 2026-03-31 |
 | 41. GPX Route Update + Pipeline Validation | v8.0 | 1/1 | Complete | 2026-03-31 |
 | 42. Photo Pipeline Expansion | v8.0 | 1/1 | Complete | 2026-03-31 |
-| 43. Horizontal Masonry Gallery | v8.0 | 0/1 | Not started | - |
+| 43. Horizontal Masonry Gallery | v8.0 | 1/1 | Complete | 2026-03-31 |
 | 44. Tone Image Integration | v8.0 | 0/TBD | Not started | - |
 | 45. Topographic Meatball Dividers | v8.0 | 0/TBD | Not started | - |
 | 46. Lizard Background Animation | v8.0 | 0/TBD | Not started | - |

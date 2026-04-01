@@ -5,22 +5,22 @@
 See: .planning/PROJECT.md (updated 2026-03-31)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v8.0 Phase 44 — (next phase)
+**Current focus:** v8.0 Phase 44 — Tone Image Integration
 
 ## Current Position
 
 Milestone: v8.0 Visual Polish + Content
-Phase: 43 of 46 (Horizontal Masonry Gallery)
-Plan: 01 of 01
-Status: Phase complete
-Last activity: 2026-03-31 — Completed 43-01-PLAN.md (Masonry Gallery)
+Phase: 44 of 46 (Tone Image Integration)
+Plan: —
+Status: Ready to plan
+Last activity: 2026-03-31 — Phase 43 complete and verified (Horizontal Masonry Gallery)
 
-Progress: [█████████████████████░░] 81% (79/~82 total plans)
+Progress: [██████████████████████░░] 82% (79/~82 total plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 78
+- Total plans completed: 79
 - v1.0: 30 plans across 10 phases (2 days)
 - v2.0: 15 plans across 6 phases (3 days)
 - v3.0: 6 plans across 5 phases (2 days)
@@ -28,7 +28,7 @@ Progress: [█████████████████████░░
 - v5.0: 10 plans across 6 phases (4 days)
 - v6.0: 3 plans across 3 phases (1 day)
 - v7.0: 5 plans across 5 phases (1 day)
-- v8.0: 2 plans across 2 phases (1 day, in progress)
+- v8.0: 3 plans across 3 phases (1 day, in progress)
 
 ## Accumulated Context
 
@@ -52,5 +52,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-31
-Stopped at: Phase 43 plan 01 complete and verified — Phase 44 ready to plan
+Stopped at: Phase 43 complete and verified — Phase 44 ready to plan
 Resume file: None

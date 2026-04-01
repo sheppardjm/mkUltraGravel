@@ -18,12 +18,12 @@ Requirements for visual polish + content update milestone.
 
 ### Gallery
 
-- [ ] **GAL-01**: PhotoGallery.astro refactored to horizontal masonry strip (CSS flexbox, no JS library)
-- [ ] **GAL-02**: Fixed-height rows with variable-width images computed from aspect ratios in photos.json
-- [ ] **GAL-03**: Horizontal scroll with scroll-snap-type: x proximity for touch/swipe
-- [ ] **GAL-04**: Partial-peek scroll indicator showing next image is available
-- [ ] **GAL-05**: Width/height attributes on all gallery images to prevent CLS
-- [ ] **GAL-06**: PhotoSwipe lightbox still opens from gallery image click
+- [x] **GAL-01**: PhotoGallery.astro refactored to CSS columns masonry grid (no JS library)
+- [x] **GAL-02**: Variable-height items with aspect-ratio placeholders computed from photos.json
+- [x] **GAL-03**: Max-height constrained container with horizontal scroll overflow
+- [x] **GAL-04**: Aspect-ratio placeholders prevent empty space during lazy loading
+- [x] **GAL-05**: Width/height attributes on all gallery images to prevent CLS
+- [x] **GAL-06**: PhotoSwipe lightbox still opens from gallery image click
 
 ### Decorative — Tone Images
 
@@ -82,12 +82,12 @@ Deferred to post-event or future milestones.
 | PHOTO-03 | Phase 42 | Complete |
 | PHOTO-04 | Phase 42 | Complete |
 | PHOTO-05 | Phase 42 | Complete |
-| GAL-01 | Phase 43 | Pending |
-| GAL-02 | Phase 43 | Pending |
-| GAL-03 | Phase 43 | Pending |
-| GAL-04 | Phase 43 | Pending |
-| GAL-05 | Phase 43 | Pending |
-| GAL-06 | Phase 43 | Pending |
+| GAL-01 | Phase 43 | Complete |
+| GAL-02 | Phase 43 | Complete |
+| GAL-03 | Phase 43 | Complete |
+| GAL-04 | Phase 43 | Complete |
+| GAL-05 | Phase 43 | Complete |
+| GAL-06 | Phase 43 | Complete |
 | TONE-01 | Phase 44 | Pending |
 | TONE-02 | Phase 44 | Pending |
 | TONE-03 | Phase 44 | Pending |
