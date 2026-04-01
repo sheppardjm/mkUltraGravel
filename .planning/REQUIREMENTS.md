@@ -34,10 +34,10 @@ Requirements for visual polish + content update milestone.
 
 ### Decorative — Topographic Dividers
 
-- [ ] **TOPO-01**: TopoDivider.astro component with hollow topographic meatball SVG
-- [ ] **TOPO-02**: stroke-dashoffset draw-in animation triggered by IntersectionObserver
-- [ ] **TOPO-03**: Reduced-motion gate (static display, no draw-in)
-- [ ] **TOPO-04**: Reusable — placed between 2+ sections on index.astro
+- [x] **TOPO-01**: TopoDivider.astro component with hollow topographic meatball SVG
+- [x] **TOPO-02**: Canvas metaball animation with IntersectionObserver (upgraded from stroke-dashoffset)
+- [x] **TOPO-03**: Reduced-motion gate (static display, no animation)
+- [x] **TOPO-04**: Reusable — placed between 2+ sections on index.astro
 
 ### Decorative — Lizard Background
 
@@ -92,10 +92,10 @@ Deferred to post-event or future milestones.
 | TONE-02 | Phase 44 | Complete |
 | TONE-03 | Phase 44 | Complete |
 | TONE-04 | Phase 44 | Complete |
-| TOPO-01 | Phase 45 | Pending |
-| TOPO-02 | Phase 45 | Pending |
-| TOPO-03 | Phase 45 | Pending |
-| TOPO-04 | Phase 45 | Pending |
+| TOPO-01 | Phase 45 | Complete |
+| TOPO-02 | Phase 45 | Complete |
+| TOPO-03 | Phase 45 | Complete |
+| TOPO-04 | Phase 45 | Complete |
 | LIZD-01 | Phase 46 | Pending |
 | LIZD-02 | Phase 46 | Pending |
 | LIZD-03 | Phase 46 | Pending |
