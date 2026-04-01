@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 
 Milestone: v8.0 Visual Polish + Content
 Phase: 44 of 46 (Tone Image Integration)
-Plan: —
-Status: Ready to plan
-Last activity: 2026-03-31 — Phase 43 complete and verified (Horizontal Masonry Gallery)
+Plan: 01 of 1 (in progress — awaiting checkpoint:human-verify)
+Status: In progress — Tasks 1-2 complete, checkpoint pending
+Last activity: 2026-04-01 — Phase 44-01 tasks 1-2 complete, at checkpoint:human-verify
 
-Progress: [██████████████████████░░] 82% (79/~82 total plans)
+Progress: [██████████████████████░░] 83% (80/~82 total plans)
 
 ## Performance Metrics
 
@@ -38,6 +38,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 - Phase 42: Route owner excluded 3 of 19 candidate photos — final count 71, not 74. All cover photos unchanged.
 - Phase 43: Original horizontal flex strip rejected at checkpoint; switched to CSS columns masonry grid. CLS prevention via aspect-ratio placeholders. PhotoSwipe lightbox preserved.
+- Phase 44-01: Escher 'Square Limit' at 600px/q35 (99KB) instead of plan's 1000px/q55 — high-frequency geometric detail resists WebP compression; visually identical at 12% opacity. Card accents use lsd-mind-control.webp (already 13KB, no new pipeline entry needed).
 
 ### Pending Todos
 
@@ -51,6 +52,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-31
-Stopped at: Phase 43 complete and verified — Phase 44 ready to plan
+Last session: 2026-04-01
+Stopped at: Phase 44-01 Tasks 1-2 complete — awaiting checkpoint:human-verify approval
 Resume file: None
