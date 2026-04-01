@@ -121,10 +121,10 @@ Plans:
   4. Lighthouse mobile Performance score is 90 or higher with the complete v8.0 visual stack active
   5. Total Blocking Time remains 0ms — no synchronous JS animation, no DOM measurement
   6. CLS is 0.1 or lower — gallery image dimensions prevent layout shift
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 46-01: Build LizardBackground.astro and run final performance audit
+- [ ] 46-01-PLAN.md — Build LizardBackground.astro and run final performance audit
 
 ---
 
@@ -144,4 +144,4 @@ Plans:
 | 43. Horizontal Masonry Gallery | v8.0 | 1/1 | Complete | 2026-03-31 |
 | 44. Tone Image Integration | v8.0 | 1/1 | Complete | 2026-03-31 |
 | 45. Topographic Meatball Dividers | v8.0 | 1/1 | Complete | 2026-03-31 |
-| 46. Lizard Background Animation | v8.0 | 0/TBD | Not started | - |
+| 46. Lizard Background Animation | v8.0 | 0/1 | Not started | - |
