@@ -19,8 +19,8 @@ const kom = annotations.kom as Array<{
 
 <div class="space-y-4">
   {kom.map((segment, i) => (
-    <div class="classified-border bg-bg-surface card-hover min-h-[280px]" data-reveal style={`animation-delay: ${i * 60}ms`}>
-      <div class="overflow-hidden">
+    <div class="classified-border bg-bg-surface card-hover min-h-[280px]" data-reveal style={`animation-delay: ${i * 60}ms${i === 0 ? '; isolation: isolate' : ''}`}>
+      <div class={`overflow-hidden${i === 0 ? ' relative' : ''}`}>
         {segment.coverPhoto && (
           <img
             src={`/images/cards/${segment.coverPhoto.replace(/\.(jpg|jpeg|png|avif)$/i, '.webp')}`}
@@ -32,7 +32,16 @@ const kom = annotations.kom as Array<{
             class="w-full aspect-video object-cover"
           />
         )}
-        <div class="p-4">
+        {i === 0 && (
+          <img
+            src="/tone/lsd-mind-control.webp"
+            alt=""
+            aria-hidden="true"
+            class="tone-image inset-0 w-full h-full object-cover"
+            loading="lazy"
+          />
+        )}
+        <div class={`p-4${i === 0 ? ' relative z-10' : ''}`}>
           <h3 class="text-accent-green mb-2">{segment.name}</h3>
           <div class="grid grid-cols-2 gap-x-6 gap-y-1 text-text-muted text-sm">
             <span>Mile {segment.startMi}</span>
