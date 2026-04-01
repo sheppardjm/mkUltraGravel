@@ -1,0 +1,100 @@
+---
+// Topographic meatball divider — hollow concentric rings that draw in on scroll
+// Placed between page sections to reinforce gravel/elevation aesthetic
+---
+<svg
+  class="topo-divider"
+  data-topo-divider
+  aria-hidden="true"
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 200 200"
+  width="200"
+  height="200"
+>
+  <circle class="ring ring-1" cx="100" cy="100" r="18" fill="none" stroke="currentColor" stroke-width="1.5" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" />
+  <circle class="ring ring-2" cx="100" cy="100" r="34" fill="none" stroke="currentColor" stroke-width="1.5" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" />
+  <circle class="ring ring-3" cx="100" cy="100" r="52" fill="none" stroke="currentColor" stroke-width="1.5" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" />
+  <circle class="ring ring-4" cx="100" cy="100" r="70" fill="none" stroke="currentColor" stroke-width="1.5" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" />
+  <circle class="ring ring-5" cx="100" cy="100" r="88" fill="none" stroke="currentColor" stroke-width="1.2" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" />
+</svg>
+
+<style>
+  .topo-divider {
+    display: block;
+    margin: 0 auto;
+    color: var(--color-accent-green);
+    opacity: 0.5;
+  }
+
+  .topo-divider .ring {
+    stroke-dashoffset: 1;
+    transition: stroke-dashoffset 1s ease-out;
+  }
+
+  .topo-divider.is-drawn .ring-1 {
+    stroke-dashoffset: 0;
+    transition-delay: 0ms;
+  }
+
+  .topo-divider.is-drawn .ring-2 {
+    stroke-dashoffset: 0;
+    transition-delay: 100ms;
+  }
+
+  .topo-divider.is-drawn .ring-3 {
+    stroke-dashoffset: 0;
+    transition-delay: 200ms;
+  }
+
+  .topo-divider.is-drawn .ring-4 {
+    stroke-dashoffset: 0;
+    transition-delay: 300ms;
+  }
+
+  .topo-divider.is-drawn .ring-5 {
+    stroke-dashoffset: 0;
+    transition-delay: 400ms;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .topo-divider .ring {
+      stroke-dashoffset: 0;
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  function initTopoDividers() {
+    // Respect prefers-reduced-motion — CSS handles static display, skip observer
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+
+    const topoObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-drawn");
+            topoObserver.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        rootMargin: "0px 0px -60px 0px",
+        threshold: 0.1,
+      }
+    );
+
+    document.querySelectorAll("[data-topo-divider]").forEach((el) => {
+      topoObserver.observe(el);
+    });
+  }
+
+  // Support Astro View Transitions
+  document.addEventListener("astro:page-load", initTopoDividers);
+  // Fallback for non-View-Transitions pages
+  if (!document.querySelector("[data-astro-transition]")) {
+    initTopoDividers();
+  }
+</script>
