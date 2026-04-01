@@ -29,6 +29,7 @@ const TONE_IMAGES = [
   { src: 'lsd-mind-control.jpg',     dest: 'lsd-mind-control.webp',     width: 350, quality: 45 },
   { src: 'Mkultra-lsd-doc.jpg',      dest: 'Mkultra-lsd-doc.webp',      width: 1000, quality: 60 },
   { src: 'escharian_stairs_fb.webp', dest: 'escharian_stairs_fb.webp',  width: 500, quality: 50 },
+  { src: 'square-limit-mc-escher-1964.jpg', dest: 'square-limit-mc-escher.webp', width: 600, quality: 35 },
 ];
 
 async function convertToneImages() {
