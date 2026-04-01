@@ -276,6 +276,17 @@
   }
 }
 
+@keyframes lizard-drift {
+  0%   { transform: translate(0, 0); }
+  100% { transform: translate(200px, 200px); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lizard-bg {
+    animation: lizard-drift 80s linear infinite;
+  }
+}
+
 @keyframes penrose-spin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
