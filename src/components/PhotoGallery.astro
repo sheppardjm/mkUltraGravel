@@ -23,6 +23,7 @@ const photos = JSON.parse(photosRaw) as Array<{
         data-pswp-width={photo.width}
         data-pswp-height={photo.height}
         class="gallery-item"
+        style={`aspect-ratio: ${photo.width} / ${photo.height};`}
         aria-label={`View route photo at mile ${photo.mi}`}
       >
         <img
@@ -81,6 +82,9 @@ const photos = JSON.parse(photosRaw) as Array<{
     position: relative;
     overflow: hidden;
     cursor: pointer;
+    /* Reserve space before image loads — color shows as placeholder */
+    background-color: #27272a; /* zinc-800 */
+    width: 100%;
   }
 
   @media (min-width: 768px) {
@@ -92,7 +96,8 @@ const photos = JSON.parse(photosRaw) as Array<{
   .gallery-img {
     display: block;
     width: 100%;
-    height: auto;
+    height: 100%;
+    object-fit: cover;
     transition: opacity 0.2s ease;
   }
 
