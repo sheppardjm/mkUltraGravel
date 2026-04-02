@@ -23,7 +23,7 @@ Requirements for adding BAA gravel sector to the site.
 
 ### Scoring
 
-- [ ] **SECT-06**: BAA included in Gravel Champion scoring engine (6 → 7 required sectors)
+- [ ] **SECT-06**: BAA included in Gravel Champion scoring engine (6 -> 7 required sectors)
 
 ## Future Requirements
 
@@ -41,18 +41,18 @@ None — single-feature milestone.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SECT-01 | TBD | Pending |
-| SECT-02 | TBD | Pending |
-| SECT-03 | TBD | Pending |
-| SECT-04 | TBD | Pending |
-| SECT-05 | TBD | Pending |
-| SECT-06 | TBD | Pending |
+| SECT-01 | Phase 47 | Pending |
+| SECT-02 | Phase 47 | Pending |
+| SECT-03 | Phase 47 | Pending |
+| SECT-04 | Phase 47 | Pending |
+| SECT-05 | Phase 47 | Pending |
+| SECT-06 | Phase 47 | Pending |
 
 **Coverage:**
 - v9.0 requirements: 6 total
-- Mapped to phases: 0
-- Unmapped: 6 ⚠️
+- Mapped to phases: 6
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-02*
-*Last updated: 2026-04-02 after initial definition*
+*Last updated: 2026-04-02 after roadmap creation*
