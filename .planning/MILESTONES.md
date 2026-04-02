@@ -1,5 +1,31 @@
 # Project Milestones: MK Ultra Gravel
 
+## v9.0 New Sector Addition (Shipped: 2026-04-02)
+
+**Delivered:** Added BAA gravel sector (Strava segment 41159670, mile 12.9, 2-star) as 7th sector across all 5 surfaces — map polyline, elevation profile, sector card, scoring engine, and results page. All content updated from "six" to "seven" sectors. 13 vitest tests green.
+
+**Phases completed:** 47 (1 plan total)
+
+**Key accomplishments:**
+
+- BAA sector resolves to 66 track points at mile 12.9 with pipeline-assigned cover photo and 2-star color coding
+- Scoring engine counts 7 required sectors; SECTOR_SEGMENT_IDS includes "41159670" as first entry
+- All 13 vitest tests pass with updated 7-sector fixtures (makeGravelAthlete, DNF, tie scenarios)
+- Zero stale references — all "six"/"6 sector" strings updated across 4 source files
+
+**Stats:**
+
+- 15 files created/modified
+- +1,109 / -33 lines of code
+- 1 phase, 1 plan, 2 tasks
+- 1 day (2026-04-02)
+
+**Git range:** `e71ea34` → `b331a58`
+
+**What's next:** Awaiting Strava app review approval (REVIEW-03). Site production-ready for June 7, 2026 event. Future work gated on external review or post-event needs.
+
+---
+
 ## v8.0 Visual Polish + Content (Shipped: 2026-04-01)
 
 **Delivered:** Elevated visual texture and photo presentation — updated GPX route, 16 new photos (55→71), CSS columns masonry gallery, SVG lizard tessellation on sectors, tone card accents, canvas metaball topographic dividers, and three-layer animated background stack — Lighthouse 96 mobile, TBT 0ms, CLS 0.073.

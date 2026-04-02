@@ -118,12 +118,14 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 - TOPO-01: Canvas metaball topographic dividers between sections — v8.0
 - LIZD-01: Animated lizard background layer at z-index 9997 — v8.0
 - PERF-03: Lighthouse mobile 96, TBT 0ms, CLS 0.073 with full v8.0 stack — v8.0
+- SECT-01: BAA sector defined in annotation pipeline with start/end coordinates, 2-star rating, mile 12.9 — v9.0
+- SECT-02: BAA Strava segment 41159670 linked with distance and avg grade metadata — v9.0
+- SECT-03: BAA sector displayed as colored polyline on map with 2-star color coding — v9.0
+- SECT-04: BAA sector band on elevation profile with matching star color and label — v9.0
+- SECT-05: BAA sector card with pipeline-assigned cover photo, 2-star rating, Strava link — v9.0
+- SECT-06: BAA included in Gravel Champion scoring engine (6 -> 7 required sectors) — v9.0
 
 ### Active
-
-#### Current Milestone: v9.0 New Sector Addition
-
-**Goal:** Add BAA gravel sector (Strava segment 41159670, 2-star, mile 12.9) to the route — map, elevation profile, sector card, Strava metadata, and scoring engine.
 
 #### Pending External
 
@@ -151,7 +153,7 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ## Context
 
-**Shipped v8.0** with ~4,074 LOC across Astro/CSS/JS/TS source files, Netlify Functions, and build scripts. 82 plans shipped across 46 phases and 8 milestones. Visual texture stack complete — three animated overlays (grain, escher, lizard) with reduced-motion gates. Photo library expanded to 71 images in masonry gallery. Strava submission pipeline operational. Developer program review submitted 2026-03-31; awaiting approval (REVIEW-03 externally gated).
+**Shipped v9.0** with ~4,100 LOC across Astro/CSS/JS/TS source files, Netlify Functions, and build scripts. 83 plans shipped across 47 phases and 9 milestones. BAA gravel sector added as 7th sector across all 5 surfaces (map, elevation, cards, scoring, results). Visual texture stack complete — three animated overlays (grain, escher, lizard) with reduced-motion gates. Photo library at 71 images in masonry gallery. Strava submission pipeline operational. Developer program review submitted 2026-03-31; awaiting approval (REVIEW-03 externally gated).
 
 **Tech stack:** Astro 6, Tailwind v4, Leaflet 1.9.4, Chart.js (+ annotation plugin), PhotoSwipe, sharp (thumbnails), vitest (testing), Netlify Functions v1 (Strava OAuth/API)
 
@@ -159,7 +161,7 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 **Performance:** Lighthouse mobile Performance 96, LCP 2.48s, CLS 0.054, TBT 0ms. All Core Web Vitals green. All animations compositor-safe (transform/opacity only). Escher drift and Penrose spin animations gated behind prefers-reduced-motion.
 
-**v8.0 shipped:** Visual polish + content — updated GPX route (MKULTRA.gpx), 16 new photos (55→71), CSS columns masonry gallery, SVG lizard tessellation on sectors, tone card accents, canvas metaball topographic dividers, animated lizard background at z-index 9997. Lighthouse mobile 96, TBT 0ms, CLS 0.073. Previous: v7.0 shipped full Strava go-live.
+**v9.0 shipped:** BAA gravel sector (Strava segment 41159670, mile 12.9, 2-star) added as 7th sector across map, elevation profile, sector card, scoring engine, and results page. All "six"→"seven" content strings updated. 13 vitest tests green. Previous: v8.0 shipped visual polish + content (GPX update, 16 new photos, masonry gallery, lizard tessellation, metaball dividers).
 
 **Event Details:**
 - Date: June 7, 2026
@@ -236,4 +238,4 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | Three-layer z-index stack: 9997 < 9998 < 9999 < 10000 | Consistent ordering: lizard < escher < grain < nav | Good |
 
 ---
-*Last updated: 2026-04-02 after v9.0 milestone started*
+*Last updated: 2026-04-02 after v9.0 milestone*
