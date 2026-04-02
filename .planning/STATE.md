@@ -2,20 +2,20 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-31)
+See: .planning/PROJECT.md (updated 2026-04-01)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v8.0 Phase 46 — Lizard Background Animation
+**Current focus:** Planning next milestone
 
 ## Current Position
 
-Milestone: v8.0 Visual Polish + Content — COMPLETE
-Phase: 46 of 46 (Lizard Background Animation)
-Plan: 01 of 01 — complete
-Status: Phase complete — all 46 phases done
-Last activity: 2026-04-01 — Completed 46-01-PLAN.md — Lighthouse 96/100 mobile, TBT 0ms, CLS 0.073
+Milestone: v8.0 Visual Polish + Content — SHIPPED
+Phase: 46 of 46 (all phases complete)
+Plan: N/A
+Status: Ready to plan next milestone
+Last activity: 2026-04-01 — v8.0 milestone archived
 
-Progress: [██████████████████████████] 100% (82/82 total plans)
+Progress: [██████████████████████████] 100% (82/82 total plans across 8 milestones)
 
 ## Performance Metrics
 
@@ -36,23 +36,16 @@ Progress: [███████████████████████
 
 Decisions are logged in PROJECT.md Key Decisions table.
 
-- Phase 42: Route owner excluded 3 of 19 candidate photos — final count 71, not 74. All cover photos unchanged.
-- Phase 43: Original horizontal flex strip rejected at checkpoint; switched to CSS columns masonry grid. CLS prevention via aspect-ratio placeholders. PhotoSwipe lightbox preserved.
-- Phase 44: Raster Escher WebP rejected at checkpoint (quality too low on large screens) — replaced with SVG lizard tessellation (EscherLizards.astro) using codepen/lizards paths. Card accents use lsd-mind-control.webp (13KB, thematically consistent).
-- Phase 45: Original static concentric SVG circles with stroke-dashoffset replaced at checkpoint with animated canvas + SVG filter metaball approach (matching codepen/metaballs reference). 6 orbiting blobs produce emergent topographic contour rings.
-- Phase 46: mask-image linear-gradient added to LizardBackground.astro to hide lizard behind hero/Penrose section (too visually busy). Lighthouse 96/100 mobile with full v8.0 stack — TBT 0ms, CLS 0.073.
-
 ### Pending Todos
 
-- Card cover photo aspect ratios on non-accent cards need review (noted during phase 44 checkpoint)
+- Card cover photo aspect ratios on non-accent cards need review (noted during Phase 44 checkpoint)
 
 ### Blockers/Concerns
 
-- **[Active]** REVIEW-03 (app approved) is externally gated — submitted 2026-03-31, 7-10 business day minimum (community reports 1-4 weeks). If not approved by ~May 28, escalate to `developers@strava.com` and prepare manual result-collection contingency.
-- **[Resolved]** Phase 46 complete. v8.0 milestone fully delivered. All 46 phases done.
+- **[Active]** REVIEW-03 (Strava app approved) is externally gated — submitted 2026-03-31, 7-10 business day minimum. If not approved by ~May 28, escalate to `developers@strava.com` and prepare manual result-collection contingency.
 
 ## Session Continuity
 
 Last session: 2026-04-01
-Stopped at: Completed 46-01-PLAN.md — all phases done
+Stopped at: v8.0 milestone archived
 Resume file: None

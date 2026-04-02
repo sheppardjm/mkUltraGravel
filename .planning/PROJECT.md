@@ -111,16 +111,15 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 - REVIEW-01: Strava branding compliance (#FC5200, "View on Strava", "Powered by Strava") — v7.0
 - REVIEW-02: Strava developer program review submitted (2026-03-31) — v7.0
 
+- ROUTE-07: Updated GPX route (MKULTRA.gpx) with full pipeline re-run — v8.0
+- PHOTO-03: 16 new route photos processed through pipeline (3 excluded by owner, 55→71 total) — v8.0
+- GAL-01: CSS columns masonry gallery with natural aspect ratios — v8.0
+- TONE-01: SVG lizard tessellation on #sectors + tone accents on 3 cards — v8.0
+- TOPO-01: Canvas metaball topographic dividers between sections — v8.0
+- LIZD-01: Animated lizard background layer at z-index 9997 — v8.0
+- PERF-03: Lighthouse mobile 96, TBT 0ms, CLS 0.073 with full v8.0 stack — v8.0
+
 ### Active
-
-#### v8.0 Visual Polish + Content
-
-- [ ] VIS-16: Tone images integrated between sections and inside sector/KOM cards
-- [ ] VIS-17: Responsive lizard background animation (subtle, reduced-motion gated)
-- [ ] VIS-18: Horizontal masonry gallery for route photos
-- [ ] VIS-19: Hollow topographic meatball section dividers
-- [ ] PHOTO-03: 19 new route photos processed through pipeline with mile markers (55 → 74 total)
-- [ ] ROUTE-07: Updated GPX route (MKULTRA.gpx) with full pipeline re-run
 
 #### Pending External
 
@@ -148,9 +147,7 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ## Context
 
-**Shipped v7.0** with ~4,484 LOC across Astro/CSS/JS/TS source files, Netlify Functions, and build scripts. 76 plans shipped across 40 phases and 7 milestones. Strava submission pipeline fully operational — real athlete can OAuth in, submit an activity, and appear on leaderboard. Strava developer program review submitted 2026-03-31; awaiting approval (REVIEW-03 externally gated).
-
-**v8.0 in progress:** Visual polish + content update — tone images, animated lizard background, horizontal masonry gallery, topographic meatball dividers, 19 new route photos, updated GPX route. All visual additions target subtle intensity.
+**Shipped v8.0** with ~4,074 LOC across Astro/CSS/JS/TS source files, Netlify Functions, and build scripts. 82 plans shipped across 46 phases and 8 milestones. Visual texture stack complete — three animated overlays (grain, escher, lizard) with reduced-motion gates. Photo library expanded to 71 images in masonry gallery. Strava submission pipeline operational. Developer program review submitted 2026-03-31; awaiting approval (REVIEW-03 externally gated).
 
 **Tech stack:** Astro 6, Tailwind v4, Leaflet 1.9.4, Chart.js (+ annotation plugin), PhotoSwipe, sharp (thumbnails), vitest (testing), Netlify Functions v1 (Strava OAuth/API)
 
@@ -158,7 +155,7 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 **Performance:** Lighthouse mobile Performance 96, LCP 2.48s, CLS 0.054, TBT 0ms. All Core Web Vitals green. All animations compositor-safe (transform/opacity only). Escher drift and Penrose spin animations gated behind prefers-reduced-motion.
 
-**v7.0 shipped:** Full Strava go-live — environment configured, data pipeline verified, OAuth round-trip tested, webhook registered, branding compliance fixed (#FC5200), developer review submitted. Previous: v6.0 shipped starColors module, elevation labels, site nav header.
+**v8.0 shipped:** Visual polish + content — updated GPX route (MKULTRA.gpx), 16 new photos (55→71), CSS columns masonry gallery, SVG lizard tessellation on sectors, tone card accents, canvas metaball topographic dividers, animated lizard background at z-index 9997. Lighthouse mobile 96, TBT 0ms, CLS 0.073. Previous: v7.0 shipped full Strava go-live.
 
 **Event Details:**
 - Date: June 7, 2026
@@ -172,7 +169,7 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 - **Tech stack**: Astro static site + Netlify Functions for Strava OAuth/API
 - **External dependency**: BikeReg handles registration, site links out
-- **Assets**: GPX file (100mi route) and 55 route photos in repo (1 AVIF, rest JPG); photos use manual mile-marker positioning (no EXIF GPS)
+- **Assets**: GPX file (100mi route) and 71 route photos in repo (1 AVIF, rest JPG); photos use manual mile-marker positioning (no EXIF GPS)
 - **Timeline**: Site needs to be live well before June 7, 2026
 
 ## Key Decisions
@@ -227,5 +224,12 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | Exact #FC5200 for Strava branding (not oklch) | Strava brand guidelines require exact hex color | Good |
 | sr-only "View on Strava" spans | Satisfies brand guideline + accessibility without visual change | Good |
 
+| CSS columns masonry over JS library | Preserves TBT 0ms; no new runtime dependency | Good |
+| SVG pattern tessellation over raster WebP | Resolution-independent on all screen sizes | Good |
+| Canvas metaball + SVG filter over stroke-dashoffset | Matches codepen reference; more organic visual | Good |
+| Lizard opacity 0.04 (below grain 0.06, escher 0.05) | Subliminal layer — shouldn't be immediately obvious | Good |
+| mask-image gate hiding lizard from hero section | Prevents visual competition with Penrose + Escher in first viewport | Good |
+| Three-layer z-index stack: 9997 < 9998 < 9999 < 10000 | Consistent ordering: lizard < escher < grain < nav | Good |
+
 ---
-*Last updated: 2026-03-31 after v8.0 milestone start*
+*Last updated: 2026-04-01 after v8.0 milestone complete*

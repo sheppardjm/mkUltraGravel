@@ -1,5 +1,33 @@
 # Project Milestones: MK Ultra Gravel
 
+## v8.0 Visual Polish + Content (Shipped: 2026-04-01)
+
+**Delivered:** Elevated visual texture and photo presentation — updated GPX route, 16 new photos (55→71), CSS columns masonry gallery, SVG lizard tessellation on sectors, tone card accents, canvas metaball topographic dividers, and three-layer animated background stack — Lighthouse 96 mobile, TBT 0ms, CLS 0.073.
+
+**Phases completed:** 41-46 (6 plans total)
+
+**Key accomplishments:**
+
+- Replaced GPX route source (MKULTRA.gpx) with clean pipeline re-run — 100.62mi, 2581 trackpoints, 3365ft gain
+- Expanded photo library from 55 to 71 with owner-curated mile markers spanning mi 13.8–95.4
+- Built CSS columns masonry gallery — natural aspect ratios, overflow scroll, CLS-safe placeholders
+- Added SVG lizard tessellation on #sectors + tone accents on 3 cards (2 sector + 1 KOM)
+- Created canvas metaball topographic dividers between sections with IntersectionObserver animation
+- Completed three-layer texture stack (lizard 9997, escher 9998, grain 9999) — all reduced-motion gated
+
+**Stats:**
+
+- 24 files created/modified
+- ~4,074 lines of code total (Astro/CSS/JS/TS)
+- 6 phases, 6 plans, ~18 tasks
+- 2 days (2026-03-31 → 2026-04-01)
+
+**Git range:** `fd0d117` → `1226caf`
+
+**What's next:** Awaiting Strava app review approval (REVIEW-03, submitted 2026-03-31). Site is production-ready for June 7, 2026 event. Future work gated on external review or post-event needs.
+
+---
+
 ## v7.0 Strava Go-Live (Shipped: 2026-03-31)
 
 **Delivered:** Full Strava pipeline operational — environment configured, data pipeline verified end-to-end, OAuth round-trip tested on production HTTPS with real Strava account, webhook subscription registered with deauth deletion verified, branding compliance fixed, and developer program review submitted to start the approval clock.
