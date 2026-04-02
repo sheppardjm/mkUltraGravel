@@ -1,5 +1,5 @@
 /**
- * Photo manifest - curated list of 71 route photos with verified mile markers.
+ * Photo manifest - curated list of 73 route photos with verified mile markers.
  * Used by scripts/match-photos.js to produce public/data/photos.json.
  * All mile markers verified by route owner.
  *
@@ -9,6 +9,9 @@
  *   - Excluded: near-duplicate shots (kept best of each cluster)
  */
 const photoManifest = [
+  // -- Mi 10: early route, pine forest --
+  { filename: 'vuDqMrdPXVpE5EqIcUGGFDuCJElTSlxBs5j_Tn6eWt0-1536x2048.jpg', mi: 10.4 },
+
   // -- Mi 13-14: early route, pre-Laughing Whitefish --
   { filename: 'HPBlbKhBz0-5_T0sbj2ih_5vs1nQMxLG63JgbSmpYcc-1536x2048 (1).jpg', mi: 13.8 },
 
@@ -84,6 +87,7 @@ const photoManifest = [
   { filename: 'bFuy7XibzBZGM0Xxx92_JYluGnZROmghJg7o_MgqHCU-1536x2048.jpg', mi: 56.5 },
 
   // -- Mi 60-65: C4 sector, roughest gravel, water crossings --
+  { filename: 'QxKpirdmeCXIoWhflUVbxsUXRoF9E9D6lDG5xMr6fFY-1536x2048.jpg', mi: 60.0 },
   { filename: 'lDc_WSD8-6oaxGXmegCxWJMRguK9jSqULQiuN2zZy6U-1536x2048.jpg', mi: 60.0 },
   { filename: '2hX2RzHWb2HBzkd1bc68hqeTn0zJuV_pMnXDyFDKZOM-1536x2048.jpg', mi: 60.1 },
   { filename: '5lckZGXLDgmouH4B0ONSzjpwouFMJ957uZD31-FuqJg-1536x2048.jpg', mi: 63.1 },
