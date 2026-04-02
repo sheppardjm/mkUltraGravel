@@ -41,17 +41,17 @@ Requirements for visual polish + content update milestone.
 
 ### Decorative — Lizard Background
 
-- [ ] **LIZD-01**: LizardBackground.astro component with repeating CSS background tile
-- [ ] **LIZD-02**: Z-index 9997 (below Escher at 9998, below grain at 9999, below nav at 10000)
-- [ ] **LIZD-03**: Subtle opacity calibrated against existing grain + Escher stack
-- [ ] **LIZD-04**: Compositor-safe animation (transform/opacity only), TBT 0ms maintained
-- [ ] **LIZD-05**: Reduced-motion gate (static tile, no animation)
+- [x] **LIZD-01**: LizardBackground.astro component with repeating CSS background tile
+- [x] **LIZD-02**: Z-index 9997 (below Escher at 9998, below grain at 9999, below nav at 10000)
+- [x] **LIZD-03**: Subtle opacity calibrated against existing grain + Escher stack
+- [x] **LIZD-04**: Compositor-safe animation (transform/opacity only), TBT 0ms maintained
+- [x] **LIZD-05**: Reduced-motion gate (static tile, no animation)
 
 ### Performance
 
-- [ ] **PERF-03**: Lighthouse mobile Performance score ≥ 90 after all additions
-- [ ] **PERF-04**: TBT remains 0ms (no JS animation libraries)
-- [ ] **PERF-05**: CLS ≤ 0.1 (gallery images sized, no layout shift)
+- [x] **PERF-03**: Lighthouse mobile Performance score ≥ 90 after all additions
+- [x] **PERF-04**: TBT remains 0ms (no JS animation libraries)
+- [x] **PERF-05**: CLS ≤ 0.1 (gallery images sized, no layout shift)
 
 ## Future Requirements
 
@@ -96,14 +96,14 @@ Deferred to post-event or future milestones.
 | TOPO-02 | Phase 45 | Complete |
 | TOPO-03 | Phase 45 | Complete |
 | TOPO-04 | Phase 45 | Complete |
-| LIZD-01 | Phase 46 | Pending |
-| LIZD-02 | Phase 46 | Pending |
-| LIZD-03 | Phase 46 | Pending |
-| LIZD-04 | Phase 46 | Pending |
-| LIZD-05 | Phase 46 | Pending |
-| PERF-03 | Phase 46 | Pending |
-| PERF-04 | Phase 46 | Pending |
-| PERF-05 | Phase 46 | Pending |
+| LIZD-01 | Phase 46 | Complete |
+| LIZD-02 | Phase 46 | Complete |
+| LIZD-03 | Phase 46 | Complete |
+| LIZD-04 | Phase 46 | Complete |
+| LIZD-05 | Phase 46 | Complete |
+| PERF-03 | Phase 46 | Complete |
+| PERF-04 | Phase 46 | Complete |
+| PERF-05 | Phase 46 | Complete |
 
 **Coverage:**
 - v8.0 requirements: 25 total

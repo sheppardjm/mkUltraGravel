@@ -20,7 +20,7 @@ Progress: [███████████████████████
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 81
+- Total plans completed: 82
 - v1.0: 30 plans across 10 phases (2 days)
 - v2.0: 15 plans across 6 phases (3 days)
 - v3.0: 6 plans across 5 phases (2 days)
@@ -28,7 +28,7 @@ Progress: [███████████████████████
 - v5.0: 10 plans across 6 phases (4 days)
 - v6.0: 3 plans across 3 phases (1 day)
 - v7.0: 5 plans across 5 phases (1 day)
-- v8.0: 5 plans across 5 phases (1 day, in progress)
+- v8.0: 6 plans across 6 phases (2 days)
 
 ## Accumulated Context
 

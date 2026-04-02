@@ -9,7 +9,7 @@
 - ✅ **v5.0 Strava Integration + Results** - Phases 27-32 (shipped 2026-03-30)
 - ✅ **v6.0 UI Polish + Dev Tools** - Phases 33-35 (shipped 2026-03-30)
 - ✅ **v7.0 Strava Go-Live** - Phases 36-40 (shipped 2026-03-31)
-- 🚧 **v8.0 Visual Polish + Content** - Phases 41-46 (in progress)
+- ✅ **v8.0 Visual Polish + Content** - Phases 41-46 (shipped 2026-04-01)
 
 ---
 
@@ -124,7 +124,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 46-01-PLAN.md — Build LizardBackground.astro and run final performance audit
+- [x] 46-01-PLAN.md — Build LizardBackground.astro and run final performance audit
 
 ---
 
@@ -144,4 +144,4 @@ Plans:
 | 43. Horizontal Masonry Gallery | v8.0 | 1/1 | Complete | 2026-03-31 |
 | 44. Tone Image Integration | v8.0 | 1/1 | Complete | 2026-03-31 |
 | 45. Topographic Meatball Dividers | v8.0 | 1/1 | Complete | 2026-03-31 |
-| 46. Lizard Background Animation | v8.0 | 0/1 | Not started | - |
+| 46. Lizard Background Animation | v8.0 | 1/1 | Complete | 2026-04-01 |
