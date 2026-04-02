@@ -20,6 +20,7 @@ const hasResults = athletes.length > 0;
 // ─── Segment name lookups ─────────────────────────────────────────────────────
 
 const SECTOR_NAMES: Record<string, string> = {
+  "41159670": "BAA",
   "24479292": "Sandstrom",
   "24479426": "Akkala Rd",
   "24479467": "Haavisto",
@@ -173,7 +174,7 @@ const SEG_DISPLAY_MAX = 10;
                           <div>
                             <span style="color: var(--color-accent-white); font-family: var(--font-mono);">{entry.name}</span>
                             {entry.completedSectors < SECTOR_SEGMENT_IDS.length && (
-                              <span class="ml-2 text-xs" style="color: var(--color-accent-red); font-family: var(--font-mono);">[DNF — {entry.completedSectors}/6 sectors]</span>
+                              <span class="ml-2 text-xs" style="color: var(--color-accent-red); font-family: var(--font-mono);">[DNF — {entry.completedSectors}/7 sectors]</span>
                             )}
                           </div>
                           <details class="mt-2">
@@ -237,7 +238,7 @@ const SEG_DISPLAY_MAX = 10;
                           <div>
                             <span style="color: var(--color-accent-white); font-family: var(--font-mono);">{entry.name}</span>
                             {entry.completedSectors < SECTOR_SEGMENT_IDS.length && (
-                              <span class="ml-2 text-xs" style="color: var(--color-accent-red); font-family: var(--font-mono);">[DNF — {entry.completedSectors}/6 sectors]</span>
+                              <span class="ml-2 text-xs" style="color: var(--color-accent-red); font-family: var(--font-mono);">[DNF — {entry.completedSectors}/7 sectors]</span>
                             )}
                           </div>
                           <details class="mt-2">
@@ -301,7 +302,7 @@ const SEG_DISPLAY_MAX = 10;
                           <div>
                             <span style="color: var(--color-accent-white); font-family: var(--font-mono);">{entry.name}</span>
                             {entry.completedSectors < SECTOR_SEGMENT_IDS.length && (
-                              <span class="ml-2 text-xs" style="color: var(--color-accent-red); font-family: var(--font-mono);">[DNF — {entry.completedSectors}/6 sectors]</span>
+                              <span class="ml-2 text-xs" style="color: var(--color-accent-red); font-family: var(--font-mono);">[DNF — {entry.completedSectors}/7 sectors]</span>
                             )}
                           </div>
                           <details class="mt-2">

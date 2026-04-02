@@ -9,8 +9,9 @@
 
 // ─── Segment ID Constants ─────────────────────────────────────────────────────
 
-/** The 6 gravel sector segment IDs used for Gravel Champion ranking. */
+/** The 7 gravel sector segment IDs used for Gravel Champion ranking. */
 export const SECTOR_SEGMENT_IDS = [
+  "41159670", // BAA
   "24479292", // Sandstrom
   "24479426", // Akkala Rd
   "24479467", // Haavisto
@@ -63,7 +64,7 @@ function getSegmentTime(athlete, segmentId) {
  * @returns {{ M: Array, F: Array, NB: Array }} — Ranked arrays per gender
  *
  * Ranking rules:
- *   1. completedSectors (descending) — athletes who finished all 6 sectors rank first
+ *   1. completedSectors (descending) — athletes who finished all 7 sectors rank first
  *   2. totalTime (ascending) — fastest cumulative time ranks first
  *
  * Output entry shape:

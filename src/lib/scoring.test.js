@@ -8,15 +8,15 @@ import {
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
 
-const SECTOR_IDS = ["24479292", "24479426", "24479467", "24479496", "34573011", "6809754"];
+const SECTOR_IDS = ["41159670", "24479292", "24479426", "24479467", "24479496", "34573011", "6809754"];
 const KOM_IDS    = ["24479270", "41126651", "16438243"];
 
-/** Build a complete athlete with all 6 sector times summing to `totalTime`.
+/** Build a complete athlete with all 7 sector times summing to `totalTime`.
  *  Times are spread evenly across sectors. */
 function makeGravelAthlete(id, name, gender, totalTime, url = `https://strava.com/activities/${id}`) {
-  const perSector = Math.floor(totalTime / 6);
-  const remainder = totalTime - perSector * 5;
-  const times = [perSector, perSector, perSector, perSector, perSector, remainder];
+  const perSector = Math.floor(totalTime / 7);
+  const remainder = totalTime - perSector * 6;
+  const times = [perSector, perSector, perSector, perSector, perSector, perSector, remainder];
   const segments = {};
   SECTOR_IDS.forEach((sid, i) => { segments[sid] = { elapsed_time: times[i] }; });
   return { athleteId: id, name, gender, activityUrl: url, segments };
@@ -55,7 +55,7 @@ describe('computeGravelChampion', () => {
     expect(first).toHaveProperty('totalTime');
     expect(first).toHaveProperty('completedSectors');
     expect(first).toHaveProperty('sectorTimes');
-    expect(first.completedSectors).toBe(6);
+    expect(first.completedSectors).toBe(7);
     expect(first.totalTime).toBe(7200);
   });
 
@@ -88,7 +88,7 @@ describe('computeGravelChampion', () => {
     const complete1 = makeGravelAthlete('c1', 'Complete One',   'M', 7000);
     const complete2 = makeGravelAthlete('c2', 'Complete Two',   'M', 8000);
 
-    // DNF athlete has only 5 of 6 sectors — partial sum is faster than complete2
+    // DNF athlete has only 6 of 7 sectors — partial sum is faster than complete2
     const dnf = makeGravelAthlete('d1', 'DNF Dan', 'M', 7500);
     delete dnf.segments["6809754"]; // remove one sector
 
@@ -96,9 +96,9 @@ describe('computeGravelChampion', () => {
     const result = computeGravelChampion(athletes);
 
     expect(result.M).toHaveLength(3);
-    // DNF athlete must be last (5 sectors < 6 sectors)
+    // DNF athlete must be last (6 sectors < 7 sectors)
     expect(result.M[2].athleteId).toBe('d1');
-    expect(result.M[2].completedSectors).toBe(5);
+    expect(result.M[2].completedSectors).toBe(6);
     // Complete athletes ranked by time
     expect(result.M[0].athleteId).toBe('c1');
     expect(result.M[1].athleteId).toBe('c2');
@@ -307,8 +307,8 @@ describe('computeKomChampion', () => {
 // ─── Constants sanity check ───────────────────────────────────────────────────
 
 describe('exported constants', () => {
-  it('SECTOR_SEGMENT_IDS has 6 entries', () => {
-    expect(SECTOR_SEGMENT_IDS).toHaveLength(6);
+  it('SECTOR_SEGMENT_IDS has 7 entries', () => {
+    expect(SECTOR_SEGMENT_IDS).toHaveLength(7);
   });
 
   it('KOM_SEGMENT_IDS has 3 entries', () => {
@@ -316,6 +316,7 @@ describe('exported constants', () => {
   });
 
   it('SECTOR_SEGMENT_IDS contains expected IDs', () => {
+    expect(SECTOR_SEGMENT_IDS).toContain("41159670");
     expect(SECTOR_SEGMENT_IDS).toContain("24479292");
     expect(SECTOR_SEGMENT_IDS).toContain("24479426");
     expect(SECTOR_SEGMENT_IDS).toContain("24479467");
