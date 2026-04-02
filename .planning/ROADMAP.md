@@ -56,10 +56,10 @@ See: `.planning/milestones/v8.0-ROADMAP.md`
   2. BAA appears as a labeled band on the elevation profile with matching 2-star color, sector name, and star rating
   3. BAA sector card renders with pipeline-assigned cover photo, 2-star rating display, and clickable Strava link showing segment distance and average grade
   4. Gravel Champion scoring engine counts 7 required sectors (up from 6) and BAA segment effort contributes to cumulative time scoring
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 47-01: TBD
+- [ ] 47-01-PLAN.md — Add BAA sector to data pipeline, scoring engine, tests, results page, and content components
 
 ---
 
