@@ -10,7 +10,7 @@
 - ✅ **v6.0 UI Polish + Dev Tools** - Phases 33-35 (shipped 2026-03-30)
 - ✅ **v7.0 Strava Go-Live** - Phases 36-40 (shipped 2026-03-31)
 - ✅ **v8.0 Visual Polish + Content** - Phases 41-46 (shipped 2026-04-01)
-- 🚧 **v9.0 New Sector Addition** - Phase 47 (in progress)
+- ✅ **v9.0 New Sector Addition** - Phase 47 (shipped 2026-04-02)
 
 ---
 
@@ -43,7 +43,7 @@ See: `.planning/milestones/v8.0-ROADMAP.md`
 
 ---
 
-### 🚧 v9.0 New Sector Addition (In Progress)
+### ✅ v9.0 New Sector Addition (Shipped 2026-04-02)
 
 **Milestone Goal:** Add BAA gravel sector (Strava segment 41159670, 2-star, mile 12.9) to every surface where existing sectors appear -- map, elevation profile, sector card, and scoring engine.
 
@@ -59,7 +59,7 @@ See: `.planning/milestones/v8.0-ROADMAP.md`
 **Plans**: 1 plan
 
 Plans:
-- [ ] 47-01-PLAN.md — Add BAA sector to data pipeline, scoring engine, tests, results page, and content components
+- [x] 47-01-PLAN.md — Add BAA sector to data pipeline, scoring engine, tests, results page, and content components — completed 2026-04-02
 
 ---
 
@@ -75,4 +75,4 @@ Plans:
 | 33-35. UI Polish + Dev Tools | v6.0 | 3/3 | Complete | 2026-03-30 |
 | 36-40. Strava Go-Live | v7.0 | 5/5 | Complete | 2026-03-31 |
 | 41-46. Visual Polish + Content | v8.0 | 6/6 | Complete | 2026-04-01 |
-| 47. BAA Sector Integration | v9.0 | 0/1 | Not started | - |
+| 47. BAA Sector Integration | v9.0 | 1/1 | Complete | 2026-04-02 |

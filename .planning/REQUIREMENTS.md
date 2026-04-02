@@ -9,21 +9,21 @@ Requirements for adding BAA gravel sector to the site.
 
 ### Sector Data
 
-- [ ] **SECT-01**: BAA sector defined in annotation pipeline with start/end coordinates, 2-star rating, and mile 12.9 start marker
-- [ ] **SECT-02**: BAA Strava segment 41159670 linked with distance and avg grade metadata
+- [x] **SECT-01**: BAA sector defined in annotation pipeline with start/end coordinates, 2-star rating, and mile 12.9 start marker
+- [x] **SECT-02**: BAA Strava segment 41159670 linked with distance and avg grade metadata
 
 ### Map & Elevation
 
-- [ ] **SECT-03**: BAA sector displayed as colored polyline on map with 2-star color coding
-- [ ] **SECT-04**: BAA sector band on elevation profile with matching star color and label
+- [x] **SECT-03**: BAA sector displayed as colored polyline on map with 2-star color coding
+- [x] **SECT-04**: BAA sector band on elevation profile with matching star color and label
 
 ### Sector Card
 
-- [ ] **SECT-05**: BAA sector card with pipeline-assigned cover photo, 2-star rating, and Strava link
+- [x] **SECT-05**: BAA sector card with pipeline-assigned cover photo, 2-star rating, and Strava link
 
 ### Scoring
 
-- [ ] **SECT-06**: BAA included in Gravel Champion scoring engine (6 -> 7 required sectors)
+- [x] **SECT-06**: BAA included in Gravel Champion scoring engine (6 -> 7 required sectors)
 
 ## Future Requirements
 
@@ -41,12 +41,12 @@ None — single-feature milestone.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SECT-01 | Phase 47 | Pending |
-| SECT-02 | Phase 47 | Pending |
-| SECT-03 | Phase 47 | Pending |
-| SECT-04 | Phase 47 | Pending |
-| SECT-05 | Phase 47 | Pending |
-| SECT-06 | Phase 47 | Pending |
+| SECT-01 | Phase 47 | Complete |
+| SECT-02 | Phase 47 | Complete |
+| SECT-03 | Phase 47 | Complete |
+| SECT-04 | Phase 47 | Complete |
+| SECT-05 | Phase 47 | Complete |
+| SECT-06 | Phase 47 | Complete |
 
 **Coverage:**
 - v9.0 requirements: 6 total
