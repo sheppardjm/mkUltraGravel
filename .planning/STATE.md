@@ -9,13 +9,13 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 
 ## Current Position
 
-Milestone: v8.0 Visual Polish + Content
+Milestone: v8.0 Visual Polish + Content — COMPLETE
 Phase: 46 of 46 (Lizard Background Animation)
-Plan: 01 of 01 — paused at checkpoint (Task 2: human-verify)
-Status: In progress — awaiting visual calibration approval
-Last activity: 2026-04-02 — Task 1 complete, checkpoint reached (visual verify lizard overlay opacity/animation)
+Plan: 01 of 01 — complete
+Status: Phase complete — all 46 phases done
+Last activity: 2026-04-01 — Completed 46-01-PLAN.md — Lighthouse 96/100 mobile, TBT 0ms, CLS 0.073
 
-Progress: [█████████████████████████░] 87% (81.5/~82 total plans)
+Progress: [██████████████████████████] 100% (82/82 total plans)
 
 ## Performance Metrics
 
@@ -40,6 +40,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - Phase 43: Original horizontal flex strip rejected at checkpoint; switched to CSS columns masonry grid. CLS prevention via aspect-ratio placeholders. PhotoSwipe lightbox preserved.
 - Phase 44: Raster Escher WebP rejected at checkpoint (quality too low on large screens) — replaced with SVG lizard tessellation (EscherLizards.astro) using codepen/lizards paths. Card accents use lsd-mind-control.webp (13KB, thematically consistent).
 - Phase 45: Original static concentric SVG circles with stroke-dashoffset replaced at checkpoint with animated canvas + SVG filter metaball approach (matching codepen/metaballs reference). 6 orbiting blobs produce emergent topographic contour rings.
+- Phase 46: mask-image linear-gradient added to LizardBackground.astro to hide lizard behind hero/Penrose section (too visually busy). Lighthouse 96/100 mobile with full v8.0 stack — TBT 0ms, CLS 0.073.
 
 ### Pending Todos
 
@@ -48,10 +49,10 @@ Decisions are logged in PROJECT.md Key Decisions table.
 ### Blockers/Concerns
 
 - **[Active]** REVIEW-03 (app approved) is externally gated — submitted 2026-03-31, 7-10 business day minimum (community reports 1-4 weeks). If not approved by ~May 28, escalate to `developers@strava.com` and prepare manual result-collection contingency.
-- **[Phase 46]** EscherLizards.astro component from phase 44 available for reuse/extension. Lizard SVG paths in codepen/lizards/index.html. Fixed vs. section-scoped placement requires visual calibration.
+- **[Resolved]** Phase 46 complete. v8.0 milestone fully delivered. All 46 phases done.
 
 ## Session Continuity
 
-Last session: 2026-04-02
-Stopped at: Phase 46 Plan 01 — Task 2 checkpoint:human-verify (lizard opacity/animation visual calibration)
+Last session: 2026-04-01
+Stopped at: Completed 46-01-PLAN.md — all phases done
 Resume file: None
