@@ -116,6 +116,7 @@ function findPointsForSegment(routeData, startMi, lengthMi) {
 // ---------------------------------------------------------------------------
 
 const sectors = [
+  { name: "BAA",               startMi: 12.9,  lengthMi: 2.53, stars: 2, stravaSegmentId: 41159670 },
   { name: "Sandstrom",         startMi: 23.4,  lengthMi: 5.89, stars: 3, stravaSegmentId: 24479292 },
   { name: "Akkala Rd",         startMi: 39.5,  lengthMi: 1.42, stars: 3, stravaSegmentId: 24479426 },
   { name: "Haavisto",          startMi: 43.0,  lengthMi: 1.38, stars: 4, stravaSegmentId: 24479467 },
