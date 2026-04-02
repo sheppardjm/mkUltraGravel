@@ -18,5 +18,12 @@
     background-repeat: repeat;
     background-size: 200px 200px;
     will-change: transform;
+    /* Mask the lizard out of the hero/Penrose section (first viewport height).
+       linear-gradient on a fixed element uses viewport coords, so:
+       - transparent from 0 → 100vh  (hero area — too busy with Penrose + Escher)
+       - fades to opaque 100vh → 110vh (gentle transition at section boundary)
+       This is paint-free — mask-image doesn't trigger layout or composite layers. */
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent 100vh, black 110vh);
+    mask-image: linear-gradient(to bottom, transparent 0, transparent 100vh, black 110vh);
   }
 </style>
