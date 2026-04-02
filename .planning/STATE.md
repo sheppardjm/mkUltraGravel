@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 
 Milestone: v8.0 Visual Polish + Content
 Phase: 46 of 46 (Lizard Background Animation)
-Plan: —
-Status: Ready to plan
-Last activity: 2026-03-31 — Phase 45 complete and verified (Topographic Meatball Dividers)
+Plan: 01 of 01 — paused at checkpoint (Task 2: human-verify)
+Status: In progress — awaiting visual calibration approval
+Last activity: 2026-04-02 — Task 1 complete, checkpoint reached (visual verify lizard overlay opacity/animation)
 
-Progress: [█████████████████████████░] 86% (81/~82 total plans)
+Progress: [█████████████████████████░] 87% (81.5/~82 total plans)
 
 ## Performance Metrics
 
@@ -52,6 +52,6 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-03-31
-Stopped at: Phase 45 complete and verified — Phase 46 ready to plan
+Last session: 2026-04-02
+Stopped at: Phase 46 Plan 01 — Task 2 checkpoint:human-verify (lizard opacity/animation visual calibration)
 Resume file: None
