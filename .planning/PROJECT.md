@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A website for MK Ultra Gravel — a 100-mile gravel cycling event through Marquette County, Michigan on June 7, 2026. Named after the CIA's infamous LSD experiments, the ride features rowdy, technical gravel sectors rated Paris-Roubaix style (1-5 stars) with timed Grinduro-style sectors and KOM/QOM segments. The site showcases the route with an interactive map synced to an elevation profile, 55 geo-located photos with thumbnail markers and lightbox, photo-rich sector and KOM cards, a Grinduro format explainer, a full gallery, brutalist animations with Penrose triangle hero and Escher tessellation background, and event details — driving registration through BikeReg.
+A website for MK Ultra Gravel — a 100-mile gravel cycling event through Marquette County, Michigan on June 7, 2026. Named after the CIA's infamous LSD experiments, the ride features rowdy, technical gravel sectors rated Paris-Roubaix style (1-5 stars) with timed Grinduro-style sectors and KOM/QOM segments. The site showcases the route with an interactive map synced to an elevation profile, 71 geo-located photos with thumbnail markers and lightbox, photo-rich sector and KOM cards, a Grinduro format explainer, a full gallery, brutalist animations with Penrose triangle hero and Escher tessellation background, and event details — driving registration through BikeReg.
 
 Live at: https://mkultragravel.netlify.app/
 
@@ -121,6 +121,10 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ### Active
 
+#### Current Milestone: v9.0 New Sector Addition
+
+**Goal:** Add BAA gravel sector (Strava segment 41159670, 2-star, mile 12.9) to the route — map, elevation profile, sector card, Strava metadata, and scoring engine.
+
 #### Pending External
 
 - REVIEW-03: Strava app approved and 1-athlete limit lifted (submitted 2026-03-31, awaiting review — 7-10 business days)
@@ -232,4 +236,4 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | Three-layer z-index stack: 9997 < 9998 < 9999 < 10000 | Consistent ordering: lizard < escher < grain < nav | Good |
 
 ---
-*Last updated: 2026-04-01 after v8.0 milestone complete*
+*Last updated: 2026-04-02 after v9.0 milestone started*
