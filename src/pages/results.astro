@@ -1,0 +1,49 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="Results — MK Ultra Gravel"
+  description="MK Ultra Gravel results and leaderboards are hosted on ironpineomnium.com."
+>
+  <main>
+    <section class="relative min-h-screen flex items-center justify-center px-4 overflow-hidden">
+      <img
+        src="/tone/Mkultra-lsd-doc.webp"
+        alt=""
+        class="tone-image inset-0 w-full h-full object-cover"
+        loading="eager"
+      />
+      <div class="relative z-10 text-center max-w-2xl">
+        <p class="stamp mb-6">RESULTS</p>
+        <h1 class="font-display text-4xl md:text-6xl tracking-tight mb-6">
+          Leaderboards Relocated
+        </h1>
+        <div class="classified-border p-8 mb-8">
+          <p class="text-text-muted text-lg font-mono mb-2">
+            MK Ultra Gravel results and leaderboards are now hosted on
+          </p>
+          <p class="text-accent-white text-xl font-mono mb-6">
+            Iron &amp; Pine Omnium
+          </p>
+          <p class="text-text-muted text-sm font-mono">
+            Sector times, KOM segments, and full results for all editions of the race.
+          </p>
+        </div>
+        <a
+          href="https://ironpineomnium.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-block bg-accent-green text-bg-base font-bold uppercase tracking-widest
+                 px-8 py-4 text-lg hover:opacity-90 transition-opacity
+                 active:translate-y-px active:scale-[0.98] motion-reduce:active:transform-none"
+        >
+          View Leaderboards
+        </a>
+        <p class="text-text-muted text-xs font-mono mt-6">
+          ironpineomnium.com
+        </p>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
