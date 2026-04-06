@@ -33,15 +33,15 @@ None — final pre-event polish milestone.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SCROLL-01 | — | Pending |
-| SCROLL-02 | — | Pending |
-| SCROLL-03 | — | Pending |
-| CARD-01 | — | Pending |
+| SCROLL-01 | Phase 50 | Pending |
+| SCROLL-02 | Phase 50 | Pending |
+| SCROLL-03 | Phase 50 | Pending |
+| CARD-01 | Phase 50 | Pending |
 
 **Coverage:**
 - v10.1 requirements: 4 total
-- Mapped to phases: 0
-- Unmapped: 4
+- Mapped to phases: 4
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-06*
