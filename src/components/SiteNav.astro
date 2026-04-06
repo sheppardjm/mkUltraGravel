@@ -5,13 +5,9 @@ const pathname = rawPath === "/" ? "/" : rawPath.replace(/\/$/, "");
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/results", label: "Results" },
-  { href: "/submit", label: "Submit" },
 ];
 
 function isActive(href: string): boolean {
-  if (href === "/submit") {
-    return pathname === "/submit" || pathname.startsWith("/submit-confirm");
-  }
   return pathname === href;
 }
 ---
