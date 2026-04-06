@@ -52,6 +52,8 @@
     font-family: var(--font-mono);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    scrollbar-color: var(--color-accent-green) var(--color-bg-surface);
+    scrollbar-width: thin;
   }
 
   body {
@@ -261,6 +263,26 @@
     .card-hover:hover {
       box-shadow: 4px 4px 0 0 transparent;
     }
+  }
+}
+
+/* WebKit scrollbar fallback — Chrome <121, macOS Safari <18 */
+@supports selector(::-webkit-scrollbar) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-bg-surface);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-accent-green);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-accent-white);
+  }
+  ::-webkit-scrollbar-corner {
+    background: var(--color-bg-base);
   }
 }
 
