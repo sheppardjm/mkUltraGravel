@@ -34,7 +34,9 @@
   3. All other scrollable containers use the same scrollbar theme
   4. Gravel sector card images on screens >1280px display with proportional height (not fixed 180px clipping)
   5. Card image changes do not break mobile layout (375px+)
-**Plans**: TBD (estimated 1 plan)
+**Plans**: 1 plan
+Plans:
+- [ ] 50-01-PLAN.md — Dark scrollbar theme + gravel card aspect ratio fix
 
 ## Progress
 
@@ -46,4 +48,4 @@
 
 ---
 *Roadmap created: 2026-04-06*
-*Last updated: 2026-04-06 after initial creation*
+*Last updated: 2026-04-06 after Phase 50 planning*
