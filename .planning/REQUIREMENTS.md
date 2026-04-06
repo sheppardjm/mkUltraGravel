@@ -9,12 +9,12 @@ Requirements for decoupling Strava submission/scoring/results from MK Ultra. Lea
 
 ### Removal
 
-- [ ] **REM-01**: Delete 4 Netlify Functions — strava-auth, strava-callback, submit-result, strava-webhook
-- [ ] **REM-02**: Delete /submit page and /submit-confirm page
-- [ ] **REM-03**: Delete scoring engine (scoring.js) and test suite (scoring.test.js)
-- [ ] **REM-04**: Delete ScoringExplainer component and its import from index.astro
-- [ ] **REM-05**: Delete validate-results.mjs script
-- [ ] **REM-06**: Delete results athlete data (public/data/results/)
+- [x] **REM-01**: Delete 4 Netlify Functions — strava-auth, strava-callback, submit-result, strava-webhook
+- [x] **REM-02**: Delete /submit page and /submit-confirm page
+- [x] **REM-03**: Delete scoring engine (scoring.js) and test suite (scoring.test.js)
+- [x] **REM-04**: Delete ScoringExplainer component and its import from index.astro
+- [x] **REM-05**: Delete validate-results.mjs script
+- [x] **REM-06**: Delete results athlete data (public/data/results/)
 
 ### Replacement
 
@@ -29,7 +29,7 @@ Requirements for decoupling Strava submission/scoring/results from MK Ultra. Lea
 
 ### Cleanup
 
-- [ ] **CLN-01**: Remove KOM/QOM time display from KomSegments.astro (data source removed)
+- [x] **CLN-01**: Remove KOM/QOM time display from KomSegments.astro (data source removed)
 
 ## Future Requirements
 
@@ -48,18 +48,18 @@ None — single-focus subtraction milestone.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| REM-01 | Phase 48 | Pending |
-| REM-02 | Phase 48 | Pending |
-| REM-03 | Phase 48 | Pending |
-| REM-04 | Phase 48 | Pending |
-| REM-05 | Phase 48 | Pending |
-| REM-06 | Phase 48 | Pending |
+| REM-01 | Phase 48 | Complete |
+| REM-02 | Phase 48 | Complete |
+| REM-03 | Phase 48 | Complete |
+| REM-04 | Phase 48 | Complete |
+| REM-05 | Phase 48 | Complete |
+| REM-06 | Phase 48 | Complete |
 | REP-01 | Phase 49 | Pending |
 | REP-02 | Phase 49 | Pending |
 | PRE-01 | Phase 49 | Pending |
 | PRE-02 | Phase 49 | Pending |
 | PRE-03 | Phase 49 | Pending |
-| CLN-01 | Phase 48 | Pending |
+| CLN-01 | Phase 48 | Complete |
 
 **Coverage:**
 - v10.0 requirements: 12 total
@@ -68,4 +68,4 @@ None — single-focus subtraction milestone.
 
 ---
 *Requirements defined: 2026-04-06*
-*Last updated: 2026-04-06 after roadmap creation*
+*Last updated: 2026-04-06 after Phase 48 completion*

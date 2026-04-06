@@ -19,7 +19,7 @@
 
 **Milestone Goal:** Remove Strava OAuth submission, scoring engine, and results leaderboards from MK Ultra. Replace /results with CTA to Iron & Pine Omnium (ironpineomnium.com). MK Ultra becomes a pure static event site with no Netlify Functions dependency.
 
-- [ ] **Phase 48: Strava Infrastructure Removal** - Delete all Strava OAuth, scoring, submission, and results infrastructure
+- [x] **Phase 48: Strava Infrastructure Removal** - Delete all Strava OAuth, scoring, submission, and results infrastructure
 - [ ] **Phase 49: Results CTA and Nav Update** - Replace /results with ironpineomnium.com CTA, update navigation, verify preserved functionality
 
 ## Phase Details
@@ -37,8 +37,8 @@
 **Plans**: 2 plans
 
 Plans:
-- [ ] 48-01-PLAN.md — Delete Strava-dependent pages, ScoringExplainer, clean index.astro and KomSegments.astro
-- [ ] 48-02-PLAN.md — Delete scoring engine, Netlify Functions, results data, clean package.json and netlify.toml
+- [x] 48-01-PLAN.md — Delete Strava-dependent pages, ScoringExplainer, clean index.astro and KomSegments.astro
+- [x] 48-02-PLAN.md — Delete scoring engine, Netlify Functions, results data, clean package.json and netlify.toml
 
 ### Phase 49: Results CTA and Nav Update
 **Goal**: Users visiting /results see a styled CTA page directing them to ironpineomnium.com, and site navigation reflects the simplified structure
@@ -61,9 +61,9 @@ Plans:
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 48. Strava Infrastructure Removal | v10.0 | 0/? | Not started | - |
+| 48. Strava Infrastructure Removal | v10.0 | 2/2 | ✓ Complete | 2026-04-06 |
 | 49. Results CTA and Nav Update | v10.0 | 0/? | Not started | - |
 
 ---
 *Roadmap created: 2026-04-06*
-*Last updated: 2026-04-06*
+*Last updated: 2026-04-06 after Phase 48 completion*
