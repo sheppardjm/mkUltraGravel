@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-04-06)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v10.0 Strava Decoupling — Phase 48 complete, Phase 49 next
+**Current focus:** v10.0 Strava Decoupling — COMPLETE (Phase 49 done)
 
 ## Current Position
 
-Milestone: v10.0 Strava Decoupling
-Phase: 48 of 49 (Strava Infrastructure Removal) — COMPLETE
-Plan: 2 of 2 complete
-Status: Phase complete — ready for Phase 49
-Last activity: 2026-04-06 — Completed 48-02-PLAN.md
+Milestone: v10.0 Strava Decoupling — COMPLETE
+Phase: 49 of 49 (Results CTA and Nav Update) — COMPLETE
+Plan: 1 of 1 complete
+Status: Milestone complete
+Last activity: 2026-04-06 — Completed 49-01-PLAN.md
 
-Progress: 9 milestones shipped, 85 plans across 48 phases
+Progress: 10 milestones shipped, 86 plans across 49 phases
 
 ## Performance Metrics
 
@@ -48,5 +48,5 @@ Decisions are logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-04-06
-Stopped at: Completed 48-02-PLAN.md — Phase 48 complete, MK Ultra is now pure static
+Stopped at: Completed 49-01-PLAN.md — v10.0 Strava Decoupling milestone complete
 Resume file: None
