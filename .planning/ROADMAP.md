@@ -11,16 +11,16 @@
 - ✅ **v7.0 Production Hardening** - Phases 36-40 (shipped 2026-03-31)
 - ✅ **v8.0 Visual Texture + Content** - Phases 41-46 (shipped 2026-04-02)
 - ✅ **v9.0 BAA Sector** - Phase 47 (shipped 2026-04-06)
-- 🚧 **v10.0 Strava Decoupling** - Phases 48-49 (in progress)
+- ✅ **v10.0 Strava Decoupling** - Phases 48-49 (shipped 2026-04-06)
 
 ## Phases
 
-### 🚧 v10.0 Strava Decoupling (In Progress)
+### ✅ v10.0 Strava Decoupling (Shipped 2026-04-06)
 
 **Milestone Goal:** Remove Strava OAuth submission, scoring engine, and results leaderboards from MK Ultra. Replace /results with CTA to Iron & Pine Omnium (ironpineomnium.com). MK Ultra becomes a pure static event site with no Netlify Functions dependency.
 
 - [x] **Phase 48: Strava Infrastructure Removal** - Delete all Strava OAuth, scoring, submission, and results infrastructure
-- [ ] **Phase 49: Results CTA and Nav Update** - Replace /results with ironpineomnium.com CTA, update navigation, verify preserved functionality
+- [x] **Phase 49: Results CTA and Nav Update** - Replace /results with ironpineomnium.com CTA, update navigation, verify preserved functionality
 
 ## Phase Details
 
@@ -50,10 +50,10 @@ Plans:
   3. Strava segment links on all 7 gravel sector cards open correct Strava segment pages
   4. Strava segment links on all 3 KOM cards open correct Strava segment pages
   5. Site builds and deploys as fully static with zero Netlify Functions invocations
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 49-01: TBD
+- [x] 49-01: Create /results CTA page and update SiteNav
 
 ## Progress
 
@@ -62,8 +62,8 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 48. Strava Infrastructure Removal | v10.0 | 2/2 | ✓ Complete | 2026-04-06 |
-| 49. Results CTA and Nav Update | v10.0 | 0/? | Not started | - |
+| 49. Results CTA and Nav Update | v10.0 | 1/1 | ✓ Complete | 2026-04-06 |
 
 ---
 *Roadmap created: 2026-04-06*
-*Last updated: 2026-04-06 after Phase 48 completion*
+*Last updated: 2026-04-06 after Phase 49 completion*

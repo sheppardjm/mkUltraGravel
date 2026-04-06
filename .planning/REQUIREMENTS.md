@@ -18,14 +18,14 @@ Requirements for decoupling Strava submission/scoring/results from MK Ultra. Lea
 
 ### Replacement
 
-- [ ] **REP-01**: Replace /results page with CTA redirecting to ironpineomnium.com for leaderboard viewing
-- [ ] **REP-02**: Update SiteNav — remove Submit link, update Results to point to new CTA page or Omnium link
+- [x] **REP-01**: Replace /results page with CTA redirecting to ironpineomnium.com for leaderboard viewing
+- [x] **REP-02**: Update SiteNav — remove Submit link, update Results to point to new CTA page or Omnium link
 
 ### Preservation
 
-- [ ] **PRE-01**: Strava segment links on GravelSectors.astro cards remain functional
-- [ ] **PRE-02**: Strava segment links on KomSegments.astro cards remain functional
-- [ ] **PRE-03**: Site builds and deploys as fully static (no Netlify Functions required)
+- [x] **PRE-01**: Strava segment links on GravelSectors.astro cards remain functional
+- [x] **PRE-02**: Strava segment links on KomSegments.astro cards remain functional
+- [x] **PRE-03**: Site builds and deploys as fully static (no Netlify Functions required)
 
 ### Cleanup
 
@@ -54,11 +54,11 @@ None — single-focus subtraction milestone.
 | REM-04 | Phase 48 | Complete |
 | REM-05 | Phase 48 | Complete |
 | REM-06 | Phase 48 | Complete |
-| REP-01 | Phase 49 | Pending |
-| REP-02 | Phase 49 | Pending |
-| PRE-01 | Phase 49 | Pending |
-| PRE-02 | Phase 49 | Pending |
-| PRE-03 | Phase 49 | Pending |
+| REP-01 | Phase 49 | Complete |
+| REP-02 | Phase 49 | Complete |
+| PRE-01 | Phase 49 | Complete |
+| PRE-02 | Phase 49 | Complete |
+| PRE-03 | Phase 49 | Complete |
 | CLN-01 | Phase 48 | Complete |
 
 **Coverage:**
@@ -68,4 +68,4 @@ None — single-focus subtraction milestone.
 
 ---
 *Requirements defined: 2026-04-06*
-*Last updated: 2026-04-06 after Phase 48 completion*
+*Last updated: 2026-04-06 after Phase 49 completion*
