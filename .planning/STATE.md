@@ -5,15 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-04-06)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v10.1 Polish — themed scrollbars + gravel card aspect ratio fix
+**Current focus:** No active milestone — site is production-ready for June 7, 2026
 
 ## Current Position
 
-Milestone: v10.1 Polish
-Phase: 50 of 50 (CSS Polish)
-Plan: 01 of 01 — COMPLETE
-Status: Phase complete / Milestone complete
-Last activity: 2026-04-06 — Completed 50-01-PLAN.md (CSS Polish)
+Milestone: None active (v10.1 completed)
+Phase: 50 phases completed across 11 milestones
+Plan: N/A
+Status: Production-ready
+Last activity: 2026-04-06 — v10.1 milestone completed and archived
 
 Progress: 11 milestones shipped, 87 plans across 50 phases (100% complete)
 
@@ -22,16 +22,16 @@ Progress: 11 milestones shipped, 87 plans across 50 phases (100% complete)
 **Velocity:**
 - Total plans completed: 87
 - v10.1: 1 plan across 1 phase (1 day)
-- v1.0: 30 plans across 10 phases (2 days)
-- v2.0: 15 plans across 6 phases (3 days)
-- v3.0: 6 plans across 5 phases (2 days)
-- v4.0: 7 plans across 5 phases (4 days)
-- v5.0: 10 plans across 6 phases (4 days)
-- v6.0: 3 plans across 3 phases (1 day)
-- v7.0: 5 plans across 5 phases (1 day)
-- v8.0: 6 plans across 6 phases (2 days)
-- v9.0: 1 plan across 1 phase (1 day)
 - v10.0: 3 plans across 2 phases (1 day)
+- v9.0: 1 plan across 1 phase (1 day)
+- v8.0: 6 plans across 6 phases (2 days)
+- v7.0: 5 plans across 5 phases (1 day)
+- v6.0: 3 plans across 3 phases (1 day)
+- v5.0: 10 plans across 6 phases (4 days)
+- v4.0: 7 plans across 5 phases (4 days)
+- v3.0: 6 plans across 5 phases (2 days)
+- v2.0: 15 plans across 6 phases (3 days)
+- v1.0: 30 plans across 10 phases (2 days)
 
 ## Accumulated Context
 
@@ -50,5 +50,5 @@ None — site is production-ready for June 7, 2026.
 ## Session Continuity
 
 Last session: 2026-04-06
-Stopped at: Completed 50-01-PLAN.md — v10.1 Polish milestone complete
+Stopped at: v10.1 milestone completed and archived
 Resume file: None

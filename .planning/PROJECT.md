@@ -129,16 +129,14 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 - REP-02: SiteNav simplified to Home + Results (Submit removed) — v10.0
 - PRE-01 through PRE-03: Strava segment links + static build preserved — v10.0
 - CLN-01: KOM/QOM time display removed from KomSegments.astro — v10.0
+- SCROLL-01: Main page vertical scrollbar uses dark theme matching site background and accent colors — v10.1
+- SCROLL-02: Gallery horizontal scrollbar uses dark theme consistent with SCROLL-01 — v10.1
+- SCROLL-03: All scrollable containers use consistent dark scrollbar theme — v10.1
+- CARD-01: Gravel sector card images maintain good aspect ratio on wide screens via aspect-video — v10.1
 
 ### Active
 
-#### Current Milestone: v10.1 Polish
-
-**Goal:** Final visual polish before June 7 event — themed scrollbars and gravel card aspect ratio fix on wide screens.
-
-**Target features:**
-- Themed scrollbars (all page and container scrollbars match dark brutalist aesthetic)
-- Gravel card image aspect ratio fix on wide screens (h-[180px] fixed height causes poor proportions)
+No active milestone. Site is production-ready for June 7, 2026.
 
 ### Out of Scope
 
@@ -159,7 +157,7 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ## Context
 
-**Shipped v10.0** with ~2,277 LOC across Astro/CSS/JS/TS source files and build scripts. 86 plans shipped across 49 phases and 10 milestones. v10.0 removed all Strava OAuth, scoring, submission, and results infrastructure — MK Ultra is now a pure static Astro site with zero Netlify Functions. /results redirects to ironpineomnium.com for leaderboards. Visual texture stack complete — three animated overlays (grain, escher, lizard) with reduced-motion gates. Photo library at 71 images in masonry gallery.
+**Shipped v10.1** with ~2,299 LOC across Astro/CSS/JS/TS source files and build scripts. 87 plans shipped across 50 phases and 11 milestones. Pure static Astro site with zero backend dependencies. /results redirects to ironpineomnium.com for leaderboards. Visual texture stack complete — three animated overlays (grain, escher, lizard) with reduced-motion gates. Photo library at 71 images in masonry gallery. Dark-themed scrollbars and proportional card images complete the visual polish.
 
 **Tech stack:** Astro 6, Tailwind v4, Leaflet 1.9.4, Chart.js (+ annotation plugin), PhotoSwipe, sharp (thumbnails)
 
@@ -167,7 +165,7 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 **Performance:** Lighthouse mobile Performance 96, LCP 2.48s, CLS 0.054, TBT 0ms. All Core Web Vitals green. All animations compositor-safe (transform/opacity only). Escher drift and Penrose spin animations gated behind prefers-reduced-motion.
 
-**v10.0 shipped:** Strava Decoupling — deleted 4 Netlify Functions, 3 OAuth pages, scoring engine + tests, validation script, 25 athlete JSON files (-3,574 source LOC). Created /results CTA to ironpineomnium.com. SiteNav simplified to 2 links. All 10 Strava segment links preserved as static card links. Previous: v9.0 added BAA as 7th gravel sector across all surfaces.
+**v10.1 shipped:** CSS Polish — dark accent-green themed scrollbars via CSS Scrollbars Level 1 + WebKit fallback, proportional 16:9 gravel card images replacing h-[180px] fixed height. Previous: v10.0 removed all Strava infrastructure; v9.0 added BAA as 7th gravel sector.
 
 **Event Details:**
 - Date: June 7, 2026
@@ -249,5 +247,9 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | mask-image gate hiding lizard from hero section | Prevents visual competition with Penrose + Escher in first viewport | Good |
 | Three-layer z-index stack: 9997 < 9998 < 9999 < 10000 | Consistent ordering: lizard < escher < grain < nav | Good |
 
+| scrollbar-color on html in @layer base | Consistent with existing element selector pattern; CSS inheritance covers all containers | Good |
+| WebKit scrollbar fallback outside @layer | Pseudo-element selectors not layer-scoped; @supports guard prevents conflicts | Good |
+| aspect-video replacing h-[180px] on gravel cards | Matches KomSegments.astro pattern; proportional on all screen widths | Good |
+
 ---
-*Last updated: 2026-04-06 after v10.1 milestone started*
+*Last updated: 2026-04-06 after v10.1 milestone completed*

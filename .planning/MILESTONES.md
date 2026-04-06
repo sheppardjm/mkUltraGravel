@@ -1,5 +1,31 @@
 # Project Milestones: MK Ultra Gravel
 
+## v10.1 Polish (Shipped: 2026-04-06)
+
+**Delivered:** Final visual polish — dark accent-green themed scrollbars via CSS Scrollbars Level 1 + WebKit fallback, and proportional 16:9 gravel sector card images replacing clipped 180px fixed height.
+
+**Phases completed:** 50 (1 plan total)
+
+**Key accomplishments:**
+
+- Dark-themed scrollbars (accent-green thumb on dark surface track) inherited by all scrollable containers via CSS Scrollbars Level 1
+- WebKit fallback with @supports selector(::-webkit-scrollbar) guard covering Chrome <121 and Safari <18
+- Gravel sector card images render proportionally at 16:9 on wide screens instead of being clipped at 180px
+- Build passes with zero errors, zero regressions, Lighthouse mobile 96 maintained
+
+**Stats:**
+
+- 2 files modified (+23/-1 lines)
+- 2,299 lines of code remaining (Astro/CSS/JS/TS)
+- 1 phase, 1 plan, 2 tasks
+- 1 day (2026-04-06)
+
+**Git range:** `80f7b50` → `012c7d3`
+
+**What's next:** Site is production-ready for June 7, 2026 event. Future work TBD via `/gsd:new-milestone`.
+
+---
+
 ## v10.0 Strava Decoupling (Shipped: 2026-04-06)
 
 **Delivered:** Removed all Strava OAuth, scoring engine, submission flow, and results leaderboards from MK Ultra. Replaced /results with CTA to Iron & Pine Omnium (ironpineomnium.com). Site is now a zero-backend pure static Astro site.
