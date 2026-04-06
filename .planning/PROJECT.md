@@ -127,15 +127,9 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ### Active
 
-#### Pending External
+#### Current Milestone: v10.0 Strava Decoupling
 
-- REVIEW-03: Strava app approved and 1-athlete limit lifted (submitted 2026-03-31, awaiting review — 7-10 business days)
-
-#### Post-Event
-
-- POST-01: Real segment matching verified with actual June 7 race activities
-- POST-02: Multi-athlete concurrent submission load testing
-- POST-03: KOM/QOM times populated on cards from real race data
+**Goal:** Remove Strava OAuth submission, scoring engine, and results leaderboards from MK Ultra. Replace /results with CTA to Iron & Pine Omnium (ironpineomnium.com). MK Ultra becomes a pure static event site.
 
 ### Out of Scope
 
@@ -146,7 +140,10 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 - Email list signup — single event, high obligation, low return
 - Merchandise / shop — not the site's purpose
 - Strava segment embeds — unreliable due to Chrome third-party cookie deprecation
-- Auto-scraping KOM/QOM from Strava — TOS violation; using manual entry
+- Auto-scraping KOM/QOM from Strava — TOS violation
+- Strava OAuth submission — moved to Iron & Pine Omnium app (v10.0)
+- On-site results/leaderboards — moved to Iron & Pine Omnium for Strava ToS compliance (v10.0)
+- Scoring engine — moved to Iron & Pine Omnium (v10.0)
 - Weather widget — irrelevant before event day
 - Database — JSON file storage sufficient for single-event results
 - Real-time leaderboard updates — rebuild-on-commit is acceptable latency
@@ -238,4 +235,4 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | Three-layer z-index stack: 9997 < 9998 < 9999 < 10000 | Consistent ordering: lizard < escher < grain < nav | Good |
 
 ---
-*Last updated: 2026-04-02 after v9.0 milestone*
+*Last updated: 2026-04-06 after v10.0 milestone started*

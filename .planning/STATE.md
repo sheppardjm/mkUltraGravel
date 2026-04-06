@@ -5,15 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-04-02)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** Planning next milestone
+**Current focus:** v10.0 Strava Decoupling
 
 ## Current Position
 
-Milestone: v9.0 shipped — awaiting next milestone
-Phase: Next TBD
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-04-02 — v9.0 milestone archived
+Milestone: v10.0 Strava Decoupling
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-06 — Milestone v10.0 started
 
 Progress: 9 milestones shipped, 83 plans across 47 phases
 
@@ -47,6 +47,6 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-04-02
-Stopped at: v9.0 milestone archived
+Last session: 2026-04-06
+Stopped at: v10.0 milestone started — defining requirements
 Resume file: None
