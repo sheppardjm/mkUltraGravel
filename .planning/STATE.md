@@ -5,15 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-04-06)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** Production-ready — awaiting June 7, 2026 event
+**Current focus:** v10.1 Polish — themed scrollbars + gravel card aspect ratio fix
 
 ## Current Position
 
-Milestone: v10.0 Strava Decoupling — SHIPPED
-Phase: 49 of 49 (Results CTA and Nav Update) — COMPLETE
-Plan: All plans complete
-Status: No active milestone
-Last activity: 2026-04-06 — v10.0 milestone archived
+Milestone: v10.1 Polish
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-06 — Milestone v10.1 started
 
 Progress: 10 milestones shipped, 86 plans across 49 phases
 
@@ -40,7 +40,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ### Pending Todos
 
-- Card cover photo aspect ratios on non-accent cards need review (noted during Phase 44 checkpoint)
+- Card cover photo aspect ratios on non-accent cards need review (noted during Phase 44 checkpoint) — ADDRESSED in v10.1
 
 ### Blockers/Concerns
 
@@ -49,5 +49,5 @@ None — site is production-ready for June 7, 2026.
 ## Session Continuity
 
 Last session: 2026-04-06
-Stopped at: v10.0 milestone archived
+Stopped at: Defining v10.1 requirements
 Resume file: None

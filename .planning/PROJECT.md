@@ -132,7 +132,13 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ### Active
 
-(No active milestone — site production-ready for June 7, 2026)
+#### Current Milestone: v10.1 Polish
+
+**Goal:** Final visual polish before June 7 event — themed scrollbars and gravel card aspect ratio fix on wide screens.
+
+**Target features:**
+- Themed scrollbars (all page and container scrollbars match dark brutalist aesthetic)
+- Gravel card image aspect ratio fix on wide screens (h-[180px] fixed height causes poor proportions)
 
 ### Out of Scope
 
@@ -244,4 +250,4 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | Three-layer z-index stack: 9997 < 9998 < 9999 < 10000 | Consistent ordering: lizard < escher < grain < nav | Good |
 
 ---
-*Last updated: 2026-04-06 after v10.0 milestone complete*
+*Last updated: 2026-04-06 after v10.1 milestone started*
