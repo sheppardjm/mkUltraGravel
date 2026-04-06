@@ -34,10 +34,11 @@
   3. No scoring engine code exists (scoring.js, scoring.test.js, validate-results.mjs all deleted)
   4. No results athlete data exists (public/data/results/ directory removed)
   5. KomSegments.astro no longer displays KOM/QOM time data on cards
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 48-01: TBD
+- [ ] 48-01-PLAN.md — Delete Strava-dependent pages, ScoringExplainer, clean index.astro and KomSegments.astro
+- [ ] 48-02-PLAN.md — Delete scoring engine, Netlify Functions, results data, clean package.json and netlify.toml
 
 ### Phase 49: Results CTA and Nav Update
 **Goal**: Users visiting /results see a styled CTA page directing them to ironpineomnium.com, and site navigation reflects the simplified structure
