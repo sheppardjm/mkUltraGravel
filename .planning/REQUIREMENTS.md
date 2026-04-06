@@ -48,24 +48,24 @@ None — single-focus subtraction milestone.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| REM-01 | — | Pending |
-| REM-02 | — | Pending |
-| REM-03 | — | Pending |
-| REM-04 | — | Pending |
-| REM-05 | — | Pending |
-| REM-06 | — | Pending |
-| REP-01 | — | Pending |
-| REP-02 | — | Pending |
-| PRE-01 | — | Pending |
-| PRE-02 | — | Pending |
-| PRE-03 | — | Pending |
-| CLN-01 | — | Pending |
+| REM-01 | Phase 48 | Pending |
+| REM-02 | Phase 48 | Pending |
+| REM-03 | Phase 48 | Pending |
+| REM-04 | Phase 48 | Pending |
+| REM-05 | Phase 48 | Pending |
+| REM-06 | Phase 48 | Pending |
+| REP-01 | Phase 49 | Pending |
+| REP-02 | Phase 49 | Pending |
+| PRE-01 | Phase 49 | Pending |
+| PRE-02 | Phase 49 | Pending |
+| PRE-03 | Phase 49 | Pending |
+| CLN-01 | Phase 48 | Pending |
 
 **Coverage:**
 - v10.0 requirements: 12 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 12
+- Mapped to phases: 12
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-06*
-*Last updated: 2026-04-06 after initial definition*
+*Last updated: 2026-04-06 after roadmap creation*

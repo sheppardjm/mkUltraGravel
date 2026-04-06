@@ -2,18 +2,18 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-02)
+See: .planning/PROJECT.md (updated 2026-04-06)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v10.0 Strava Decoupling
+**Current focus:** v10.0 Strava Decoupling — Phase 48
 
 ## Current Position
 
 Milestone: v10.0 Strava Decoupling
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-04-06 — Milestone v10.0 started
+Phase: 48 of 49 (Strava Infrastructure Removal)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-04-06 — Roadmap created for v10.0
 
 Progress: 9 milestones shipped, 83 plans across 47 phases
 
@@ -43,10 +43,10 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ### Blockers/Concerns
 
-- **[Active]** REVIEW-03 (Strava app approved) is externally gated — submitted 2026-03-31, 7-10 business day minimum. If not approved by ~May 28, escalate to `developers@strava.com` and prepare manual result-collection contingency.
+- **[Resolved by v10.0]** REVIEW-03 (Strava app approval) no longer gates MK Ultra — Strava features moving to Iron & Pine Omnium
 
 ## Session Continuity
 
 Last session: 2026-04-06
-Stopped at: v10.0 milestone started — defining requirements
+Stopped at: v10.0 roadmap created — ready to plan Phase 48
 Resume file: None
