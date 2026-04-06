@@ -12,8 +12,6 @@ const kom = annotations.kom as Array<{
   elevFt: number;
   coverPhoto?: string;
   stravaSegmentId?: number;
-  komTime?: string | null;
-  qomTime?: string | null;
 }>;
 ---
 
@@ -63,12 +61,6 @@ const kom = annotations.kom as Array<{
               </svg>
               View on Strava
             </a>
-          )}
-          {(segment.komTime || segment.qomTime) && (
-            <div class="mt-2 pt-2 border-t border-border text-xs text-text-muted space-y-0.5">
-              {segment.komTime && <div>KOM <span class="text-accent-white">{segment.komTime}</span></div>}
-              {segment.qomTime && <div>QOM <span class="text-accent-white">{segment.qomTime}</span></div>}
-            </div>
           )}
         </div>
       </div>
