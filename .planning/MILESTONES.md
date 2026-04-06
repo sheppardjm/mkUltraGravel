@@ -1,5 +1,32 @@
 # Project Milestones: MK Ultra Gravel
 
+## v10.0 Strava Decoupling (Shipped: 2026-04-06)
+
+**Delivered:** Removed all Strava OAuth, scoring engine, submission flow, and results leaderboards from MK Ultra. Replaced /results with CTA to Iron & Pine Omnium (ironpineomnium.com). Site is now a zero-backend pure static Astro site.
+
+**Phases completed:** 48-49 (3 plans total)
+
+**Key accomplishments:**
+
+- Deleted all Strava infrastructure — 4 Netlify Functions, 3 OAuth pages, scoring engine + test suite, validation script, 25 athlete JSON files
+- Converted MK Ultra from Netlify Functions + Astro to zero-backend pure static site (-3,574 source LOC)
+- Created styled /results CTA page directing users to ironpineomnium.com for leaderboards
+- Simplified SiteNav from 3 links (Home, Results, Submit) to 2 links (Home, Results)
+- Preserved all 10 Strava segment links on sector and KOM cards as static links
+
+**Stats:**
+
+- 41 source files changed
+- 2,277 lines of code remaining (Astro/CSS/JS/TS)
+- 2 phases, 3 plans, 6 tasks
+- 1 day (2026-04-06)
+
+**Git range:** `5eba515` → `070173f`
+
+**What's next:** Site is production-ready for June 7, 2026 event. Future work TBD via `/gsd:new-milestone`.
+
+---
+
 ## v9.0 New Sector Addition (Shipped: 2026-04-02)
 
 **Delivered:** Added BAA gravel sector (Strava segment 41159670, mile 12.9, 2-star) as 7th sector across all 5 surfaces — map polyline, elevation profile, sector card, scoring engine, and results page. All content updated from "six" to "seven" sectors. 13 vitest tests green.

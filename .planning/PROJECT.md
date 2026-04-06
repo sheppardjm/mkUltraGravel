@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A website for MK Ultra Gravel — a 100-mile gravel cycling event through Marquette County, Michigan on June 7, 2026. Named after the CIA's infamous LSD experiments, the ride features rowdy, technical gravel sectors rated Paris-Roubaix style (1-5 stars) with timed Grinduro-style sectors and KOM/QOM segments. The site showcases the route with an interactive map synced to an elevation profile, 71 geo-located photos with thumbnail markers and lightbox, photo-rich sector and KOM cards, a Grinduro format explainer, a full gallery, brutalist animations with Penrose triangle hero and Escher tessellation background, and event details — driving registration through BikeReg.
+A website for MK Ultra Gravel — a 100-mile gravel cycling event through Marquette County, Michigan on June 7, 2026. Named after the CIA's infamous LSD experiments, the ride features rowdy, technical gravel sectors rated Paris-Roubaix style (1-5 stars) with timed Grinduro-style sectors and KOM/QOM segments. The site showcases the route with an interactive map synced to an elevation profile, 71 geo-located photos with thumbnail markers and lightbox, photo-rich sector and KOM cards, a Grinduro format explainer, a full gallery, brutalist animations with Penrose triangle hero and Escher tessellation background, and event details — driving registration through BikeReg. Pure static Astro site with zero backend dependencies. Strava submission and leaderboards moved to Iron & Pine Omnium (ironpineomnium.com) in v10.0.
 
 Live at: https://mkultragravel.netlify.app/
 
@@ -124,12 +124,15 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 - SECT-04: BAA sector band on elevation profile with matching star color and label — v9.0
 - SECT-05: BAA sector card with pipeline-assigned cover photo, 2-star rating, Strava link — v9.0
 - SECT-06: BAA included in Gravel Champion scoring engine (6 -> 7 required sectors) — v9.0
+- REM-01 through REM-06: All Strava infrastructure deleted (Functions, pages, scoring, data) — v10.0
+- REP-01: /results replaced with CTA to ironpineomnium.com — v10.0
+- REP-02: SiteNav simplified to Home + Results (Submit removed) — v10.0
+- PRE-01 through PRE-03: Strava segment links + static build preserved — v10.0
+- CLN-01: KOM/QOM time display removed from KomSegments.astro — v10.0
 
 ### Active
 
-#### Current Milestone: v10.0 Strava Decoupling
-
-**Goal:** Remove Strava OAuth submission, scoring engine, and results leaderboards from MK Ultra. Replace /results with CTA to Iron & Pine Omnium (ironpineomnium.com). MK Ultra becomes a pure static event site.
+(No active milestone — site production-ready for June 7, 2026)
 
 ### Out of Scope
 
@@ -141,24 +144,24 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 - Merchandise / shop — not the site's purpose
 - Strava segment embeds — unreliable due to Chrome third-party cookie deprecation
 - Auto-scraping KOM/QOM from Strava — TOS violation
-- Strava OAuth submission — moved to Iron & Pine Omnium app (v10.0)
-- On-site results/leaderboards — moved to Iron & Pine Omnium for Strava ToS compliance (v10.0)
-- Scoring engine — moved to Iron & Pine Omnium (v10.0)
+- Strava OAuth submission — removed in v10.0, moved to Iron & Pine Omnium
+- On-site results/leaderboards — removed in v10.0, moved to Iron & Pine Omnium for Strava ToS compliance
+- Scoring engine — removed in v10.0, moved to Iron & Pine Omnium
 - Weather widget — irrelevant before event day
 - Database — JSON file storage sufficient for single-event results
 - Real-time leaderboard updates — rebuild-on-commit is acceptable latency
 
 ## Context
 
-**Shipped v9.0** with ~4,100 LOC across Astro/CSS/JS/TS source files, Netlify Functions, and build scripts. 83 plans shipped across 47 phases and 9 milestones. BAA gravel sector added as 7th sector across all 5 surfaces (map, elevation, cards, scoring, results). Visual texture stack complete — three animated overlays (grain, escher, lizard) with reduced-motion gates. Photo library at 71 images in masonry gallery. Strava submission pipeline operational. Developer program review submitted 2026-03-31; awaiting approval (REVIEW-03 externally gated).
+**Shipped v10.0** with ~2,277 LOC across Astro/CSS/JS/TS source files and build scripts. 86 plans shipped across 49 phases and 10 milestones. v10.0 removed all Strava OAuth, scoring, submission, and results infrastructure — MK Ultra is now a pure static Astro site with zero Netlify Functions. /results redirects to ironpineomnium.com for leaderboards. Visual texture stack complete — three animated overlays (grain, escher, lizard) with reduced-motion gates. Photo library at 71 images in masonry gallery.
 
-**Tech stack:** Astro 6, Tailwind v4, Leaflet 1.9.4, Chart.js (+ annotation plugin), PhotoSwipe, sharp (thumbnails), vitest (testing), Netlify Functions v1 (Strava OAuth/API)
+**Tech stack:** Astro 6, Tailwind v4, Leaflet 1.9.4, Chart.js (+ annotation plugin), PhotoSwipe, sharp (thumbnails)
 
-**Deployment:** Netlify with git-triggered CI/CD from GitHub. Prebuild pipeline generates route-data.json, annotations.json, photos.json, thumbnails, card crops, and hero WebP on every deploy. Strava OAuth submission triggers GitHub API commit + Netlify build hook for rebuild.
+**Deployment:** Netlify with git-triggered CI/CD from GitHub. Prebuild pipeline generates route-data.json, annotations.json, photos.json, thumbnails, card crops, and hero WebP on every deploy. Fully static — no Netlify Functions, no SSR adapter.
 
 **Performance:** Lighthouse mobile Performance 96, LCP 2.48s, CLS 0.054, TBT 0ms. All Core Web Vitals green. All animations compositor-safe (transform/opacity only). Escher drift and Penrose spin animations gated behind prefers-reduced-motion.
 
-**v9.0 shipped:** BAA gravel sector (Strava segment 41159670, mile 12.9, 2-star) added as 7th sector across map, elevation profile, sector card, scoring engine, and results page. All "six"→"seven" content strings updated. 13 vitest tests green. Previous: v8.0 shipped visual polish + content (GPX update, 16 new photos, masonry gallery, lizard tessellation, metaball dividers).
+**v10.0 shipped:** Strava Decoupling — deleted 4 Netlify Functions, 3 OAuth pages, scoring engine + tests, validation script, 25 athlete JSON files (-3,574 source LOC). Created /results CTA to ironpineomnium.com. SiteNav simplified to 2 links. All 10 Strava segment links preserved as static card links. Previous: v9.0 added BAA as 7th gravel sector across all surfaces.
 
 **Event Details:**
 - Date: June 7, 2026
@@ -170,7 +173,7 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ## Constraints
 
-- **Tech stack**: Astro static site + Netlify Functions for Strava OAuth/API
+- **Tech stack**: Astro static site (pure static, no Netlify Functions)
 - **External dependency**: BikeReg handles registration, site links out
 - **Assets**: GPX file (100mi route) and 71 route photos in repo (1 AVIF, rest JPG); photos use manual mile-marker positioning (no EXIF GPS)
 - **Timeline**: Site needs to be live well before June 7, 2026
@@ -226,6 +229,12 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | Client-side query param parsing in static Astro | Static builds cannot read request-time query params in frontmatter | Good |
 | Exact #FC5200 for Strava branding (not oklch) | Strava brand guidelines require exact hex color | Good |
 | sr-only "View on Strava" spans | Satisfies brand guideline + accessibility without visual change | Good |
+| Delete pages before backend dependencies | results.astro imports scoring.js — delete pages first to prevent build failures | Good |
+| Retain Strava segment links on cards | Static URLs to strava.com, not OAuth-dependent — useful to riders | Good |
+| Remove "test" script with scoring.js | vitest exits non-zero with no test files; breaks CI | Good |
+| Retain [[redirects]] in netlify.toml | /api/* redirect is harmless dead-end; removing risks redirect regression | Good |
+| /results CTA to ironpineomnium.com | Strava features decoupled to separate app for TOS compliance | Good |
+| isActive() simplified to exact match | Only "/" and "/results" exist; no prefix matching needed | Good |
 
 | CSS columns masonry over JS library | Preserves TBT 0ms; no new runtime dependency | Good |
 | SVG pattern tessellation over raster WebP | Resolution-independent on all screen sizes | Good |
@@ -235,4 +244,4 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | Three-layer z-index stack: 9997 < 9998 < 9999 < 10000 | Consistent ordering: lizard < escher < grain < nav | Good |
 
 ---
-*Last updated: 2026-04-06 after v10.0 milestone started*
+*Last updated: 2026-04-06 after v10.0 milestone complete*
