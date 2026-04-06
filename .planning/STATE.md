@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-04-06)
 
 Milestone: v10.1 Polish
 Phase: 50 of 50 (CSS Polish)
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-04-06 — Roadmap created
+Plan: 01 of 01 — COMPLETE
+Status: Phase complete / Milestone complete
+Last activity: 2026-04-06 — Completed 50-01-PLAN.md (CSS Polish)
 
-Progress: 10 milestones shipped, 86 plans across 49 phases
+Progress: 11 milestones shipped, 87 plans across 50 phases (100% complete)
 
 ## Performance Metrics
 
@@ -40,7 +40,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ### Pending Todos
 
-- Card cover photo aspect ratios on non-accent cards need review (noted during Phase 44 checkpoint) — ADDRESSED in v10.1
+None — all todos resolved.
 
 ### Blockers/Concerns
 
@@ -49,5 +49,5 @@ None — site is production-ready for June 7, 2026.
 ## Session Continuity
 
 Last session: 2026-04-06
-Stopped at: Defining v10.1 requirements
+Stopped at: Completed 50-01-PLAN.md — v10.1 Polish milestone complete
 Resume file: None
