@@ -9,13 +9,13 @@ Final visual polish — themed scrollbars and gravel card aspect ratio fix.
 
 ### Scrollbar Theming
 
-- [ ] **SCROLL-01**: Main page vertical scrollbar uses dark theme matching site background and accent colors
-- [ ] **SCROLL-02**: Gallery horizontal scrollbar uses dark theme consistent with SCROLL-01
-- [ ] **SCROLL-03**: Any other scrollable containers use consistent dark scrollbar theme
+- [x] **SCROLL-01**: Main page vertical scrollbar uses dark theme matching site background and accent colors
+- [x] **SCROLL-02**: Gallery horizontal scrollbar uses dark theme consistent with SCROLL-01
+- [x] **SCROLL-03**: Any other scrollable containers use consistent dark scrollbar theme
 
 ### Card Layout
 
-- [ ] **CARD-01**: Gravel sector card images maintain good aspect ratio on wide screens (>1280px) instead of fixed 180px height
+- [x] **CARD-01**: Gravel sector card images maintain good aspect ratio on wide screens (>1280px) instead of fixed 180px height
 
 ## Future Requirements
 
@@ -33,10 +33,10 @@ None — final pre-event polish milestone.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SCROLL-01 | Phase 50 | Pending |
-| SCROLL-02 | Phase 50 | Pending |
-| SCROLL-03 | Phase 50 | Pending |
-| CARD-01 | Phase 50 | Pending |
+| SCROLL-01 | Phase 50 | Complete |
+| SCROLL-02 | Phase 50 | Complete |
+| SCROLL-03 | Phase 50 | Complete |
+| CARD-01 | Phase 50 | Complete |
 
 **Coverage:**
 - v10.1 requirements: 4 total
@@ -45,4 +45,4 @@ None — final pre-event polish milestone.
 
 ---
 *Requirements defined: 2026-04-06*
-*Last updated: 2026-04-06 after initial definition*
+*Last updated: 2026-04-06 after Phase 50 completion*

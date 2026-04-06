@@ -12,15 +12,15 @@
 - ✅ **v8.0 Visual Texture + Content** — Phases 41-46 (shipped 2026-04-02)
 - ✅ **v9.0 BAA Sector** — Phase 47 (shipped 2026-04-06)
 - ✅ **v10.0 Strava Decoupling** — Phases 48-49 (shipped 2026-04-06)
-- 🚧 **v10.1 Polish** — Phase 50 (in progress)
+- ✅ **v10.1 Polish** — Phase 50 (shipped 2026-04-06)
 
 ## Phases
 
-### 🚧 v10.1 Polish (In Progress)
+### ✅ v10.1 Polish (Shipped 2026-04-06)
 
 **Milestone Goal:** Final visual polish — themed scrollbars matching dark brutalist aesthetic and gravel card aspect ratio fix on wide screens.
 
-- [ ] **Phase 50: CSS Polish** — Themed scrollbars + gravel card aspect ratio fix
+- [x] **Phase 50: CSS Polish** — Themed scrollbars + gravel card aspect ratio fix
 
 ## Phase Details
 
@@ -36,7 +36,7 @@
   5. Card image changes do not break mobile layout (375px+)
 **Plans**: 1 plan
 Plans:
-- [ ] 50-01-PLAN.md — Dark scrollbar theme + gravel card aspect ratio fix
+- [x] 50-01-PLAN.md — Dark scrollbar theme + gravel card aspect ratio fix
 
 ## Progress
 
@@ -44,8 +44,8 @@ Plans:
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 50. CSS Polish | v10.1 | 0/1 | Not started | — |
+| 50. CSS Polish | v10.1 | 1/1 | ✓ Complete | 2026-04-06 |
 
 ---
 *Roadmap created: 2026-04-06*
-*Last updated: 2026-04-06 after Phase 50 planning*
+*Last updated: 2026-04-06 after Phase 50 execution*

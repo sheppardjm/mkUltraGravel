@@ -20,7 +20,8 @@ Progress: 11 milestones shipped, 87 plans across 50 phases (100% complete)
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 86
+- Total plans completed: 87
+- v10.1: 1 plan across 1 phase (1 day)
 - v1.0: 30 plans across 10 phases (2 days)
 - v2.0: 15 plans across 6 phases (3 days)
 - v3.0: 6 plans across 5 phases (2 days)
