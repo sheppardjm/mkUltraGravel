@@ -18,38 +18,16 @@
 ## Phases
 
 <details>
-<summary>✅ v1.0 through v10.1 (Phases 1-50) — SHIPPED</summary>
+<summary>✅ v1.0 through v10.2 (Phases 1-51) — SHIPPED</summary>
 
 See MILESTONES.md for full archive of completed phases.
 
 </details>
 
-### ✅ v10.2 Neucadia Footer (Shipped 2026-04-07)
-
-**Milestone Goal:** Add "Powered by Neucadia" footer with logo linking to neucadia.com — attribution for the company that built the site.
-
-#### Phase 51: Neucadia Footer ✓
-
-**Goal**: Users see a styled attribution footer that credits Neucadia for building the site with a clickable logo link to neucadia.com.
-
-**Depends on**: Phase 50 (v10.1 CSS Polish complete)
-
-**Requirements**: FOOT-01, FOOT-02, FOOT-03
-
-**Success Criteria** (what must be TRUE):
-  1. A footer is visible at the bottom of every page displaying "Powered by Neucadia" with the Neucadia logo
-  2. Clicking the footer logo or text opens neucadia.com in a new browser tab
-  3. The footer typography, color palette, and spacing are consistent with the site's dark brutalist design
-  4. The footer does not introduce visual regression — no layout shift, no z-index conflicts with existing overlays
-
-Plans:
-- [x] 51-01: Implement Neucadia footer component
-
 ## Progress
 
-**Execution Order:** Phases execute in numeric order. Last shipped: 50.
+**Execution Order:** Phases execute in numeric order. Last shipped: 51.
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 1-50 (archived) | v1.0–v10.1 | 87/87 | Complete | 2026-04-06 |
-| 51. Neucadia Footer | v10.2 | 1/1 | Complete | 2026-04-07 |
+| 1-51 (archived) | v1.0–v10.2 | 88/88 | Complete | 2026-04-07 |

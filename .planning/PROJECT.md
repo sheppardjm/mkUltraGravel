@@ -133,16 +133,13 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 - SCROLL-02: Gallery horizontal scrollbar uses dark theme consistent with SCROLL-01 — v10.1
 - SCROLL-03: All scrollable containers use consistent dark scrollbar theme — v10.1
 - CARD-01: Gravel sector card images maintain good aspect ratio on wide screens via aspect-video — v10.1
+- FOOT-01: Site footer displays "Powered by Neucadia" with Neucadia logo — v10.2
+- FOOT-02: Footer links to neucadia.com (opens in new tab) — v10.2
+- FOOT-03: Footer styling consistent with site's dark brutalist design — v10.2
 
 ### Active
 
-**Current Milestone: v10.2 Neucadia Footer**
-
-**Goal:** Add "Powered by Neucadia" footer with logo linking to neucadia.com — attribution for the company that built the site.
-
-- [ ] FOOT-01: Site footer displays "Powered by Neucadia" with Neucadia logo
-- [ ] FOOT-02: Footer links to neucadia.com (opens in new tab)
-- [ ] FOOT-03: Footer styling consistent with site's dark brutalist design
+(No active milestone — site is production-ready for June 7, 2026)
 
 ### Out of Scope
 
@@ -163,7 +160,7 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ## Context
 
-**Shipped v10.1** with ~2,299 LOC across Astro/CSS/JS/TS source files and build scripts. 87 plans shipped across 50 phases and 11 milestones. Pure static Astro site with zero backend dependencies. /results redirects to ironpineomnium.com for leaderboards. Visual texture stack complete — three animated overlays (grain, escher, lizard) with reduced-motion gates. Photo library at 71 images in masonry gallery. Dark-themed scrollbars and proportional card images complete the visual polish.
+**Shipped v10.2** with ~3,512 LOC across Astro/CSS/JS/TS source files and build scripts. 88 plans shipped across 51 phases and 12 milestones. Pure static Astro site with zero backend dependencies. /results redirects to ironpineomnium.com for leaderboards. Visual texture stack complete — three animated overlays (grain, escher, lizard) with reduced-motion gates. Photo library at 71 images in masonry gallery. Dark-themed scrollbars, proportional card images, and "Powered by Neucadia" attribution footer complete the visual polish.
 
 **Tech stack:** Astro 6, Tailwind v4, Leaflet 1.9.4, Chart.js (+ annotation plugin), PhotoSwipe, sharp (thumbnails)
 
@@ -171,7 +168,7 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 **Performance:** Lighthouse mobile Performance 96, LCP 2.48s, CLS 0.054, TBT 0ms. All Core Web Vitals green. All animations compositor-safe (transform/opacity only). Escher drift and Penrose spin animations gated behind prefers-reduced-motion.
 
-**v10.1 shipped:** CSS Polish — dark accent-green themed scrollbars via CSS Scrollbars Level 1 + WebKit fallback, proportional 16:9 gravel card images replacing h-[180px] fixed height. Previous: v10.0 removed all Strava infrastructure; v9.0 added BAA as 7th gravel sector.
+**v10.2 shipped:** Neucadia Footer — "Powered by Neucadia" attribution footer with logo linking to neucadia.com on every page. Previous: v10.1 dark-themed scrollbars + proportional card images; v10.0 removed all Strava infrastructure; v9.0 added BAA as 7th gravel sector.
 
 **Event Details:**
 - Date: June 7, 2026
@@ -257,5 +254,9 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | WebKit scrollbar fallback outside @layer | Pseudo-element selectors not layer-scoped; @supports guard prevents conflicts | Good |
 | aspect-video replacing h-[180px] on gravel cards | Matches KomSegments.astro pattern; proportional on all screen widths | Good |
 
+| In-flow footer (not fixed/sticky) | No z-index conflicts, no layout shift on either page | Good |
+| grayscale(100%) brightness(2) filter on logo | Renders PNG as white on dark background without separate asset | Good |
+| Footer after `<slot />` in BaseLayout | Ensures footer renders below all page content on every page | Good |
+
 ---
-*Last updated: 2026-04-07 after v10.2 milestone started*
+*Last updated: 2026-04-07 after v10.2 milestone complete*

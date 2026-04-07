@@ -1,5 +1,32 @@
 # Project Milestones: MK Ultra Gravel
 
+## v10.2 Neucadia Footer (Shipped: 2026-04-07)
+
+**Delivered:** "Powered by Neucadia" attribution footer with logo and external link rendered on every page via BaseLayout integration, using site design tokens for dark brutalist consistency.
+
+**Phases completed:** 51 (1 plan total)
+
+**Key accomplishments:**
+
+- Neucadia logo downloaded and rendered white via CSS grayscale + brightness filter on dark background
+- NeucadiaFooter.astro component with scoped styles using site design tokens (mono font, muted text, border, base bg)
+- Footer integrated into BaseLayout after slot — renders on all pages with zero z-index conflicts
+- Accessibility: aria-label, prefers-reduced-motion, loading=lazy, rel="noopener noreferrer"
+- UAT: 5/5 tests passed, verification: 4/4 must-haves passed
+
+**Stats:**
+
+- 3 code files changed (+72 lines)
+- ~3,512 lines of code total (Astro/CSS/JS/TS)
+- 1 phase, 1 plan, 2 tasks
+- 1 day (2026-04-07)
+
+**Git range:** `79e2953` → `da6f3fe`
+
+**What's next:** Site is production-ready for June 7, 2026 event. Future work TBD via `/gsd:new-milestone`.
+
+---
+
 ## v10.1 Polish (Shipped: 2026-04-06)
 
 **Delivered:** Final visual polish — dark accent-green themed scrollbars via CSS Scrollbars Level 1 + WebKit fallback, and proportional 16:9 gravel sector card images replacing clipped 180px fixed height.
