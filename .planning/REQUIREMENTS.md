@@ -7,9 +7,9 @@
 
 ### Footer
 
-- [ ] **FOOT-01**: Site displays a footer with "Powered by Neucadia" text and Neucadia logo
-- [ ] **FOOT-02**: Footer links to neucadia.com, opening in a new tab
-- [ ] **FOOT-03**: Footer styling matches site's dark brutalist design (consistent typography, colors, spacing)
+- [x] **FOOT-01**: Site displays a footer with "Powered by Neucadia" text and Neucadia logo
+- [x] **FOOT-02**: Footer links to neucadia.com, opening in a new tab
+- [x] **FOOT-03**: Footer styling matches site's dark brutalist design (consistent typography, colors, spacing)
 
 ## Out of Scope
 
@@ -23,9 +23,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FOOT-01 | Phase 51 | Pending |
-| FOOT-02 | Phase 51 | Pending |
-| FOOT-03 | Phase 51 | Pending |
+| FOOT-01 | Phase 51 | Complete |
+| FOOT-02 | Phase 51 | Complete |
+| FOOT-03 | Phase 51 | Complete |
 
 **Coverage:**
 - v10.2 requirements: 3 total

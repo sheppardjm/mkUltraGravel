@@ -13,7 +13,7 @@
 - ✅ **v9.0 New Sector Addition** - Phase 47 (shipped 2026-04-02)
 - ✅ **v10.0 Strava Decoupling** - Phases 48-49 (shipped 2026-04-06)
 - ✅ **v10.1 CSS Polish** - Phase 50 (shipped 2026-04-06)
-- 🚧 **v10.2 Neucadia Footer** - Phase 51 (in progress)
+- ✅ **v10.2 Neucadia Footer** - Phase 51 (shipped 2026-04-07)
 
 ## Phases
 
@@ -24,11 +24,11 @@ See MILESTONES.md for full archive of completed phases.
 
 </details>
 
-### 🚧 v10.2 Neucadia Footer (In Progress)
+### ✅ v10.2 Neucadia Footer (Shipped 2026-04-07)
 
 **Milestone Goal:** Add "Powered by Neucadia" footer with logo linking to neucadia.com — attribution for the company that built the site.
 
-#### Phase 51: Neucadia Footer
+#### Phase 51: Neucadia Footer ✓
 
 **Goal**: Users see a styled attribution footer that credits Neucadia for building the site with a clickable logo link to neucadia.com.
 
@@ -42,10 +42,8 @@ See MILESTONES.md for full archive of completed phases.
   3. The footer typography, color palette, and spacing are consistent with the site's dark brutalist design
   4. The footer does not introduce visual regression — no layout shift, no z-index conflicts with existing overlays
 
-**Plans**: TBD
-
 Plans:
-- [ ] 51-01: Implement Neucadia footer component
+- [x] 51-01: Implement Neucadia footer component
 
 ## Progress
 
@@ -54,4 +52,4 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1-50 (archived) | v1.0–v10.1 | 87/87 | Complete | 2026-04-06 |
-| 51. Neucadia Footer | v10.2 | 0/1 | Not started | - |
+| 51. Neucadia Footer | v10.2 | 1/1 | Complete | 2026-04-07 |
