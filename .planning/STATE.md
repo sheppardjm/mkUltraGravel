@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-04-06)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** No active milestone — site is production-ready for June 7, 2026
+**Current focus:** v10.2 Neucadia Footer — "Powered by Neucadia" attribution with logo
 
 ## Current Position
 
-Milestone: None active (v10.1 completed)
-Phase: 50 phases completed across 11 milestones
-Plan: N/A
-Status: Production-ready
-Last activity: 2026-04-06 — v10.1 milestone completed and archived
+Milestone: v10.2 Neucadia Footer
+Phase: 51 (not yet planned)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-07 — Milestone v10.2 started
 
-Progress: 11 milestones shipped, 87 plans across 50 phases (100% complete)
+Progress: 11 milestones shipped, 87 plans across 50 phases
 
 ## Performance Metrics
 

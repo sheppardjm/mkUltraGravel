@@ -136,7 +136,13 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ### Active
 
-No active milestone. Site is production-ready for June 7, 2026.
+**Current Milestone: v10.2 Neucadia Footer**
+
+**Goal:** Add "Powered by Neucadia" footer with logo linking to neucadia.com — attribution for the company that built the site.
+
+- [ ] FOOT-01: Site footer displays "Powered by Neucadia" with Neucadia logo
+- [ ] FOOT-02: Footer links to neucadia.com (opens in new tab)
+- [ ] FOOT-03: Footer styling consistent with site's dark brutalist design
 
 ### Out of Scope
 
@@ -252,4 +258,4 @@ No active milestone. Site is production-ready for June 7, 2026.
 | aspect-video replacing h-[180px] on gravel cards | Matches KomSegments.astro pattern; proportional on all screen widths | Good |
 
 ---
-*Last updated: 2026-04-06 after v10.1 milestone completed*
+*Last updated: 2026-04-07 after v10.2 milestone started*
