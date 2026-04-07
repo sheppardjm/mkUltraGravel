@@ -3,6 +3,7 @@ import { Font } from "astro:assets";
 import "../styles/global.css";
 import SiteNav from "../components/SiteNav.astro";
 import LizardBackground from "../components/LizardBackground.astro";
+import NeucadiaFooter from "../components/NeucadiaFooter.astro";
 
 interface Props {
   title?: string;
@@ -38,5 +39,6 @@ const {
     <div class="escher-overlay" aria-hidden="true"></div>
     <LizardBackground />
     <slot />
+    <NeucadiaFooter />
   </body>
 </html>
