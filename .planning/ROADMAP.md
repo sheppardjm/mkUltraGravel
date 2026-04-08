@@ -44,10 +44,11 @@ See MILESTONES.md for full archive of completed phases.
 3. At exactly 639px viewport width, labels are hidden; at exactly 640px, labels are visible — the breakpoint is precise and consistent.
 4. Resizing the browser window from above 640px to below 640px (and back) does not break the chart — the annotation bands remain visible at all sizes.
 
-**Plans:** 1 plan
+**Plans:** 2 plans
 
 Plans:
 - [x] 52-01-PLAN.md — Make annotation labels responsive to viewport width
+- [ ] 52-02-PLAN.md — Fix missing sector name on narrow sectors (Down Jeep)
 
 ---
 
@@ -57,5 +58,5 @@ Plans:
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 1-51 (archived) | v1.0–v10.2 | 88/88 | Complete | 2026-04-07 |
-| 52 | v10.3 | 1/1 | Complete | 2026-04-08 |
+| 1-51 (archived) | v1.0-v10.2 | 88/88 | Complete | 2026-04-07 |
+| 52 | v10.3 | 1/2 | In Progress | — |
