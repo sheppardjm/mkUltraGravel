@@ -31,17 +31,17 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CARD-02 | TBD | Pending |
-| CARD-03 | TBD | Pending |
-| CARD-04 | TBD | Pending |
-| VIS-16 | TBD | Pending |
-| GAL-02 | TBD | Pending |
+| CARD-02 | Phase 53 | Pending |
+| CARD-03 | Phase 53 | Pending |
+| CARD-04 | Phase 53 | Pending |
+| VIS-16 | Phase 54 | Pending |
+| GAL-02 | Phase 55 | Pending |
 
 **Coverage:**
 - v10.4 requirements: 5 total
-- Mapped to phases: 0
-- Unmapped: 5 ⚠️
+- Mapped to phases: 5
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-08*
-*Last updated: 2026-04-08 after initial definition*
+*Last updated: 2026-04-08 after roadmap creation*
