@@ -24,10 +24,10 @@ v10.4 is a visual polish milestone targeting three independent surface areas: se
   1. Classified badge renders fully visible above all card content on every segment card — no clipping, no occlusion by overflow-hidden parents or stacking context
   2. Gravel sector card photos appear sharp (no visible softness or upscaling artifacts) on viewports 1440px and wider
   3. Gravel sector cards stop growing at a reasonable max-width on ultrawide viewports (2560px+) — card content does not stretch across the full viewport
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 53-01: TBD
+- [ ] 53-01-PLAN.md — Badge clipping fix, card photo resolution bump, max-width constraint
 
 ### Phase 54: Overlay Contrast
 **Goal**: Light text over Escher tessellation background maintains readable contrast at all scroll positions
