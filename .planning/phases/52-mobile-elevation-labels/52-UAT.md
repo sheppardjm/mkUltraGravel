@@ -1,5 +1,5 @@
 ---
-status: complete
+status: diagnosed
 phase: 52-mobile-elevation-labels
 source: 52-01-SUMMARY.md
 started: 2026-04-08T20:00:00Z
@@ -45,7 +45,10 @@ skipped: 0
   reason: "User reported: Down Jeep text isn't showing up because the sector is so short"
   severity: minor
   test: 2
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "isNarrow guard (lines 64-68) strips sector name from label when width < 1.0mi. Down Jeep is 0.59mi, so only star chars render. Plugin doesn't clip labels to box, so name could be included."
+  artifacts:
+    - path: "src/components/ElevationProfile.astro"
+      issue: "isNarrow branch at lines 64-68 sets labelContent = [starsStr] instead of [sector.name, starsStr]"
+  missing:
+    - "Include sector name in labelContent for narrow sectors (rotation already handles horizontal constraint)"
+  debug_session: ".planning/debug/down-jeep-label.md"
