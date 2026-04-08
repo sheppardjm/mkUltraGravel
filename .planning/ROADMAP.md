@@ -49,10 +49,10 @@ Plans:
   1. Gallery columns are visually balanced — no column ends significantly shorter than its neighbors across the full photo set
   2. All photos render at their natural aspect ratio (no cropping or distortion introduced by the fill fix)
   3. Gallery remains horizontally scrollable with the existing UX pattern preserved
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 55-01: TBD
+- [ ] 55-01-PLAN.md — Balanced column fill CSS change + visual verification
 
 ## Progress
 
