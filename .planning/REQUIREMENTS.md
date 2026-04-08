@@ -13,7 +13,7 @@
 
 ### Visual Overlays
 
-- [ ] **VIS-16**: Escher background overlay opacity/brightness reduced so light text maintains readable contrast
+- [x] **VIS-16**: Escher background overlay opacity/brightness reduced so light text maintains readable contrast
 
 ### Gallery
 
@@ -34,7 +34,7 @@
 | CARD-02 | Phase 53 | Complete |
 | CARD-03 | Phase 53 | Complete |
 | CARD-04 | Phase 53 | Complete |
-| VIS-16 | Phase 54 | Pending |
+| VIS-16 | Phase 54 | Complete |
 | GAL-02 | Phase 55 | Pending |
 
 **Coverage:**
@@ -44,4 +44,4 @@
 
 ---
 *Requirements defined: 2026-04-08*
-*Last updated: 2026-04-08 after Phase 53 completion*
+*Last updated: 2026-04-08 after Phase 54 completion*
