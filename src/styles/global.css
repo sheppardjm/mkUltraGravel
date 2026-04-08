@@ -149,6 +149,7 @@
   .classified-border::before {
     content: "CLASSIFIED";
     position: absolute;
+    z-index: 1;
     top: -0.7em;
     left: 1em;
     background-color: var(--color-bg-base);
