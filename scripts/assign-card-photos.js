@@ -3,7 +3,7 @@
  * Card photo assignment for sector and KOM annotation cards.
  * Reads public/data/photos.json (mile-marked photo manifest) and
  * public/data/annotations.json, selects a representative coverPhoto
- * for each sector and KOM segment, generates 600x338 WebP card crops,
+ * for each sector and KOM segment, generates 1200x675 WebP card crops,
  * and writes coverPhoto back into annotations.json.
  *
  * Algorithm (two-pass):
@@ -11,7 +11,7 @@
  *   Pass 2: If no photos in range, pick nearest photo in entire manifest (fallback).
  *           Logs a warning for each fallback used.
  *
- * Card crops written to: public/images/cards/{basename}.webp (600x338, q80)
+ * Card crops written to: public/images/cards/{basename}.webp (1200x675, q80)
  * Idempotent: skips card crops that already exist.
  *
  * Usage: node scripts/assign-card-photos.js
@@ -85,7 +85,7 @@ async function assignCardPhotos() {
 
   console.log(`\nSelected ${uniqueCoverFilenames.size} unique cover photos for ${annotations.sectors.length} sectors + ${annotations.kom.length} KOMs`);
 
-  // Generate 600x338 WebP card crops for selected photos only
+  // Generate 1200x675 WebP card crops for selected photos only
   let generated = 0;
   let skipped = 0;
 
@@ -100,7 +100,7 @@ async function assignCardPhotos() {
     }
 
     await sharp(srcPath)
-      .resize(600, 338, { fit: 'cover', position: 'attention' })
+      .resize(1200, 675, { fit: 'cover', position: 'attention' })
       .webp({ quality: 80, effort: 4 })
       .toFile(cardPath);
 
