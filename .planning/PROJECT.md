@@ -139,7 +139,14 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ### Active
 
-(No active milestone — site is production-ready for June 7, 2026)
+**Current Milestone: v10.3 Mobile Elevation Labels**
+
+**Goal:** Hide elevation profile sector/KOM labels on mobile (< 640px) to eliminate unreadable label clutter while preserving colored bands for visual context.
+
+- [ ] ELEV-05: Elevation profile sector name labels hidden below 640px viewport width
+- [ ] ELEV-06: Elevation profile star-rating labels hidden below 640px viewport width
+- [ ] ELEV-07: Elevation profile KOM segment labels hidden below 640px viewport width
+- [ ] ELEV-08: Colored sector and KOM bands remain visible on all viewport sizes
 
 ### Out of Scope
 
@@ -161,6 +168,8 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 ## Context
 
 **Shipped v10.2** with ~3,512 LOC across Astro/CSS/JS/TS source files and build scripts. 88 plans shipped across 51 phases and 12 milestones. Pure static Astro site with zero backend dependencies. /results redirects to ironpineomnium.com for leaderboards. Visual texture stack complete — three animated overlays (grain, escher, lizard) with reduced-motion gates. Photo library at 71 images in masonry gallery. Dark-themed scrollbars, proportional card images, and "Powered by Neucadia" attribution footer complete the visual polish.
+
+**v10.3 focus:** Elevation profile chart labels (sector names, star ratings, KOM names) are unreadable on mobile (375px). Labels will be hidden below 640px via Chart.js annotation plugin `display` property; colored bands remain for visual context.
 
 **Tech stack:** Astro 6, Tailwind v4, Leaflet 1.9.4, Chart.js (+ annotation plugin), PhotoSwipe, sharp (thumbnails)
 
@@ -259,4 +268,4 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | Footer after `<slot />` in BaseLayout | Ensures footer renders below all page content on every page | Good |
 
 ---
-*Last updated: 2026-04-07 after v10.2 milestone complete*
+*Last updated: 2026-04-08 after v10.3 milestone started*
