@@ -12,7 +12,7 @@ v10.4 is a visual polish milestone targeting three independent surface areas: se
 
 - [x] **Phase 53: Card Display** - Badge visibility, photo resolution, and gravel card width constraints
 - [x] **Phase 54: Overlay Contrast** - Escher background opacity reduced for text readability
-- [ ] **Phase 55: Gallery Fill** - Masonry columns fill evenly across variable aspect ratios
+- [x] **Phase 55: Gallery Fill** - Masonry columns fill evenly across variable aspect ratios
 
 ## Phase Details
 
@@ -52,7 +52,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 55-01-PLAN.md — Balanced column fill CSS change + visual verification
+- [x] 55-01-PLAN.md — Balanced column fill CSS change + visual verification
 
 ## Progress
 
@@ -63,4 +63,4 @@ Phases 53, 54, 55 are independent and can execute in any order.
 |-------|----------------|--------|-----------|
 | 53. Card Display | 1/1 | Complete | 2026-04-08 |
 | 54. Overlay Contrast | 1/1 | Complete | 2026-04-08 |
-| 55. Gallery Fill | 0/TBD | Not started | - |
+| 55. Gallery Fill | 1/1 | Complete | 2026-04-08 |

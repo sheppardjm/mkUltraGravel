@@ -17,7 +17,7 @@
 
 ### Gallery
 
-- [ ] **GAL-02**: Horizontal masonry gallery fills columns with minimal empty space across variable photo aspect ratios
+- [x] **GAL-02**: Horizontal masonry gallery fills columns with minimal empty space across variable photo aspect ratios
 
 ## Out of Scope
 
@@ -35,7 +35,7 @@
 | CARD-03 | Phase 53 | Complete |
 | CARD-04 | Phase 53 | Complete |
 | VIS-16 | Phase 54 | Complete |
-| GAL-02 | Phase 55 | Pending |
+| GAL-02 | Phase 55 | Complete |
 
 **Coverage:**
 - v10.4 requirements: 5 total
