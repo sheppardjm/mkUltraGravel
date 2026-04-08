@@ -10,7 +10,7 @@ v10.4 is a visual polish milestone targeting three independent surface areas: se
 
 ## Phases
 
-- [ ] **Phase 53: Card Display** - Badge visibility, photo resolution, and gravel card width constraints
+- [x] **Phase 53: Card Display** - Badge visibility, photo resolution, and gravel card width constraints
 - [ ] **Phase 54: Overlay Contrast** - Escher background opacity reduced for text readability
 - [ ] **Phase 55: Gallery Fill** - Masonry columns fill evenly across variable aspect ratios
 
@@ -27,7 +27,7 @@ v10.4 is a visual polish milestone targeting three independent surface areas: se
 **Plans**: 1 plan
 
 Plans:
-- [ ] 53-01-PLAN.md — Badge clipping fix, card photo resolution bump, max-width constraint
+- [x] 53-01-PLAN.md — Badge clipping fix, card photo resolution bump, max-width constraint
 
 ### Phase 54: Overlay Contrast
 **Goal**: Light text over Escher tessellation background maintains readable contrast at all scroll positions
@@ -61,6 +61,6 @@ Phases 53, 54, 55 are independent and can execute in any order.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 53. Card Display | 0/TBD | Not started | - |
+| 53. Card Display | 1/1 | Complete | 2026-04-08 |
 | 54. Overlay Contrast | 0/TBD | Not started | - |
 | 55. Gallery Fill | 0/TBD | Not started | - |

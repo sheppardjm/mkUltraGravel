@@ -7,9 +7,9 @@
 
 ### Card Display
 
-- [ ] **CARD-02**: Classified badge `::before` pseudo-element renders visibly on all segment cards (no occlusion by card content or parent overflow)
-- [ ] **CARD-03**: Card photo crops generated at resolution sufficient for large-screen display (gravel cards span ~900px+ on wide viewports)
-- [ ] **CARD-04**: Gravel sector cards constrained to a reasonable max-width on viewports wider than 1280px
+- [x] **CARD-02**: Classified badge `::before` pseudo-element renders visibly on all segment cards (no occlusion by card content or parent overflow)
+- [x] **CARD-03**: Card photo crops generated at resolution sufficient for large-screen display (gravel cards span ~900px+ on wide viewports)
+- [x] **CARD-04**: Gravel sector cards constrained to a reasonable max-width on viewports wider than 1280px
 
 ### Visual Overlays
 
@@ -31,9 +31,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CARD-02 | Phase 53 | Pending |
-| CARD-03 | Phase 53 | Pending |
-| CARD-04 | Phase 53 | Pending |
+| CARD-02 | Phase 53 | Complete |
+| CARD-03 | Phase 53 | Complete |
+| CARD-04 | Phase 53 | Complete |
 | VIS-16 | Phase 54 | Pending |
 | GAL-02 | Phase 55 | Pending |
 
@@ -44,4 +44,4 @@
 
 ---
 *Requirements defined: 2026-04-08*
-*Last updated: 2026-04-08 after roadmap creation*
+*Last updated: 2026-04-08 after Phase 53 completion*
