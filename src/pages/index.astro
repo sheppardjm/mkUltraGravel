@@ -32,155 +32,71 @@ const GLRC_URL = 'https://www.glrc.org/donate';
 }
 
 @keyframes noise-anim {
-  0% {
-    clip: rect(96px, 9999px, 57px, 0);
-  }
-  5% {
-    clip: rect(88px, 9999px, 67px, 0);
-  }
-  10% {
-    clip: rect(92px, 9999px, 85px, 0);
-  }
-  15% {
-    clip: rect(44px, 9999px, 37px, 0);
-  }
-  20% {
-    clip: rect(53px, 9999px, 19px, 0);
-  }
-  25% {
-    clip: rect(28px, 9999px, 54px, 0);
-  }
-  30% {
-    clip: rect(17px, 9999px, 23px, 0);
-  }
-  35% {
-    clip: rect(6px, 9999px, 6px, 0);
-  }
-  40% {
-    clip: rect(54px, 9999px, 90px, 0);
-  }
-  45% {
-    clip: rect(39px, 9999px, 67px, 0);
-  }
-  50% {
-    clip: rect(17px, 9999px, 43px, 0);
-  }
-  55% {
-    clip: rect(29px, 9999px, 5px, 0);
-  }
-  60% {
-    clip: rect(9px, 9999px, 3px, 0);
-  }
-  65% {
-    clip: rect(1px, 9999px, 67px, 0);
-  }
-  70% {
-    clip: rect(16px, 9999px, 28px, 0);
-  }
-  75% {
-    clip: rect(37px, 9999px, 93px, 0);
-  }
-  80% {
-    clip: rect(14px, 9999px, 9px, 0);
-  }
-  85% {
-    clip: rect(4px, 9999px, 74px, 0);
-  }
-  90% {
-    clip: rect(19px, 9999px, 55px, 0);
-  }
-  95% {
-    clip: rect(44px, 9999px, 75px, 0);
-  }
-  100% {
-    clip: rect(12px, 9999px, 20px, 0);
-  }
+  0% { clip-path: inset(100% 0 41% 0); }
+  5% { clip-path: inset(92% 0 30% 0); }
+  10% { clip-path: inset(96% 0 11% 0); }
+  15% { clip-path: inset(46% 0 61% 0); }
+  20% { clip-path: inset(55% 0 80% 0); }
+  25% { clip-path: inset(29% 0 44% 0); }
+  30% { clip-path: inset(18% 0 76% 0); }
+  35% { clip-path: inset(6% 0 94% 0); }
+  40% { clip-path: inset(56% 0 6% 0); }
+  45% { clip-path: inset(41% 0 30% 0); }
+  50% { clip-path: inset(18% 0 55% 0); }
+  55% { clip-path: inset(30% 0 95% 0); }
+  60% { clip-path: inset(9% 0 97% 0); }
+  65% { clip-path: inset(1% 0 30% 0); }
+  70% { clip-path: inset(17% 0 71% 0); }
+  75% { clip-path: inset(39% 0 3% 0); }
+  80% { clip-path: inset(15% 0 91% 0); }
+  85% { clip-path: inset(4% 0 23% 0); }
+  90% { clip-path: inset(20% 0 43% 0); }
+  95% { clip-path: inset(46% 0 22% 0); }
+  100% { clip-path: inset(13% 0 79% 0); }
 }
 .glitch:after {
   content: attr(data-text);
   position: absolute;
   left: 2px;
+  right: -2px;
   top: 0;
   color: transparent;
-  overflow: hidden;
-  clip: rect(0, 900px, 0, 0);
+  clip-path: inset(0 0 100% 0);
   animation: noise-anim 2s infinite linear alternate-reverse;
 }
 
 @keyframes noise-anim-2 {
-  0% {
-    clip: rect(13px, 9999px, 90px, 0);
-  }
-  5% {
-    clip: rect(16px, 9999px, 39px, 0);
-  }
-  10% {
-    clip: rect(18px, 9999px, 50px, 0);
-  }
-  15% {
-    clip: rect(96px, 9999px, 28px, 0);
-  }
-  20% {
-    clip: rect(92px, 9999px, 12px, 0);
-  }
-  25% {
-    clip: rect(91px, 9999px, 48px, 0);
-  }
-  30% {
-    clip: rect(14px, 9999px, 84px, 0);
-  }
-  35% {
-    clip: rect(92px, 9999px, 54px, 0);
-  }
-  40% {
-    clip: rect(60px, 9999px, 4px, 0);
-  }
-  45% {
-    clip: rect(5px, 9999px, 78px, 0);
-  }
-  50% {
-    clip: rect(23px, 9999px, 20px, 0);
-  }
-  55% {
-    clip: rect(48px, 9999px, 38px, 0);
-  }
-  60% {
-    clip: rect(69px, 9999px, 78px, 0);
-  }
-  65% {
-    clip: rect(64px, 9999px, 42px, 0);
-  }
-  70% {
-    clip: rect(91px, 9999px, 81px, 0);
-  }
-  75% {
-    clip: rect(73px, 9999px, 53px, 0);
-  }
-  80% {
-    clip: rect(37px, 9999px, 16px, 0);
-  }
-  85% {
-    clip: rect(45px, 9999px, 57px, 0);
-  }
-  90% {
-    clip: rect(48px, 9999px, 10px, 0);
-  }
-  95% {
-    clip: rect(51px, 9999px, 8px, 0);
-  }
-  100% {
-    clip: rect(24px, 9999px, 47px, 0);
-  }
+  0% { clip-path: inset(14% 0 6% 0); }
+  5% { clip-path: inset(17% 0 59% 0); }
+  10% { clip-path: inset(19% 0 48% 0); }
+  15% { clip-path: inset(100% 0 71% 0); }
+  20% { clip-path: inset(96% 0 88% 0); }
+  25% { clip-path: inset(95% 0 50% 0); }
+  30% { clip-path: inset(15% 0 13% 0); }
+  35% { clip-path: inset(96% 0 44% 0); }
+  40% { clip-path: inset(63% 0 96% 0); }
+  45% { clip-path: inset(5% 0 19% 0); }
+  50% { clip-path: inset(24% 0 79% 0); }
+  55% { clip-path: inset(50% 0 60% 0); }
+  60% { clip-path: inset(72% 0 19% 0); }
+  65% { clip-path: inset(67% 0 56% 0); }
+  70% { clip-path: inset(95% 0 16% 0); }
+  75% { clip-path: inset(76% 0 45% 0); }
+  80% { clip-path: inset(39% 0 83% 0); }
+  85% { clip-path: inset(47% 0 41% 0); }
+  90% { clip-path: inset(50% 0 90% 0); }
+  95% { clip-path: inset(53% 0 92% 0); }
+  100% { clip-path: inset(25% 0 51% 0); }
 }
 .glitch:before {
   content: attr(data-text);
   position: absolute;
   left: -2px;
+  right: 2px;
   text-shadow: 1px 0 blue;
   top: 0;
   color: white;
-  overflow: hidden;
-  clip: rect(0, 900px, 0, 0);
+  clip-path: inset(0 0 100% 0);
   animation: noise-anim-2 3s infinite linear alternate-reverse;
 }
 </style>
