@@ -24,10 +24,11 @@ v10.4 is a visual polish milestone targeting three independent surface areas: se
   1. Classified badge renders fully visible above all card content on every segment card — no clipping, no occlusion by overflow-hidden parents or stacking context
   2. Gravel sector card photos appear sharp (no visible softness or upscaling artifacts) on viewports 1440px and wider
   3. Gravel sector cards stop growing at a reasonable max-width on ultrawide viewports (2560px+) — card content does not stretch across the full viewport
-**Plans**: 1 plan
+**Plans**: 2 plans
 
 Plans:
 - [x] 53-01-PLAN.md — Badge clipping fix, card photo resolution bump, max-width constraint
+- [ ] 53-02-PLAN.md — Gap closure: z-index fix for CLASSIFIED badge paint order
 
 ### Phase 54: Overlay Contrast
 **Goal**: Light text over Escher tessellation background maintains readable contrast at all scroll positions
@@ -61,6 +62,6 @@ Phases 53, 54, 55 are independent and can execute in any order.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 53. Card Display | 1/1 | Complete | 2026-04-08 |
+| 53. Card Display | 1/2 | Gap closure pending | 2026-04-08 |
 | 54. Overlay Contrast | 1/1 | Complete | 2026-04-08 |
 | 55. Gallery Fill | 1/1 | Complete | 2026-04-08 |
