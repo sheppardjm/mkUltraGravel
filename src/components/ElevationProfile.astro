@@ -63,9 +63,7 @@
     const widthMi = sector.endMi - sector.startMi;
     const isNarrow = widthMi < 1.0;
     const starsStr = '\u2605'.repeat(sector.stars);
-    const labelContent: string[] = isNarrow
-      ? [starsStr]
-      : [sector.name, starsStr];
+    const labelContent: string[] = [sector.name, starsStr];
 
     annotationBoxes[`sector_${i}`] = {
       type: 'box',
