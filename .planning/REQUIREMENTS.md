@@ -9,10 +9,10 @@ Requirements for mobile elevation profile label fix. Each maps to roadmap phases
 
 ### Elevation Profile Mobile
 
-- [ ] **ELEV-05**: Sector name labels hidden on elevation profile below 640px viewport width
-- [ ] **ELEV-06**: Sector star-rating labels hidden on elevation profile below 640px viewport width
-- [ ] **ELEV-07**: KOM segment labels hidden on elevation profile below 640px viewport width
-- [ ] **ELEV-08**: Colored sector and KOM annotation bands remain visible on all viewport sizes
+- [x] **ELEV-05**: Sector name labels hidden on elevation profile below 640px viewport width
+- [x] **ELEV-06**: Sector star-rating labels hidden on elevation profile below 640px viewport width
+- [x] **ELEV-07**: KOM segment labels hidden on elevation profile below 640px viewport width
+- [x] **ELEV-08**: Colored sector and KOM annotation bands remain visible on all viewport sizes
 
 ## Out of Scope
 
@@ -26,10 +26,10 @@ Requirements for mobile elevation profile label fix. Each maps to roadmap phases
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ELEV-05 | Phase 52 | Pending |
-| ELEV-06 | Phase 52 | Pending |
-| ELEV-07 | Phase 52 | Pending |
-| ELEV-08 | Phase 52 | Pending |
+| ELEV-05 | Phase 52 | Complete |
+| ELEV-06 | Phase 52 | Complete |
+| ELEV-07 | Phase 52 | Complete |
+| ELEV-08 | Phase 52 | Complete |
 
 **Coverage:**
 - v10.3 requirements: 4 total

@@ -14,7 +14,7 @@
 - ✅ **v10.0 Strava Decoupling** - Phases 48-49 (shipped 2026-04-06)
 - ✅ **v10.1 CSS Polish** - Phase 50 (shipped 2026-04-06)
 - ✅ **v10.2 Neucadia Footer** - Phase 51 (shipped 2026-04-07)
-- **v10.3 Mobile Elevation Labels** - Phase 52 (in progress)
+- ✅ **v10.3 Mobile Elevation Labels** - Phase 52 (shipped 2026-04-08)
 
 ## Phases
 
@@ -47,7 +47,7 @@ See MILESTONES.md for full archive of completed phases.
 **Plans:** 1 plan
 
 Plans:
-- [ ] 52-01-PLAN.md — Make annotation labels responsive to viewport width
+- [x] 52-01-PLAN.md — Make annotation labels responsive to viewport width
 
 ---
 
@@ -58,4 +58,4 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1-51 (archived) | v1.0–v10.2 | 88/88 | Complete | 2026-04-07 |
-| 52 | v10.3 | 0/1 | Planned | — |
+| 52 | v10.3 | 1/1 | Complete | 2026-04-08 |
