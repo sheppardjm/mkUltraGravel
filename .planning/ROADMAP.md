@@ -48,7 +48,7 @@ See MILESTONES.md for full archive of completed phases.
 
 Plans:
 - [x] 52-01-PLAN.md — Make annotation labels responsive to viewport width
-- [ ] 52-02-PLAN.md — Fix missing sector name on narrow sectors (Down Jeep)
+- [x] 52-02-PLAN.md — Fix missing sector name on narrow sectors (Down Jeep)
 
 ---
 
@@ -59,4 +59,4 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1-51 (archived) | v1.0-v10.2 | 88/88 | Complete | 2026-04-07 |
-| 52 | v10.3 | 1/2 | In Progress | — |
+| 52 | v10.3 | 2/2 | Complete | 2026-04-08 |
