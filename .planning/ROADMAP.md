@@ -28,7 +28,7 @@ v10.4 is a visual polish milestone targeting three independent surface areas: se
 
 Plans:
 - [x] 53-01-PLAN.md — Badge clipping fix, card photo resolution bump, max-width constraint
-- [ ] 53-02-PLAN.md — Gap closure: z-index fix for CLASSIFIED badge paint order
+- [x] 53-02-PLAN.md — Gap closure: z-index fix for CLASSIFIED badge paint order
 
 ### Phase 54: Overlay Contrast
 **Goal**: Light text over Escher tessellation background maintains readable contrast at all scroll positions
@@ -62,6 +62,6 @@ Phases 53, 54, 55 are independent and can execute in any order.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 53. Card Display | 1/2 | Gap closure pending | 2026-04-08 |
+| 53. Card Display | 2/2 | Complete | 2026-04-08 |
 | 54. Overlay Contrast | 1/1 | Complete | 2026-04-08 |
 | 55. Gallery Fill | 1/1 | Complete | 2026-04-08 |
