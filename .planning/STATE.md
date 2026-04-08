@@ -5,15 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-04-08)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** Planning next milestone
+**Current focus:** v10.4 Polish — cards, gallery, overlays
 
 ## Current Position
 
-Milestone: Between milestones (v10.3 complete)
-Phase: N/A
-Plan: N/A
-Status: Ready for next milestone
-Last activity: 2026-04-08 — v10.3 milestone complete
+Milestone: v10.4 Polish
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-08 — Milestone v10.4 started
 
 Progress: 13 milestones shipped, 90 plans across 52 phases complete
 
@@ -46,5 +46,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-04-08
-Stopped at: v10.3 milestone archived
+Stopped at: Defining v10.4 requirements
 Resume file: None

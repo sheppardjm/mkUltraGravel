@@ -143,7 +143,16 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ### Active
 
-None — next milestone TBD via `/gsd:new-milestone`.
+**Current Milestone: v10.4 Polish**
+
+**Goal:** Fix visual regressions and improve layout quality across cards, gallery, and background overlays.
+
+**Target features:**
+- Classified badge regression fix on segment cards
+- Higher resolution card photo crops for large screens
+- Max-width constraint on gravel sector cards for wide viewports
+- Escher background opacity/brightness reduction for text readability
+- Tighter horizontal masonry gallery with fewer empty spaces
 
 ### Out of Scope
 
@@ -266,4 +275,4 @@ None — next milestone TBD via `/gsd:new-milestone`.
 | labelContent unconditional for narrow sectors | isNarrow only controls rotation (-90deg), not content — fixes Down Jeep label gap | Good |
 
 ---
-*Last updated: 2026-04-08 after v10.3 milestone complete*
+*Last updated: 2026-04-08 after v10.4 milestone started*
