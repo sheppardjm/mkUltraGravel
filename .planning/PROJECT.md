@@ -136,17 +136,14 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 - FOOT-01: Site footer displays "Powered by Neucadia" with Neucadia logo — v10.2
 - FOOT-02: Footer links to neucadia.com (opens in new tab) — v10.2
 - FOOT-03: Footer styling consistent with site's dark brutalist design — v10.2
+- ELEV-05: Elevation profile sector name labels hidden below 640px viewport width — v10.3
+- ELEV-06: Elevation profile star-rating labels hidden below 640px viewport width — v10.3
+- ELEV-07: Elevation profile KOM segment labels hidden below 640px viewport width — v10.3
+- ELEV-08: Colored sector and KOM bands remain visible on all viewport sizes — v10.3
 
 ### Active
 
-**Current Milestone: v10.3 Mobile Elevation Labels**
-
-**Goal:** Hide elevation profile sector/KOM labels on mobile (< 640px) to eliminate unreadable label clutter while preserving colored bands for visual context.
-
-- [ ] ELEV-05: Elevation profile sector name labels hidden below 640px viewport width
-- [ ] ELEV-06: Elevation profile star-rating labels hidden below 640px viewport width
-- [ ] ELEV-07: Elevation profile KOM segment labels hidden below 640px viewport width
-- [ ] ELEV-08: Colored sector and KOM bands remain visible on all viewport sizes
+None — next milestone TBD via `/gsd:new-milestone`.
 
 ### Out of Scope
 
@@ -167,9 +164,7 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ## Context
 
-**Shipped v10.2** with ~3,512 LOC across Astro/CSS/JS/TS source files and build scripts. 88 plans shipped across 51 phases and 12 milestones. Pure static Astro site with zero backend dependencies. /results redirects to ironpineomnium.com for leaderboards. Visual texture stack complete — three animated overlays (grain, escher, lizard) with reduced-motion gates. Photo library at 71 images in masonry gallery. Dark-themed scrollbars, proportional card images, and "Powered by Neucadia" attribution footer complete the visual polish.
-
-**v10.3 focus:** Elevation profile chart labels (sector names, star ratings, KOM names) are unreadable on mobile (375px). Labels will be hidden below 640px via Chart.js annotation plugin `display` property; colored bands remain for visual context.
+**Shipped v10.3** with ~2,369 LOC across Astro/CSS/JS/TS source files and build scripts. 90 plans shipped across 52 phases and 13 milestones. Pure static Astro site with zero backend dependencies. /results redirects to ironpineomnium.com for leaderboards. Visual texture stack complete — three animated overlays (grain, escher, lizard) with reduced-motion gates. Photo library at 71 images in masonry gallery. Dark-themed scrollbars, proportional card images, "Powered by Neucadia" attribution footer, and responsive elevation profile labels complete the visual polish.
 
 **Tech stack:** Astro 6, Tailwind v4, Leaflet 1.9.4, Chart.js (+ annotation plugin), PhotoSwipe, sharp (thumbnails)
 
@@ -177,7 +172,7 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 **Performance:** Lighthouse mobile Performance 96, LCP 2.48s, CLS 0.054, TBT 0ms. All Core Web Vitals green. All animations compositor-safe (transform/opacity only). Escher drift and Penrose spin animations gated behind prefers-reduced-motion.
 
-**v10.2 shipped:** Neucadia Footer — "Powered by Neucadia" attribution footer with logo linking to neucadia.com on every page. Previous: v10.1 dark-themed scrollbars + proportional card images; v10.0 removed all Strava infrastructure; v9.0 added BAA as 7th gravel sector.
+**v10.3 shipped:** Mobile Elevation Labels — responsive annotation labels hidden on mobile (< 640px), visible on desktop (640px+), with colored bands preserved at all sizes. Down Jeep narrow-sector gap closed. Previous: v10.2 Neucadia Footer; v10.1 dark-themed scrollbars + proportional card images; v10.0 removed all Strava infrastructure.
 
 **Event Details:**
 - Date: June 7, 2026
@@ -267,5 +262,8 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | grayscale(100%) brightness(2) filter on logo | Renders PNG as white on dark background without separate asset | Good |
 | Footer after `<slot />` in BaseLayout | Ensures footer renders below all page content on every page | Good |
 
+| Scriptable label.display for viewport-conditional rendering | Preserves colored bands (annotation root display untouched) while hiding text on mobile | Good |
+| labelContent unconditional for narrow sectors | isNarrow only controls rotation (-90deg), not content — fixes Down Jeep label gap | Good |
+
 ---
-*Last updated: 2026-04-08 after v10.3 milestone started*
+*Last updated: 2026-04-08 after v10.3 milestone complete*

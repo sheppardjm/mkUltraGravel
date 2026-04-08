@@ -1,5 +1,31 @@
 # Project Milestones: MK Ultra Gravel
 
+## v10.3 Mobile Elevation Labels (Shipped: 2026-04-08)
+
+**Delivered:** Responsive elevation profile labels — hidden on mobile (< 640px) to eliminate clutter, visible on desktop, with colored sector/KOM bands preserved at all sizes. Down Jeep narrow-sector label gap closed.
+
+**Phases completed:** 52 (2 plans total)
+
+**Key accomplishments:**
+
+- Responsive annotation labels via scriptable `display: () => window.innerWidth >= 640` — zero new dependencies
+- Colored sector and KOM bands remain visible at all viewport sizes for visual context
+- Down Jeep narrow-sector label gap closed — all 7 sectors render name + stars on desktop
+- Leverages Chart.js `responsive:true` re-render, no manual resize listeners
+
+**Stats:**
+
+- 1 code file changed (+10/-4 lines)
+- ~2,369 lines of code total (Astro/CSS/JS/TS)
+- 1 phase, 2 plans, 2 tasks
+- 1 day (2026-04-08)
+
+**Git range:** `4195d18` → `36515d7`
+
+**What's next:** Site is production-ready for June 7, 2026 event. Future work TBD via `/gsd:new-milestone`.
+
+---
+
 ## v10.2 Neucadia Footer (Shipped: 2026-04-07)
 
 **Delivered:** "Powered by Neucadia" attribution footer with logo and external link rendered on every page via BaseLayout integration, using site design tokens for dark brutalist consistency.
