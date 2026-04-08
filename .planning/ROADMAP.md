@@ -14,6 +14,7 @@
 - ✅ **v10.0 Strava Decoupling** - Phases 48-49 (shipped 2026-04-06)
 - ✅ **v10.1 CSS Polish** - Phase 50 (shipped 2026-04-06)
 - ✅ **v10.2 Neucadia Footer** - Phase 51 (shipped 2026-04-07)
+- **v10.3 Mobile Elevation Labels** - Phase 52 (in progress)
 
 ## Phases
 
@@ -24,6 +25,27 @@ See MILESTONES.md for full archive of completed phases.
 
 </details>
 
+---
+
+### Phase 52 — Mobile Elevation Labels
+
+**Milestone:** v10.3 Mobile Elevation Labels
+
+**Goal:** The elevation profile chart is readable on mobile devices without label clutter obscuring the visualization.
+
+**Dependencies:** None (single-file change to ElevationProfile.astro)
+
+**Requirements:** ELEV-05, ELEV-06, ELEV-07, ELEV-08
+
+**Success Criteria:**
+
+1. On a 375px viewport, the elevation profile displays no text labels (sector names, star ratings, or KOM segment names) — only the colored annotation bands and the elevation line remain visible.
+2. On a 640px or wider viewport, all sector name labels, star-rating labels, and KOM segment labels render exactly as they do today.
+3. At exactly 639px viewport width, labels are hidden; at exactly 640px, labels are visible — the breakpoint is precise and consistent.
+4. Resizing the browser window from above 640px to below 640px (and back) does not break the chart — the annotation bands remain visible at all sizes.
+
+---
+
 ## Progress
 
 **Execution Order:** Phases execute in numeric order. Last shipped: 51.
@@ -31,3 +53,4 @@ See MILESTONES.md for full archive of completed phases.
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1-51 (archived) | v1.0–v10.2 | 88/88 | Complete | 2026-04-07 |
+| 52 | v10.3 | 0/— | Not started | — |

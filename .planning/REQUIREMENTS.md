@@ -38,4 +38,4 @@ Requirements for mobile elevation profile label fix. Each maps to roadmap phases
 
 ---
 *Requirements defined: 2026-04-08*
-*Last updated: 2026-04-08 after initial definition*
+*Last updated: 2026-04-08 — Phase 52 mapped in roadmap*
