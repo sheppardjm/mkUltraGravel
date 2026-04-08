@@ -76,7 +76,7 @@
       borderWidth: 1,
       _baseColor: starColors[sector.stars],               // stored for highlight/restore
       label: {
-        display: true,
+        display: () => window.innerWidth >= 640,
         content: labelContent,
         position: { x: 'center', y: 'end' },
         color: starColors[sector.stars] + 'cc',
@@ -104,7 +104,7 @@
       borderWidth: 1,
       borderDash: [6, 3],             // dashed border — matches map KOM dashArray style
       label: {
-        display: true,
+        display: () => window.innerWidth >= 640,
         content: kom.name,
         color: '#7fff00cc',           // chartreuse ~80% opacity text
         font: { size: 9, family: 'Space Mono, monospace' },
