@@ -45,18 +45,16 @@ const photos = JSON.parse(photosRaw) as Array<{
   .masonry-gallery {
     columns: 2 160px;
     column-gap: 6px;
-    max-height: 75vh;
+    height: 75vh;
     overflow-x: auto;
     overflow-y: hidden;
-    /* Prevent column count from expanding beyond what fits the height;
-       CSS columns will create new columns to the right when constrained */
-    column-fill: auto;
+    column-fill: balance;
   }
 
   @media (min-width: 480px) {
     .masonry-gallery {
       columns: 3 180px;
-      max-height: 80vh;
+      height: 80vh;
     }
   }
 
@@ -64,14 +62,14 @@ const photos = JSON.parse(photosRaw) as Array<{
     .masonry-gallery {
       columns: 4 200px;
       column-gap: 8px;
-      max-height: 85vh;
+      height: 85vh;
     }
   }
 
   @media (min-width: 1280px) {
     .masonry-gallery {
       columns: 5 220px;
-      max-height: 90vh;
+      height: 90vh;
     }
   }
 
