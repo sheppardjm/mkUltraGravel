@@ -24,8 +24,8 @@ import { starColors } from '../lib/starColors';
           <img
             src={`/images/cards/${sector.coverPhoto.replace(/\.(jpg|jpeg|png|avif)$/i, '.webp')}`}
             alt={`${sector.name} sector terrain`}
-            width="600"
-            height="338"
+            width="1200"
+            height="675"
             loading="lazy"
             decoding="async"
             class="w-full aspect-video object-cover"
@@ -40,7 +40,8 @@ import { starColors } from '../lib/starColors';
             loading="lazy"
           />
         )}
-        <div class={`p-4${i < 2 ? ' relative z-10' : ''}`}>
+      </div>
+      <div class="p-4">
           <div class="flex items-start justify-between gap-4">
             <h3 class="text-accent-white text-lg">{sector.name}</h3>
             <span
@@ -70,7 +71,6 @@ import { starColors } from '../lib/starColors';
             </a>
           )}
         </div>
-      </div>
     </div>
   ))}
 </div>

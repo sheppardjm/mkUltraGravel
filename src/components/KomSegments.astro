@@ -23,8 +23,8 @@ const kom = annotations.kom as Array<{
           <img
             src={`/images/cards/${segment.coverPhoto.replace(/\.(jpg|jpeg|png|avif)$/i, '.webp')}`}
             alt={`${segment.name} climb`}
-            width="600"
-            height="338"
+            width="1200"
+            height="675"
             loading="lazy"
             decoding="async"
             class="w-full aspect-video object-cover"
@@ -39,7 +39,8 @@ const kom = annotations.kom as Array<{
             loading="lazy"
           />
         )}
-        <div class={`p-4${i === 0 ? ' relative z-10' : ''}`}>
+      </div>
+      <div class="p-4">
           <h3 class="text-accent-green mb-2">{segment.name}</h3>
           <div class="grid grid-cols-2 gap-x-6 gap-y-1 text-text-muted text-sm">
             <span>Mile {segment.startMi}</span>
@@ -63,7 +64,6 @@ const kom = annotations.kom as Array<{
             </a>
           )}
         </div>
-      </div>
     </div>
   ))}
 </div>
