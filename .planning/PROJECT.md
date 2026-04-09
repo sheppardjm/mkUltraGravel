@@ -143,16 +143,15 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ### Active
 
-**Current Milestone: v10.4 Polish**
+**Current Milestone: v10.5 SEO & Social Sharing**
 
-**Goal:** Fix visual regressions and improve layout quality across cards, gallery, and background overlays.
+**Goal:** Make the site discoverable and shareable — proper previews when links are shared, structured data for search engines, and crawl infrastructure.
 
 **Target features:**
-- Classified badge regression fix on segment cards
-- Higher resolution card photo crops for large screens
-- Max-width constraint on gravel sector cards for wide viewports
-- Escher background opacity/brightness reduction for text readability
-- Tighter horizontal masonry gallery with fewer empty spaces
+- Open Graph + Twitter Card meta tags with route photo share image
+- JSON-LD Event structured data (date, location, free event)
+- robots.txt + sitemap.xml for search engine crawling
+- Canonical URLs using mkultragravel.com
 
 ### Out of Scope
 
@@ -173,7 +172,7 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ## Context
 
-**Shipped v10.3** with ~2,369 LOC across Astro/CSS/JS/TS source files and build scripts. 90 plans shipped across 52 phases and 13 milestones. Pure static Astro site with zero backend dependencies. /results redirects to ironpineomnium.com for leaderboards. Visual texture stack complete — three animated overlays (grain, escher, lizard) with reduced-motion gates. Photo library at 71 images in masonry gallery. Dark-themed scrollbars, proportional card images, "Powered by Neucadia" attribution footer, and responsive elevation profile labels complete the visual polish.
+**Shipped v10.4** with ~2,369 LOC across Astro/CSS/JS/TS source files and build scripts. 94 plans shipped across 55 phases and 13 milestones. Pure static Astro site with zero backend dependencies. /results redirects to ironpineomnium.com for leaderboards. Visual texture stack complete — three animated overlays (grain, escher, lizard) with reduced-motion gates. Photo library at 71 images in masonry gallery. Dark-themed scrollbars, proportional card images, "Powered by Neucadia" attribution footer, responsive elevation profile labels, card display polish, and balanced gallery fill complete the visual layer. No social meta tags, structured data, or crawl infrastructure exist yet.
 
 **Tech stack:** Astro 6, Tailwind v4, Leaflet 1.9.4, Chart.js (+ annotation plugin), PhotoSwipe, sharp (thumbnails)
 
@@ -275,4 +274,4 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | labelContent unconditional for narrow sectors | isNarrow only controls rotation (-90deg), not content — fixes Down Jeep label gap | Good |
 
 ---
-*Last updated: 2026-04-08 after v10.4 milestone started*
+*Last updated: 2026-04-09 after v10.5 milestone started*
