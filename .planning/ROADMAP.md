@@ -67,7 +67,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 56-01-PLAN.md — Astro site config, sitemap integration, robots.txt, Netlify subdomain redirect
+- [x] 56-01-PLAN.md — Astro site config, sitemap integration, robots.txt, Netlify subdomain redirect
 
 #### Phase 57: OG Share Image
 **Goal**: A 1200×630 JPEG share image exists in public/ and is ready for use in meta tags
@@ -119,7 +119,7 @@ Phase 56 first (all others depend on site config). Phase 57 independent (asset c
 | 53. Card Display | v10.4 | 2/2 | Complete | 2026-04-08 |
 | 54. Overlay Contrast | v10.4 | 1/1 | Complete | 2026-04-08 |
 | 55. Gallery Fill | v10.4 | 1/1 | Complete | 2026-04-08 |
-| 56. SEO Foundation | v10.5 | 0/TBD | Not started | - |
+| 56. SEO Foundation | v10.5 | 1/1 | Complete | 2026-04-09 |
 | 57. OG Share Image | v10.5 | 0/TBD | Not started | - |
 | 58. Meta Tags | v10.5 | 0/TBD | Not started | - |
 | 59. Structured Data | v10.5 | 0/TBD | Not started | - |
