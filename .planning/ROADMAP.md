@@ -1,20 +1,14 @@
-# Roadmap: MK Ultra Gravel v10.4
-
-## Overview
-
-v10.4 is a visual polish milestone targeting three independent surface areas: segment card display (badge z-index, photo resolution, max-width), Escher overlay contrast, and gallery column fill. All five requirements are CSS/pipeline fixes with no cross-dependencies.
+# Roadmap: MK Ultra Gravel
 
 ## Milestones
 
-- 🚧 **v10.4 Polish** - Phases 53-55 (in progress)
+- ✅ **v10.4 Polish** - Phases 53-55 (shipped 2026-04-08)
+- 🚧 **v10.5 SEO & Social Sharing** - Phases 56-59 (in progress)
 
 ## Phases
 
-- [x] **Phase 53: Card Display** - Badge visibility, photo resolution, and gravel card width constraints
-- [x] **Phase 54: Overlay Contrast** - Escher background opacity reduced for text readability
-- [x] **Phase 55: Gallery Fill** - Masonry columns fill evenly across variable aspect ratios
-
-## Phase Details
+<details>
+<summary>✅ v10.4 Polish (Phases 53-55) - SHIPPED 2026-04-08</summary>
 
 ### Phase 53: Card Display
 **Goal**: Segment cards render correctly on large screens — classified badge visible, photos sharp, gravel cards reasonably sized
@@ -55,13 +49,77 @@ Plans:
 Plans:
 - [x] 55-01-PLAN.md — Balanced column fill CSS change + visual verification
 
+</details>
+
+### v10.5 SEO & Social Sharing (In Progress)
+
+**Milestone Goal:** Make the site discoverable and shareable — proper previews when links are shared, structured data for search engines, and crawl infrastructure.
+
+#### Phase 56: SEO Foundation
+**Goal**: Crawl infrastructure is in place — search engines can index the canonical domain, the sitemap is generated, and deploy previews are blocked from indexing
+**Depends on**: Nothing (first phase of milestone)
+**Requirements**: SEO-01, SEO-02, SEO-03, SEO-04, SEO-05
+**Success Criteria** (what must be TRUE):
+  1. Visiting `mkultragravel.netlify.app` in a browser redirects (301) to `mkultragravel.com` — the netlify subdomain never shows the site
+  2. `https://mkultragravel.com/sitemap-index.xml` resolves and lists the site pages
+  3. `https://mkultragravel.com/robots.txt` resolves and contains an Allow directive and the Sitemap URL
+  4. Deploy preview URLs (e.g. `deploy-preview-123--mkultragravel.netlify.app`) return an `X-Robots-Tag: noindex` response header
+**Plans**: TBD
+
+Plans:
+- [ ] 56-01-PLAN.md — TBD
+
+#### Phase 57: OG Share Image
+**Goal**: A 1200×630 JPEG share image exists in public/ and is ready for use in meta tags
+**Depends on**: Nothing (independent asset creation)
+**Requirements**: SOC-03
+**Success Criteria** (what must be TRUE):
+  1. A file exists at `public/og-image.jpg` (or equivalent path) with dimensions 1200×630 pixels
+  2. The image uses a route photo and is visually compelling when viewed as a link preview thumbnail
+  3. File size is suitable for web delivery (under 300 KB)
+**Plans**: TBD
+
+Plans:
+- [ ] 57-01-PLAN.md — TBD
+
+#### Phase 58: Meta Tags
+**Goal**: Every page produces correct Open Graph, Twitter Card, and canonical link metadata — links shared to social platforms show rich previews
+**Depends on**: Phase 56 (for canonical domain URL), Phase 57 (for OG image path)
+**Requirements**: SOC-01, SOC-02, CRAWL-01
+**Success Criteria** (what must be TRUE):
+  1. Pasting `https://mkultragravel.com` into a social share debugger (e.g. Facebook Sharing Debugger, Twitter Card Validator) returns a rich preview with the route photo, title, and description
+  2. Every page's `<head>` contains all six required og: tags (og:title, og:description, og:image, og:url, og:type, og:site_name)
+  3. Every page's `<head>` contains all four required twitter: tags (twitter:card as summary_large_image, twitter:title, twitter:description, twitter:image)
+  4. Every page's `<head>` contains a `<link rel="canonical">` pointing to the mkultragravel.com domain URL for that page
+**Plans**: TBD
+
+Plans:
+- [ ] 58-01-PLAN.md — TBD
+
+#### Phase 59: Structured Data
+**Goal**: The homepage emits a valid JSON-LD SportsEvent schema so search engines understand this is a sporting event with a date, location, and free entry
+**Depends on**: Phase 56 (for canonical domain URL used in schema)
+**Requirements**: DATA-07
+**Success Criteria** (what must be TRUE):
+  1. Google's Rich Results Test returns a valid SportsEvent result for `https://mkultragravel.com`
+  2. The schema includes startDate of 2026-06-07T09:00:00-04:00, location as Marquette Fire Bell (Marquette, MI), and offers with price "0"
+  3. No validation errors appear in a JSON-LD schema validator for the homepage source
+**Plans**: TBD
+
+Plans:
+- [ ] 59-01-PLAN.md — TBD
+
 ## Progress
 
 **Execution Order:**
-Phases 53, 54, 55 are independent and can execute in any order.
+Phase 56 first (all others depend on site config). Phase 57 independent (asset creation). Phase 58 after 56 and 57. Phase 59 after 56.
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 53. Card Display | 2/2 | Complete | 2026-04-08 |
-| 54. Overlay Contrast | 1/1 | Complete | 2026-04-08 |
-| 55. Gallery Fill | 1/1 | Complete | 2026-04-08 |
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 53. Card Display | v10.4 | 2/2 | Complete | 2026-04-08 |
+| 54. Overlay Contrast | v10.4 | 1/1 | Complete | 2026-04-08 |
+| 55. Gallery Fill | v10.4 | 1/1 | Complete | 2026-04-08 |
+| 56. SEO Foundation | v10.5 | 0/TBD | Not started | - |
+| 57. OG Share Image | v10.5 | 0/TBD | Not started | - |
+| 58. Meta Tags | v10.5 | 0/TBD | Not started | - |
+| 59. Structured Data | v10.5 | 0/TBD | Not started | - |

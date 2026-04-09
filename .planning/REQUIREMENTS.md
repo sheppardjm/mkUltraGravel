@@ -41,22 +41,22 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SEO-01 | — | Pending |
-| SEO-02 | — | Pending |
-| SEO-03 | — | Pending |
-| SEO-04 | — | Pending |
-| SEO-05 | — | Pending |
-| SOC-01 | — | Pending |
-| SOC-02 | — | Pending |
-| SOC-03 | — | Pending |
-| DATA-07 | — | Pending |
-| CRAWL-01 | — | Pending |
+| SEO-01 | Phase 56 | Pending |
+| SEO-02 | Phase 56 | Pending |
+| SEO-03 | Phase 56 | Pending |
+| SEO-04 | Phase 56 | Pending |
+| SEO-05 | Phase 56 | Pending |
+| SOC-03 | Phase 57 | Pending |
+| SOC-01 | Phase 58 | Pending |
+| SOC-02 | Phase 58 | Pending |
+| CRAWL-01 | Phase 58 | Pending |
+| DATA-07 | Phase 59 | Pending |
 
 **Coverage:**
 - v10.5 requirements: 10 total
-- Mapped to phases: 0
-- Unmapped: 10
+- Mapped to phases: 10
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-09*
-*Last updated: 2026-04-09 after initial definition*
+*Last updated: 2026-04-09 — traceability mapped after roadmap creation*
