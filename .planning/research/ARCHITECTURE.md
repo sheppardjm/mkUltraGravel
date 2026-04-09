@@ -1,485 +1,405 @@
-# Architecture Patterns — v8.0 Visual Polish Integration
+# Architecture Patterns — SEO & Social Sharing Integration
 
 **Project:** MK Ultra Gravel
-**Research date:** 2026-03-31
-**Scope:** How v8.0 features integrate with existing Astro 6 / Tailwind v4 architecture
-**Overall confidence:** HIGH — all claims sourced from direct codebase inspection
+**Research date:** 2026-04-09
+**Scope:** How SEO meta tags, OG image generation, structured data, and crawl infrastructure integrate with the existing Astro 6 static site
+**Overall confidence:** HIGH — all findings sourced from direct codebase inspection and Astro official documentation
 
 ---
 
 ## Existing Architecture Baseline
 
-**Page structure (`src/pages/index.astro`):**
+### BaseLayout.astro — Current Head Structure
+
 ```
-BaseLayout
-  └─ body.pt-12
-       ├─ SiteNav (fixed, z-index 10000)
-       ├─ div.grain-overlay (fixed, z-index 9999)
-       ├─ div.escher-overlay (fixed, z-index 9998)
-       └─ main
-            ├─ section#hero (tone-image + content)
-            ├─ MkUltraExplainer (section, tone-image + content)
-            ├─ section#route (tone-image + RouteMap + ElevationProfile)
-            ├─ div [CTA block]
-            ├─ section#sectors (GrinduroExplainer + ScoringExplainer + GravelSectors + KomSegments)
-            ├─ section#photos (tone-image + PhotoGallery)
-            └─ section#info (tone-image + EventInfoBlock)
+<head>
+  charset, viewport
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="icon" href="/favicon.svg" />
+  <Font cssVariable="--font-mono" />
+  <Font cssVariable="--font-display" />
+  <!-- Carto CDN preconnects (4 links) -->
+  <slot name="head" />        ← per-page injection point already exists
+</head>
 ```
 
-**Fixed overlay z-index stack (current):**
-```
-10000  SiteNav (.site-nav — position: fixed, in BaseLayout body)
- 9999  grain-overlay (div.grain-overlay — position: fixed, in BaseLayout body)
- 9998  escher-overlay (div.escher-overlay — position: fixed, in BaseLayout body)
-    0  .route-map (Leaflet creates its own stacking context internally)
-    —  section content (div.relative.z-10 inside each section — local stacking context)
-```
+Props accepted: `title?: string`, `description?: string`
+Defaults: `"MK Ultra Gravel — June 7, 2026"` / `"100 miles of rowdy..."` description
 
-**`tone-image` CSS class (global.css):**
-```css
-.tone-image {
-  opacity: 0.12;
-  mix-blend-mode: lighten;
-  filter: grayscale(100%) contrast(1.3);
-  position: absolute;
-  pointer-events: none;
-}
-```
-Every section that uses a tone image has `position: relative; overflow: hidden` and places `<img class="tone-image inset-0 w-full h-full object-cover">` before a `<div class="relative z-10">` content wrapper. The content wrapper's z-10 lifts it above the absolutely-positioned tone image within the section's stacking context.
+**The head slot already exists and is already used.** `index.astro` uses it today to inject a `<link rel="preload">` for the hero image. This is the correct injection point for per-page OG and structured data.
 
-**Pipeline execution order (`scripts/generate-data.js`):**
+### Pages Inventory
+
+| Page | File | Current Title | Description |
+|------|------|--------------|-------------|
+| Homepage | `src/pages/index.astro` | default (from BaseLayout) | default |
+| Results CTA | `src/pages/results.astro` | `"Results — MK Ultra Gravel"` | custom |
+
+Two static pages, no dynamic routes, no `getStaticPaths()`. Sitemap generation is trivial.
+
+### Prebuild Pipeline — Current Steps
+
 ```
-copy images/*.{jpg,jpeg,png,webp,avif} → public/images/
-1. parse-gpx.js            → public/data/route-data.json + public/mk-ultra.gpx
+1. parse-gpx.js            → public/data/route-data.json
 2. resolve-annotations.js  → public/data/annotations.json
 3. match-photos.js         → public/data/photos.json
-4. generate-thumbnails.js  → public/images/thumbs/*.webp + enriches photos.json (width/height)
-5. assign-card-photos.js   → enriches annotations.json (coverPhoto) + public/images/cards/*.webp
-6. convert-hero.js         → public/tone/CIA-MKULTRA-IG_Page_01.webp
-7. convert-tone-images.js  → public/tone/*.webp (3 images currently)
+4. generate-thumbnails.js  → public/images/thumbs/*.webp
+5. assign-card-photos.js   → public/images/cards/*.webp
+6. convert-hero.js         → public/tone/CIA-MKULTRA-IG_Page_01.webp (600px wide, q45)
+7. convert-tone-images.js  → public/tone/*.webp
 ```
 
-**Image source directories:**
-- `images/` — 75 files (route photos). Copied to `public/images/` by pipeline at startup.
-- `images/tone/` — 32 files (CIA docs, Escher art, psychedelic imagery). NOT automatically copied. Tone images must be in `public/tone/` directly for the pipeline to process them.
-- `public/tone/` — 8 files currently. This is the pipeline's source AND destination for tone images (convert-tone-images.js reads and writes here).
+Sharp is already a devDependency. The pipeline is Node.js scripts called via `npm run prebuild` / `npm run dev` preamble.
 
-**`photos.json` schema (per entry, after full pipeline):**
-```json
-{
-  "filename": "...",
-  "lat": 46.xxxxx,
-  "lon": -87.xxxxx,
-  "mi": 45.2,
-  "source": "manual",
-  "width": 1536,
-  "height": 2048
-}
+### Public Assets Already Available
+
+- `public/tone/CIA-MKULTRA-IG_Page_01.webp` — grayscale CIA document, hero background, 600px wide
+- `public/images/` — 75 route photos, originals and thumbs
+- `public/favicon.svg`
+- `public/neucadia-logo.png`
+
+### astro.config.mjs — Current State
+
+```js
+export default defineConfig({
+  vite: { plugins: [tailwindcss()] },
+  fonts: [ /* Space Mono, Special Elite */ ],
+  // NO site property configured — required for sitemap
+});
 ```
+
+### netlify.toml — Current State
+
+```toml
+[build]
+  command = "npm run build"
+  publish = "dist"
+```
+
+No existing `robots.txt` in `public/`.
 
 ---
 
-## Feature 1: Horizontal Masonry Gallery (VIS-18)
+## Integration Points for New Features
 
-### Current state
-`PhotoGallery.astro` renders a uniform CSS grid: `grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2`. Every item has `aspect-[3/4] overflow-hidden` — all cells forced to portrait ratio regardless of original photo orientation.
+### 1. OG / Twitter Meta Tags — Where They Go
 
-### Integration approach
+**Location:** `src/layouts/BaseLayout.astro` head, directly inline.
 
-**Modify `PhotoGallery.astro` directly.** No new component. Changes are internal to the component.
+The cleanest approach for a two-page static site is to expand `BaseLayout.astro` to accept additional props and render OG/Twitter tags directly — no new component needed. BaseLayout already has the prop interface; just add fields.
 
-**Data available:** `photos.json` already contains `width` and `height` per photo (enriched by `generate-thumbnails.js`). These are full-resolution dimensions. The thumbnail is always 400px wide with height scaled proportionally:
-```
-thumbHeight = Math.round((photo.height / photo.width) * 400)
-```
-
-**Layout change:** Replace the uniform grid with a flex-wrap row approach. Set a fixed row height (e.g., 220px mobile, 300px desktop). Each item's width derives from its aspect ratio at the target row height:
-```
-itemWidth = Math.round((photo.width / photo.height) * rowHeight)
-```
-This width can be applied as an inline `style` on each `<a>` element in the template using the already-loaded `width`/`height` fields.
-
-**PhotoSwipe compatibility:** No changes. PhotoSwipe reads `data-pswp-width` and `data-pswp-height` from anchor elements — these pass full-resolution dimensions and remain correct. The init script is unchanged.
-
-**What changes in `PhotoGallery.astro`:**
-- CSS: remove `aspect-[3/4]` per-item, add flex wrap container with fixed height rows
-- Template: add inline `style` attribute per item computing width from aspect ratio
-
-**What does NOT change:**
-- `photos.json` schema — no pipeline changes
-- PhotoSwipe init script — unchanged
-- `data-pswp-width` / `data-pswp-height` attributes — unchanged
-- Thumbnail generation — unchanged
-
----
-
-## Feature 2: Lizard Background Animation (VIS-17)
-
-### Z-index placement
-The lizard background is full-page and fixed. It sits below grain and Escher but above the base background color:
-
-```
-10000  SiteNav
- 9999  grain-overlay
- 9998  escher-overlay
- 9997  LizardBackground  ← NEW
-    —  page section content
-```
-
-### Integration approach
-
-**New Astro component: `src/components/LizardBackground.astro`.**
-
-Add to `BaseLayout.astro` alongside the existing grain/Escher divs, before the `<slot />`.
-
-**Component pattern (follows Escher exactly):**
+**Expanded Props Interface:**
 ```astro
----
-// LizardBackground.astro — no props needed
----
-<div class="lizard-background" aria-hidden="true"></div>
-
-<style>
-  .lizard-background {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    opacity: 0.04;
-    /* SVG background-image with lizard tessellation */
-    background-image: url("data:image/svg+xml,...");
-    background-repeat: repeat;
-    background-size: 120px 120px;
-    z-index: 9997;
-    will-change: transform;
-  }
-  @keyframes lizard-drift {
-    0%   { transform: translate(0, 0); }
-    50%  { transform: translate(-60px, -60px); }
-    100% { transform: translate(-120px, -120px); }
-  }
-  @media (prefers-reduced-motion: no-preference) {
-    .lizard-background {
-      animation: lizard-drift 70s linear infinite;
-    }
-  }
-</style>
-```
-
-**Integration in `BaseLayout.astro`:**
-```astro
-import LizardBackground from "../components/LizardBackground.astro";
-// in body:
-<div class="grain-overlay" aria-hidden="true"></div>
-<div class="escher-overlay" aria-hidden="true"></div>
-<LizardBackground />
-<slot />
-```
-
-**Animation constraints to preserve:**
-- `transform` only — compositor-safe, TBT remains 0ms
-- `will-change: transform` on the element
-- `prefers-reduced-motion` gate (same pattern as escher-drift)
-- `pointer-events: none` so it never intercepts clicks
-
-**Why new component vs bare div in global.css:** The lizard SVG data URI will be substantial. Keeping it in a dedicated component avoids bloating global.css further. The grain and Escher overlays are bare divs because their SVGs were added when the component count was smaller — consistency would be cleaner with components for all three, but changing the existing two is not necessary for v8.0.
-
----
-
-## Feature 3: Topo Meatball Section Dividers (VIS-19)
-
-### Integration approach
-
-**New reusable Astro component: `src/components/TopoDivider.astro`.**
-
-Zero JavaScript. Zero data dependencies. Placed between sections in `index.astro`.
-
-**Component pattern:**
-```astro
----
 interface Props {
-  class?: string;
+  title?: string;
+  description?: string;
+  ogImage?: string;       // absolute URL, e.g. "https://mkultragravel.com/og.jpg"
+  ogType?: string;        // "website" (default)
+  canonicalUrl?: string;  // absolute URL — defaults to Astro.url.href
 }
-const { class: className = '' } = Astro.props;
----
-<div class={`topo-divider ${className}`} aria-hidden="true">
-  <!-- inline SVG: circle with topographic contour lines -->
-  <svg ...>...</svg>
-</div>
+```
 
-<style>
-  .topo-divider {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 1rem 0;
-    opacity: 0.25;
-  }
-</style>
+**New tags to add inside `<head>`, before `<slot name="head" />`:**
+```html
+<!-- Canonical -->
+<link rel="canonical" href={canonicalUrl ?? Astro.url.href} />
+
+<!-- Open Graph -->
+<meta property="og:type" content={ogType ?? "website"} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonicalUrl ?? Astro.url.href} />
+<meta property="og:image" content={ogImage} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:site_name" content="MK Ultra Gravel" />
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImage} />
+```
+
+**Why inline in BaseLayout rather than a new `SEOMeta.astro` component:**
+- Two pages. A dedicated component adds a file and an import for minimal benefit.
+- All existing SEO tags (`<title>`, `<meta name="description">`) are already inline in BaseLayout.
+- Consistency wins. A new component would split SEO concerns across two files.
+
+**If a new component is preferred:** Create `src/components/SEOMeta.astro` that accepts the same props and renders all head tags. Render it inside `<head>` in BaseLayout. Either approach is valid — the inline approach is simpler for this scale.
+
+### 2. OG Image Generation — Static Asset via Prebuild
+
+**Recommendation: Generate a single static OG image in the prebuild pipeline using sharp. Do not use Satori.**
+
+**Rationale:**
+- The site has one meaningful OG image needed: the homepage share card.
+- `results.astro` could share the same image or have a trivially different one.
+- Sharp is already a devDependency. No new dependencies required.
+- Satori adds ~500KB of dependencies (satori, @resvg/resvg-js or sharp-based SVG renderer), requires font embedding, and is engineering overkill for one static image.
+- The existing CIA document hero image (`public/tone/CIA-MKULTRA-IG_Page_01.jpg`) is visually on-brand and already high-quality at source.
+
+**Approach:**
+
+Add a new script `scripts/generate-og-image.js` to the prebuild pipeline (as step 8, after convert-tone-images.js):
+
+```
+8. generate-og-image.js   → public/og.jpg (1200×630)
+```
+
+The script uses sharp to:
+1. Resize the CIA document source to 1200×630 (crop/fill, match OG dimensions)
+2. Optionally composite text overlay (event name, date) — but simple image crop may be sufficient given the site's aesthetic
+3. Output to `public/og.jpg` at quality ~80 (target ~80-120KB)
+
+**OG Image dimensions:** 1200×630 — this is the Facebook/Twitter/LinkedIn recommended size. Aspect ratio 1.91:1.
+
+**Source image for OG:** `public/tone/CIA-MKULTRA-IG_Page_01.jpg` (original, not the 600px WebP) or a source from `images/tone/`. The original is 1374KB at full resolution — more than enough source material.
+
+**Output path:** `public/og.jpg` — served as `https://mkultragravel.com/og.jpg`
+
+**Idempotency:** Same pattern as convert-hero.js — check if file exists and is recent, skip if so.
+
+**Alternative (simpler):** Manually create `public/og.jpg` as a static committed asset. No pipeline change needed. Appropriate if the OG image is designed once and won't change. For a gravel event with fixed branding, this is acceptable. The tradeoff: updating the OG image requires a manual design step rather than a pipeline regeneration.
+
+**Recommendation: Start with a manually created static asset committed to `public/og.jpg`.** Add pipeline generation only if the image needs to vary by page or regenerate automatically. For this milestone, manual is faster and has no moving parts.
+
+### 3. JSON-LD Structured Data — Where It Goes
+
+**Location:** Injected via `<slot name="head" />` in BaseLayout — the same slot already used for per-page head injection.
+
+**Pattern:** Create `src/components/StructuredData.astro` that accepts event data and renders a `<script type="application/ld+json">` tag.
+
+```astro
+---
+// StructuredData.astro
+interface Props {
+  schema: Record<string, unknown>;
+}
+const { schema } = Astro.props;
+---
+<script type="application/ld+json" set:html={JSON.stringify(schema)} />
 ```
 
 **Usage in `index.astro`:**
 ```astro
-<MkUltraExplainer />
-<TopoDivider />
-<section id="route" ...>
-  ...
-</section>
-<TopoDivider class="mt-4" />
-<section id="sectors" ...>
+<BaseLayout ...>
+  <link rel="preload" ... slot="head" />
+  <StructuredData schema={eventSchema} slot="head" />
+  <main>...</main>
+</BaseLayout>
 ```
 
-**Reusability note:** Astro `.astro` components do not auto-forward attributes to the root element. The `class` prop must be explicitly destructured from `Astro.props` and applied to the wrapper `div`. This is the correct Astro pattern for prop-forwarding.
+**Schema type:** `SportsEvent` (subtype of `Event`) — appropriate for a competitive cycling race.
 
----
-
-## Feature 4: Tone Images in New Sections (VIS-16)
-
-### Current state
-Tone images are in 5 of 6 sections. `section#sectors` has no tone image.
-
-### Pipeline changes
-
-**`scripts/convert-tone-images.js` — add entries to `TONE_IMAGES` array** for each new tone image to be used. The array is the configuration manifest. Current array has 3 entries; add as many as needed for v8.0 placements.
-
-**Source path issue:** `convert-tone-images.js` currently reads from AND writes to `public/tone/`. The 32 source images are in `images/tone/`, not `public/tone/`. To use new images from `images/tone/`, either:
-
-1. **Manual copy** (current pattern): Manually place selected images in `public/tone/` before committing. Simple but requires a manual step.
-2. **Update script srcDir** (recommended): Update `convert-tone-images.js` to accept a source directory, defaulting to `images/tone/`, writing to `public/tone/`. This eliminates manual copies and makes the source of truth `images/tone/` for all tone images.
-
-Option 2 is architecturally cleaner and prevents `public/tone/` from needing unprocessed source files committed.
-
-**Template placement** — same pattern as existing tone images. No new CSS needed; `.tone-image` class handles everything:
-```astro
-<section id="sectors" class="relative min-h-screen px-4 py-16 overflow-hidden border-t border-border">
-  <img
-    src="/tone/new-image.webp"
-    alt=""
-    class="tone-image inset-0 w-full h-full object-cover"
-    loading="lazy"
-  />
-  <div class="relative z-10">
-    <!-- existing content unchanged -->
-  </div>
-</section>
+**Required SportsEvent fields:**
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "SportsEvent",
+  "name": "MK Ultra Gravel",
+  "startDate": "2026-06-07T09:00:00-05:00",
+  "location": {
+    "@type": "Place",
+    "name": "Marquette Fire Bell",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Marquette",
+      "addressRegion": "MI",
+      "addressCountry": "US"
+    }
+  },
+  "description": "100 miles of rowdy, technical gravel through Michigan's Upper Peninsula. Free ride. Mass start. No mercy.",
+  "url": "https://mkultragravel.com",
+  "image": "https://mkultragravel.com/og.jpg",
+  "organizer": {
+    "@type": "Organization",
+    "name": "MK Ultra Gravel",
+    "url": "https://mkultragravel.com"
+  },
+  "isAccessibleForFree": true,
+  "sport": "Cycling"
+}
 ```
 
-**Tone images inside sector/KOM cards:** Both `GravelSectors.astro` and `KomSegments.astro` cards already have `position: relative` (via `classified-border`) and `overflow-hidden`. An additional `<img class="tone-image">` inside a card would need the card wrapper to explicitly have these — it does, but the visual effect at card scale may look different from section-scale. This is a visual judgment call, not an architecture constraint.
+**Data source:** Event metadata is static (date, location, name are hardcoded throughout the site). JSON-LD object is hardcoded in `index.astro` frontmatter — no dynamic data required. The `StructuredData.astro` component is just a rendering shell.
 
----
+**Why a component vs inline `<script>` tag:** An Astro component allows `set:html` to bypass Astro's automatic HTML escaping of `<script>` contents. A raw inline `<script type="application/ld+json">` works fine in Astro too — the component pattern is cleaner and reusable if `results.astro` ever needs its own schema.
 
-## Feature 5: 19 New Route Photos (PHOTO-03)
+### 4. Sitemap and robots.txt — Crawl Infrastructure
 
-### The only file that needs editing
+**Sitemap approach: `@astrojs/sitemap` integration (official, v3.7.2)**
 
-**`scripts/photo-manifest.js`** — add 19 new entries with `{ filename, mi }`. The manifest is manually curated. No automation.
-
-**Pre-requisite:** New photo files must be placed in `images/` before running the pipeline. `generate-data.js` copies `images/*.{jpg,jpeg,png,webp,avif}` to `public/images/` at startup.
-
-**Automatic downstream regeneration (no further changes needed):**
-
-| Step | What happens |
-|------|-------------|
-| `match-photos.js` | Adds 19 new entries to `photos.json` with lat/lon from mile markers |
-| `generate-thumbnails.js` | Generates 19 new WebP thumbnails in `public/images/thumbs/`; adds width/height to new entries |
-| `assign-card-photos.js` | Re-evaluates cover photo assignments — new photos expand the candidate pool, may update some coverPhoto fields in annotations.json |
-| `PhotoGallery.astro` | Reads photos.json at build time — 74 photos now appear in gallery automatically |
-| `RouteMap.astro` | Fetches photos.json at runtime — 74 markers appear on map automatically |
-
-**`photos.json` schema does NOT change.** The `width`/`height` fields added by `generate-thumbnails.js` are already present in the schema and consumed by `PhotoGallery.astro`.
-
-**Validation checks run automatically by `match-photos.js`:**
-- All filenames exist in `images/`
-- No duplicate filenames
-- Coordinates within Marquette County bounds (~46.2–46.8 lat, -87.5 to -86.5 lon)
-- Mile markers beyond route end get clamped with a warning
-
----
-
-## Feature 6: GPX Replacement (ROUTE-07)
-
-### Which scripts consume the GPX
-
-Only `parse-gpx.js` reads the GPX directly:
+**Required change to `astro.config.mjs`:**
 ```js
-const GPX_SOURCE = path.join(ROOT, 'MK_Ultra.gpx');  // hardcoded
+import sitemap from '@astrojs/sitemap';
+
+export default defineConfig({
+  site: 'https://mkultragravel.com',  // ADD THIS
+  vite: { plugins: [tailwindcss()] },
+  fonts: [...],
+  integrations: [sitemap()],          // ADD THIS
+});
 ```
 
-**Simplest approach:** Rename the new GPX file to `MK_Ultra.gpx` and replace the existing file at the repo root. No code changes needed.
+This generates `dist/sitemap-index.xml` and `dist/sitemap-0.xml` at build time. Both pages (`/` and `/results/`) are included automatically.
 
-**Alternative:** Update `GPX_SOURCE` in `parse-gpx.js` to the new filename. This requires a code change but is transparent about the new file name.
+**robots.txt approach: Static file in `public/`**
 
-### Full downstream regeneration chain
+Create `public/robots.txt`:
+```
+User-agent: *
+Allow: /
+Sitemap: https://mkultragravel.com/sitemap-index.xml
+```
 
-All artifacts regenerate automatically on next `npm run dev` or `npm run build`:
+Static file is simpler than a dynamic endpoint for a hardcoded canonical domain. The only downside (site URL getting out of sync) is not a real risk here — `mkultragravel.com` is fixed.
 
-| Artifact | Regenerated by | What changes |
-|----------|---------------|--------------|
-| `public/data/route-data.json` | `parse-gpx.js` | New trackpoints, totalMi, elevationGainFt |
-| `public/mk-ultra.gpx` | `parse-gpx.js` | Copied to public/ for the GPX download link |
-| `public/data/annotations.json` | `resolve-annotations.js` | Sector/KOM lat/lon/track arrays recalculated |
-| `public/data/photos.json` | `match-photos.js` | Photo lat/lon recalculated (manual mile markers re-mapped to new trackpoints) |
-| `public/images/thumbs/` | `generate-thumbnails.js` | No change to thumbnails themselves |
-| `public/images/cards/` | `assign-card-photos.js` | No change to card crops |
-| Elevation profile | `ElevationProfile.astro` | Fetches route-data.json at runtime — reflects new route automatically |
-| Route map | `RouteMap.astro` | Fetches route-data.json at runtime — reflects new route automatically |
-| Route stats in hero | `index.astro` | `routeMeta.totalMi` and `elevationGainFt` updated at Astro build time |
+**Canonical URL:** Must add `site: 'https://mkultragravel.com'` to `astro.config.mjs`. This is required for sitemap AND enables `Astro.site` in components, which can be used to generate absolute canonical/OG URLs programmatically.
 
-**Photo mile-marker drift:** `photo-manifest.js` uses manually assigned mile markers. If the new GPX has slightly different cumulative distances, absolute lat/lon coordinates shift slightly. This is expected and acceptable — photos still appear at the correct relative position on the route.
+### 5. Canonical URLs — Implementation
 
-**Sector/KOM startMi verification:** Sector and KOM start mile markers are hardcoded in `resolve-annotations.js`. After GPX replacement, verify that all `startMi + lengthMi` values still fall within the new track's total distance. If the route is longer, existing mile markers are unaffected. If it is shorter (unlikely), the clamping logic in `findPointAtMile` will warn.
+**Pattern:** Use `Astro.site` (set via `site:` in astro.config.mjs) to derive canonical URLs:
+
+In `BaseLayout.astro`:
+```astro
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site).href;
+```
+
+This produces `https://mkultragravel.com/` for the homepage and `https://mkultragravel.com/results/` for the results page. No prop required — derived automatically from the page's own URL.
 
 ---
 
-## New and Modified Components Summary
+## New vs Modified Components
 
-**New components:**
-| Component | File | Purpose | Where Used |
-|-----------|------|---------|-----------|
-| `LizardBackground` | `src/components/LizardBackground.astro` | Fixed animated lizard tessellation behind all content | `BaseLayout.astro` body, before `<slot />` |
-| `TopoDivider` | `src/components/TopoDivider.astro` | Decorative topo meatball between page sections | `src/pages/index.astro` between sections |
+### Modified
 
-**Modified components:**
-| Component | Change |
-|-----------|--------|
-| `src/components/PhotoGallery.astro` | Replace uniform CSS grid with horizontal masonry flex layout |
-| `src/layouts/BaseLayout.astro` | Import and render `<LizardBackground />` |
-| `src/pages/index.astro` | Insert `<TopoDivider />` between sections; add tone images where missing (sectors section) |
+| File | Change | Why |
+|------|--------|-----|
+| `src/layouts/BaseLayout.astro` | Add OG/Twitter/canonical meta tags | Central location for all head meta |
+| `astro.config.mjs` | Add `site:` property and `sitemap()` integration | Required for sitemap generation and `Astro.site` |
 
-**Modified scripts:**
-| Script | Change |
-|--------|--------|
-| `scripts/photo-manifest.js` | Add 19 new `{ filename, mi }` entries |
-| `scripts/convert-tone-images.js` | Add `TONE_IMAGES` entries for new tone images; optionally update source directory to `images/tone/` |
-| `scripts/parse-gpx.js` | Update `GPX_SOURCE` path if new GPX has different filename (or rename GPX to `MK_Ultra.gpx`) |
+### New
 
----
+| File | Purpose | Notes |
+|------|---------|-------|
+| `src/components/StructuredData.astro` | Renders `<script type="application/ld+json">` | Thin shell, schema passed as prop |
+| `public/robots.txt` | Crawl directives + sitemap pointer | Static file |
+| `public/og.jpg` | Shared OG image for social sharing | 1200×630, manually created or pipeline-generated |
 
-## Z-Index Stack (Complete, Post-v8.0)
+### Not Needed
 
-```
-10000  SiteNav (.site-nav — position: fixed — SiteNav.astro inline style)
- 9999  grain-overlay (div — position: fixed — BaseLayout.astro + global.css)
- 9998  escher-overlay (div — position: fixed — BaseLayout.astro + global.css)
- 9997  LizardBackground [NEW] (div — position: fixed — LizardBackground.astro)
-    —  Section content: div.relative.z-10 (local stacking context within each section)
-    —  Tone images: position: absolute, no explicit z-index (below z-10 content within section)
-    0  .route-map Leaflet container (creates its own stacking context)
-```
-
-**Constraints preserved:**
-- Nav at 10000 clears all overlays (established in SiteNav.astro comments)
-- All three global overlays are `pointer-events: none` — clicks pass through to page content
-- All animations are `transform`/`opacity` only — compositor-safe, TBT 0ms preserved
-- All new animations gated behind `prefers-reduced-motion: no-preference`
+| Item | Reason |
+|------|--------|
+| `src/components/SEOMeta.astro` | Inline expansion of BaseLayout.astro head is sufficient at 2-page scale |
+| Satori / resvg-js | Overkill for a single static OG image |
+| Dynamic `robots.txt.ts` endpoint | Static file is sufficient for a hardcoded domain |
+| `astro-seo` third-party package | Adds a dependency for functionality that's 20 lines of markup |
 
 ---
 
-## Suggested Build Order for v8.0 Phases
-
-**Phase 1 — GPX + Photo Pipeline (ROUTE-07, PHOTO-03)**
-Do this first. All route-distance statistics, sector/KOM coordinates, and photo positions derive from the GPX. Updating it early ensures all subsequent visual work is built on accurate data.
-- Replace `MK_Ultra.gpx` at repo root
-- Run pipeline, verify `route-data.json` totalMi and elevationGainFt
-- Verify annotations.json sector/KOM coordinates
-- Add 19 new photos to `images/`, add entries to `photo-manifest.js`
-- Run pipeline, verify `photos.json` count = 74, verify thumbnails generated
-
-**Phase 2 — Tone Images (VIS-16)**
-Simple pipeline config change + template HTML. No component API surface.
-- Update `convert-tone-images.js` `TONE_IMAGES` array
-- Optionally update srcDir to `images/tone/`
-- Add `<img class="tone-image">` to `section#sectors` in `index.astro`
-
-**Phase 3 — Horizontal Masonry Gallery (VIS-18)**
-Self-contained to `PhotoGallery.astro`. No pipeline or data schema changes.
-- Modify CSS and template in `PhotoGallery.astro`
-- Uses `width`/`height` already in `photos.json`
-
-**Phase 4 — Lizard Background (VIS-17)**
-New component + BaseLayout import. Isolated from page content.
-- Create `LizardBackground.astro` with SVG + animation
-- Import and render in `BaseLayout.astro`
-
-**Phase 5 — Topo Dividers (VIS-19)**
-Zero dependencies. Purely additive.
-- Create `TopoDivider.astro`
-- Insert at section boundaries in `index.astro`
-
-**Phases 2–5 are independent** — they can be worked in parallel or in any order after Phase 1 completes.
-
----
-
-## Data Flow (v8.0 Complete)
+## Data Flow — SEO Features
 
 ```
-images/tone/[32 files]      images/[75 files]        MK_Ultra.gpx
-     │                            │                        │
-     │ (manual copy or            │ (copied by             │
-     │  updated script)           │  generate-data.js)     │
-     ▼                            ▼                        ▼
-convert-tone-images.js      public/images/          parse-gpx.js
-     │                            │                        │
-     ▼                            ▼                        ▼
-public/tone/*.webp          match-photos.js       route-data.json
-     │                            │                   meta.totalMi
-     ▼                            ▼               meta.elevationGainFt
-Astro templates            photos.json                     │
-(.tone-image class)         lat/lon/mi/w/h                 ▼
-section bg decorations           │             resolve-annotations.js
-                                 │                         │
-                    generate-thumbnails.js                 ▼
-                                 │              annotations.json
-                                 ▼              sector/KOM coords
-                        thumbs/*.webp
-                        photos.json (w/h)
-                                 │
-                    assign-card-photos.js ←── annotations.json
-                                 │
-                                 ▼
-                        cards/*.webp
-                        annotations.json (coverPhoto)
-                                 │
-                        ─────────┴────────────────────
-                        ▼                             ▼
-                Astro build-time               Runtime fetch
-                (PhotoGallery,                 (RouteMap.astro,
-                 GravelSectors,                 ElevationProfile.astro
-                 KomSegments,                   fetch /data/*.json)
-                 index.astro routeMeta)
+astro.config.mjs
+  site: 'https://mkultragravel.com'
+       │
+       ├── Astro.site (available in all .astro files)
+       │         │
+       │         ├── BaseLayout.astro
+       │         │    canonical = new URL(pathname, Astro.site).href
+       │         │    og:url = canonical
+       │         │    og:image = "https://mkultragravel.com/og.jpg"  (static)
+       │         │
+       │         └── @astrojs/sitemap integration
+       │              generates sitemap-index.xml + sitemap-0.xml at build
+       │
+public/og.jpg  ←── manually created 1200×630 (or scripts/generate-og-image.js)
+       │
+       └── og:image, twitter:image in BaseLayout head
+
+
+index.astro (frontmatter)
+  eventSchema = { "@type": "SportsEvent", ... }  ← static object
+       │
+       └── <StructuredData schema={eventSchema} slot="head" />
+                 │
+                 └── <script type="application/ld+json" set:html={...} />
+                      in <head> via BaseLayout slot
+
+
+public/robots.txt  ←── static committed file
+  Sitemap: https://mkultragravel.com/sitemap-index.xml
 ```
 
 ---
 
-## Integration Points Summary
+## Build Order
 
-| v8.0 Feature | Integration Point | Files Touched | Dependencies |
-|---|---|---|---|
-| Masonry gallery (VIS-18) | Modify `PhotoGallery.astro` layout | `src/components/PhotoGallery.astro` | `photos.json` width/height (already present) |
-| Lizard background (VIS-17) | New component + BaseLayout | `src/components/LizardBackground.astro`, `src/layouts/BaseLayout.astro` | None |
-| Topo dividers (VIS-19) | New component + index.astro | `src/components/TopoDivider.astro`, `src/pages/index.astro` | None |
-| Tone images (VIS-16) | Pipeline config + template | `scripts/convert-tone-images.js`, `src/pages/index.astro` | New images in `public/tone/` |
-| 19 new photos (PHOTO-03) | Photo manifest + image files | `scripts/photo-manifest.js`, `images/` | New JPGs present in `images/` |
-| GPX replacement (ROUTE-07) | Parse script source | `scripts/parse-gpx.js` or rename GPX | New GPX at repo root |
+The recommended build order for implementing SEO & social sharing:
+
+**Step 1 — Foundation (astro.config.mjs + robots.txt)**
+Add `site:` property to astro.config.mjs and `@astrojs/sitemap` integration. Create `public/robots.txt`. This is the prerequisite for `Astro.site` to work in subsequent steps. Install `@astrojs/sitemap` as a dependency.
+
+**Step 2 — OG Image**
+Create `public/og.jpg` (manually designed or via a quick sharp script). Commit the asset. This unblocks all OG tag testing — you need an actual image URL to verify with Facebook/Twitter debuggers.
+
+**Step 3 — BaseLayout Meta Tags**
+Expand `BaseLayout.astro` with OG/Twitter/canonical tags. Wire up `Astro.site` for canonical URL derivation. Test both pages with social debugger tools.
+
+**Step 4 — Structured Data**
+Create `src/components/StructuredData.astro`. Add `SportsEvent` JSON-LD to `index.astro`. Validate with Google Rich Results Test.
+
+Steps 2, 3, and 4 are independent once Step 1 is complete. They can be separate phases or one combined phase depending on how the roadmap structures it.
+
+---
+
+## Integration with Existing Patterns
+
+**head slot usage (existing):** `index.astro` already uses `slot="head"` for a `<link rel="preload">`. Adding `<StructuredData slot="head" />` follows the exact same pattern.
+
+**No changes to prebuild pipeline** unless the OG image generation is automated. The static committed asset approach requires zero pipeline changes.
+
+**No new pages.** `sitemap-0.xml` is generated at build from the two existing pages. No new `.astro` files in `src/pages/` except potentially `src/pages/robots.txt.ts` (but the static file approach avoids even this).
+
+**Netlify deployment:** No changes to `netlify.toml` required. The `dist/` directory already receives the `astro build` output; sitemap XML files land there automatically.
+
+---
+
+## Architecture Decision Record
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| OG/Twitter tags location | Inline in BaseLayout.astro | Consistency with existing `<title>` and `<description>` tags; 2-page scale doesn't justify a component |
+| OG image generation | Static `public/og.jpg` committed asset | Sharp already available but Satori is overkill; manual design gives full control of the 1200×630 composition |
+| OG image source material | CIA document hero image (CIA-MKULTRA-IG_Page_01.jpg) | On-brand, high-resolution source, already used as visual identity |
+| JSON-LD component | `StructuredData.astro` (thin shell) | `set:html` pattern needed for unescaped JSON; component is reusable if `results.astro` ever needs schema |
+| Sitemap | `@astrojs/sitemap` official integration | Official, maintained, zero-config for a static 2-page site |
+| robots.txt | Static `public/robots.txt` | Domain is fixed; dynamic endpoint adds no value |
+| Canonical URL derivation | `new URL(Astro.url.pathname, Astro.site)` | Uses `site:` config — single source of truth, no hardcoded URLs in templates |
+| Schema type | `SportsEvent` (Schema.org) | Subtype of Event, appropriate for a competitive cycling race |
+
+---
+
+## Confidence Assessment
+
+| Area | Confidence | Source |
+|------|------------|--------|
+| BaseLayout head slot usage | HIGH | Direct codebase inspection |
+| `@astrojs/sitemap` config requirements | HIGH | Astro official docs |
+| `Astro.site` / canonical URL pattern | HIGH | Astro official docs |
+| JSON-LD `set:html` pattern | HIGH | Verified in Astro structured data articles |
+| OG image dimensions (1200×630) | HIGH | Facebook/Twitter platform standards, well-established |
+| SportsEvent schema appropriateness | MEDIUM | Schema.org spec + community guidance; Google's support for SportsEvent in rich results is less documented than Event |
+| Static vs pipeline OG image | MEDIUM | Tradeoff judgment call based on site scale; either approach is valid |
 
 ---
 
 ## Sources
 
-All findings from direct codebase inspection. No external research required for this architecture-dimension question.
-
-- `src/pages/index.astro` — section structure, tone image placements, z-index usage
-- `src/layouts/BaseLayout.astro` — overlay render order, nav/grain/Escher structure
-- `src/components/PhotoGallery.astro` — current grid layout, PhotoSwipe init, photos.json consumption
-- `src/components/MkUltraExplainer.astro` — tone-image pattern reference
-- `src/components/GravelSectors.astro` — card structure, position/overflow for potential tone image placement
-- `src/components/SiteNav.astro` — z-index 10000 confirmation
-- `src/styles/global.css` — tone-image class, grain-overlay/escher-overlay z-index, complete overlay definitions
-- `scripts/generate-data.js` — pipeline execution order and image copy logic
-- `scripts/parse-gpx.js` — GPX source path, downstream output
-- `scripts/match-photos.js` — photos.json schema, mile-marker resolution
-- `scripts/generate-thumbnails.js` — thumbnail dimensions, width/height enrichment
-- `scripts/assign-card-photos.js` — card photo selection, annotations enrichment
-- `scripts/convert-tone-images.js` — TONE_IMAGES config, source/dest paths
-- `scripts/photo-manifest.js` — current 55-entry manifest, format reference
-- `scripts/resolve-annotations.js` — hardcoded sector/KOM mile markers
-- `.planning/PROJECT.md` — v8.0 requirements, key decisions log
+- Direct codebase inspection: `src/layouts/BaseLayout.astro`, `src/pages/index.astro`, `src/pages/results.astro`, `astro.config.mjs`, `package.json`, `netlify.toml`, `scripts/generate-data.js`, `scripts/convert-hero.js`
+- Astro official docs: https://docs.astro.build/en/guides/integrations-guide/sitemap/
+- Schema.org SportsEvent: https://schema.org/SportsEvent
+- Astro JSON-LD patterns: https://stephen-lunt.dev/blog/astro-structured-data/
+- OG image approaches in Astro: https://arne.me/blog/static-og-images-in-astro

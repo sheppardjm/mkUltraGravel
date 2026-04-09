@@ -1,377 +1,329 @@
-# Technology Stack — v8.0 Visual Polish
+# Technology Stack — SEO & Social Sharing Milestone
 
 **Project:** MK Ultra Gravel
-**Milestone:** v8.0 visual polish + content
-**Researched:** 2026-03-31
-**Scope:** NEW stack decisions only. Existing Astro 6 + Tailwind v4 + Leaflet + Chart.js + PhotoSwipe + sharp stack is validated and unchanged.
-**Confidence:** HIGH — primary findings from MDN official docs, web.dev, Andy Barefoot's own Medium post, sharp official changelog, and direct codebase inspection.
+**Milestone:** SEO & Social Sharing
+**Researched:** 2026-04-09
+**Scope:** NEW stack decisions only. Existing Astro 6.1.1 + Tailwind v4 + Leaflet + Chart.js + PhotoSwipe + sharp 0.34.5 stack is validated and unchanged.
+**Confidence:** HIGH — primary findings from Astro official docs, @astrojs/sitemap GitHub changelog, npm registry, and direct codebase inspection.
 
 ---
 
 ## Executive Summary
 
-v8.0 introduces six new visual features. Most require zero new dependencies. The two that most resemble "needs a library" questions — masonry gallery layout and CodePen animation adaptation — resolve cleanly to CSS-only or minimal-JS CSS Grid patterns already compatible with the existing stack.
+This milestone adds four SEO capabilities to a 2-page static site. Three of the four require no new npm dependencies at all — they are pure Astro configuration or inline HTML. The fourth (OG image generation) has a choice between zero-dependency (static pre-made file) and a sharp-based build pipeline. The right choice for this project is the static pre-made file approach, since there are only two pages and sharp is already installed.
 
 **Bottom line for each feature:**
 
 | Feature | Approach | New dependency? |
 |---------|----------|-----------------|
-| Horizontal masonry gallery | CSS Grid + ~50 lines of inline JS | No |
-| Lizard background animation | Inline SVG Astro component + CSS keyframes | No |
-| Topo meatball dividers | Inline SVG Astro component + CSS | No |
-| Tone image integration | `public/tone/` + existing `.tone-image` class | No |
-| 19 new route photos | Existing sharp pipeline, no changes needed | No |
-| Updated GPX file | Drop-in replacement, existing pipeline handles it | No |
+| Open Graph + Twitter Card meta tags | Props on `BaseLayout.astro` + inline `<meta>` tags | None |
+| OG share image | Pre-process one route photo with existing sharp, serve from `public/` | None (sharp already installed) |
+| JSON-LD Event structured data | `<script type="application/ld+json">` in `BaseLayout.astro` head slot | None |
+| robots.txt | Static file in `public/robots.txt` | None |
+| sitemap.xml | `@astrojs/sitemap` integration + `site` in astro.config.mjs | `@astrojs/sitemap@3.7.2` |
+| Canonical URLs | `Astro.site` + `Astro.url.pathname` in `BaseLayout.astro` | None (needs `site` in config) |
 
-No new npm dependencies are needed for v8.0.
+**One new dependency total: `@astrojs/sitemap@3.7.2`.**
 
 ---
 
-## Feature 1: Horizontal Masonry Gallery
+## The One New Dependency: @astrojs/sitemap
 
-### What "horizontal masonry" means here
+### Why it's needed
 
-The goal is a gallery where photos scroll horizontally and have a masonry feel — adjacent photos of different natural heights are displayed at a uniform row height, with widths proportionally derived from each photo's aspect ratio. This produces a dense, film-strip visual rather than the traditional Pinterest vertical column masonry.
+Astro does not auto-generate `sitemap.xml`. The `@astrojs/sitemap` integration is the official first-party solution maintained in the Astro monorepo. It crawls all statically-generated routes at build time and emits `sitemap-index.xml` + `sitemap-0.xml` into the output directory. This is the canonical approach documented in Astro's official integration guide.
 
-This is NOT traditional masonry (variable height in vertical columns). It is a fixed-height horizontal strip where widths vary by aspect ratio.
+### Version
 
-### CSS Native Masonry: Not viable
+**Current: 3.7.2** — confirmed via the package's GitHub CHANGELOG.md in the withastro/astro monorepo and corroborated by npm registry data (last published April 2026).
 
-As of March 2026, CSS native masonry (`grid-template-rows: masonry` / `display: grid-lanes`) is experimental in all browsers and available only behind flags in Firefox, Safari Technology Preview, and Chrome/Edge 140. No stable browser ships it unflagged. Using it would break the gallery in production. (Source: [MDN Masonry Layout](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Grid_layout/Masonry_layout), [Chrome for Developers — Brick by brick](https://developer.chrome.com/blog/masonry-update))
+### Installation
 
-### Masonry.js / Isotope: Rejected
-
-Masonry.js (`masonry-layout` on npm) is at version 4.2.2, last published 8 years ago. It does absolute-position layout and requires imagesLoaded as a companion. It adds ~16KB (min+gz) and was designed for vertical column masonry — not horizontal strip scrolling. Isotope is heavier still. Both are unnecessary. (Source: [npm masonry-layout](https://www.npmjs.com/package/masonry-layout))
-
-### Recommended: CSS Grid with aspect-ratio + overflow-x scroll
-
-This is a pure-CSS approach for fixed-height horizontal strip layout, with a small amount of JavaScript only if natural aspect-ratio scroll behavior is wanted. The core technique:
-
-```css
-/* Container: horizontal scroll strip */
-.photo-strip {
-  display: flex;
-  gap: 4px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  height: 280px;         /* fixed row height */
-}
-
-/* Items: width determined by natural aspect ratio */
-.photo-strip-item {
-  flex-shrink: 0;
-  height: 100%;
-  aspect-ratio: var(--photo-ar); /* set in Astro template from photo.width/photo.height */
-  scroll-snap-align: start;
-  overflow: hidden;
-  cursor: pointer;
-}
-
-.photo-strip-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+```bash
+npx astro add sitemap
 ```
 
-In the Astro template, `--photo-ar` is set inline from the `photo.width / photo.height` values already in `photos.json`. PhotoSwipe lightbox wiring (existing) wraps the items as it does today in `PhotoGallery.astro`. No JS layout calculation needed. Scroll-snap adds momentum-scroll feel at no TBT cost (CSS-only, compositor-handled).
+This command installs the package and auto-patches `astro.config.mjs` to add the integration. Alternatively:
 
-**This approach is entirely compositor-safe and adds TBT 0ms.** Flexbox layout, overflow scrolling, and scroll-snap are all handled in the browser's layout/composite pass with no main-thread blocking.
+```bash
+npm install @astrojs/sitemap
+```
 
-**Why not the traditional CSS Grid span technique from Andy Barefoot's Medium article?**
-Barefoot's technique (`grid-auto-rows: 10px` + JS `grid-row-end: span N`) is designed for vertical column masonry (items of variable height in multiple columns). For a horizontal photo strip with a fixed row height, it adds complexity without benefit. The flex + aspect-ratio approach is simpler and more readable. (Source: [Andy Barefoot — Masonry style layout using CSS Grid](https://medium.com/@andybarefoot/a-masonry-style-layout-using-css-grid-8c663d355ebb))
+Then manually update `astro.config.mjs`.
 
-**Integration with existing PhotoGallery.astro:**
-The `photo.width` and `photo.height` fields are already populated in `photos.json` by `generate-thumbnails.js`. The Astro component reads `photos.json` at build time. No data format changes needed.
+### Configuration required in astro.config.mjs
+
+The integration requires the `site` option — without it, it cannot construct absolute URLs:
+
+```js
+import { defineConfig, fontProviders } from "astro/config";
+import tailwindcss from "@tailwindcss/vite";
+import sitemap from "@astrojs/sitemap";
+
+export default defineConfig({
+  site: "https://mkultragravel.com",
+  integrations: [sitemap()],
+  vite: { plugins: [tailwindcss()] },
+  fonts: [ /* unchanged */ ],
+});
+```
+
+The `site` value of `"https://mkultragravel.com"` is the canonical production domain (not the Netlify subdomain). Setting this also enables `Astro.site` throughout the codebase, which is used to build canonical URLs.
+
+**Output:** Two files emitted to `dist/` at build time — `sitemap-index.xml` and `sitemap-0.xml`. For a 2-page site, both pages (`/` and `/results`) are automatically included.
+
+### What NOT to configure
+
+- Do not set `changefreq` or `priority` — Google ignores both fields as of 2023. Including them adds noise.
+- Do not install `astro-robots-txt` (a community package) — a static `public/robots.txt` file is simpler and has no build-time dependency. (See below.)
 
 ---
 
-## Feature 2: Lizard Background Animation (from codepen.io/andybarefoot/pen/MEbORa)
+## Canonical URLs — No New Dependency
 
-### What the CodePen does
+### How it works
 
-Andy Barefoot's "Animated Responsive Lizards — CSS Grid" creates an Escher-tessellation background using CSS Grid diagonal layout with SVG or CSS-clipped tile elements. The grid fills the viewport, JS resizes the grid on window resize to maintain tile count, and CSS handles tile coloring and transitions. The pen is titled "Animated Responsive Lizards" and uses CSS Grid with JS for grid resizing. (Source: web search of CodePen title; full pen source not fetchable due to 403, but Andy Barefoot's own Medium/blog confirms the CSS Grid + JS resize approach for his tessellation pens.)
-
-**This project already has an Escher tessellation.** The `escher-overlay` in `global.css` is a fixed `position: fixed` SVG background tile with `animation: escher-drift 50s linear infinite` — a CSS transform animation that's already compositor-safe. The existing implementation IS the Escher pattern.
-
-### Adaptation strategy: Astro component with inline SVG + CSS keyframes
-
-The CodePen adaptation does NOT require copying its JavaScript. The correct approach for this project:
-
-1. Extract the SVG tile definition from the CodePen as an inline SVG.
-2. Create a new Astro component (e.g. `LizardBackground.astro`) that renders the inline SVG as a `position: fixed` background layer, styled like the existing `escher-overlay`.
-3. Animate using CSS keyframes on `transform` only — same pattern as `escher-drift`.
+Once `site: "https://mkultragravel.com"` is set in `astro.config.mjs`, the Astro global `Astro.site` exposes a `URL` object anywhere in `.astro` files. Canonical URLs are constructed at build time:
 
 ```astro
 ---
-// LizardBackground.astro — no script block needed
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 ---
-<div class="lizard-overlay" aria-hidden="true">
-  <!-- SVG tile from CodePen extracted inline -->
-</div>
-
-<style>
-  .lizard-overlay {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    opacity: 0.04;     /* subtle, not distracting */
-    background-image: url("data:image/svg+xml,..."); /* lizard tile encoded */
-    background-repeat: repeat;
-    background-size: [tile-size];
-    z-index: 9997;     /* below escher-overlay (9998) and grain-overlay (9999) */
-    will-change: transform;
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .lizard-overlay {
-      animation: lizard-drift 70s linear infinite;
-    }
-  }
-
-  @keyframes lizard-drift {
-    from { transform: translate(0, 0); }
-    to   { transform: translate(-[tile-width]px, -[tile-height]px); }
-  }
-</style>
+<link rel="canonical" href={canonicalURL} />
 ```
 
-**Performance characteristics:**
-- `transform` animation: compositor-safe, TBT 0ms, no layout/paint (confirmed: [web.dev animations guide](https://web.dev/articles/animations-guide))
-- `position: fixed` + `will-change: transform`: promotes to GPU layer — same pattern as existing `escher-overlay`
-- `opacity: 0.04`: matches site aesthetic, subtle
+This pattern is documented in Astro's official API reference. The `href` attribute on a `URL` object serializes correctly — no string manipulation needed.
 
-**What NOT to do:** Do not copy the CodePen's JavaScript grid-resizing code. That code is for an interactive viewport-filling grid. This project needs a repeating background tile — the CSS `background-repeat` approach covers this with zero JS.
+### Where to add it
 
-**Astro integration:** Inline SVG in `.astro` component is idiomatic Astro — SVG is just HTML, no special tooling needed. No `postcss-inline-svg` or `astro-icon` library required.
+`BaseLayout.astro` already has `title` and `description` props and a `<head>` section. The canonical tag goes there unconditionally — every page needs one. No per-page configuration is required because `Astro.url.pathname` resolves to the correct value (`/` vs `/results`) at build time for each route.
+
+### The Netlify subdomain concern
+
+The current live URL is `mkultragravel.netlify.app`. Once `mkultragravel.com` is configured as the primary domain in Netlify, Netlify automatically 301-redirects `mkultragravel.netlify.app` to `mkultragravel.com` for all pages. No additional `netlify.toml` redirect rules are needed for the domain consolidation. The canonical tag pointing to `mkultragravel.com` is correct regardless of how the visitor arrived.
 
 ---
 
-## Feature 3: Topographic Meatball Section Dividers (from codepen.io/hollandblumer/pen/RNGLjNQ)
+## Open Graph + Twitter Card Meta Tags — No New Dependency
 
-### What the CodePen likely does
+### Why no library
 
-The pen title suggests hollow circular section dividers with topographic contour line styling (concentric rings suggesting elevation). Full source is not accessible (CodePen returns 403 to non-browser fetches), but topographic/contour SVG dividers are a well-understood pattern: concentric SVG `<circle>` elements with stroke-only fills (hollow), possibly with a `<clipPath>` to create the meatball/disc shape.
+Community SEO wrapper packages (`astro-seo`, `astro-seo-meta`, `@astrolib/seo`) exist but add an abstraction layer over what is ultimately 6-8 `<meta>` tags. For a 2-page static site with a stable tag set, inline meta tags in `BaseLayout.astro` are preferable: they are readable, maintainable, and have zero bundle cost. The wrapper packages vary in Astro 6 compatibility and maintenance activity — introducing a dependency for a thin convenience layer is not justified here.
 
-### Adaptation strategy: Astro component with inline SVG
+### Required tags
+
+Open Graph minimum for a link preview (Facebook, LinkedIn, iMessage):
 
 ```astro
----
-// TopoMeatball.astro
+<meta property="og:type" content="website" />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonicalURL} />
+<meta property="og:image" content={ogImageURL} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="MK Ultra Gravel route photo" />
+<meta property="og:site_name" content="MK Ultra Gravel" />
+```
+
+Twitter/X Card minimum (falls back to OG tags if absent, but explicit tags get better results):
+
+```astro
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImageURL} />
+```
+
+All these tags live in `BaseLayout.astro`. The `ogImageURL` value is a prop defaulting to the pre-generated OG image path (see OG Image section below).
+
+### BaseLayout.astro prop additions
+
+New props needed:
+
+```ts
 interface Props {
-  label?: string;
+  title?: string;
+  description?: string;
+  ogImage?: string;   // path or URL — defaults to the static OG image
 }
-const { label } = Astro.props;
----
-<div class="topo-divider" aria-hidden="true">
-  <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-    <!-- Concentric circles — stroke only, no fill (hollow) -->
-    <circle cx="60" cy="60" r="55" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
-    <circle cx="60" cy="60" r="45" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
-    <circle cx="60" cy="60" r="35" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
-    <circle cx="60" cy="60" r="25" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
-    <circle cx="60" cy="60" r="15" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
-  </svg>
-  {label && <span class="sr-only">{label}</span>}
-</div>
 ```
 
-The exact ring shapes, distortion, and irregular topographic curves must be extracted manually from the CodePen (open in browser, copy the SVG source). The component shell is the same regardless of the exact SVG content.
+---
 
-**No JavaScript needed.** Section dividers are static visual elements. If the CodePen uses JavaScript for animation, that animation should be evaluated against the compositor-safe criterion — only adopt it if it uses `transform`/`opacity` keyframes.
+## OG Share Image — No New Dependency (sharp already installed)
 
-**No new library needed.** Inline SVG in Astro components requires no tooling. Static SVG dividers are HTML.
+### Decision: static pre-generated file, not an Astro endpoint
+
+Two approaches exist for OG images in Astro:
+
+**Option A — Astro endpoint with Satori + sharp:** Create `src/pages/og-image.png.ts`, use `satori` (0.18.3) to render an HTML tree to SVG, convert with sharp to PNG, return as a `Response`. This is appropriate for sites with many pages and dynamic content per page — the image is generated at build time via `getStaticPaths()`.
+
+**Option B — Static file in `public/`:** Pre-process one route photo with sharp (already a devDependency), save as `public/og-image.jpg`, commit to repo. The `<meta property="og:image">` tag points to `https://mkultragravel.com/og-image.jpg`.
+
+**Use Option B.** Rationale:
+- This site has 2 pages, not 200. Both pages share the same OG image (a compelling route photo). There is no per-page dynamic content requiring unique OG images.
+- Adding `satori` (which uses the `yoga-layout-wasm` + `opentype.js` dependency chain and requires a font file) for a 2-page site is engineering overhead with no return.
+- sharp is already installed as a devDependency. A one-time script invocation (or even the macOS Preview export) produces the correctly-sized file. This is not a build-step dependency — it's a one-time authoring task.
+
+### OG image spec
+
+- **Dimensions:** 1200×630px (standard OG aspect ratio, optimal for all platforms)
+- **Format:** JPG at quality 85 (smaller than PNG, acceptable quality loss for a photo)
+- **Source:** Any of the 71 route photos in `images/`. Pick a wide, dramatic, high-contrast shot.
+- **Output path:** `public/og-image.jpg`
+- **Served at:** `https://mkultragravel.com/og-image.jpg`
+
+### One-time sharp script (runs manually, not in prebuild)
+
+```js
+// scripts/generate-og-image.js
+import sharp from "sharp";
+await sharp("images/[chosen-photo].jpg")
+  .resize(1200, 630, { fit: "cover", position: "centre" })
+  .jpeg({ quality: 85 })
+  .toFile("public/og-image.jpg");
+```
+
+Run once: `node scripts/generate-og-image.js`. Commit `public/og-image.jpg`. Done. No build-time dependency, no Satori, no font files.
 
 ---
 
-## Feature 4: Tone Image Integration
+## JSON-LD Event Structured Data — No New Dependency
 
-### Current state
+### Why inline script, not a library
 
-The site already has:
-- `public/tone/` directory with WebP-converted images
-- `.tone-image` CSS class in `global.css` (`opacity: 0.12; mix-blend-mode: lighten; filter: grayscale(100%) contrast(1.3)`)
-- `convert-tone-images.js` pipeline script that processes source images in `images/tone/` into `public/tone/`
+`astro-seo-schema` (version 6.0.0) is a community package that wraps JSON-LD in an Astro component. For a single `Event` type on a single page, the wrapper adds a package dependency and import overhead for what is one `<script>` tag. The correct approach for a static site with known, stable schema is inline JSON in the template.
 
-The `images/tone/` directory already contains 32 images of varying formats (JPEG, WebP, AVIF, PNG).
+### Placement
 
-### What needs to happen
+MK Ultra Gravel is a sporting event. The JSON-LD goes in `index.astro` (the homepage), injected into `BaseLayout.astro`'s `<slot name="head" />`:
 
-The `convert-tone-images.js` script currently only processes 3 hardcoded images. To integrate additional CIA/MK Ultra themed tone images into sectors and KOM cards, the script must be extended or the images placed directly into `public/tone/` as WebP.
+```astro
+<!-- In index.astro frontmatter section -->
+---
+const eventSchema = {
+  "@context": "https://schema.org",
+  "@type": "SportsEvent",
+  "name": "MK Ultra Gravel",
+  "startDate": "2026-06-07T08:00:00-05:00",
+  "endDate": "2026-06-07T20:00:00-05:00",
+  "eventStatus": "https://schema.org/EventScheduled",
+  "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+  "location": {
+    "@type": "Place",
+    "name": "Michigan's Upper Peninsula",
+    "address": {
+      "@type": "PostalAddress",
+      "addressRegion": "MI",
+      "addressCountry": "US"
+    }
+  },
+  "description": "100 miles of rowdy, technical gravel through Michigan's Upper Peninsula. Free ride. Mass start. No mercy.",
+  "url": "https://mkultragravel.com",
+  "image": "https://mkultragravel.com/og-image.jpg",
+  "organizer": {
+    "@type": "Organization",
+    "name": "MK Ultra Gravel",
+    "url": "https://mkultragravel.com"
+  },
+  "isAccessibleForFree": true
+};
+---
+```
 
-**Recommended approach:** Extend `TONE_IMAGES` array in `convert-tone-images.js` for any new source images that need processing. For images already in `images/tone/` that are already WebP and reasonably sized, copy them directly to `public/tone/` (they'll be served as-is).
+```astro
+<!-- Injected via head slot -->
+<script type="application/ld+json" slot="head" set:html={JSON.stringify(eventSchema)} />
+```
 
-**Placement in templates:** Use the existing `.tone-image` class. For sector/KOM card overlays, add a `position: relative` wrapper and place the tone image with `position: absolute`. The existing CSS class handles opacity, blend mode, and grayscale — it's already designed for this use case.
+Using `set:html` prevents Astro from escaping the JSON string. The `slot="head"` targets `BaseLayout.astro`'s `<slot name="head" />` which already exists.
 
-**No new libraries needed.** The existing sharp pipeline and CSS class handle everything.
+### Schema type choice
+
+Use `SportsEvent` (a subtype of `Event`) rather than generic `Event` — it's the correct Schema.org type for a cycling event and may unlock sport-specific rich results in Google Search.
 
 ---
 
-## Feature 5: 19 New Route Photos
+## robots.txt — No New Dependency, Static File
 
-### Current pipeline behavior
+### Approach: static file in `public/`
 
-`generate-data.js` orchestrates the full pipeline:
-1. Copies all images from `images/` to `public/images/`
-2. Runs `match-photos.js` to build `photos.json` (GPS-matched photo manifest)
-3. Runs `generate-thumbnails.js`: clears all stale thumbnails, regenerates 400px-wide WebP for each photo in `photos.json`
-4. Runs `assign-card-photos.js`: assigns cover photos to sector/KOM cards, generates 600×338 WebP card crops
+`public/robots.txt` is copied to `dist/robots.txt` at build time with no processing — this is standard Astro behavior. There is no reason to create a dynamic endpoint for `robots.txt` on a site that has no pages to disallow.
 
-**The pipeline is already idempotent and handles new photos automatically.** Dropping 19 new JPEGs into `images/` and re-running `npm run prebuild` will:
-- Auto-detect them via the `images/` directory scan
-- Add them to `photos.json` via GPS coordinate matching
-- Generate thumbnails for all (the stale-clear-then-regenerate logic means all thumbs are rebuilt)
-- Potentially update cover photos for sectors if better photos are now available
+### Content
 
-### No pipeline changes needed
+```
+User-agent: *
+Allow: /
 
-The sharp API used by the pipeline (`resize()`, `.webp({ quality, effort })`, `.toFile()`) is unchanged in sharp 0.34.x. The 0.34.x changelog shows no breaking API changes from the JPEG/WebP thumbnail workflow. (Source: [sharp changelog v0.34.5](https://sharp.pixelplumbing.com/changelog/v0.34.5/))
+Sitemap: https://mkultragravel.com/sitemap-index.xml
+```
 
-The existing `devDependencies: { "sharp": "^0.34.5" }` is already current.
-
-**One consideration:** `generate-thumbnails.js` clears ALL thumbnails before regenerating. With 55+19=74 photos, regeneration is still fast (sharp is ~50-100ms per image at 400px WebP). No performance concern.
-
----
-
-## Feature 6: Updated GPX Route File
-
-The pipeline already handles GPX replacement via `parse-gpx.js`, which reads `MK_Ultra.gpx` (or `MKULTRA.gpx` — both exist in root). Dropping in an updated GPX and running `npm run prebuild` regenerates `public/data/route-data.json` automatically. No code changes needed.
-
----
-
-## Performance Budget Analysis
-
-**TBT budget: 0ms (must maintain)**
-
-| Feature | TBT Impact | Reason |
-|---------|------------|--------|
-| Horizontal masonry gallery | 0ms | CSS flex layout + overflow-x, no JS layout calculations |
-| Lizard background CSS animation | 0ms | `transform` only, compositor thread |
-| Topo meatball SVGs | 0ms | Static SVG, no animation unless transform-only CSS added |
-| Tone image integration | 0ms | Static img elements with CSS class |
-| 19 new photos (lazy loaded) | 0ms | `loading="lazy" decoding="async"` already on all gallery imgs |
-
-**Caveat on `clip-path` animations:** If the topo meatball or other features use `clip-path` animations, be aware that `clip-path` is not compositor-safe in Firefox as of March 2026 (causes 24.5% CPU increase in Firefox per performance research). Avoid animating `clip-path`. Use `transform: scale()` or `opacity` instead. (Source: [Chrome hardware-accelerated animations blog](https://developer.chrome.com/blog/hardware-accelerated-animations))
-
-**Caveat on `filter` animations:** `filter` is compositor-safe in Chrome but the behavior varies. The existing `filter: grayscale(100%) contrast(1.3)` on `.tone-image` is not animated — it's a static filter. This is fine. Do not add animated `filter` values.
+The `Sitemap:` directive points to `sitemap-index.xml`, which is the index file generated by `@astrojs/sitemap`. Google uses this directive as a hint — the sitemap is also submitted directly via Google Search Console, so the `robots.txt` reference is belt-and-suspenders.
 
 ---
 
 ## What NOT to Add and Why
 
-| Library | Why Rejected |
-|---------|-------------|
-| GSAP | Animation JS library; adds ~30KB and blocks main thread for JS-driven animations. Existing CSS-only approach achieves 0ms TBT. Project constraint: no JS animation libraries. |
-| Masonry.js / Isotope | Designed for vertical column masonry. 8-year-old codebase, absolute-position based. The horizontal strip layout needed here is better served by CSS flex + aspect-ratio. |
-| Swiper.js | Carousel library; 40KB+ min+gz. CSS scroll-snap achieves equivalent horizontal scroll UX at 0KB. |
-| Isotope | Heavy (filtering/sorting grid). Not needed — gallery is display-only. |
-| `@appnest/masonry-layout` | Web component; even at 1KB adds a custom element registration and mutation observer. Not needed for fixed-height strip. |
-| `postcss-inline-svg` | PostCSS plugin for inlining SVGs in CSS. Not needed — Astro supports inline SVG in `.astro` files natively. |
-| `astro-icon` | Overkill for adding 2-3 new SVG components. Direct inline SVG in Astro components is the idiomatic approach for custom shapes. |
+| Library | Rejected because |
+|---------|-----------------|
+| `satori` (0.18.3) | OG image generation overkill for 2-page site; static pre-generated file is simpler and uses sharp already installed |
+| `astro-seo` / `astro-seo-meta` / `@astrolib/seo` | Thin wrappers over `<meta>` tags; adds a dependency for no capability gain; Astro 6 compatibility varies |
+| `astro-seo-schema` | Single JSON-LD `<script>` tag; wrapping it in a component adds a package for zero DX benefit |
+| `astro-robots-txt` | Community package for dynamic robots.txt; static `public/robots.txt` is simpler, no build-time dependency, no maintenance surface |
+| Netlify Edge Functions for OG image | SSR not in the project; pure static deployment; no serverless needed |
 
 ---
 
 ## Dependency Summary
 
-**No new dependencies are needed for v8.0.**
+| Package | Version | Type | Purpose |
+|---------|---------|------|---------|
+| `@astrojs/sitemap` | 3.7.2 | dependency | Generates `sitemap-index.xml` + `sitemap-0.xml` at build time |
 
-Existing stack that v8.0 builds on:
-
-| Dependency | Version in package.json | v8.0 role |
-|-----------|------------------------|-----------|
-| `astro` | ^6.1.1 | Astro component shells for LizardBackground, TopoMeatball |
-| `tailwindcss` | ^4.2.2 | Tailwind utilities for scroll container, spacing |
-| `photoswipe` | ^5.4.4 | Existing lightbox — PhotoGallery.astro reuse |
-| `sharp` (devDep) | ^0.34.5 | Existing — handles 19 new photos unchanged |
+All other SEO features are implemented through:
+- Astro configuration (`site` option — enables `Astro.site`)
+- `BaseLayout.astro` template additions (canonical, OG meta, Twitter meta)
+- `index.astro` head slot (JSON-LD)
+- Static file (`public/robots.txt`)
+- One-time sharp script (`scripts/generate-og-image.js`) producing `public/og-image.jpg`
 
 ---
 
-## Integration Points
+## astro.config.mjs Final State
 
-### global.css additions
+```js
+import { defineConfig, fontProviders } from "astro/config";
+import tailwindcss from "@tailwindcss/vite";
+import sitemap from "@astrojs/sitemap";
 
-Three new CSS blocks in `@layer components`:
-
-```css
-/* Lizard background tile */
-.lizard-overlay {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.04;
-  background-image: url("data:image/svg+xml,...");
-  background-repeat: repeat;
-  background-size: [extracted-tile-size];
-  z-index: 9997;
-  will-change: transform;
-}
-
-/* Topo meatball divider */
-.topo-divider {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-accent-green);
-  width: 80px;
-  height: 80px;
-  margin: 2rem auto;
-}
-
-/* Horizontal photo strip (replaces grid in PhotoGallery.astro) */
-.photo-strip {
-  display: flex;
-  gap: 3px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  height: 280px;
-}
-.photo-strip-item {
-  flex-shrink: 0;
-  height: 100%;
-  scroll-snap-align: start;
-  overflow: hidden;
-  cursor: pointer;
-}
+export default defineConfig({
+  site: "https://mkultragravel.com",           // NEW — enables Astro.site + sitemap URLs
+  integrations: [sitemap()],                    // NEW — generates sitemap at build
+  vite: {
+    plugins: [tailwindcss()],
+  },
+  fonts: [
+    {
+      name: "Space Mono",
+      cssVariable: "--font-mono",
+      provider: fontProviders.google(),
+      weights: [400, 700],
+      styles: ["normal", "italic"],
+      subsets: ["latin"],
+    },
+    {
+      name: "Special Elite",
+      cssVariable: "--font-display",
+      provider: fontProviders.google(),
+      weights: [400],
+      styles: ["normal"],
+      subsets: ["latin"],
+    },
+  ],
+});
 ```
-
-Add to `@keyframes` section:
-
-```css
-@keyframes lizard-drift {
-  from { transform: translate(0, 0); }
-  to   { transform: translate(-[tile-w]px, -[tile-h]px); }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .lizard-overlay { animation: lizard-drift 70s linear infinite; }
-}
-```
-
-### New Astro components
-
-| File | Purpose | Dependencies |
-|------|---------|-------------|
-| `src/components/LizardBackground.astro` | Fixed bg animation tile | None — inline SVG + CSS |
-| `src/components/TopoMeatball.astro` | Section divider SVG | None — inline SVG |
-
-Both components: no `<script>` block, no imports, no new npm packages.
-
-### Modified Astro components
-
-| File | Change |
-|------|--------|
-| `src/components/PhotoGallery.astro` | Replace `<div id="photo-gallery" class="grid grid-cols-2...">` with `<div class="photo-strip">` flex container; set `style="aspect-ratio: {photo.width}/{photo.height}"` on each item; keep existing PhotoSwipe lightbox JS unchanged |
-| `src/components/GravelSectors.astro` | Add `.tone-image` positioned inside card where desired |
-| `src/components/KomSegments.astro` | Add `.tone-image` positioned inside card where desired |
-
-### Pipeline changes
-
-| Script | Change |
-|--------|--------|
-| `scripts/convert-tone-images.js` | Extend `TONE_IMAGES` array for any new source images in `images/tone/` that need conversion |
-| All other scripts | No changes |
 
 ---
 
@@ -379,14 +331,10 @@ Both components: no `<script>` block, no imports, no new npm packages.
 
 | Source | Confidence | What it informed |
 |--------|------------|-----------------|
-| [MDN CSS Masonry Layout](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Grid_layout/Masonry_layout) | HIGH | CSS native masonry is not production-ready (experimental, flag-only) |
-| [Chrome for Developers — Brick by brick help us build CSS Masonry](https://developer.chrome.com/blog/masonry-update) | HIGH | Chrome 140+ testing; still behind flag |
-| [Andy Barefoot — Masonry style layout using CSS Grid](https://medium.com/@andybarefoot/a-masonry-style-layout-using-css-grid-8c663d355ebb) | HIGH | CSS Grid span technique for vertical masonry; confirmed JS-dependent |
-| [web.dev — How to create high-performance CSS animations](https://web.dev/articles/animations-guide) | HIGH | Only `transform` and `opacity` are compositor-safe; verified `will-change: transform` pattern |
-| [Chrome for Developers — Hardware-accelerated animations](https://developer.chrome.com/blog/hardware-accelerated-animations) | MEDIUM | `clip-path` coming to compositor but not fully there in Firefox (24.5% CPU cost) |
-| [npm masonry-layout](https://www.npmjs.com/package/masonry-layout) | HIGH | Version 4.2.2, 8 years since last publish |
-| [sharp changelog v0.34.5](https://sharp.pixelplumbing.com/changelog/v0.34.5/) | HIGH | No breaking API changes in 0.34.x affecting JPEG→WebP thumbnail workflow |
-| [CSS Tricks — Making a Masonry Layout That Works Today](https://css-tricks.com/making-a-masonry-layout-that-works-today/) | MEDIUM | JS polyfill approach for masonry; confirms no pure CSS cross-browser solution today |
-| [MDN CSS Scroll Snap](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Scroll_snap) | HIGH | `scroll-snap-type: x mandatory` is CSS-only, compositor-handled |
-| [Tobias Ahlin — Masonry with CSS](https://tobiasahlin.com/blog/masonry-with-css/) | MEDIUM | Flexbox + nth-child order technique; confirmed not suited for horizontal strip gallery |
-| Direct codebase inspection | HIGH | Confirmed existing `photos.json` already has `width`/`height`; confirmed `.tone-image` CSS class; confirmed escher/grain overlay z-index layer ordering; confirmed sharp pipeline is already fully parameterized for new photos |
+| [Astro config reference — site option](https://docs.astro.build/en/reference/configuration-reference/#site) | HIGH | `Astro.site` behavior, canonical URL construction pattern, requirement for sitemap |
+| [Astro API reference — Astro.site](https://docs.astro.build/en/reference/api-reference/) | HIGH | `new URL(Astro.url.pathname, Astro.site)` canonical pattern |
+| [@astrojs/sitemap integration guide](https://docs.astro.build/en/guides/integrations-guide/sitemap/) | HIGH | Installation, config, output files, robots.txt relationship |
+| [withastro/astro sitemap CHANGELOG.md](https://github.com/withastro/astro/blob/main/packages/integrations/sitemap/CHANGELOG.md) | HIGH | Confirmed 3.7.2 is current version |
+| [npm — satori](https://www.npmjs.com/package/satori) | MEDIUM | Confirmed 0.18.3 is current version; informed decision to reject for this use case |
+| [arne.me — Static OG Images in Astro](https://arne.me/blog/static-og-images-in-astro) | MEDIUM | Confirmed Satori + sharp is the standard dynamic approach; confirmed build-time approach is viable |
+| Direct codebase inspection | HIGH | Confirmed `BaseLayout.astro` has `<slot name="head" />`, title/description props, sharp already in devDependencies; confirmed `public/` exists; confirmed no existing sitemap or robots.txt |

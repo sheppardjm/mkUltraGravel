@@ -1,17 +1,17 @@
 # Project Research Summary
 
-**Project:** MK Ultra Gravel — v8.0 Visual Polish + Content
-**Domain:** High-performance event website — visual texture and photo presentation layer
-**Researched:** 2026-03-31
+**Project:** MK Ultra Gravel — v10.5 SEO & Social Sharing
+**Domain:** Static event website — SEO and social sharing layer on existing Astro 6 static site
+**Researched:** 2026-04-09
 **Confidence:** HIGH
 
 ## Executive Summary
 
-v8.0 is a visual polish milestone that adds six surface-area features to a site already scoring Lighthouse mobile 96, TBT 0ms, CLS 0.054. The defining constraint is that every feature must layer on top of an existing texture stack (fixed Escher tessellation at 0.05 opacity, film grain at 0.06) without tipping the site from "subtle and atmospheric" to "distracting." Research confirmed that all six features — horizontal masonry gallery, lizard background animation, topographic meatball dividers, tone image expansion, 19 new route photos, and GPX replacement — can be implemented with zero new npm dependencies. The existing Astro 6 / Tailwind v4 / sharp / PhotoSwipe stack handles everything.
+MK Ultra Gravel is a two-page Astro 6 static site that currently has `<title>` and `<meta name="description">` but no Open Graph tags, no canonical URL, no structured data, no sitemap, and no robots.txt. The v10.5 milestone adds all standard SEO and social sharing infrastructure. This is a low-complexity, low-risk implementation. Five of six features require zero new npm dependencies. The only new package is `@astrojs/sitemap@3.7.2`, the official first-party Astro integration.
 
-The recommended approach is CSS-first with a hard rule against JS masonry libraries or JS animation libraries. The horizontal gallery (the highest-impact feature) is best implemented as a CSS flexbox fixed-height horizontal strip where each image's display width derives from its natural aspect ratio — this achieves zero CLS (the existing `photos.json` already has `width`/`height` per photo), zero TBT (no JS layout calculations), and keeps PhotoSwipe lightbox wiring completely unchanged. Animations for the lizard background use `transform`-only CSS keyframes, which are compositor-safe and leave the 0ms TBT baseline untouched.
+The single most important prerequisite is setting `site: 'https://mkultragravel.com'` in `astro.config.mjs` before any other work begins. This one field enables `Astro.site` throughout the codebase, unlocks the sitemap integration, and is the source of truth for all absolute URL construction. Without it, canonical tags silently render `href="undefined"`, the sitemap integration throws a build warning, and OG URLs are wrong. Everything downstream of this milestone depends on it being set to the production domain — not the Netlify subdomain.
 
-The single highest-risk element is the GPX replacement, not for its own complexity but because replacing the route file cascades through five downstream pipeline consumers (`parse-gpx.js` → `route-data.json` → `annotations.json` + `photos.json` → Leaflet map + elevation chart + hero stats). The risk is silent coordinate drift: photo mile markers and sector/KOM positions valid on the old route geometry may silently shift on the new one without pipeline errors. This must be the first phase of v8.0, run in isolation and verified against expected outputs before any visual work begins.
+The primary risk is quiet failures: `og:image` with a relative path breaks all social previews without a build error; JSON-LD with invalid JSON is silently ignored by Google's rich results parser; the `.netlify.app` subdomain stays live after a custom domain is connected, creating duplicate content. All these failures are invisible until tested with social debugger tools and the Google Rich Results Test. The implementation plan must include explicit validation steps using those tools before the milestone is considered complete.
 
 ---
 
@@ -19,148 +19,183 @@ The single highest-risk element is the GPX replacement, not for its own complexi
 
 ### Recommended Stack
 
-No new dependencies are needed for v8.0. The entire milestone builds on the existing stack. All "needs a library" questions resolve to CSS or tiny inline patterns.
+The existing stack (Astro 6.1.1, Tailwind v4, sharp 0.34.5) covers all SEO needs without new dependencies except one. Sharp is already installed and handles the OG image. The OG meta tags, canonical link, Twitter Card tags, JSON-LD structured data, and robots.txt are all pure HTML/config — no packages needed. The sitemap is the only feature that needs a package because Astro does not auto-generate `sitemap.xml`.
 
-The masonry gallery resolves to CSS flexbox (`display: flex; overflow-x: auto; height: 300px`) with per-image inline `aspect-ratio` set from `photos.json` data already available at Astro build time. The lizard background and topographic dividers resolve to Astro components with inline SVG and `@keyframes` CSS — the same pattern already used for the Escher overlay. The tone image expansion uses the existing `.tone-image` CSS class and `convert-tone-images.js` pipeline script with array entries added for new images.
+**Core technologies:**
 
-**Core technologies — all existing:**
-- **Astro 6** — component shells for `LizardBackground.astro` and `TopoDivider.astro`; build-time data access for gallery photo dimensions
-- **Tailwind v4** — scroll container utilities; spacing for divider placement
-- **CSS flexbox + scroll-snap** — horizontal masonry layout; zero JS, zero TBT impact
-- **CSS keyframes (`transform` only)** — lizard drift animation; compositor-safe, gated behind `prefers-reduced-motion: no-preference`
-- **sharp 0.34.5** — existing thumbnail pipeline; handles 19 new photos without code changes
-- **PhotoSwipe 5.4.4** — existing lightbox; `PhotoGallery.astro` changes to layout only, not to lightbox wiring
+| Technology | Purpose | Rationale |
+|------------|---------|-----------|
+| `@astrojs/sitemap@3.7.2` | Generates `sitemap-index.xml` + `sitemap-0.xml` at build time | Official first-party Astro integration; only new dependency |
+| `Astro.site` (built-in) | Absolute URL construction for canonical, OG, Twitter, JSON-LD | Requires `site:` in astro.config.mjs; replaces all hardcoded URL strings |
+| `sharp` (existing devDep) | One-time OG image generation (1200×630 JPEG) | Already installed; Satori rejected as overkill for a 2-page site |
+| `BaseLayout.astro` (existing) | Head tag injection point for OG/Twitter/canonical | Already has `<slot name="head" />` and title/description props |
 
-**Explicitly rejected:**
-Masonry.js (8 years old, absolute-position layout, causes CLS + TBT regression), GSAP (JS animation, adds TBT), Swiper.js (40KB carousel library), CSS native masonry (`grid-template-rows: masonry` is flag-only in all stable browsers as of March 2026).
+**Rejected packages:** `satori`, `astro-seo`, `astro-seo-meta`, `@astrolib/seo`, `astro-seo-schema`, `astro-robots-txt`. Each adds a dependency for functionality that is 20 lines of inline code or a static file.
+
+**astro.config.mjs final state — two additions only:**
+```js
+export default defineConfig({
+  site: "https://mkultragravel.com",   // NEW
+  integrations: [sitemap()],           // NEW
+  vite: { plugins: [tailwindcss()] },
+  fonts: [ /* unchanged */ ],
+});
+```
 
 ### Expected Features
 
-All six features have clear, well-researched implementation paths. Priority order by impact-to-effort ratio:
-
-**Must have (table stakes — blocks v8.0 milestone):**
-- GPX replacement with pipeline verification — data accuracy prerequisite; hero stats show wrong mileage without it
-- 19 new route photos (55 → 74) — prerequisite for horizontal masonry (needs updated `photos.json`)
-- Horizontal masonry gallery — highest visual impact; the vertical fixed-crop grid actively damages landscape photos
-- Tone images in sectors section + card accents — existing class, proven placement pattern; `section#sectors` is the only major section without a tone image
+**Must have (table stakes) — social previews break without these:**
+- Open Graph tags (`og:type`, `og:title`, `og:description`, `og:url`, `og:image`, `og:image:width`, `og:image:height`, `og:site_name`) — required by Facebook, LinkedIn, Discord, Slack, iMessage
+- Twitter/X Card tags (`twitter:card: summary_large_image`, `twitter:title`, `twitter:description`, `twitter:image`) — `twitter:card` must be explicit or large image degrades to small thumbnail
+- OG share image at `public/og-image.jpg` (1200×630, JPEG quality 85, under 300KB) — used by all platforms
+- Canonical URL tag (`<link rel="canonical">`) — prevents `.netlify.app` duplicate content indexing
+- `public/robots.txt` with `Sitemap:` directive — crawl infrastructure
+- `sitemap.xml` via `@astrojs/sitemap` — enables Google to discover and index pages
 
 **Should have (differentiators):**
-- Topographic meatball dividers (2–3 placements) — strong thematic fit with gravel/elevation aesthetic; scroll-triggered draw-in distinguishes it from static decoration
-- Lizard background animation (section-scoped at `opacity: 0.03–0.05`) — extends the existing Escher tessellation language into a specific section
+- JSON-LD `SportsEvent` structured data on homepage — unlocks Google rich result card (date, location, event details) in search results
+- Domain 301 redirect (`.netlify.app` to `mkultragravel.com`) via `public/_redirects` — prevents duplicate indexing after custom domain connects
+- Deploy preview `noindex` block via `netlify.toml` context override — prevents crawling of ephemeral preview URLs
+- Per-page OG prop overrides in `BaseLayout.astro` — allows `/results` to carry its own title/description when that page evolves
 
-**Can defer post-v8.0 if constrained:**
-- Lizard background — the Escher tessellation already exists page-wide; a second tessellation in one section risks stacking opacity; calibration may require iteration
-- Divider draw-in animation — static dividers deliver most of the visual value; animated draw-in is a differentiator, not table stakes
+**Defer:**
+- Google Tag Manager / analytics
+- Separate Twitter-specific 1200×675 image (marginal gain over 1200×630)
+- Dynamic OG image generation with Satori (relevant only for sites with unique per-page share images)
+- Social sharing buttons
 
-**Anti-features (confirmed, do not build):**
-- Autoplay gallery, arrow navigation, dot pagination for 74 photos, any JS carousel library
-- Global `position: fixed` for lizard background (third fixed texture layer exceeds subtlety threshold)
-- Opacity above 0.06 for lizard; above 0.16 for card tone accents
-- Tone image on every sector card (select 2–3 maximum)
-- `scroll-snap-type: x mandatory` (traps scroll; use `x proximity` instead)
+**Note on Schema.org type:** FEATURES.md recommends `@type: "Event"` while ARCHITECTURE.md and STACK.md recommend `@type: "SportsEvent"`. PITFALLS.md flags that Google's Rich Results Test documentation does not explicitly list `SportsEvent` as a supported type. **Recommendation: implement `"SportsEvent"` — it is the correct Schema.org subtype for a cycling race, and the fallback to `"Event"` is a one-field change if validation fails.** See Gaps section.
 
 ### Architecture Approach
 
-v8.0 changes are additive and well-isolated. The page structure (`BaseLayout` → body fixed overlays → `main` sections) is unchanged. Two new Astro components are created (`LizardBackground.astro`, `TopoDivider.astro`), one existing component is modified (`PhotoGallery.astro` layout only), and two pipeline scripts get array entries added (`convert-tone-images.js`, `photo-manifest.js`).
+All SEO additions integrate into the existing two-file surface area: `astro.config.mjs` (add `site` and `sitemap()`) and `src/layouts/BaseLayout.astro` (add OG, Twitter, canonical tags inline, expanding existing prop interface). A thin `StructuredData.astro` component handles JSON-LD rendering because Astro's `set:html` directive is needed to emit unescaped JSON inside a `<script>` tag — this is a one-function shell. Static files `public/robots.txt`, `public/og-image.jpg`, and `public/_redirects` are committed assets. No new pages, no dynamic routes, no SSR.
 
-The z-index stack after v8.0:
+**Components and files:**
 
+| Item | Type | Change |
+|------|------|--------|
+| `astro.config.mjs` | Modified | Add `site:` and `sitemap()` integration |
+| `src/layouts/BaseLayout.astro` | Modified | Add OG, Twitter Card, canonical tags; expand Props interface |
+| `src/components/StructuredData.astro` | New | Thin shell: renders `<script type="application/ld+json" set:html={JSON.stringify(schema)} />` |
+| `public/robots.txt` | New | Static file; `Allow: /`; `Sitemap:` directive |
+| `public/og-image.jpg` | New | 1200×630 route photo; manually generated once via sharp |
+| `public/_redirects` | New | 301 redirect from `.netlify.app/*` to `mkultragravel.com/:splat` |
+
+**Data flow:**
 ```
-10000  SiteNav (fixed)
- 9999  grain-overlay (fixed)
- 9998  escher-overlay (fixed, will-change: transform)
- 9997  LizardBackground [NEW] (fixed, transform-only animation, no will-change)
-    —  Section content (relative z-10 local stacking contexts)
+astro.config.mjs (site: 'https://mkultragravel.com')
+  └── Astro.site
+        ├── BaseLayout.astro: canonical = new URL(pathname, Astro.site).href
+        ├── BaseLayout.astro: og:image = new URL('/og-image.jpg', Astro.site).href
+        └── @astrojs/sitemap: generates sitemap-index.xml + sitemap-0.xml
+
+index.astro: eventSchema object (static)
+  └── <StructuredData schema={eventSchema} slot="head" />
+        └── <script type="application/ld+json"> in <head>
+
+public/og-image.jpg  → https://mkultragravel.com/og-image.jpg
+public/robots.txt    → https://mkultragravel.com/robots.txt
+public/_redirects    → processed by Netlify for subdomain 301
 ```
-
-All three global overlays are `pointer-events: none`. All animations are `transform`/`opacity` only — compositor thread, TBT remains 0ms.
-
-**Major components:**
-1. **`LizardBackground.astro`** — new; fixed animated tessellation; added to `BaseLayout.astro` body before `<slot />`; no props, no script block
-2. **`TopoDivider.astro`** — new; reusable inline SVG section divider; placed between sections in `index.astro`; no JS, accepts optional `class` prop
-3. **`PhotoGallery.astro`** — modified; CSS grid replaced with flex horizontal strip; `aspect-ratio` inline styles set from `photos.json` `width`/`height`; PhotoSwipe wiring and `data-pswp-*` attributes unchanged
-
-**Pipeline architecture note:** `convert-tone-images.js` currently reads from AND writes to `public/tone/`, but the 32 source images live in `images/tone/`. Recommended fix: update the script's `srcDir` to `images/tone/` so source of truth is consistent. This is an architecture cleanup, not a blocker.
 
 ### Critical Pitfalls
 
-1. **Masonry gallery without explicit image dimensions causes CLS regression** — Pass `photo.width` and `photo.height` from `photos.json` as `width`/`height` HTML attributes on every `<img>` in the gallery. These values exist in the data; they are currently unused in the template. Without them, the masonry container has zero height on first paint and shifts layout as images load. CLS must stay below 0.1 (currently 0.054).
+1. **`site` not set in astro.config.mjs** — set `site: 'https://mkultragravel.com'` as the absolute first change. Without it: sitemap throws a build warning, canonical tags render `href="undefined"`, `og:url` is wrong. Root cause of multiple silent failures.
 
-2. **GPX replacement cascades silently through five downstream consumers** — Run `npm run prebuild` in isolation immediately after GPX swap. Check `route-data.json` `meta.totalMi` against expected ~100mi. Scan `match-photos.js` output for ANY "mile marker exceeds route end" warnings. Visually verify photo markers at route start, middle, and end on the Leaflet map. Do not proceed to visual phases until this passes.
+2. **`og:image` with a relative path** — always construct with `new URL('/og-image.jpg', Astro.site).href`. Relative paths fail silently on all social platforms — no build error, no browser error, no image in link previews.
 
-3. **JS masonry library destroys TBT** — Do not use Masonry.js, Macy.js, Isotope, or any library that measures DOM element heights post-render. All require synchronous reflow + absolute-position assignment for 74 items — expect 100–300ms TBT regression from the current 0ms baseline. Use CSS flexbox fixed-height rows; widths are pre-calculated at Astro build time.
+3. **OG image cache is effectively permanent on WhatsApp and Telegram** — get the image right before the first public share. If the image must change after initial shares, change the filename/URL (not just the file content) to bust platform caches.
 
-4. **`mix-blend-mode` on tone images creates stacking contexts that break card interactivity** — Add `isolation: isolate` to section and card containers that receive tone images. Without it, `mix-blend-mode: lighten` on an absolutely-positioned tone image can interfere with hover states and PhotoSwipe lightbox z-ordering. Test by clicking a gallery item after adding tone images to any section.
+4. **`.netlify.app` stays live as duplicate content** — add `public/_redirects` with a 301 before submitting the sitemap to Google Search Console. If Google indexes both URLs first, fixing it requires weeks of waiting for re-crawl.
 
-5. **Animated lizard background with `will-change` on too many elements degrades mobile scroll** — The existing `escher-overlay` already has `will-change: transform`. Do NOT add `will-change` to `LizardBackground`. Use `animation` with `transform` only; the browser promotes the layer only when needed. Target: DevTools Layers panel shows 3 or fewer simultaneously active layers. Test on CPU-throttled Chrome DevTools profile (4x slowdown) before shipping.
+5. **`twitter:card` missing = large image renders as small thumbnail** — Twitter inherits OG tags but defaults to the `summary` (small) card without an explicit `twitter:card: summary_large_image` tag.
+
+6. **Trailing slash inconsistency between canonical tags and sitemap** — use `new URL(Astro.url.pathname, Astro.site).href` for all canonical construction, never hardcoded strings.
+
+7. **JSON-LD with invalid JSON is silently ignored** — always use `JSON.stringify(schemaObject)` with `set:html`, never string concatenation. Validate with Google Rich Results Test on the production URL, not localhost.
 
 ---
 
 ## Implications for Roadmap
 
-Based on combined research, the natural phase structure has one strict ordering dependency (GPX first) and four largely independent phases.
+All four research files converge on the same build order. The dependency graph is strict at the top (everything needs `site` set first) and parallel at the bottom (OG image, meta tags, and structured data are independent once foundation is in place).
 
-### Phase 1: GPX + Route Data Validation
-**Rationale:** The GPX file is the root data source for the entire route display — hero stats, elevation profile, Leaflet map, sector/KOM positions, and photo geo-matching all derive from it. The project MEMORY notes the route was extended to 100mi but the updated GPX has not been verified. Any route data drift discovered after visual phases are built would require rebuilding against new coordinates. This must be isolated and verified first.
-**Delivers:** Verified `route-data.json` with `totalMi ≈ 100`, clean `annotations.json` sector/KOM coordinates, zero pipeline clamping warnings
-**Addresses:** Feature 6 (GPX replacement)
-**Avoids:** Pitfall 3 (silent downstream cascade), the open MEMORY flag ("awaiting updated GPX from Strava before Phase 1 verification can pass")
-**Research flag:** No additional research needed — pipeline chain fully documented in ARCHITECTURE.md
+### Phase 1: SEO Foundation
 
-### Phase 2: Photo Pipeline Expansion (55 → 74 Photos)
-**Rationale:** Adding photos to `images/` and updating `photo-manifest.js` is a data pipeline operation. It must complete before the horizontal masonry gallery is built because the gallery's flex layout depends on `photos.json` having all 74 entries with correct `width`/`height`. Running this phase early also surfaces any card cover photo reassignments that need visual review.
-**Delivers:** 74 entries in `photos.json` with thumbnails; card cover photo reassignment diff for review; `photo-manifest.js` updated
-**Addresses:** Feature 5 (19 new route photos)
-**Avoids:** Pitfall 8 (thumbnail audit, card cover photo diff after `assign-card-photos.js` reruns)
-**Research flag:** No additional research needed — pipeline is idempotent and fully documented
+**Rationale:** Hard prerequisite for every other phase. `Astro.site` is not available until `site:` is set. Sitemap integration cannot function without it. Canonical URL construction requires it. This is the one change that unlocks all downstream work.
 
-### Phase 3: Horizontal Masonry Gallery
-**Rationale:** Highest visual impact of all v8.0 features. Self-contained to `PhotoGallery.astro` — no pipeline changes, no new components. Depends on Phases 1 and 2 completing so all 74 photos with correct dimensions are in `photos.json`.
-**Delivers:** Horizontal fixed-height photo strip replacing the fixed-crop vertical grid; aspect-ratio-correct display for all 74 photos; PhotoSwipe lightbox unchanged
-**Addresses:** Feature 1 (horizontal masonry gallery)
-**Avoids:** Pitfall 1 (CLS — pass `width`/`height` attributes), Pitfall 2 (TBT — no JS masonry library), Pitfall 11 (touch scroll capture — add `touch-action: pan-y`)
-**Stack:** CSS flexbox + `scroll-snap-type: x proximity`, inline `aspect-ratio` from build-time data
-**Research flag:** No additional research needed — implementation pattern fully specified in STACK.md and PITFALLS.md
+**Delivers:** Working `Astro.site` global; `@astrojs/sitemap` installed and generating sitemap at build; `public/robots.txt` deployed with `Sitemap:` directive; `.netlify.app` 301 redirect in place; deploy previews blocked from indexing; `/results` filtered from sitemap.
 
-### Phase 4: Tone Image Expansion
-**Rationale:** Low-risk, additive. Extends the established `.tone-image` pattern to the one major section currently without it (`#sectors`) and adds card-corner accents to 2–3 selected cards. Pipeline config change (`convert-tone-images.js` array) plus template HTML only.
-**Delivers:** Tone image in `section#sectors`; 1 interstitial tone band; 2–3 card accents in `GravelSectors.astro` or `KomSegments.astro`
-**Addresses:** Feature 4 (tone image integration)
-**Avoids:** Pitfall 4 (LCP — all new images use `loading="lazy"`), Pitfall 7 (`mix-blend-mode` stacking context — add `isolation: isolate` to card containers)
-**Research flag:** No additional research needed — placement patterns and anti-patterns fully documented in FEATURES.md
+**Implements:**
+- `site: 'https://mkultragravel.com'` in `astro.config.mjs`
+- `@astrojs/sitemap` integration installed and wired
+- `public/robots.txt` (static file, `Sitemap: https://mkultragravel.com/sitemap-index.xml`)
+- `public/_redirects` (301 from `.netlify.app/*` to `mkultragravel.com/:splat 301!`)
+- `netlify.toml` context override blocking deploy preview indexing
+- Sitemap filter excluding `/results`
 
-### Phase 5: Topographic Meatball Dividers
-**Rationale:** Zero dependencies on other phases. Purely additive: new `TopoDivider.astro` component inserted between existing sections in `index.astro`. No pipeline changes. The scroll-triggered draw-in reuses the existing IntersectionObserver pattern from `index.astro`.
-**Delivers:** 2–3 topographic SVG section dividers with scroll-triggered stroke-dashoffset draw-in animation; `aria-hidden="true"` decorative elements
-**Addresses:** Feature 3 (topographic meatball dividers)
-**Avoids:** Pitfall 9 (missing `aria-hidden`), Pitfall 10 (reduced-motion gate on new animation)
-**Research flag:** SVG path data must be extracted from codepen.io/hollandblumer/pen/RNGLjNQ by opening in a browser — not fetchable programmatically (403 on non-browser requests). The component shell and CSS animation pattern are fully specified; only SVG paths require manual extraction during implementation.
+**Avoids:** Pitfall 1 (missing `site`), Pitfall 4 (duplicate `.netlify.app`), Pitfall 5 (trailing slash mismatch), Pitfall 8 (robots.txt not in `public/`), Pitfall 9 (deploy previews indexed), Pitfall 11 (`/results` in sitemap)
 
-### Phase 6: Lizard Background Animation
-**Rationale:** Lowest priority in v8.0. The Escher tessellation already exists page-wide. A second tessellation risks pushing the texture stack past the "subtle" threshold. Implementing this last allows opacity calibration against all other v8.0 changes already visible. If calibration proves difficult, this phase can slip to v8.1 without affecting any other feature.
-**Delivers:** `LizardBackground.astro` as fixed layer at z-index 9997; `transform`-only 70s drift animation at `opacity: 0.04`
-**Addresses:** Feature 2 (lizard background animation)
-**Avoids:** Pitfall 5 (compositor layer budget — no `will-change`), Pitfall 6 (CodePen dark-background color adjustment), Pitfall 10 (reduced-motion gate), Pitfall 12 (`will-change` audit with all three overlay layers active)
-**Research flag:** SVG tile must be extracted from codepen.io/andybarefoot/pen/MEbORa in a browser. Colors must be adjusted from CodePen's assumed light background to the site's `oklch(0.10)` dark background. The `position: fixed` vs. `position: absolute` (section-scoped) decision should be revisited at implementation time — both options are specified in research; calibrate with full v8.0 texture stack visible.
+### Phase 2: OG Image
+
+**Rationale:** The OG image file must exist at a committed, stable URL before OG meta tags can be tested with social debugger tools. Testing meta tags without an actual image returns false negatives from all validator tools. Create the asset first.
+
+**Delivers:** `public/og-image.jpg` — 1200×630 JPEG of a compelling route photo, quality 85, under 300KB. Stable filename (not hashed). Accessible at `https://mkultragravel.com/og-image.jpg` after deploy.
+
+**Implements:**
+- One-time `scripts/generate-og-image.js` using existing sharp (or manual creation)
+- Select source photo from `images/` (wide, dramatic, high-contrast, landscape)
+- Commit `public/og-image.jpg` as a static asset
+
+**Avoids:** Pitfall 2 (relative OG image), Pitfall 3 (cache permanence — get it right here)
+
+### Phase 3: Meta Tags (OG, Twitter Card, Canonical)
+
+**Rationale:** Purely additive to `BaseLayout.astro`. Depends on Phase 1 (`Astro.site` available) and Phase 2 (image URL to reference). Can be validated with social debugger tools immediately after deploy.
+
+**Delivers:** All pages have correct canonical URL, full Open Graph tag set, and Twitter Card tags with `summary_large_image`. Both `/` and `/results` carry correct per-page canonical URLs derived from `Astro.url.pathname`.
+
+**Implements:**
+- Expand `BaseLayout.astro` Props interface: `ogImage?: string`, `ogType?: string`
+- `canonicalUrl = new URL(Astro.url.pathname, Astro.site).href`
+- `ogImageUrl = new URL('/og-image.jpg', Astro.site).href` as default
+- Canonical `<link>`, OG `<meta property>` tags, Twitter `<meta name="twitter:">` tags inline before `<slot name="head" />`
+- Ensure no duplicate `<meta name="description">` (props only, no unconditional defaults)
+
+**Avoids:** Pitfall 2 (relative OG URL), Pitfall 5 (trailing slash), Pitfall 7 (duplicate meta tags), Pitfall 10 (`twitter:card` missing)
+
+**Validate with:** opengraph.xyz, cards-dev.x.com/validator, linkedin.com/post-inspector
+
+### Phase 4: Structured Data (JSON-LD)
+
+**Rationale:** Independent of Phases 2 and 3 once Phase 1 is complete. Separate phase because it has its own validation tool (Google Rich Results Test), its own failure modes (silent JSON parse errors), and specific event data to confirm (start time, venue name) before committing the schema.
+
+**Delivers:** `SportsEvent` JSON-LD block in `index.astro` head, validated with Google Rich Results Test showing no errors. Homepage eligible for Google event rich result card.
+
+**Implements:**
+- `src/components/StructuredData.astro` (thin shell: `set:html={JSON.stringify(schema)}`)
+- `eventSchema` static object in `index.astro` frontmatter with all required fields
+- `<StructuredData schema={eventSchema} slot="head" />` in `index.astro`
+
+**Avoids:** Pitfall 6 (missing required JSON-LD fields), Pitfall 12 (invalid JSON silently ignored)
+
+**Validate with:** Google Rich Results Test on production URL (not localhost)
 
 ### Phase Ordering Rationale
 
-- **GPX first:** Route data is the root dependency for hero stats, map, elevation, photo positions, and sector/KOM coordinates. Changing it after visual phases risks rebuilding against corrected geometry.
-- **Photos before gallery:** The masonry gallery's flex widths derive from `photos.json` `width`/`height`. Building the gallery against 55 photos and later adding 19 more requires re-testing the layout.
-- **Tone images before dividers/animation:** Tone images modify section containers (adding `isolation: isolate`, verifying `overflow: hidden`). Settling that work before inserting dividers between sections reduces unexpected stacking context interactions.
-- **Animation last:** Calibrating the lizard background opacity against the complete v8.0 texture stack (Escher + grain + new tone images + new interstitial band) is more accurate than calibrating against the v7.0 baseline. Also allows `will-change` audit across all three animated overlays simultaneously.
+- Phase 1 is a hard prerequisite — nothing works correctly without `site:` set
+- Phase 2 before Phase 3 — social debugger tools return false negatives without an actual image URL
+- Phases 3 and 4 are parallel-eligible after Phases 1-2 — they touch different files and use different validation tools
+- Post-deploy operational step (no code): submit `https://mkultragravel.com/sitemap-index.xml` to Google Search Console after Phase 1 is live
 
 ### Research Flags
 
-Phases needing manual asset extraction during implementation (not further research-phase):
-- **Phase 5 (Topo Dividers):** SVG path data requires opening codepen.io/hollandblumer/pen/RNGLjNQ in a browser to copy source. Component shell is fully specified.
-- **Phase 6 (Lizard Background):** SVG tile requires opening codepen.io/andybarefoot/pen/MEbORa in a browser. Colors require adjustment for dark background. Fixed vs. section-scoped placement decision requires visual evaluation.
+**No phases in this milestone need `/gsd:research-phase`.** All patterns are sourced from official documentation and direct codebase inspection. All are well-established with stable, documented implementations:
 
-Phases with standard well-documented patterns (no research-phase needed):
-- **Phase 1 (GPX):** Pure pipeline operation; scripts fully understood from codebase inspection.
-- **Phase 2 (Photos):** Idempotent pipeline; add manifest entries, run, verify count and thumbnails.
-- **Phase 3 (Gallery):** CSS flexbox + scroll-snap; pattern fully specified in STACK.md and PITFALLS.md.
-- **Phase 4 (Tone Images):** Established `.tone-image` pattern extended to new placements.
+- Phase 1 (SEO Foundation): `@astrojs/sitemap` config from Astro official docs; robots.txt and `_redirects` are static files with known formats
+- Phase 2 (OG Image): Sharp resize/crop well-documented; 1200×630 OG spec well-established
+- Phase 3 (Meta Tags): OG and Twitter tag specs are official and stable; `Astro.site` pattern from Astro API reference
+- Phase 4 (Structured Data): Schema.org `Event` fields documented; `JSON.stringify` + `set:html` from Astro docs
 
 ---
 
@@ -168,54 +203,50 @@ Phases with standard well-documented patterns (no research-phase needed):
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | All conclusions from official MDN docs, web.dev, sharp changelog, and direct codebase inspection. Zero new dependencies confirmed across all six features. |
-| Features | HIGH | All six features researched with table stakes, differentiators, and anti-features documented. Priority order is opinionated and sourced. |
-| Architecture | HIGH | Based entirely on direct codebase inspection. All component files, pipeline scripts, z-index values, and data schemas verified against actual source. |
-| Pitfalls | HIGH | Critical pitfalls sourced from web.dev official documentation and direct codebase inspection. Two moderate pitfalls (CodePen adaptation issues, `will-change` layer budget) rated MEDIUM — consistent across community sources but no single authoritative reference. |
+| Stack | HIGH | One new dependency (`@astrojs/sitemap@3.7.2`) confirmed from Astro monorepo CHANGELOG and npm registry; existing sharp confirmed from `package.json`; all other decisions are no-dependency by design |
+| Features | HIGH | OG, Twitter Card, canonical, robots.txt, sitemap requirements from official platform specs (ogp.me, X developer docs, Google Search Central); 2-page scope leaves no scope ambiguity |
+| Architecture | HIGH | All patterns from direct `BaseLayout.astro` inspection + Astro official docs; head slot confirmed to exist; `Astro.site` canonical pattern from Astro API reference |
+| Pitfalls | HIGH | Critical pitfalls (missing `site`, relative OG URL, `.netlify.app` duplicate content, `twitter:card`) confirmed via official sources; OG cache behavior confirmed by Facebook developer docs |
 
-**Overall confidence:** HIGH
+**Overall confidence: HIGH**
 
 ### Gaps to Address
 
-- **Lizard background opacity calibration:** Research specifies the constraint range (0.03–0.05 to stay below subtlety threshold with existing overlays) but the exact value must be calibrated visually during Phase 6 with all other v8.0 textures active.
+- **`SportsEvent` vs `Event` in JSON-LD:** FEATURES.md recommends `Event`; ARCHITECTURE.md and STACK.md recommend `SportsEvent`. Google's Rich Results Test explicitly documents `Event`; `SportsEvent` rich result support is less documented. Resolution: implement `SportsEvent`, validate with Rich Results Test on production, fall back to `Event` if errors appear. One-field change if needed.
 
-- **Topo divider SVG geometry:** The exact `d` path data for topographic-feeling concentric rings must be authored or extracted from the CodePen. Research specifies irregular ring spacing mimicking real topography and `fill: none; stroke: currentColor` technique; the actual SVG paths are authored during Phase 5 implementation.
+- **Exact event start time:** JSON-LD `startDate` requires a time with UTC offset for optimal rich result display. Research uses placeholders. The actual MK Ultra Gravel mass start time should be confirmed before the structured data phase ships.
 
-- **CodePen fetch restriction:** Both referenced CodePens (andybarefoot/MEbORa for lizard, hollandblumer/RNGLjNQ for topo) return 403 to non-browser HTTP fetches. SVG content was not directly verified in research; component shells and integration patterns are fully specified, but SVG paths require manual extraction in a browser during implementation.
+- **OG image photo selection:** Research recommends a wide, dramatic, high-contrast route photo from `images/` but does not select a specific file. The CIA document hero (`CIA-MKULTRA-IG_Page_01.jpg`) is on-brand and available as a fallback.
 
-- **Lizard background scope — fixed vs. section-scoped:** FEATURES.md recommends `position: absolute` scoped to `#sectors` to avoid a third global fixed texture layer. ARCHITECTURE.md shows `position: fixed` at z-index 9997 for implementation simplicity. Resolve visually during Phase 6 with full v8.0 stack visible.
-
-- **Thumbnail width optimization:** PITFALLS.md notes the current 400px thumbnail width may exceed what a 300px-height masonry row needs, wasting ~40% bandwidth on portrait images. Evaluate during Phase 3; reducing to 300px is an optional optimization that requires a one-line change in `generate-thumbnails.js`.
+- **AI bot blocking in robots.txt:** FEATURES.md notes the option to add `GPTBot`, `CCBot`, `anthropic-ai` Disallow blocks. Policy decision for the site owner — confirm before shipping robots.txt.
 
 ---
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- [MDN CSS Masonry Layout](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Grid_layout/Masonry_layout) — native masonry is experimental and flag-only; not production viable
-- [Chrome for Developers — Brick by brick: CSS Masonry](https://developer.chrome.com/blog/masonry-update) — Chrome 140+ still behind flag
-- [web.dev — High-performance CSS animations](https://web.dev/articles/animations-guide) — `transform`/`opacity` only for compositor safety; `will-change` has layer budget costs
-- [web.dev — Optimize CLS](https://web.dev/articles/optimize-cls) — images without `width`/`height` attributes as primary CLS cause
-- [web.dev — LCP lazy loading](https://web.dev/articles/lcp-lazy-loading) — above-fold lazy loading causes 500ms+ regression
-- [MDN — mix-blend-mode](https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode) — confirmed "Creates stacking context: yes"
-- [MDN — scroll-snap-type](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-snap-type) — `x proximity` vs `x mandatory` behavior
-- [sharp changelog v0.34.5](https://sharp.pixelplumbing.com/changelog/v0.34.5/) — no breaking API changes in 0.34.x
-- [WCAG 2.3.3](https://www.w3.org/WAI/WCAG21/Understanding/animation-from-interactions.html) — reduced-motion requirements for continuous animations
-- Direct codebase inspection (`global.css`, `PhotoGallery.astro`, `BaseLayout.astro`, `index.astro`, all pipeline scripts) — z-index stack, tone-image class, pipeline execution order, `photos.json` schema
+
+- [Astro configuration reference — `site` option](https://docs.astro.build/en/reference/configuration-reference/#site) — `Astro.site` behavior, canonical URL pattern
+- [Astro API reference — `Astro.site`](https://docs.astro.build/en/reference/api-reference/) — `new URL(pathname, Astro.site)` pattern
+- [@astrojs/sitemap integration guide](https://docs.astro.build/en/guides/integrations-guide/sitemap/) — installation, config, output files
+- [withastro/astro sitemap CHANGELOG.md](https://github.com/withastro/astro/blob/main/packages/integrations/sitemap/CHANGELOG.md) — confirmed v3.7.2 current
+- [The Open Graph protocol — ogp.me](https://ogp.me/) — authoritative OG tag spec, absolute URL requirement
+- [Facebook developer docs: OG image requirements](https://developers.facebook.com/docs/sharing/webmasters/images/) — image dimensions, cache behavior
+- [Google Search Central — Event Structured Data](https://developers.google.com/search/docs/appearance/structured-data/event) — required fields, rich result eligibility
+- [X/Twitter developer docs — Summary Card with Large Image](https://developer.twitter.com/en/docs/twitter-for-websites/cards/overview/summary-card-with-large-image) — `twitter:card` requirement
+- [Netlify Support — `.netlify.app` duplicate content](https://answers.netlify.com/t/netlify-com-netlify-app-potential-duplicate-content-seo-issue/22726) — confirmed subdomain stays live after custom domain
+- [Astro GitHub issue #11575](https://github.com/withastro/astro/issues/11575) — sitemap URL and `Astro.url` trailing slash mismatch
+- Direct codebase inspection: `src/layouts/BaseLayout.astro`, `astro.config.mjs`, `package.json`, `netlify.toml`, `public/` directory — confirmed baseline state
 
 ### Secondary (MEDIUM confidence)
-- [Andy Barefoot — Masonry Style Layout with CSS Grid (Medium)](https://medium.com/@andybarefoot/a-masonry-style-layout-using-css-grid-8c663d355ebb) — JS row-span technique is vertical-column masonry only; confirmed not suited for horizontal strip
-- [Chrome for Developers — Hardware-accelerated animations](https://developer.chrome.com/blog/hardware-accelerated-animations) — `clip-path` not fully compositor-safe in Firefox (24.5% CPU increase)
-- [UX Collective — Best Practices for Horizontal Lists in Mobile](https://uxdesign.cc/best-practices-for-horizontal-lists-in-mobile-21480b9b73e5) — right-edge peek affordance pattern
-- [LogRocket — How to Animate SVG with CSS](https://blog.logrocket.com/how-to-animate-svg-css-tutorial-examples/) — stroke-dashoffset draw-in animation technique
-- [Motion.dev — Web Animation Performance Tier List](https://motion.dev/magazine/web-animation-performance-tier-list) — mobile GPU layer budget concern
-- [npm masonry-layout](https://www.npmjs.com/package/masonry-layout) — version 4.2.2, 8 years since last publish
 
-### Not directly accessible (CodePen returns 403 to non-browser fetches)
-- codepen.io/andybarefoot/pen/MEbORa — lizard tessellation source; SVG paths require manual extraction in browser during Phase 6
-- codepen.io/hollandblumer/pen/RNGLjNQ — topographic divider source; SVG paths require manual extraction in browser during Phase 5
+- [arne.me — Static OG Images in Astro](https://arne.me/blog/static-og-images-in-astro) — static vs Satori tradeoff; build-time approach viability
+- [Schema.org/SportsEvent](https://schema.org/SportsEvent) — type definition and inheritance from Event
+- [Ahrefs — Canonical Tag Guide](https://ahrefs.com/blog/canonical-tags/) — canonical behavior in multi-URL scenarios
+- OG image size guides (myogimage.com, krumzi.com, ogpreview.app) — platform dimension requirements
+- [tempertemper.net — Preventing deploy preview indexing](https://www.tempertemper.net/blog/stop-search-indexing-for-netlify-deploy-previews-and-branch-deploys) — `netlify.toml` context override pattern
 
 ---
 
-*Research completed: 2026-03-31*
+*Research completed: 2026-04-09*
 *Ready for roadmap: yes*
