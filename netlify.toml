@@ -7,6 +7,12 @@
   SECRETS_SCAN_OMIT_KEYS = "GITHUB_REPO,GITHUB_OWNER"
 
 [[redirects]]
+  from = "https://mkultragravel.netlify.app/*"
+  to = "https://mkultragravel.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
