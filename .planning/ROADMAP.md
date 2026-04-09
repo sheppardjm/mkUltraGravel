@@ -77,10 +77,10 @@ Plans:
   1. A file exists at `public/og-image.jpg` (or equivalent path) with dimensions 1200×630 pixels
   2. The image uses a route photo and is visually compelling when viewed as a link preview thumbnail
   3. File size is suitable for web delivery (under 300 KB)
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 57-01-PLAN.md — TBD
+- [x] 57-01-PLAN.md — Generate OG share image from Down Jeep route photo
 
 #### Phase 58: Meta Tags
 **Goal**: Every page produces correct Open Graph, Twitter Card, and canonical link metadata — links shared to social platforms show rich previews
@@ -120,6 +120,6 @@ Phase 56 first (all others depend on site config). Phase 57 independent (asset c
 | 54. Overlay Contrast | v10.4 | 1/1 | Complete | 2026-04-08 |
 | 55. Gallery Fill | v10.4 | 1/1 | Complete | 2026-04-08 |
 | 56. SEO Foundation | v10.5 | 1/1 | Complete | 2026-04-09 |
-| 57. OG Share Image | v10.5 | 0/TBD | Not started | - |
+| 57. OG Share Image | v10.5 | 1/1 | Complete | 2026-04-09 |
 | 58. Meta Tags | v10.5 | 0/TBD | Not started | - |
 | 59. Structured Data | v10.5 | 0/TBD | Not started | - |

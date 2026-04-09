@@ -17,7 +17,7 @@
 
 - [ ] **SOC-01**: Open Graph meta tags (og:title, og:description, og:image, og:url, og:type, og:site_name) on all pages
 - [ ] **SOC-02**: Twitter Card meta tags (twitter:card as summary_large_image, twitter:title, twitter:description, twitter:image) on all pages
-- [ ] **SOC-03**: OG share image as 1200×630 JPEG using a route photo, served from public/
+- [x] **SOC-03**: OG share image as 1200×630 JPEG using a route photo, served from public/
 
 ### Structured Data
 
@@ -46,7 +46,7 @@
 | SEO-03 | Phase 56 | Complete |
 | SEO-04 | Phase 56 | Complete |
 | SEO-05 | Phase 56 | Complete |
-| SOC-03 | Phase 57 | Pending |
+| SOC-03 | Phase 57 | Complete |
 | SOC-01 | Phase 58 | Pending |
 | SOC-02 | Phase 58 | Pending |
 | CRAWL-01 | Phase 58 | Pending |
