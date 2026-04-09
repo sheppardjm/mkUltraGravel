@@ -64,10 +64,10 @@ Plans:
   2. `https://mkultragravel.com/sitemap-index.xml` resolves and lists the site pages
   3. `https://mkultragravel.com/robots.txt` resolves and contains an Allow directive and the Sitemap URL
   4. Deploy preview URLs (e.g. `deploy-preview-123--mkultragravel.netlify.app`) return an `X-Robots-Tag: noindex` response header
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 56-01-PLAN.md — TBD
+- [ ] 56-01-PLAN.md — Astro site config, sitemap integration, robots.txt, Netlify subdomain redirect
 
 #### Phase 57: OG Share Image
 **Goal**: A 1200×630 JPEG share image exists in public/ and is ready for use in meta tags
