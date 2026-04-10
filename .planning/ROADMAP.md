@@ -94,7 +94,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 58-01-PLAN.md — Add OG, Twitter Card, and canonical meta tags to BaseLayout.astro
+- [x] 58-01-PLAN.md — Add OG, Twitter Card, and canonical meta tags to BaseLayout.astro
 
 #### Phase 59: Structured Data
 **Goal**: The homepage emits a valid JSON-LD SportsEvent schema so search engines understand this is a sporting event with a date, location, and free entry
@@ -121,5 +121,5 @@ Phase 56 first (all others depend on site config). Phase 57 independent (asset c
 | 55. Gallery Fill | v10.4 | 1/1 | Complete | 2026-04-08 |
 | 56. SEO Foundation | v10.5 | 1/1 | Complete | 2026-04-09 |
 | 57. OG Share Image | v10.5 | 1/1 | Complete | 2026-04-09 |
-| 58. Meta Tags | v10.5 | 0/1 | Not started | - |
+| 58. Meta Tags | v10.5 | 1/1 | Complete | 2026-04-09 |
 | 59. Structured Data | v10.5 | 0/TBD | Not started | - |

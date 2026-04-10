@@ -15,8 +15,8 @@
 
 ### Social Sharing
 
-- [ ] **SOC-01**: Open Graph meta tags (og:title, og:description, og:image, og:url, og:type, og:site_name) on all pages
-- [ ] **SOC-02**: Twitter Card meta tags (twitter:card as summary_large_image, twitter:title, twitter:description, twitter:image) on all pages
+- [x] **SOC-01**: Open Graph meta tags (og:title, og:description, og:image, og:url, og:type, og:site_name) on all pages
+- [x] **SOC-02**: Twitter Card meta tags (twitter:card as summary_large_image, twitter:title, twitter:description, twitter:image) on all pages
 - [x] **SOC-03**: OG share image as 1200×630 JPEG using a route photo, served from public/
 
 ### Structured Data
@@ -25,7 +25,7 @@
 
 ### Crawl
 
-- [ ] **CRAWL-01**: Canonical `<link rel="canonical">` on every page using mkultragravel.com domain
+- [x] **CRAWL-01**: Canonical `<link rel="canonical">` on every page using mkultragravel.com domain
 
 ## Out of Scope
 
@@ -47,9 +47,9 @@
 | SEO-04 | Phase 56 | Complete |
 | SEO-05 | Phase 56 | Complete |
 | SOC-03 | Phase 57 | Complete |
-| SOC-01 | Phase 58 | Pending |
-| SOC-02 | Phase 58 | Pending |
-| CRAWL-01 | Phase 58 | Pending |
+| SOC-01 | Phase 58 | Complete |
+| SOC-02 | Phase 58 | Complete |
+| CRAWL-01 | Phase 58 | Complete |
 | DATA-07 | Phase 59 | Pending |
 
 **Coverage:**
