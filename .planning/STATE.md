@@ -21,7 +21,7 @@ v10.5: [██████████] 100% (4/4 phases + gap closure)
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 98
+- Total plans completed: 99
 - v10.4: 4 plans across 3 phases (1 day)
 - v10.3: 2 plans across 1 phase (< 1 day)
 - v10.2: 1 plan across 1 phase (1 day)
