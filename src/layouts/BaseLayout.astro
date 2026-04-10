@@ -11,8 +11,8 @@ interface Props {
 }
 
 const {
-  title = "MK Ultra Gravel — June 7, 2026",
-  description = "100 miles of rowdy, technical gravel through Michigan's Upper Peninsula. Free ride. Mass start. No mercy."
+  title = "MK Ultra Gravel — 100 Miles of Upper Peninsula Gravel",
+  description = "Rowdy, technical gravel through Michigan's Upper Peninsula. 100 miles. Free ride. Mass start. No mercy. June 7, 2026 from Marquette, MI."
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
@@ -47,7 +47,7 @@ const structuredData = {
     "name": "MK Ultra Gravel",
     "url": Astro.site?.toString() ?? "https://mkultragravel.com"
   },
-  "description": "100 miles of rowdy, technical gravel through Michigan's Upper Peninsula. Free ride. Mass start. No mercy.",
+  "description": "Rowdy, technical gravel through Michigan's Upper Peninsula. 100 miles. Free ride. Mass start. No mercy. June 7, 2026 from Marquette, MI.",
   "url": Astro.site?.toString() ?? "https://mkultragravel.com"
 };
 ---
