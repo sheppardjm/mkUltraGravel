@@ -1,5 +1,33 @@
 # Project Milestones: MK Ultra Gravel
 
+## v10.5 SEO & Social Sharing (Shipped: 2026-04-10)
+
+**Delivered:** Site discoverable and shareable — crawl infrastructure (sitemap, robots.txt, Netlify subdomain redirect), OG/Twitter Card meta tags with route photo share image, JSON-LD SportsEvent structured data, and visual polish (card display, overlay contrast, gallery fill). Includes v10.4 Polish phases.
+
+**Phases completed:** 53-59 (9 plans total)
+
+**Key accomplishments:**
+
+- Card DOM restructured — CLASSIFIED badge z-index fix, 1200x675 WebP crops, max-w-6xl ultrawide constraint
+- Escher tessellation opacity reduced 0.12→0.07 for text contrast in sectors section
+- Masonry gallery column fill tuned for large viewports via max-height breakpoints
+- Crawl infrastructure — @astrojs/sitemap, robots.txt, Netlify 301 subdomain redirect to mkultragravel.com
+- OG + Twitter Card + canonical meta tags on all pages with 1200x630 JPEG share image (Down Jeep photo)
+- JSON-LD SportsEvent structured data with event date, location, free pricing for Google Rich Results
+
+**Stats:**
+
+- 58 files created/modified
+- 2,339 lines of code total (Astro/CSS/JS/TS)
+- 7 phases, 9 plans, ~14 tasks
+- 3 days (2026-04-08 → 2026-04-10)
+
+**Git range:** `feat(53-01)` → `feat(56-02)`
+
+**What's next:** Site is SEO-ready and production-ready for June 7, 2026 event. Future work TBD via `/gsd:new-milestone`.
+
+---
+
 ## v10.3 Mobile Elevation Labels (Shipped: 2026-04-08)
 
 **Delivered:** Responsive elevation profile labels — hidden on mobile (< 640px) to eliminate clutter, visible on desktop, with colored sector/KOM bands preserved at all sizes. Down Jeep narrow-sector label gap closed.

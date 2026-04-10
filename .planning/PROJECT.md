@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A website for MK Ultra Gravel — a 100-mile gravel cycling event through Marquette County, Michigan on June 7, 2026. Named after the CIA's infamous LSD experiments, the ride features rowdy, technical gravel sectors rated Paris-Roubaix style (1-5 stars) with timed Grinduro-style sectors and KOM/QOM segments. The site showcases the route with an interactive map synced to an elevation profile, 71 geo-located photos with thumbnail markers and lightbox, photo-rich sector and KOM cards, a Grinduro format explainer, a full gallery, brutalist animations with Penrose triangle hero and Escher tessellation background, and event details — driving registration through BikeReg. Pure static Astro site with zero backend dependencies. Strava submission and leaderboards moved to Iron & Pine Omnium (ironpineomnium.com) in v10.0.
+A website for MK Ultra Gravel — a 100-mile gravel cycling event through Marquette County, Michigan on June 7, 2026. Named after the CIA's infamous LSD experiments, the ride features rowdy, technical gravel sectors rated Paris-Roubaix style (1-5 stars) with timed Grinduro-style sectors and KOM/QOM segments. The site showcases the route with an interactive map synced to an elevation profile, 71 geo-located photos with thumbnail markers and lightbox, photo-rich sector and KOM cards, a Grinduro format explainer, a full gallery, brutalist animations with Penrose triangle hero and Escher tessellation background, and event details — driving registration through BikeReg. SEO foundation with sitemap, robots.txt, OG/Twitter Card meta tags with route photo share image, JSON-LD SportsEvent structured data, and canonical URLs. Pure static Astro site with zero backend dependencies. Strava submission and leaderboards moved to Iron & Pine Omnium (ironpineomnium.com) in v10.0.
 
 Live at: https://mkultragravel.netlify.app/
 
@@ -140,18 +140,25 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 - ELEV-06: Elevation profile star-rating labels hidden below 640px viewport width — v10.3
 - ELEV-07: Elevation profile KOM segment labels hidden below 640px viewport width — v10.3
 - ELEV-08: Colored sector and KOM bands remain visible on all viewport sizes — v10.3
+- CARD-02: CLASSIFIED badge visible above all card content on every segment card — v10.4
+- CARD-03: Card photos sharp (1200x675 WebP) at 1440px+ viewports — v10.4
+- CARD-04: Gravel sector cards max-width constraint (max-w-6xl) on ultrawide viewports — v10.4
+- VIS-16: Escher tessellation opacity reduced for text contrast in sectors section — v10.4
+- GAL-02: Gallery column fill tuned via max-height breakpoints for large viewports — v10.4
+- SEO-01: Astro site property set to https://mkultragravel.com — v10.5
+- SEO-02: @astrojs/sitemap integration generating sitemap-index.xml — v10.5
+- SEO-03: Static robots.txt with Allow directive and Sitemap URL — v10.5
+- SEO-04: Netlify 301 redirect from mkultragravel.netlify.app to mkultragravel.com — v10.5
+- SEO-05: Deploy preview noindex via Netlify platform default — v10.5
+- SOC-01: Open Graph meta tags on all pages — v10.5
+- SOC-02: Twitter Card meta tags on all pages — v10.5
+- SOC-03: 1200x630 JPEG OG share image from route photo — v10.5
+- DATA-07: JSON-LD SportsEvent schema on homepage — v10.5
+- CRAWL-01: Canonical link on every page using mkultragravel.com — v10.5
 
 ### Active
 
-**Current Milestone: v10.5 SEO & Social Sharing**
-
-**Goal:** Make the site discoverable and shareable — proper previews when links are shared, structured data for search engines, and crawl infrastructure.
-
-**Target features:**
-- Open Graph + Twitter Card meta tags with route photo share image
-- JSON-LD Event structured data (date, location, free event)
-- robots.txt + sitemap.xml for search engine crawling
-- Canonical URLs using mkultragravel.com
+No active milestone. Start next with `/gsd:new-milestone`.
 
 ### Out of Scope
 
@@ -172,15 +179,15 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ## Context
 
-**Shipped v10.4** with ~2,369 LOC across Astro/CSS/JS/TS source files and build scripts. 94 plans shipped across 55 phases and 13 milestones. Pure static Astro site with zero backend dependencies. /results redirects to ironpineomnium.com for leaderboards. Visual texture stack complete — three animated overlays (grain, escher, lizard) with reduced-motion gates. Photo library at 71 images in masonry gallery. Dark-themed scrollbars, proportional card images, "Powered by Neucadia" attribution footer, responsive elevation profile labels, card display polish, and balanced gallery fill complete the visual layer. No social meta tags, structured data, or crawl infrastructure exist yet.
+**Shipped v10.5** with ~2,339 LOC across Astro/CSS/JS/TS source files and build scripts. 99 plans shipped across 59 phases and 14 milestones. Pure static Astro site with zero backend dependencies. /results redirects to ironpineomnium.com for leaderboards. Visual texture stack complete — three animated overlays (grain, escher, lizard) with reduced-motion gates. Photo library at 71 images in masonry gallery. SEO foundation complete — sitemap, robots.txt, Netlify subdomain redirect, OG/Twitter Card meta tags with route photo share image, JSON-LD SportsEvent structured data, and canonical URLs on all pages.
 
-**Tech stack:** Astro 6, Tailwind v4, Leaflet 1.9.4, Chart.js (+ annotation plugin), PhotoSwipe, sharp (thumbnails)
+**Tech stack:** Astro 6, Tailwind v4, Leaflet 1.9.4, Chart.js (+ annotation plugin), PhotoSwipe, sharp (thumbnails), @astrojs/sitemap
 
-**Deployment:** Netlify with git-triggered CI/CD from GitHub. Prebuild pipeline generates route-data.json, annotations.json, photos.json, thumbnails, card crops, and hero WebP on every deploy. Fully static — no Netlify Functions, no SSR adapter.
+**Deployment:** Netlify with git-triggered CI/CD from GitHub. Prebuild pipeline generates route-data.json, annotations.json, photos.json, thumbnails, card crops, and hero WebP on every deploy. Netlify 301 redirect from mkultragravel.netlify.app to mkultragravel.com. Fully static — no Netlify Functions, no SSR adapter.
 
 **Performance:** Lighthouse mobile Performance 96, LCP 2.48s, CLS 0.054, TBT 0ms. All Core Web Vitals green. All animations compositor-safe (transform/opacity only). Escher drift and Penrose spin animations gated behind prefers-reduced-motion.
 
-**v10.3 shipped:** Mobile Elevation Labels — responsive annotation labels hidden on mobile (< 640px), visible on desktop (640px+), with colored bands preserved at all sizes. Down Jeep narrow-sector gap closed. Previous: v10.2 Neucadia Footer; v10.1 dark-themed scrollbars + proportional card images; v10.0 removed all Strava infrastructure.
+**v10.5 shipped:** SEO & Social Sharing — crawl infrastructure, OG/Twitter meta tags, share image, JSON-LD structured data. Previous: v10.4 card display polish + overlay contrast + gallery fill; v10.3 mobile elevation labels; v10.2 Neucadia footer; v10.1 scrollbars + card images; v10.0 Strava decoupling.
 
 **Event Details:**
 - Date: June 7, 2026
@@ -255,6 +262,16 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | /results CTA to ironpineomnium.com | Strava features decoupled to separate app for TOS compliance | Good |
 | isActive() simplified to exact match | Only "/" and "/results" exist; no prefix matching needed | Good |
 
+| overflow-hidden scoped to media container | Content div as sibling avoids clipping CLASSIFIED badge pseudo-element | Good |
+| 1200x675 card crops | 2x resolution for 1440px viewports; matches aspect-video ratio | Good |
+| column-fill: balance rejected for gallery | Causes whitespace in horizontal-scroll context; max-height tuning instead | Good |
+| @astrojs/sitemap for crawl | Auto-generates sitemap on build; site property anchors all URL generation | Good |
+| Subdomain redirect before path-based rules | Netlify processes redirects in order; host-based must precede path-based | Good |
+| JPEG over WebP for OG share image | Universal social platform compatibility; older scrapers sometimes fail on WebP | Good |
+| Astro.site for OG/canonical URLs | Ensures absolute production URLs in meta tags, not localhost in dev | Good |
+| set:html={JSON.stringify()} for JSON-LD | Correct Astro pattern for injecting JSON into script tags without double-escaping | Good |
+| Deploy preview noindex via platform default | Netlify handles this automatically; no config needed | Good |
+
 | CSS columns masonry over JS library | Preserves TBT 0ms; no new runtime dependency | Good |
 | SVG pattern tessellation over raster WebP | Resolution-independent on all screen sizes | Good |
 | Canvas metaball + SVG filter over stroke-dashoffset | Matches codepen reference; more organic visual | Good |
@@ -274,4 +291,4 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 | labelContent unconditional for narrow sectors | isNarrow only controls rotation (-90deg), not content — fixes Down Jeep label gap | Good |
 
 ---
-*Last updated: 2026-04-09 after v10.5 milestone started*
+*Last updated: 2026-04-10 after v10.5 milestone complete*
