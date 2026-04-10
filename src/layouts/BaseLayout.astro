@@ -17,6 +17,39 @@ const {
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const ogImageURL = new URL('/og-image.jpg', Astro.site);
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "SportsEvent",
+  "name": "MK Ultra Gravel",
+  "startDate": "2026-06-07T09:00:00-04:00",
+  "eventStatus": "https://schema.org/EventScheduled",
+  "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+  "location": {
+    "@type": "Place",
+    "name": "Marquette Fire Bell",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Marquette",
+      "addressRegion": "MI",
+      "addressCountry": "US"
+    }
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD",
+    "availability": "https://schema.org/InStock",
+    "url": Astro.site?.toString() ?? "https://mkultragravel.com"
+  },
+  "organizer": {
+    "@type": "Organization",
+    "name": "MK Ultra Gravel",
+    "url": Astro.site?.toString() ?? "https://mkultragravel.com"
+  },
+  "description": "100 miles of rowdy, technical gravel through Michigan's Upper Peninsula. Free ride. Mass start. No mercy.",
+  "url": Astro.site?.toString() ?? "https://mkultragravel.com"
+};
 ---
 
 <!doctype html>
@@ -41,6 +74,9 @@ const ogImageURL = new URL('/og-image.jpg', Astro.site);
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageURL} />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
 
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <Font cssVariable="--font-mono" />
