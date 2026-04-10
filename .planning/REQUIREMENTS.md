@@ -21,7 +21,7 @@
 
 ### Structured Data
 
-- [ ] **DATA-07**: JSON-LD SportsEvent schema on homepage with name, startDate (2026-06-07T09:00:00-04:00), location (Marquette Fire Bell, Marquette, MI), offers (price: "0"), eventAttendanceMode, organizer
+- [x] **DATA-07**: JSON-LD SportsEvent schema on homepage with name, startDate (2026-06-07T09:00:00-04:00), location (Marquette Fire Bell, Marquette, MI), offers (price: "0"), eventAttendanceMode, organizer
 
 ### Crawl
 
@@ -50,7 +50,7 @@
 | SOC-01 | Phase 58 | Complete |
 | SOC-02 | Phase 58 | Complete |
 | CRAWL-01 | Phase 58 | Complete |
-| DATA-07 | Phase 59 | Pending |
+| DATA-07 | Phase 59 | Complete |
 
 **Coverage:**
 - v10.5 requirements: 10 total

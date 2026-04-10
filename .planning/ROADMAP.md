@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v10.4 Polish** - Phases 53-55 (shipped 2026-04-08)
-- 🚧 **v10.5 SEO & Social Sharing** - Phases 56-59 (in progress)
+- ✅ **v10.5 SEO & Social Sharing** - Phases 56-59 (shipped 2026-04-10)
 
 ## Phases
 
@@ -51,7 +51,7 @@ Plans:
 
 </details>
 
-### v10.5 SEO & Social Sharing (In Progress)
+### v10.5 SEO & Social Sharing (SHIPPED 2026-04-10)
 
 **Milestone Goal:** Make the site discoverable and shareable — proper previews when links are shared, structured data for search engines, and crawl infrastructure.
 
@@ -104,10 +104,10 @@ Plans:
   1. Google's Rich Results Test returns a valid SportsEvent result for `https://mkultragravel.com`
   2. The schema includes startDate of 2026-06-07T09:00:00-04:00, location as Marquette Fire Bell (Marquette, MI), and offers with price "0"
   3. No validation errors appear in a JSON-LD schema validator for the homepage source
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 59-01-PLAN.md — TBD
+- [x] 59-01-PLAN.md — Add JSON-LD SportsEvent schema to BaseLayout.astro
 
 ## Progress
 
@@ -122,4 +122,4 @@ Phase 56 first (all others depend on site config). Phase 57 independent (asset c
 | 56. SEO Foundation | v10.5 | 1/1 | Complete | 2026-04-09 |
 | 57. OG Share Image | v10.5 | 1/1 | Complete | 2026-04-09 |
 | 58. Meta Tags | v10.5 | 1/1 | Complete | 2026-04-09 |
-| 59. Structured Data | v10.5 | 0/TBD | Not started | - |
+| 59. Structured Data | v10.5 | 1/1 | Complete | 2026-04-10 |
