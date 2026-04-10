@@ -70,11 +70,11 @@ Plans:
 - [x] 56-01-PLAN.md — Astro site config, sitemap integration, robots.txt, Netlify subdomain redirect
 
 #### Phase 57: OG Share Image
-**Goal**: A 1200×630 JPEG share image exists in public/ and is ready for use in meta tags
+**Goal**: A 1200x630 JPEG share image exists in public/ and is ready for use in meta tags
 **Depends on**: Nothing (independent asset creation)
 **Requirements**: SOC-03
 **Success Criteria** (what must be TRUE):
-  1. A file exists at `public/og-image.jpg` (or equivalent path) with dimensions 1200×630 pixels
+  1. A file exists at `public/og-image.jpg` (or equivalent path) with dimensions 1200x630 pixels
   2. The image uses a route photo and is visually compelling when viewed as a link preview thumbnail
   3. File size is suitable for web delivery (under 300 KB)
 **Plans**: 1 plan
@@ -91,10 +91,10 @@ Plans:
   2. Every page's `<head>` contains all six required og: tags (og:title, og:description, og:image, og:url, og:type, og:site_name)
   3. Every page's `<head>` contains all four required twitter: tags (twitter:card as summary_large_image, twitter:title, twitter:description, twitter:image)
   4. Every page's `<head>` contains a `<link rel="canonical">` pointing to the mkultragravel.com domain URL for that page
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 58-01-PLAN.md — TBD
+- [ ] 58-01-PLAN.md — Add OG, Twitter Card, and canonical meta tags to BaseLayout.astro
 
 #### Phase 59: Structured Data
 **Goal**: The homepage emits a valid JSON-LD SportsEvent schema so search engines understand this is a sporting event with a date, location, and free entry
@@ -121,5 +121,5 @@ Phase 56 first (all others depend on site config). Phase 57 independent (asset c
 | 55. Gallery Fill | v10.4 | 1/1 | Complete | 2026-04-08 |
 | 56. SEO Foundation | v10.5 | 1/1 | Complete | 2026-04-09 |
 | 57. OG Share Image | v10.5 | 1/1 | Complete | 2026-04-09 |
-| 58. Meta Tags | v10.5 | 0/TBD | Not started | - |
+| 58. Meta Tags | v10.5 | 0/1 | Not started | - |
 | 59. Structured Data | v10.5 | 0/TBD | Not started | - |
