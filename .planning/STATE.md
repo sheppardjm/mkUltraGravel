@@ -2,21 +2,21 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-10)
+See: .planning/PROJECT.md (updated 2026-04-13)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** Planning next milestone
+**Current focus:** v10.6 Explainer Redesign + Elevation Fix
 
 ## Current Position
 
-Milestone: v10.5 SEO & Social Sharing — SHIPPED
-Phase: 59 of 59 (all phases complete)
-Plan: N/A — milestone archived
-Status: Ready to plan next milestone
-Last activity: 2026-04-10 — v10.5 milestone complete
+Milestone: v10.6 Explainer Redesign + Elevation Fix
+Phase: Not started (researching)
+Plan: —
+Status: Researching domain ecosystem
+Last activity: 2026-04-13 — Milestone v10.6 started
 
 Progress: 14 milestones shipped, 99 plans across 59 phases complete
-v10.5: [██████████] 100% — SHIPPED
+v10.6: [░░░░░░░░░░] 0% — RESEARCHING
 
 ## Performance Metrics
 
@@ -44,6 +44,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-10
-Stopped at: v10.5 milestone archived — ready for next milestone
+Last session: 2026-04-13
+Stopped at: Researching for v10.6 milestone
 Resume file: None

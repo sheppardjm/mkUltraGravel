@@ -158,7 +158,15 @@ Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
 
 ### Active
 
-No active milestone. Start next with `/gsd:new-milestone`.
+**Milestone v10.6: Explainer Redesign + Elevation Fix**
+
+Goal: Transform the Grinduro explainer section into a snowboarding-magazine editorial layout with tone images and heavy CSS filters, and fix the Down Jeep elevation profile label.
+
+Target features:
+- Explainer section redesign with tone images from images/tone/, snowboarding magazine editorial layout
+- Heavy CSS filter treatments (duotone, grain, blur, posterize, high-contrast mix) to obscure original images
+- Same three explainer paragraphs broken up across full-bleed filtered images
+- Down Jeep elevation profile label rendered horizontally without clipping
 
 ### Out of Scope
 
@@ -179,7 +187,7 @@ No active milestone. Start next with `/gsd:new-milestone`.
 
 ## Context
 
-**Shipped v10.5** with ~2,339 LOC across Astro/CSS/JS/TS source files and build scripts. 99 plans shipped across 59 phases and 14 milestones. Pure static Astro site with zero backend dependencies. /results redirects to ironpineomnium.com for leaderboards. Visual texture stack complete — three animated overlays (grain, escher, lizard) with reduced-motion gates. Photo library at 71 images in masonry gallery. SEO foundation complete — sitemap, robots.txt, Netlify subdomain redirect, OG/Twitter Card meta tags with route photo share image, JSON-LD SportsEvent structured data, and canonical URLs on all pages.
+**Shipped v10.5** with ~2,339 LOC across Astro/CSS/JS/TS source files and build scripts. 99 plans shipped across 59 phases and 14 milestones. Pure static Astro site with zero backend dependencies. /results redirects to ironpineomnium.com for leaderboards. Visual texture stack complete — three animated overlays (grain, escher, lizard) with reduced-motion gates. Photo library at 71 images in masonry gallery. SEO foundation complete — sitemap, robots.txt, Netlify subdomain redirect, OG/Twitter Card meta tags with route photo share image, JSON-LD SportsEvent structured data, and canonical URLs on all pages. 32 tone images available in images/tone/ (CIA documents, MK Ultra imagery, Escher, LSD visuals).
 
 **Tech stack:** Astro 6, Tailwind v4, Leaflet 1.9.4, Chart.js (+ annotation plugin), PhotoSwipe, sharp (thumbnails), @astrojs/sitemap
 
@@ -291,4 +299,4 @@ No active milestone. Start next with `/gsd:new-milestone`.
 | labelContent unconditional for narrow sectors | isNarrow only controls rotation (-90deg), not content — fixes Down Jeep label gap | Good |
 
 ---
-*Last updated: 2026-04-10 after v10.5 milestone complete*
+*Last updated: 2026-04-13 after v10.6 milestone started*
