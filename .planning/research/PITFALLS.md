@@ -1,643 +1,388 @@
-# Domain Pitfalls
+# Pitfalls Research
 
-**Domain:** SEO & social sharing additions to an existing Astro 6 static site on Netlify
-**Project:** MK Ultra Gravel — SEO & Social Sharing milestone
-**Researched:** 2026-04-09
-**Confidence:** HIGH (primary sources: Astro official docs, Google Search Central, ogp.me, Facebook
-developer docs, Netlify Support forums — all verified via Context7 or direct WebFetch)
+**Domain:** Adding CSS-filtered editorial image layout + Chart.js annotation label fix to an existing Astro 6 dark-themed static site with animated overlay layers
+**Project:** MK Ultra Gravel — Explainer Redesign + Down Jeep annotation fix milestone
+**Researched:** 2026-04-13
+**Confidence:** HIGH (primary sources: direct codebase inspection, chartjs-plugin-annotation official docs, MDN, web.dev)
 
 ---
 
 ## Context
 
-This file covers pitfalls specific to ADDING SEO and social sharing to an existing Astro 6 static
-site. The site is currently deployed at `mkultragravel.netlify.app` and transitioning to
-`mkultragravel.com`. It has two pages: `/` and `/results`. It uses pure static output (`output:
-"static"` is the Astro default — no SSR).
+This file covers pitfalls specific to this milestone on the existing MK Ultra Gravel site. The site has:
 
-The current `astro.config.mjs` has **no `site` field**. This is the single most important fact in
-this research: every pitfall in this file either directly stems from this missing field or requires
-it to be set before it can be resolved.
+- Three `position: fixed` overlay layers covering the full page: grain (z-9999), escher (z-9998), lizard (z-9997), all `pointer-events: none`
+- A `SiteNav` at z-10000
+- Existing `.tone-image` component class: `position: absolute; opacity: 0.12; mix-blend-mode: lighten; filter: grayscale(100%) contrast(1.3); pointer-events: none`
+- Design tokens in oklch color space; CSS filters operate in sRGB
+- TBT 0ms and Lighthouse mobile 96 targets
+- Tailwind v4 CSS-first config (`@theme` block, no `tailwind.config.js`)
+- Chart.js 4.5.1 with chartjs-plugin-annotation 3.1.0
 
-**The existing BaseLayout.astro has:**
-- `<title>` tag (hardcoded default)
-- `<meta name="description">` tag (hardcoded default)
-- A `<slot name="head">` for page-level overrides
-- No OG tags
-- No canonical link
-- No structured data
+The two workstreams are independent but share the page:
+
+1. **Editorial explainer layout** — adding CSS-filtered tone images to the explainer section(s), likely with a magazine-style column layout
+2. **Down Jeep annotation label** — fixing the narrow (0.59mi / ~0.6% chart width) sector annotation that currently omits the sector name
 
 ---
 
 ## Critical Pitfalls
 
-Mistakes that silently break SEO or social sharing without any build error.
+---
+
+### Pitfall 1: `position: absolute` on `.tone-image` Escapes Containment When Parent Lacks `position: relative`
+
+**What goes wrong:**
+The `.tone-image` CSS class (defined in `global.css`) sets `position: absolute`. For `inset-0` (which computes to `top: 0; right: 0; bottom: 0; left: 0`) to constrain the image to its intended section, the parent element must have `position: relative` (or `sticky`/`fixed`/`absolute`).
+
+In `GravelSectors.astro`, the `relative` class is conditionally applied only to `i < 2` cards. Any new explainer section that drops a `.tone-image` inside a container without `relative` will have the image escape to the nearest positioned ancestor — potentially filling the entire viewport or climbing to the `<section>` element above it in the stacking context.
+
+This failure is visually obvious in development but easy to miss when adding a new component because the parent's positioning is often set by a sibling's needs, not the tone image's needs.
+
+**Why it happens:**
+Developers see the existing pattern (e.g., `MkUltraExplainer.astro` using `<section class="relative ...">`) and assume `relative` is implied by the section wrapper. Adding tone images to new components that don't have `relative` on the wrapper — particularly when the component is a `<div>` without explicit positioning — breaks containment silently until visually inspected.
+
+**How to avoid:**
+- Every element that contains a `.tone-image` must have `position: relative` (Tailwind: `relative`) on a direct or ancestor wrapper
+- Run a visual check at mobile (375px) and desktop (1280px) — the image escaping its container is immediately visible as a full-viewport grey wash
+- The `.tone-image` class itself could gain a note comment in `global.css` to enforce this contract
+
+**Warning signs:**
+- The tone image covers content from adjacent sections (the previous or next section's heading appears greyed out)
+- DevTools shows the `.tone-image` `<img>` element's containing block is `<body>` or `<html>` rather than the intended section/div
+- Opacity-reduced grey wash appears across section boundaries
+
+**Phase to address:**
+Explainer layout implementation phase — verify containment structure before adding any `.tone-image` to new sections.
 
 ---
 
-### Pitfall 1: Missing `site` in astro.config.mjs Breaks Everything Downstream
+### Pitfall 2: New Images Without Explicit `width`/`height` Attributes Cause CLS Regression
 
 **What goes wrong:**
-Astro's `site` configuration option is currently not set in `astro.config.mjs`. This single
-omission cascades into failures across every SEO feature being added:
+Tone images in existing sections (hero, route, photos, info) all use `loading="lazy"` but lack explicit `width` and `height` attributes. They are absolutely positioned, so they do not contribute to document flow and do not cause layout shift themselves. However, if the new explainer layout includes images that ARE in normal document flow (e.g., a magazine-style column with an image alongside text), omitting `width` and `height` will cause the browser to reserve zero height until the image loads, causing a layout shift.
 
-1. `@astrojs/sitemap` cannot generate `sitemap.xml` at all — the integration throws a build
-   error without `site` set
-2. Canonical URLs constructed via `new URL(Astro.url.pathname, Astro.site)` silently produce
-   `undefined` — the resulting `<link rel="canonical">` tag renders as `href="undefined"` in
-   the HTML, which is worse than no canonical tag at all
-3. `og:url` assembled the same way produces `undefined` in the meta tag
-4. The `robots.txt` Sitemap directive pointing to the sitemap's absolute URL cannot be constructed
+The site currently achieves CLS < 0.1. A single in-flow image without dimensions in a prominent section can push this above the 0.1 threshold.
 
 **Why it happens:**
-`site` is optional for a basic Astro build — the site still compiles and deploys without it.
-Developers add `@astrojs/sitemap` and SEO tags, run `npm run build`, see no errors, deploy,
-and discover on inspection that canonical and og:url tags contain `undefined` or blank values.
+The existing tone images are all `position: absolute` and thus flow-removed — dimensions do not affect CLS. Developers copying this pattern to an in-flow context miss the fundamental difference. Even with `object-cover` and `w-full h-full`, a normal-flow image without dimensions collapses to 0 height until loaded.
+
+**How to avoid:**
+- If the tone images remain `position: absolute` (flow-removed), no CLS risk
+- If any image enters normal document flow in a column layout, add explicit `width` and `height` attributes matching the image's natural dimensions, and use `aspect-ratio` or a padding-based container to reserve space
+- Preferred pattern for editorial columns: container with `aspect-video` or explicit aspect ratio, with the image absolutely positioned inside
 
 **Warning signs:**
-- `sitemap-index.xml` does not appear in the `dist/` output after adding `@astrojs/sitemap`
-- View-source on the deployed page shows `<link rel="canonical" href="undefined">` or `href=""`
-- Build output contains: `Warning: The @astrojs/sitemap integration requires the site property to be set`
+- Lighthouse CLS score > 0.1 in local PageSpeed run
+- Chrome DevTools Performance panel shows layout shift events tied to image loading
+- The element shifts down when a lazy-loaded image above it loads
 
-**Prevention:**
-Set `site` in `astro.config.mjs` as the very first step before any SEO work. The value must be
-the final production URL including protocol, no trailing slash:
+**Phase to address:**
+Explainer layout implementation phase — define the image composition pattern (absolutely positioned vs. in-flow) before implementation begins.
 
+---
+
+### Pitfall 3: CSS Filters on Tone Images Conflict with oklch Color Tokens — Visual Drift on Tinted Images
+
+**What goes wrong:**
+The existing `.tone-image` class applies `filter: grayscale(100%) contrast(1.3)`. This operates in sRGB color space, not oklch. For the current all-white/dark CIA document images this is invisible — greyscale on a document image looks the same regardless of color space.
+
+However, if any new tone images for the explainer contain color content (e.g., tinted photos, images with hue variation), the `grayscale()` + `contrast()` filter pipeline will produce different visual output than the designer expects when previewing the image in a color-aware editor. The `mix-blend-mode: lighten` compounds this: lighten blend mode compares channel values in sRGB. An image with oklch-designed tones at specific chroma values will produce different blend output when the filter-sRGB pipeline transforms those values.
+
+The practical effect: tone images that look correct in Figma/Photoshop (which use the display P3 or relative colorimetric intent) will look slightly brighter, flatter, or differently-contrasted when filtered through sRGB `grayscale` + `contrast`.
+
+**Why it happens:**
+CSS filters (`filter` property) are defined in the Filter Effects specification as operating on sRGB linearized values. This is a spec-level fact, not a browser quirk. The oklch tokens define UI colors, but the images being filtered are processed in sRGB regardless.
+
+**How to avoid:**
+- For document/archival tone images (primarily greyscale already), this is a non-issue — no chroma to lose
+- For any new color tone images, preview them rendered in the browser with the actual `.tone-image` class applied before deciding on opacity/contrast values
+- Do not calibrate tone image appearance in a design tool; calibrate it in the browser against the actual dark background (`--color-bg-base: oklch(0.10 0.01 250)`)
+- If a tinted effect is desired and the sRGB filter flattens it, consider skipping `grayscale()` and relying only on `opacity` and `mix-blend-mode` for tone
+
+**Warning signs:**
+- Tone image looks "flatter" or "grayer" in the browser than in the design mockup
+- `invert-100` (used in `MkUltraExplainer.astro`) produces an unexpectedly bright white result on a color image
+
+**Phase to address:**
+Explainer layout design/implementation phase — establish image treatment rules before sourcing new images.
+
+---
+
+### Pitfall 4: New Animated Elements Without `prefers-reduced-motion` Gate Break the Reduced-Motion Contract
+
+**What goes wrong:**
+All three existing overlay animations (escher-drift, lizard-drift, penrose-spin) are gated behind `@media (prefers-reduced-motion: no-preference)` in `global.css`. The scroll-reveal system also checks `window.matchMedia("(prefers-reduced-motion: reduce)").matches` and skips the IntersectionObserver entirely.
+
+If the explainer redesign introduces any new CSS animations (parallax scroll, fade-in transitions on image reveal, section-entry animations), they must follow the same pattern. Missing the reduced-motion gate on even one new animation breaks the site's accessibility contract.
+
+**Why it happens:**
+Tailwind v4's animation utilities (`animate-*`) do NOT automatically respect `prefers-reduced-motion`. Writing `class="animate-fade-in"` applies the animation unconditionally. The gate must be added explicitly in CSS or via a `@media` wrapper.
+
+**How to avoid:**
+- Any new `@keyframes` definition must be wrapped in `@media (prefers-reduced-motion: no-preference)` before applying it to any element
+- Tailwind's `motion-reduce:` variant can disable an animation inline: `class="animate-reveal motion-reduce:animate-none"` — but this is per-element; for global patterns, define in CSS
+- The existing pattern in `global.css` is the canonical reference for this project
+
+**Warning signs:**
+- Animation plays in a browser with "Reduce Motion" enabled in OS settings
+- Chrome DevTools > Rendering > "Emulate CSS media feature prefers-reduced-motion" shows animations still running
+
+**Phase to address:**
+Any phase that adds animations — enforce as a hard rule before implementation.
+
+---
+
+### Pitfall 5: Chart.js Annotation Label `display` Callback Uses `window.innerWidth` — Breaks SSR Context and Has a Narrow Mobile Bug
+
+**What goes wrong:**
+The current annotation label display callback is:
 ```javascript
-export default defineConfig({
-  site: 'https://mkultragravel.com',
-  // ... rest of config
-});
+display: () => window.innerWidth >= 640,
 ```
 
-This must be set to the **custom domain** (`mkultragravel.com`), not the Netlify subdomain
-(`mkultragravel.netlify.app`). Setting it to the `.netlify.app` URL and updating it later causes
-all generated canonical URLs and sitemaps to be wrong in the interim and requires rebuilding the
-URL claim in Google Search Console.
+This is a runtime callback evaluated during canvas draw. In the current `<script>` (client-only module) this is fine, but it has a subtle edge case: the label suppression at `< 640px` applies to ALL labels including Down Jeep. At viewport widths of 375–639px (common iPhone sizes), no sector labels are shown — so the Down Jeep fix only benefits desktop users. If the design intent is to show the Down Jeep label at mobile widths too (since the fix adds useful information), the threshold logic must be explicitly considered.
 
-**Phase:** SEO foundations phase — must be the first change in any SEO implementation plan.
-**Confidence:** HIGH — confirmed by direct inspection of `astro.config.mjs` (field absent) and
-Astro official configuration reference documentation.
-
----
-
-### Pitfall 2: `og:image` with a Relative Path Fails on Every Social Platform
-
-**What goes wrong:**
-The Open Graph specification requires `og:image` to be an **absolute URL**. If the value is
-a relative path like `/images/og-cover.jpg`, every social platform (Facebook, LinkedIn, Twitter/X,
-iMessage, Slack) will fail to load the image and show the link preview with no image. The link
-preview appears as plain text with title and description only — no visual thumbnail.
-
-This failure is silent: the tag renders in HTML without error, browsers display the page normally,
-and Lighthouse does not catch it. The failure is only visible when sharing the URL on a social
-platform.
+More practically: the `() => window.innerWidth >= 640` closure is created during `initElevation()`. If the chart is initialized before the user resizes the window, the closure captures the correct initial width. But on resize, the chart does not re-evaluate annotations unless `chart.update()` is called. Label visibility can become stale after orientation change or resize.
 
 **Why it happens:**
-Astro's image handling produces paths like `/_astro/og-cover.abc123.jpg` (hashed) for processed
-images, or `/images/og-cover.jpg` for public folder images. These are correct for `<img src>`
-tags, which are resolved relative to the page. `og:image` is read by remote crawlers that do not
-have a base URL context — they need the full URL.
+The callback fires on each `draw`, so `window.innerWidth` is re-read each draw cycle. This is actually correct — the closure doesn't capture a stale value because `window.innerWidth` is a live property. However, the 640px threshold means the Down Jeep fix is invisible on most mobile viewports.
 
-The pattern `<meta property="og:image" content={ogImagePath} />` where `ogImagePath` is an
-Astro image import result will produce a relative path.
+**How to avoid:**
+- When implementing the Down Jeep fix, explicitly decide: should the label show at mobile widths?
+- If yes, adjust the threshold or add a special case for the Down Jeep sector
+- If no, document that the fix only applies to `>= 640px` viewports
 
 **Warning signs:**
-- Paste the URL into [Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/) — image shows as blank or missing
-- `og:image` value in view-source starts with `/` instead of `https://`
-- Link preview on iMessage or Slack shows title but no image
+- Testing the fix on a 375px-wide DevTools viewport shows no change (labels are suppressed)
+- The `display` callback logs `false` for Down Jeep on mobile
 
-**Prevention:**
-Always construct `og:image` as an absolute URL using `Astro.site`:
-
-```astro
----
-const ogImageUrl = new URL('/images/og-cover.jpg', Astro.site).href;
----
-<meta property="og:image" content={ogImageUrl} />
-```
-
-This requires `site` to be set in `astro.config.mjs` (see Pitfall 1).
-
-For the OG image file itself, use `/public/images/og-cover.jpg` so it is served at a predictable,
-non-hashed path. Do not use `astro:assets` image optimization for the OG image — processed images
-get hashed filenames (`/_astro/og.abc123.jpg`) which change on every rebuild, breaking social
-platform caches for previously shared URLs.
-
-**Phase:** OG image implementation phase.
-**Confidence:** HIGH — confirmed by ogp.me protocol specification and Facebook developer documentation.
+**Phase to address:**
+Down Jeep annotation fix phase — decide mobile behavior before implementing.
 
 ---
 
-### Pitfall 3: OG Image Cache Is Effectively Permanent on Several Platforms
+### Pitfall 6: `chartjs-plugin-annotation` v3.x Label on Narrow Box — Label Overflows Chart Area Silently, Not the Box
 
 **What goes wrong:**
-After the first time a URL is shared on a social platform, the platform crawls the `og:image` URL
-and caches it. If the OG image is later updated at the **same URL path**, the platform continues
-to show the old image — sometimes for months, sometimes permanently.
+The debug document (`down-jeep-label.md`) correctly identifies that chartjs-plugin-annotation does NOT clip labels to their parent box boundary — it only clips to the chart area. This is a v2+ behavior change (v2 removed box-level clipping).
 
-Platform-specific behavior:
-- **Facebook/Meta**: Caches OG data indefinitely. Requires manual "Scrape Again" in the Sharing
-  Debugger tool to force a refresh.
-- **Telegram**: Cache is effectively permanent for URLs that have been shared. It does not
-  self-expire.
-- **WhatsApp**: Caches both locally and in cloud storage. Cannot be force-expired without changing
-  the URL.
-- **Slack**: Caches unfurls for 7 days. Does not follow redirects for `og:image` URLs.
-- **LinkedIn**: Provides a Post Inspector tool for manual cache clearing.
+The current implementation with `rotation: -90` and `content: [starsStr]` (5 star characters at 9px) for Down Jeep produces a label that is technically rendered but occupies approximately 45px height × 9px width when rotated 90 degrees. The Down Jeep box is approximately 3–6 CSS pixels wide. The rotated label overflows left and right of the box into adjacent sectors (C4 to the left, the chart end to the right).
+
+This overflow means the label text may visually collide with or be obscured by the C4 sector annotation text/fill. At 9px font size, 5 stars rotated -90° render as a thin vertical strip that is likely lost in the visual noise of the neighboring C4 annotation.
+
+The recommended fix (Option A in the debug document: include `sector.name` in the label for narrow sectors) is correct. The name adds vertical length (taller text stack) which is exactly the dimension that is abundant when rotated. The fix was already partially applied: `global.css` inspection of `ElevationProfile.astro` line 66 shows `labelContent` is now `[sector.name, starsStr]` unconditionally — the `isNarrow` branch was already removed.
+
+**Verify this before implementing**: if the fix is already in place, the milestone may only need visual verification, not a code change.
 
 **Why it happens:**
-Social platforms aggressively cache OG data to reduce server load and provide fast link preview
-rendering. This is by design — it is not a bug.
+The original `isNarrow` guard was added as a defensive measure assuming the sector name would not fit horizontally. But `rotation: -90` already solves the horizontal constraint — the name renders vertically where there is ample room.
+
+**How to avoid:**
+- Do not use both `rotation: -90` and `content: [starsStr]` (name omitted) simultaneously — rotation makes vertical space abundant, omitting the name is wasteful
+- For any future narrow annotations, the pattern is: rotate -90, include full content, let the chart-area clip handle the boundary
+- Do not use the box boundary as a clipping container (it does not clip in v2+)
 
 **Warning signs:**
-- Updated OG image is visible when viewing the image URL directly, but social shares still show
-  the old image
-- Facebook Sharing Debugger shows the old cached data
+- Down Jeep annotation shows only star characters with no text label at desktop widths
+- `display: () => window.innerWidth >= 640` returns `true` but label content is just stars
+- DevTools canvas inspection shows the label text overflowing into the C4 annotation area
 
-**Prevention:**
-1. Get the OG image right before the first public share. This is the most effective prevention.
-2. Store the OG image at a stable, intentionally versioned path: `/images/og-cover.jpg` (not
-   `/images/og-cover-v2.jpg` or a hashed path). This makes future deliberate updates possible.
-3. If the image must change post-launch, change the `og:image` URL (not just the file content)
-   — add a version query param or rename the file. This forces platforms to re-crawl a new URL.
-4. For Facebook, use the [Sharing Debugger](https://developers.facebook.com/tools/debug/) to
-   trigger a re-scrape after any intentional update.
-5. Add explicit dimensions `og:image:width` and `og:image:height` — Facebook pre-caches the image
-   before first share when dimensions are declared, preventing blank-image first-share failures.
-
-**Phase:** OG image implementation phase.
-**Confidence:** HIGH — confirmed by Facebook developer documentation and ogp.me spec.
-
----
-
-### Pitfall 4: `mkultragravel.netlify.app` Stays Live After Custom Domain — Duplicate Content
-
-**What goes wrong:**
-When a custom domain is connected to a Netlify site, the original `.netlify.app` subdomain does
-NOT get redirected automatically. It remains fully accessible and serves the same content.
-
-This creates two live URLs serving identical content:
-- `https://mkultragravel.netlify.app/`
-- `https://mkultragravel.com/`
-
-Search engines (Google in particular) may index both. If Google selects the `.netlify.app` URL
-as the canonical, all link equity from backlinks to `mkultragravel.com` is split. A site with
-canonical tags pointing to `mkultragravel.com` may not be enough — Google has been documented
-choosing its own canonical over a declared one if the `.netlify.app` URL is linked to or indexed.
-
-**Why it happens:**
-Netlify's DNS configuration connects custom domains without disabling the original subdomain.
-This is by design (the subdomain is used internally for DNS resolution). Many developers assume
-connecting a custom domain implies the old URL redirects.
-
-**Warning signs:**
-- `https://mkultragravel.netlify.app/` loads the full site (not a 404 or redirect)
-- Google Search Console shows both URLs indexed
-- `site:mkultragravel.netlify.app` in Google returns results
-
-**Prevention:**
-Add a wildcard 301 redirect from the Netlify subdomain to the custom domain in `/public/_redirects`:
-
-```
-https://mkultragravel.netlify.app/* https://mkultragravel.com/:splat 301!
-```
-
-The `!` suffix makes the redirect "force" — it overrides any other redirect rules. The `:splat`
-preserves the path (e.g., `/results` redirects to `mkultragravel.com/results`).
-
-This redirect rule must be in the `_redirects` file inside the Astro `public/` folder so it is
-copied to `dist/` and deployed by Netlify. Do not put it only in `netlify.toml` — the `_redirects`
-file takes effect on the source URL (`.netlify.app`), which is what you want.
-
-This redirect must be deployed BEFORE submitting the sitemap to Google Search Console.
-
-**Phase:** Domain consolidation phase — prerequisite to any Google Search Console configuration.
-**Confidence:** HIGH — confirmed by Netlify Support forum (direct thread on this exact issue) and
-Netlify DNS documentation confirming `.netlify.app` stays live after custom domain connection.
-
----
-
-### Pitfall 5: Trailing Slash Inconsistency Between Astro Config and Canonical Tags
-
-**What goes wrong:**
-Astro's `trailingSlash` option defaults to `'ignore'`, which means Astro will serve both
-`mkultragravel.com/results` and `mkultragravel.com/results/` as valid, live URLs.
-
-If canonical tags are written as `https://mkultragravel.com/results` (no trailing slash) but some
-links in the site or in external backlinks use `https://mkultragravel.com/results/` (with slash),
-Google sees two distinct URLs with identical content, even with canonical tags — because canonicals
-are signals, not directives.
-
-The `@astrojs/sitemap` integration generates sitemap entries based on the URLs Astro actually
-produces during build. With `build.format: 'directory'` (the default), Astro generates
-`results/index.html`. The sitemap will emit `https://mkultragravel.com/results/` (with trailing
-slash) because the directory structure implies it. If canonical tags manually emit
-`https://mkultragravel.com/results` (without slash), the canonical and sitemap disagree — a
-contradiction Google will resolve by ignoring one of them.
-
-**Why it happens:**
-Developers write canonical URLs by hand as string templates without checking what `@astrojs/sitemap`
-actually generates, or without configuring `trailingSlash` consistently.
-
-**Warning signs:**
-- Sitemap entries end with `/` but canonical tags in page source do not (or vice versa)
-- Astro generates `results/index.html` (directory mode) but canonicals say `/results`
-- `Astro.url.pathname` returns `/results/` (with slash) during build but canonical says `/results`
-
-**Prevention:**
-Pick one convention and enforce it everywhere:
-
-1. Set `trailingSlash: 'never'` in `astro.config.mjs` to redirect away from slash URLs and
-   produce canonical paths without slashes. **Or** leave `trailingSlash` at default `'ignore'`
-   and always use `Astro.url.pathname` to construct canonicals (which will include the trailing
-   slash that Astro's directory build format produces).
-
-2. Construct canonical URL from `Astro.url` instead of hardcoding strings:
-   ```astro
-   const canonicalURL = new URL(Astro.url.pathname, Astro.site).href;
-   ```
-   This way the canonical always matches what Astro actually serves, including whatever
-   trailing-slash convention is in effect.
-
-3. After adding the sitemap, view the generated `dist/sitemap-0.xml` and confirm its URLs match
-   the canonical tags in the generated HTML exactly (character for character).
-
-**Phase:** SEO foundations phase — set `trailingSlash` before any canonical URLs are hardcoded.
-**Confidence:** HIGH — confirmed by Astro configuration reference documentation and Astro GitHub
-issue #11575 (sitemap URL and Astro.url mismatch with `build.format: file`).
+**Phase to address:**
+Down Jeep annotation fix phase — verify current code state first; fix may already be in place from a prior session.
 
 ---
 
 ## Moderate Pitfalls
 
-Mistakes that cause validation failures, incomplete rich results, or degraded social sharing.
-
 ---
 
-### Pitfall 6: JSON-LD Event Schema Missing Required Fields Silently Fails Rich Results
+### Pitfall 7: Large Unoptimized Tone Images Loaded Eagerly Regress LCP or TBT
 
 **What goes wrong:**
-Google's Rich Results Test validates Event structured data against required fields. If any
-required field is missing or malformed, the event does not qualify for rich results (the enhanced
-Google Search card with date, location, and ticket link). The page is not penalized — it simply
-renders as a plain search result. There is no console error and no build warning.
+The tone image directory contains `CIA-MKULTRA-IG_Page_01.jpg` at 1.4MB, `lsd-mind-control.jpg` at 611KB, and `square-limit-mc-escher-1964.jpg` at 602KB. Their webp counterparts are 83KB, 13KB, and 101KB respectively — already converted and in use. However, `square-limit-mc-escher-1964.jpg` has no `*_fb.webp` equivalent, unlike `escharian_stairs_fb.webp`.
 
-Google's required fields for Event structured data:
-- `name` — full event title
-- `startDate` — ISO-8601 datetime (`2026-06-07T08:00:00-05:00` format; time zone offset required
-  if the event has a known start time)
-- `location.@type` — must be `"Place"`
-- `location.name` — venue name (not the event name — a common mistake is putting the event name here)
-- `location.address.@type` — must be `"PostalAddress"`
-- `location.address.addressLocality` — city
-- `location.address.addressRegion` — state/region
-- `location.address.addressCountry` — two-letter country code
+If any new explainer section uses an unoptimized `.jpg` instead of the `.webp`, the bandwidth cost is 4–70x higher. For a tone image that renders at 12% opacity with a grayscale filter, this cost is entirely wasted.
 
-**Common mistakes for this specific site:**
-1. Using `SportsEvent` as `@type` without verifying Google's rich results support — Google's
-   event structured data documentation covers the generic `Event` type; `SportsEvent` inherits
-   from it and is schema.org-valid, but Google's Rich Results Test documentation does not
-   explicitly list `SportsEvent` as a supported type for the Events experience. Use
-   `"@type": "Event"` unless testing confirms `SportsEvent` works.
-2. Setting `startDate` as `2026-06-07` (date-only) without time — Google flags this as a warning
-   if a more specific time is available. For an 8am mass-start event, use the full datetime with
-   UTC offset.
-3. Setting midnight (`T00:00:00`) as the start time because no time is known — Google's
-   documentation explicitly flags this as a common mistake.
-4. Putting the event name (`MK Ultra Gravel`) in `location.name` instead of the actual venue
-   name (`Escanaba, MI` or the specific start location).
+More specifically: the hero tone image (`CIA-MKULTRA-IG_Page_01.webp` at 83KB) is `loading="eager"` with `fetchpriority="high"` and a `<link rel="preload">` tag. Any new LCP-path tone image added to the explainer section must follow this pattern if it appears above the fold, or use `loading="lazy"` if below fold.
+
+**How to avoid:**
+- Always use `.webp` equivalents for tone images — they exist for all currently used images
+- New images must be converted to webp and sized to display dimensions before adding to `public/tone/`
+- A 12%-opacity grayscale background image does not need to be larger than ~100KB after webp conversion
+- Follow the existing pattern: `loading="eager" fetchpriority="high"` for above-fold, `loading="lazy"` for below-fold
 
 **Warning signs:**
-- Google Rich Results Test shows "Errors" tab with entries (not just "Warnings")
-- Search Console "Events" report shows "Invalid items" count increasing
-- Rich result preview in Rich Results Test does not render a date/location card
+- Network tab shows a `.jpg` file being fetched for a tone image
+- Lighthouse LCP flags a render-blocking large image
+- TBT > 0ms could indicate a long-running script triggered by a synchronously-loaded large image
 
-**Prevention:**
-1. Run Google's [Rich Results Test](https://search.google.com/test/rich-results) on the
-   production URL after deployment — not just on the local development URL
-2. Validate JSON-LD syntax with a linter before deploying — unescaped quotes and missing commas
-   cause silent JSON parse failures (the entire `<script type="application/ld+json">` block is
-   ignored without any browser console error in some parsers)
-3. Use `new URL(Astro.url.pathname, Astro.site).href` as the `url` property value in JSON-LD —
-   do not hardcode the URL
-4. Include `endDate` and `eventStatus` (`"EventScheduled"`) as recommended fields even though
-   they are not strictly required — they enable richer display in search results
-
-**Phase:** Structured data implementation phase.
-**Confidence:** HIGH — confirmed by Google Search Central event structured data documentation.
+**Phase to address:**
+Explainer layout implementation — audit image sizes before adding to the explainer.
 
 ---
 
-### Pitfall 7: Duplicate `<meta>` Tags from Layout + Page-Level OG Tags
+### Pitfall 8: `will-change: transform` on Fixed Overlay Layers Creates a New Stacking Context That Clips `z-index` of Section Content
 
 **What goes wrong:**
-The existing `BaseLayout.astro` renders `<meta name="description">` unconditionally. If a page
-adds its own `<meta name="description">` via the `<slot name="head">`, HTML will contain two
-`<meta name="description">` tags. Most parsers take the first occurrence; some take the last.
-The behavior is undefined.
+The escher overlay and lizard background both set `will-change: transform`. This promotes them to compositor layers. A `position: fixed` element with `will-change: transform` creates a new stacking context.
 
-For OG tags, if `BaseLayout.astro` adds a default `og:title` and `og:description`, and a page
-also adds its own `og:title` via the head slot, both tags appear in the HTML. Facebook's crawler
-takes the first occurrence; Twitter's crawler behavior varies.
+In practice: any element with `z-index` lower than 9997 (the lizard layer) that is rendered inside a section without its own stacking context may appear behind the overlay layers. The existing content avoids this because section content uses `relative z-10` which creates a local stacking context above the section's own background but below the fixed overlays.
 
-This is especially risky for `/results` — a page that needs entirely different OG tags than the
-homepage, both of which are rendered by the same `BaseLayout`.
+If the new explainer layout creates a stacking context (e.g., via `isolation: isolate`, `transform`, or `opacity < 1` on a wrapper) without an explicit `z-index`, that stacking context may unexpectedly be sorted behind the overlay layers.
 
-**Why it happens:**
-The layout provides defaults as a safety net. Pages that add specific overrides via the head slot
-do not remove the layout's default — they stack on top of it.
+The `isolation: isolate` pattern is already used in `GravelSectors.astro` for the first two cards (`i < 2`) specifically to scope `mix-blend-mode` effects. New layout containers should not use `isolation: isolate` unless the blend mode scoping is intentional, as it creates a stacking context.
 
-**Prevention:**
-In `BaseLayout.astro`, control all meta/OG tags exclusively from props. Do not render any default
-`<meta>` tags unconditionally if the page can also supply them through a slot. Instead:
-
-```astro
----
-interface Props {
-  title: string;
-  description: string;
-  ogTitle?: string;
-  ogDescription?: string;
-  ogImage?: string;
-  ogType?: string;
-}
-const {
-  title,
-  description,
-  ogTitle = title,
-  ogDescription = description,
-  ogImage,
-  ogType = 'website',
-} = Astro.props;
----
-```
-
-All OG tags are emitted once, controlled by props, with fallbacks baked into the destructuring.
-The head slot is reserved for non-OG additions (e.g., JSON-LD structured data, page-specific
-preloads) that do not conflict with what the layout renders.
-
-**Phase:** SEO foundations phase — refactor BaseLayout before adding any OG tags.
-**Confidence:** HIGH — confirmed by direct inspection of `BaseLayout.astro` (current meta tag
-rendering pattern) and HTML specification (duplicate meta tag behavior is undefined).
-
----
-
-### Pitfall 8: `robots.txt` Not in `public/` Is Not Deployed to Netlify
-
-**What goes wrong:**
-Netlify serves the contents of the `dist/` directory (Astro's build output). Astro copies files
-from the `public/` directory into `dist/` verbatim. A `robots.txt` file placed anywhere other
-than `public/robots.txt` will not appear at `mkultragravel.com/robots.txt`.
-
-Specifically, if `robots.txt` is generated by a build script and written to the project root
-or to `src/`, it will not be deployed. The URL `mkultragravel.com/robots.txt` returns 404, and
-Googlebot falls back to allowing all crawling (404 is treated as allow-all, not block-all).
-
-The more impactful issue: a `robots.txt` that does not include a `Sitemap:` directive means
-Google must wait for Search Console sitemap submission to find the sitemap, rather than discovering
-it automatically during crawl.
+**How to avoid:**
+- For explainer section wrappers, use `relative` without `isolation: isolate`
+- Content that must be clickable/interactive: use `relative z-10` on the content wrapper — this is the established pattern in every existing section
+- Tone images: always set `pointer-events: none` (handled by `.tone-image` class)
+- Do not set `opacity` < 1 on a content wrapper (opacity creates a stacking context in the overlay z-space)
 
 **Warning signs:**
-- `curl https://mkultragravel.com/robots.txt` returns 404 after deploy
-- Google Search Console shows "Couldn't fetch" in the robots.txt tester
-- Sitemap is not discovered until manually submitted
+- Section text appears through the grain/escher overlay as expected, but click events on links fail
+- An interactive element (button, link) inside the section receives no click events even with `pointer-events: none` on the overlay
+- DevTools z-index display shows the content wrapper as a stacking context with a z-index lower than 9997
 
-**Prevention:**
-1. Create `public/robots.txt` manually as a static file — not via a build script — since its
-   content does not depend on build-time data:
-
-```
-User-agent: *
-Allow: /
-
-Sitemap: https://mkultragravel.com/sitemap-index.xml
-```
-
-2. Verify `dist/robots.txt` exists after running `npm run build` locally before the first deploy
-3. The `Sitemap:` directive URL must use the custom domain, not `.netlify.app` — another reason
-   `site` in `astro.config.mjs` must be set to the production domain first
-
-**Phase:** Crawl infrastructure phase.
-**Confidence:** HIGH — confirmed by Astro documentation (public folder behavior), Netlify
-deployment documentation (dist/ is the publish directory), and Netlify Support forum thread on
-robots.txt 404 issues.
+**Phase to address:**
+Explainer layout implementation — validate stacking context on first implementation pass.
 
 ---
 
-### Pitfall 9: Netlify Deploy Previews Are Indexable Without Explicit Block
+### Pitfall 9: Tailwind v4 `@theme` Token Syntax Does Not Support Runtime CSS Variable Reads in Filter Values
 
 **What goes wrong:**
-Netlify automatically generates a Deploy Preview URL for every pull request (e.g.,
-`https://deploy-preview-42--mkultragravel.netlify.app/`). These preview URLs are publicly
-accessible and, if discovered, are crawlable and indexable by search engines.
+Tailwind v4 uses a CSS-first `@theme` block for tokens. The `--color-bg-base` token (`oklch(0.10 0.01 250)`) can be referenced in CSS as `var(--color-bg-base)` at compile time. However, CSS `filter` functions do not accept `var()` references in all browsers:
 
-Deploy previews can "make it out into the wild web" through:
-- GitHub PR links visible in public repos
-- Slack or email notifications that surface the preview URL
-- External contributors sharing preview links
+```css
+/* Does NOT work in any browser */
+filter: grayscale(100%) color-adjust(var(--some-token));
+```
 
-If a deploy preview URL gets indexed and then disappears (Netlify deletes old deploy previews),
-Googlebot encounters 404s and may temporarily penalize the domain's crawl budget.
+The existing `.tone-image` filter (`grayscale(100%) contrast(1.3)`) is hardcoded with literal values — this is correct. If the explainer redesign attempts to make the filter opacity or contrast responsive to a design token (e.g., `filter: grayscale(var(--tone-grayscale))`), it will silently fail and the filter will not apply.
 
-**Why it happens:**
-Netlify does not inject `noindex` headers or a restrictive `robots.txt` on deploy previews by
-default. This is a manual configuration.
+Additionally, the `backdrop-filter` property cannot read CSS custom properties as filter function arguments.
+
+**How to avoid:**
+- Keep filter values hardcoded as literals, not CSS variable references
+- If multiple filter presets are needed, define them as distinct utility classes rather than token-driven values
 
 **Warning signs:**
-- `site:deploy-preview--mkultragravel.netlify.app` in Google returns results
-- Google Search Console shows indexed pages with deploy-preview URLs in the URL prefix
+- A tone image appears in full color instead of grayscale when a token reference is used in the filter value
+- The filter applies in Chrome but not Safari (inconsistent var() support in filter arguments across browser versions)
 
-**Prevention:**
-Add a context-specific build command in `netlify.toml` that overwrites `robots.txt` on preview
-builds:
-
-```toml
-[context.deploy-preview]
-  command = "npm run build && echo 'User-agent: *\nDisallow: /' > dist/robots.txt"
-```
-
-This uses the production build but then replaces `robots.txt` with a full block. Production
-builds use the normal `public/robots.txt` unchanged.
-
-**Phase:** Crawl infrastructure phase — add before the first PR is opened on the repo.
-**Confidence:** HIGH — confirmed by Netlify support forum and community documentation on
-deploy preview indexing prevention.
+**Phase to address:**
+Explainer layout design phase — establish filter constants before implementation.
 
 ---
 
-### Pitfall 10: `twitter:card` Tag Missing Causes Large OG Image to Show as Small Summary
+### Pitfall 10: `mix-blend-mode: lighten` on Tone Images Requires Dark Backgrounds to Work — Breaks on Light Ancestors
 
 **What goes wrong:**
-Twitter/X falls back to OG tags if no `twitter:` tags are present. Specifically, Twitter will
-inherit `og:title`, `og:description`, and `og:image` from the OG meta tags. However, without
-a `twitter:card` tag, Twitter defaults to showing the `summary` card format — a small thumbnail
-in the corner of a text preview — regardless of the `og:image` size.
+The `.tone-image` class uses `mix-blend-mode: lighten`. Lighten blend mode selects the lighter of each channel value between the source and destination. On the site's dark backgrounds (`--color-bg-base: oklch(0.10 0.01 250)` ≈ very dark near-black), the grayscale tone image at 12% opacity blends subtly over the dark surface — the effect is correct.
 
-For a 1200x630px OG image (which is the recommended size), the lack of `twitter:card:
-summary_large_image` means the image is rendered small and cropped into a square, losing
-almost all visual impact.
+If any ancestor element of the tone image has a background-color that is lighter than the image content (e.g., a card with `bg-bg-surface` at oklch 0.14, or worse, any element approaching white), the lighten blend will make the image pop to full brightness instead of the subtle overlay effect. The tone image will appear as a harsh white wash instead of a ghostly overlay.
 
-**Why it happens:**
-Developers add full OG tag sets and assume Twitter will use them at full size. The OG spec has
-no equivalent for Twitter's `summary_large_image` card type — it is Twitter-only.
+In `GravelSectors.astro`, the card has `bg-bg-surface` — `oklch(0.14 0.01 250)`. The lighten blend against this slightly-lighter surface should still work because the image at 12% opacity is darker than the surface. But if any new explainer section uses a surface color lighter than `oklch(0.3 ...`, the blend breaks visually.
+
+**How to avoid:**
+- Keep tone images inside sections that use `--color-bg-base` or `--color-bg-surface` backgrounds only
+- If a magazine layout requires a lighter card or panel, either disable the lighten blend on that panel's tone image or switch to `mix-blend-mode: multiply`
+- Preview the blend mode visually at the actual background color, not in isolation
 
 **Warning signs:**
-- [Twitter Card Validator](https://cards-dev.twitter.com/validator) shows the "Summary" card
-  type instead of "Summary Large Image"
-- Link preview in Twitter shows a small square thumbnail instead of a banner-style image
+- Tone image appears as a bright white rectangle instead of a faint ghost
+- The overlay effect looks correct at full page width but breaks inside a card/panel with slightly lighter background
 
-**Prevention:**
-Add exactly two Twitter-specific tags alongside the OG tags (the rest is inherited from OG):
-
-```html
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:site" content="@mkultragravel" />
-```
-
-`twitter:card` is the critical one — without it, the large image format does not activate.
-`twitter:site` is recommended for attribution but optional.
-
-**Phase:** OG/social meta tag implementation phase.
-**Confidence:** HIGH — confirmed by Twitter/X developer documentation on Cards markup.
+**Phase to address:**
+Explainer layout implementation — visual QA pass across all viewport widths.
 
 ---
 
-## Minor Pitfalls
+## Technical Debt Patterns
 
-Mistakes that cause incomplete results or require cleanup after launch.
-
----
-
-### Pitfall 11: Sitemap Includes `/results` as a Primary Destination (It Is a Redirect Page)
-
-**What goes wrong:**
-The `/results` page is a redirect-out page — it tells users that results are hosted on
-ironpineomnium.com and links there. Including `/results` as a standard sitemap entry signals
-to Google that it is a meaningful destination page, which it is not.
-
-Google may visit `/results`, see thin content (a few sentences and a link), and apply a thin-
-content signal to the domain. This is low risk for a two-page site but is architecturally wrong
-— sitemaps should list pages Google should index and rank for search queries.
-
-**Prevention:**
-Either:
-1. Exclude `/results` from the sitemap by adding it to `@astrojs/sitemap`'s `filter` option:
-   ```javascript
-   sitemap({
-     filter: (page) => !page.includes('/results')
-   })
-   ```
-2. Or add `<meta name="robots" content="noindex, follow">` to `results.astro` and let it be
-   excluded from Google's index automatically (and consequently ignored in sitemap scoring)
-
-Option 2 is more correct — if `/results` should not appear in Google search results (since its
-only content is "go to ironpineomnium.com"), `noindex` is the right signal.
-
-**Phase:** Crawl infrastructure phase.
-**Confidence:** MEDIUM — based on Google's thin-content guidance and sitemap best practices.
-No single official source explicitly covers this exact scenario.
+| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
+|----------|-------------------|----------------|-----------------|
+| Skip `width`/`height` on absolutely positioned tone images | Fewer attributes to maintain | No CLS impact since flow-removed, but if layout changes to include in-flow images the debt surfaces immediately | Acceptable only for `position: absolute` images; never for in-flow images |
+| `window.innerWidth >= 640` display threshold (no resize listener) | Simple implementation, no event handling | Labels show/hide incorrectly after orientation change without page reload | Acceptable given static chart pattern; add resize handler only if orientation bugs are reported |
+| Hardcoded filter values (`grayscale(100%) contrast(1.3)`) | Avoids CSS variable limitation in filter context | Requires code change to adjust visual tone | Acceptable — tone treatment is design-constant, not dynamic |
+| `isolation: isolate` on cards with tone images | Scopes mix-blend-mode to card context | Creates stacking context, can cause z-index collisions in overlay-heavy system | Acceptable for specific blend-scope use cases; document each use |
 
 ---
 
-### Pitfall 12: JSON-LD Block in `<head>` with Invalid JSON Silently Fails
+## Integration Gotchas
 
-**What goes wrong:**
-`<script type="application/ld+json">` blocks are parsed independently by each platform
-(Google, Bing, social crawlers). If the JSON is malformed — unescaped quotes in string values,
-missing commas, trailing commas, multi-line template literals with special characters — the
-entire block is silently ignored. There is no browser console error, no build error, and no
-404 — the page renders normally and the structured data simply does not exist.
-
-This is particularly risky when the JSON-LD block is constructed dynamically in Astro using
-template literals with data from `route-data.json` (elevation gain, mileage, etc.) or with
-the event description (which may contain apostrophes or special characters).
-
-**Warning signs:**
-- Google Rich Results Test shows "No structured data detected" despite the `<script>` tag
-  being present in view-source
-- JSON validator (e.g., `jsonlint.com`) reports errors when the block is extracted and pasted
-
-**Prevention:**
-1. Use `JSON.stringify()` to serialize the structured data object — never construct JSON-LD via
-   string concatenation or template literals:
-   ```astro
-   ---
-   const structuredData = {
-     "@context": "https://schema.org",
-     "@type": "Event",
-     "name": "MK Ultra Gravel",
-     // ...
-   };
-   ---
-   <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
-   ```
-   `JSON.stringify()` handles all escaping automatically. `set:html` in Astro renders the
-   string without additional HTML encoding.
-2. Validate the output JSON-LD using Google's Rich Results Test on the production URL, not
-   just a local dev server
-3. Do not include raw user-generated content or data from external sources in JSON-LD without
-   sanitization
-
-**Phase:** Structured data implementation phase.
-**Confidence:** HIGH — confirmed by Astro documentation (`set:html` usage) and structured data
-community documentation.
+| Integration | Common Mistake | Correct Approach |
+|-------------|----------------|------------------|
+| `.tone-image` class + new section | Missing `position: relative` on parent — image escapes to wrong containing block | Always add `relative` (or `relative overflow-hidden`) to the direct parent of any `.tone-image` |
+| chartjs-plugin-annotation v3 + narrow box | Expecting box-boundary clipping of label — labels overflow box | Labels only clip to chart area; design for chart-area overflow, not box-boundary overflow |
+| CSS filters + oklch design tokens | Passing `var(--color-token)` as a filter argument | Filter functions require literal values; use hardcoded numbers |
+| Fixed overlay layers + new stacking contexts | Adding `transform` or `opacity < 1` on section wrappers without explicit z-index | Always pair stacking context creation with `z-index` to control layering relative to overlays |
+| Tailwind v4 + animation | Applying `animate-*` utilities without `motion-reduce:` variant or CSS media query gate | Every animation must be wrapped in `prefers-reduced-motion: no-preference` gate |
 
 ---
 
-## Phase-Specific Warnings
+## Performance Traps
 
-| Phase Topic | Likely Pitfall | Mitigation |
-|-------------|----------------|------------|
-| SEO foundations | `site` not set in astro.config — all downstream SEO breaks silently | Set `site: 'https://mkultragravel.com'` as first change |
-| SEO foundations | `trailingSlash` not set — canonical and sitemap URLs may disagree | Set `trailingSlash: 'never'` or use `Astro.url.pathname` consistently |
-| SEO foundations | Duplicate meta tags from layout + page slot | Refactor BaseLayout to emit OG tags from props only |
-| OG image | Relative path in `og:image` — fails silently on all platforms | Use `new URL('/images/og.jpg', Astro.site).href` |
-| OG image | Hashed filename (`_astro/og.abc123.jpg`) breaks social cache on rebuild | Store OG image in `public/` at a stable non-hashed path |
-| OG image | Cache effectively permanent on Telegram/WhatsApp | Get image right before first public share; never change path |
-| OG image | `og:image:width/height` missing — Facebook may blank on first share | Always declare dimensions alongside `og:image` |
-| Social meta | `twitter:card` missing — large image appears as small thumbnail | Always add `twitter:card: summary_large_image` |
-| JSON-LD | String-concatenated JSON breaks silently — no build error | Use `JSON.stringify()` + `set:html` |
-| JSON-LD | `location.name` = event name instead of venue name | Venue name is required; event name goes in `name` |
-| JSON-LD | `startDate` without time zone offset — Google flags as warning | Use `2026-06-07T08:00:00-05:00` format |
-| Sitemap | `@astrojs/sitemap` requires `site` to be set — fails silently | Set `site` first |
-| Sitemap | `/results` as thin-content page in sitemap | Filter it out or add `noindex` to the page |
-| robots.txt | File not in `public/` — not deployed | Always place at `public/robots.txt` |
-| robots.txt | Missing `Sitemap:` directive — sitemap undiscoverable until manually submitted | Always include `Sitemap: https://mkultragravel.com/sitemap-index.xml` |
-| Deploy previews | Preview URLs indexable by default | Add `netlify.toml` context override to block preview crawling |
-| Domain transition | `.netlify.app` stays live — duplicate content | Add `_redirects` 301 before Google Search Console submission |
+| Trap | Symptoms | Prevention | When It Breaks |
+|------|----------|------------|----------------|
+| Unoptimized tone image on LCP path | LCP regression, Lighthouse performance < 90 | Use webp, keep below 100KB for overlay images, use `fetchpriority="high"` for above-fold | On first load at slow network (3G simulation) |
+| Multiple tone images with `will-change: transform` | Excessive compositor layer count, GPU memory pressure on mobile | Do not add `will-change` to tone images — they are static content; reserve it for animated elements | On low-memory mobile devices (< 3GB RAM) |
+| Overly large `background-size` on overlay SVGs | Browser re-tiles on resize, causing paint jank | Keep overlay SVG patterns at existing 100-200px sizes | On aggressive window resize |
+| Chart.js annotation `update('none')` called on every rAF tick | Canvas repaint on every mouse move frame | Already throttled via `rafPending` flag — maintain this pattern for any new interactions | Visible as jank on low-end hardware during fast hover |
 
 ---
 
-## Validation Checklist (Post-Implementation)
+## "Looks Done But Isn't" Checklist
 
-Run these checks after the SEO milestone is deployed:
+- [ ] **Tone image containment:** Every `.tone-image` has a `position: relative` ancestor — verify in DevTools "Containing Block" panel
+- [ ] **Down Jeep fix verification:** Check at >= 640px viewport that "Down Jeep" text appears in the annotation label (not just star characters)
+- [ ] **Reduced-motion gate:** Any new animation has `@media (prefers-reduced-motion: no-preference)` wrapper — verify by emulating in Chrome DevTools Rendering panel
+- [ ] **Mobile label suppression:** Down Jeep annotation is suppressed at 375px (by `window.innerWidth >= 640` check) — decide if this is intentional and document it
+- [ ] **Webp images only:** `public/tone/` directory contains only `.webp` files being referenced in markup (no `.jpg` fallback being loaded)
+- [ ] **Overlay pointer-events:** New section content is reachable by click/tap — verify no new element accidentally captures pointer events
 
-- [ ] `https://mkultragravel.com/robots.txt` returns 200 with correct content (not 404)
-- [ ] `https://mkultragravel.com/sitemap-index.xml` returns 200
-- [ ] `https://mkultragravel.netlify.app/` redirects 301 to `https://mkultragravel.com/`
-- [ ] View-source on `/` shows `<link rel="canonical" href="https://mkultragravel.com/">` (not `undefined`)
-- [ ] View-source shows `og:image` value starts with `https://mkultragravel.com/`
-- [ ] `og:image:width` and `og:image:height` are present alongside `og:image`
-- [ ] `twitter:card` is `summary_large_image`
-- [ ] Facebook Sharing Debugger loads the OG image correctly
-- [ ] Google Rich Results Test shows no errors (warnings are acceptable)
-- [ ] JSON-LD block passes a JSON linter with no syntax errors
+---
+
+## Recovery Strategies
+
+| Pitfall | Recovery Cost | Recovery Steps |
+|---------|---------------|----------------|
+| Tone image escapes containment | LOW | Add `relative` to parent div — one-line fix |
+| CLS regression from in-flow image | LOW | Add `width`/`height` attributes and `aspect-ratio` CSS to container |
+| Animation without reduced-motion gate | LOW | Wrap animation in `@media (prefers-reduced-motion: no-preference)` |
+| Down Jeep label still not visible | LOW-MEDIUM | Confirm `ElevationProfile.astro` line 66 uses `[sector.name, starsStr]` unconditionally; adjust `rotation` to 0 with `xAdjust` if name still clips |
+| mix-blend-mode lighten breaks on new section background | LOW | Change container background to `bg-bg-base` or switch to `mix-blend-mode: screen` |
+| New stacking context hides behind overlays | MEDIUM | Add explicit `z-index` to the new stacking context wrapper (any value < 9997 renders below all overlays; use `z-10` for page content) |
+
+---
+
+## Pitfall-to-Phase Mapping
+
+| Pitfall | Prevention Phase | Verification |
+|---------|------------------|--------------|
+| Tone image containment (missing `relative`) | Explainer layout implementation | DevTools Containing Block check on `.tone-image` elements |
+| CLS from in-flow images | Explainer layout design (decide absolute vs. in-flow) | Lighthouse CLS score remains < 0.1 |
+| sRGB filter vs. oklch color drift | Explainer design phase — establish image treatment rules | Visual QA: browser rendering matches design intent |
+| Reduced-motion gate missing | Any animation phase | Chrome DevTools Rendering emulation with reduce-motion enabled |
+| Down Jeep label invisible at mobile | Down Jeep fix phase | QA at 375px and 1280px viewports |
+| Down Jeep name omitted from label | Down Jeep fix phase | Confirm `[sector.name, starsStr]` on line 66 of `ElevationProfile.astro` |
+| `will-change` stacking context clip | Explainer layout implementation | Check z-index layer order in DevTools Elements panel |
+| Lighten blend on light background | Explainer layout QA | Visual QA at all section backgrounds |
+| Unoptimized image on LCP path | Image prep before implementation | Network tab webp-only, Lighthouse LCP >= current baseline |
 
 ---
 
 ## Sources
 
-- [Astro Configuration Reference — `site` option](https://docs.astro.build/en/reference/configuration-reference/) — HIGH confidence, official docs, verified via WebFetch
-- [@astrojs/sitemap integration guide](https://docs.astro.build/en/guides/integrations-guide/sitemap/) — HIGH confidence, official docs, verified via WebFetch
-- [The Open Graph protocol (ogp.me)](https://ogp.me/) — HIGH confidence, official spec, verified via WebFetch
-- [Facebook developer docs: OG image requirements](https://developers.facebook.com/docs/sharing/webmasters/images/) — HIGH confidence, verified via WebFetch
-- [Google Search Central: Event structured data](https://developers.google.com/search/docs/appearance/structured-data/event) — HIGH confidence, verified via WebFetch
-- [Schema.org: SportsEvent](https://schema.org/SportsEvent) — HIGH confidence, official spec, verified via WebFetch
-- [Netlify Support: Netlify.app duplicate content SEO issue](https://answers.netlify.com/t/netlify-com-netlify-app-potential-duplicate-content-seo-issue/22726) — HIGH confidence, Netlify official support, verified via WebFetch
-- [Netlify: External DNS configuration docs](https://docs.netlify.com/manage/domains/configure-domains/configure-external-dns/) — HIGH confidence, official docs, verified via WebFetch
-- [Netlify Support: Canonical URL overriding](https://answers.netlify.com/t/in-production-netlify-keeps-overriding-my-canonical-url-that-i-have-set-up-in-astro-config/139110) — HIGH confidence, confirmed via WebFetch (SSR-specific; does not affect this static site)
-- [tempertemper.net: Preventing deploy preview indexing](https://www.tempertemper.net/blog/stop-search-indexing-for-netlify-deploy-previews-and-branch-deploys) — MEDIUM confidence, community source, verified via WebFetch
-- [Twitter/X developer docs: Cards markup](https://developer.twitter.com/en/docs/twitter-for-websites/cards/overview/markup) — HIGH confidence, official docs
-- [Astro GitHub issue #11575: Sitemap URL and Astro.url mismatch](https://github.com/withastro/astro/issues/11575) — HIGH confidence, official repo
-- Direct codebase inspection: `astro.config.mjs` (no `site` field confirmed), `BaseLayout.astro` (meta tag pattern confirmed), `public/` directory (no robots.txt confirmed), `package.json` (Astro 6.1.1, static output) — HIGH confidence
+- Direct codebase inspection: `src/styles/global.css` (overlay z-index values, `.tone-image` class, `@keyframes` reduced-motion gates), `src/components/ElevationProfile.astro` (annotation label construction, display callback), `src/components/LizardBackground.astro` (z-9997, `will-change: transform`), `src/pages/index.astro` (tone image usage pattern), `src/components/GravelSectors.astro` (`isolation: isolate` pattern) — HIGH confidence
+- `.planning/debug/down-jeep-label.md` — root cause analysis of Down Jeep annotation visibility, including sector widths and recommended fix — HIGH confidence
+- [chartjs-plugin-annotation Box Annotations documentation](https://www.chartjs.org/chartjs-plugin-annotation/latest/guide/types/box.html) — label overflow behavior, no box-level clipping in v2+ — HIGH confidence
+- [chartjs-plugin-annotation Configuration documentation](https://www.chartjs.org/chartjs-plugin-annotation/latest/guide/configuration.html) — `clip` option (clips to chart area only) — HIGH confidence
+- [MDN: CSS filter property](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/filter) — filter functions operate in sRGB linearized color space — HIGH confidence
+- [web.dev: Optimize Cumulative Layout Shift](https://web.dev/articles/optimize-cls) — absolute positioned images do not contribute to CLS; in-flow images without dimensions do — HIGH confidence
+- [Aleksandr Hovhannisyan: Set width and height on images](https://www.aleksandrhovhannisyan.com/blog/setting-width-and-height-on-images/) — CLS prevention pattern for in-flow images — MEDIUM confidence (community source, consistent with web.dev)
+
+---
+*Pitfalls research for: CSS-filtered editorial layout + Chart.js annotation label fix on MK Ultra Gravel dark-themed Astro 6 site*
+*Researched: 2026-04-13*

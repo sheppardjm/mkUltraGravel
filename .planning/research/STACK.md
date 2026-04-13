@@ -1,329 +1,311 @@
-# Technology Stack — SEO & Social Sharing Milestone
+# Stack Research
 
-**Project:** MK Ultra Gravel
-**Milestone:** SEO & Social Sharing
-**Researched:** 2026-04-09
-**Scope:** NEW stack decisions only. Existing Astro 6.1.1 + Tailwind v4 + Leaflet + Chart.js + PhotoSwipe + sharp 0.34.5 stack is validated and unchanged.
-**Confidence:** HIGH — primary findings from Astro official docs, @astrojs/sitemap GitHub changelog, npm registry, and direct codebase inspection.
+**Domain:** Editorial magazine-style explainer layout + Chart.js annotation label fix
+**Researched:** 2026-04-13
+**Confidence:** HIGH (CSS filters via MDN official docs, Chart.js annotation via official docs, Tailwind v4 via official docs, codebase directly inspected)
 
 ---
 
-## Executive Summary
+## Scope
 
-This milestone adds four SEO capabilities to a 2-page static site. Three of the four require no new npm dependencies at all — they are pure Astro configuration or inline HTML. The fourth (OG image generation) has a choice between zero-dependency (static pre-made file) and a sharp-based build pipeline. The right choice for this project is the static pre-made file approach, since there are only two pages and sharp is already installed.
+Two discrete tasks share this research:
 
-**Bottom line for each feature:**
+1. **GrinduroExplainer redesign** — Snowboarding magazine editorial layout using tone images with heavy CSS filtering
+2. **Down Jeep label fix** — Chart.js annotation label clipping when box is 0.59mi wide on a ~110mi x-axis
 
-| Feature | Approach | New dependency? |
-|---------|----------|-----------------|
-| Open Graph + Twitter Card meta tags | Props on `BaseLayout.astro` + inline `<meta>` tags | None |
-| OG share image | Pre-process one route photo with existing sharp, serve from `public/` | None (sharp already installed) |
-| JSON-LD Event structured data | `<script type="application/ld+json">` in `BaseLayout.astro` head slot | None |
-| robots.txt | Static file in `public/robots.txt` | None |
-| sitemap.xml | `@astrojs/sitemap` integration + `site` in astro.config.mjs | `@astrojs/sitemap@3.7.2` |
-| Canonical URLs | `Astro.site` + `Astro.url.pathname` in `BaseLayout.astro` | None (needs `site` in config) |
-
-**One new dependency total: `@astrojs/sitemap@3.7.2`.**
+Neither task requires new npm packages. Everything resolves with existing stack + CSS authoring decisions.
 
 ---
 
-## The One New Dependency: @astrojs/sitemap
+## Recommended Stack
 
-### Why it's needed
+### Core Technologies (unchanged — do not re-add)
 
-Astro does not auto-generate `sitemap.xml`. The `@astrojs/sitemap` integration is the official first-party solution maintained in the Astro monorepo. It crawls all statically-generated routes at build time and emits `sitemap-index.xml` + `sitemap-0.xml` into the output directory. This is the canonical approach documented in Astro's official integration guide.
+| Technology | Version | Purpose | Why Relevant |
+|------------|---------|---------|-------------|
+| Astro | 6.1.1 | Static site generation | Component authoring for new layout |
+| Tailwind v4 | 4.2.2 | Utility CSS + design tokens | Filter utilities, grid, mix-blend-mode classes |
+| Chart.js | 4.5.1 | Elevation profile canvas | Annotation label config for Down Jeep fix |
+| chartjs-plugin-annotation | 3.1.0 | Sector band overlays | Label `rotation`, `yAdjust`, `position` options |
+| sharp | 0.34.5 | Build-time image processing | Available but NOT needed for this milestone |
 
-### Version
+### Supporting Libraries (no additions required)
 
-**Current: 3.7.2** — confirmed via the package's GitHub CHANGELOG.md in the withastro/astro monorepo and corroborated by npm registry data (last published April 2026).
-
-### Installation
-
-```bash
-npx astro add sitemap
-```
-
-This command installs the package and auto-patches `astro.config.mjs` to add the integration. Alternatively:
-
-```bash
-npm install @astrojs/sitemap
-```
-
-Then manually update `astro.config.mjs`.
-
-### Configuration required in astro.config.mjs
-
-The integration requires the `site` option — without it, it cannot construct absolute URLs:
-
-```js
-import { defineConfig, fontProviders } from "astro/config";
-import tailwindcss from "@tailwindcss/vite";
-import sitemap from "@astrojs/sitemap";
-
-export default defineConfig({
-  site: "https://mkultragravel.com",
-  integrations: [sitemap()],
-  vite: { plugins: [tailwindcss()] },
-  fonts: [ /* unchanged */ ],
-});
-```
-
-The `site` value of `"https://mkultragravel.com"` is the canonical production domain (not the Netlify subdomain). Setting this also enables `Astro.site` throughout the codebase, which is used to build canonical URLs.
-
-**Output:** Two files emitted to `dist/` at build time — `sitemap-index.xml` and `sitemap-0.xml`. For a 2-page site, both pages (`/` and `/results`) are automatically included.
-
-### What NOT to configure
-
-- Do not set `changefreq` or `priority` — Google ignores both fields as of 2023. Including them adds noise.
-- Do not install `astro-robots-txt` (a community package) — a static `public/robots.txt` file is simpler and has no build-time dependency. (See below.)
+The 10 production-ready images in `public/tone/` are already built-format WebP/JPG served statically. No new image pipeline is required. CSS filters handle all visual transformation at paint time. The 32 images in `images/tone/` are source assets; the 10 in `public/tone/` are the already-processed outputs available to `<img src="/tone/...">` tags.
 
 ---
 
-## Canonical URLs — No New Dependency
+## CSS Filter Strategy for Tone Images
 
-### How it works
+### Why CSS-only (no sharp preprocessing)
 
-Once `site: "https://mkultragravel.com"` is set in `astro.config.mjs`, the Astro global `Astro.site` exposes a `URL` object anywhere in `.astro` files. Canonical URLs are constructed at build time:
+The tone images serve as ghosted background texture, not foreground content. Their purpose is atmosphere, not fidelity. CSS filters applied at paint time:
 
-```astro
----
-const canonicalURL = new URL(Astro.url.pathname, Astro.site);
----
-<link rel="canonical" href={canonicalURL} />
-```
+- Require zero build pipeline changes
+- Allow per-image variation via inline style or utility class modifiers
+- Are reversible — no destructive preprocessing of source files
+- Have zero runtime JS cost (GPU-composited layer by the browser)
+- Work in all browsers since 2016 (Baseline Widely Available per MDN)
 
-This pattern is documented in Astro's official API reference. The `href` attribute on a `URL` object serializes correctly — no string manipulation needed.
+Sharp preprocessing would be warranted only if tone images were performance-critical above-the-fold content needing format negotiation. They are not. The existing `public/tone/` pattern (plain `<img>` with `/tone/` URL) is correct.
 
-### Where to add it
+### Existing baseline (from `global.css` `.tone-image` class)
 
-`BaseLayout.astro` already has `title` and `description` props and a `<head>` section. The canonical tag goes there unconditionally — every page needs one. No per-page configuration is required because `Astro.url.pathname` resolves to the correct value (`/` vs `/results`) at build time for each route.
-
-### The Netlify subdomain concern
-
-The current live URL is `mkultragravel.netlify.app`. Once `mkultragravel.com` is configured as the primary domain in Netlify, Netlify automatically 301-redirects `mkultragravel.netlify.app` to `mkultragravel.com` for all pages. No additional `netlify.toml` redirect rules are needed for the domain consolidation. The canonical tag pointing to `mkultragravel.com` is correct regardless of how the visitor arrived.
-
----
-
-## Open Graph + Twitter Card Meta Tags — No New Dependency
-
-### Why no library
-
-Community SEO wrapper packages (`astro-seo`, `astro-seo-meta`, `@astrolib/seo`) exist but add an abstraction layer over what is ultimately 6-8 `<meta>` tags. For a 2-page static site with a stable tag set, inline meta tags in `BaseLayout.astro` are preferable: they are readable, maintainable, and have zero bundle cost. The wrapper packages vary in Astro 6 compatibility and maintenance activity — introducing a dependency for a thin convenience layer is not justified here.
-
-### Required tags
-
-Open Graph minimum for a link preview (Facebook, LinkedIn, iMessage):
-
-```astro
-<meta property="og:type" content="website" />
-<meta property="og:title" content={title} />
-<meta property="og:description" content={description} />
-<meta property="og:url" content={canonicalURL} />
-<meta property="og:image" content={ogImageURL} />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
-<meta property="og:image:alt" content="MK Ultra Gravel route photo" />
-<meta property="og:site_name" content="MK Ultra Gravel" />
-```
-
-Twitter/X Card minimum (falls back to OG tags if absent, but explicit tags get better results):
-
-```astro
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content={title} />
-<meta name="twitter:description" content={description} />
-<meta name="twitter:image" content={ogImageURL} />
-```
-
-All these tags live in `BaseLayout.astro`. The `ogImageURL` value is a prop defaulting to the pre-generated OG image path (see OG Image section below).
-
-### BaseLayout.astro prop additions
-
-New props needed:
-
-```ts
-interface Props {
-  title?: string;
-  description?: string;
-  ogImage?: string;   // path or URL — defaults to the static OG image
+```css
+.tone-image {
+  opacity: 0.12;
+  mix-blend-mode: lighten;
+  filter: grayscale(100%) contrast(1.3);
+  position: absolute;
+  pointer-events: none;
 }
 ```
 
----
+This is the correct foundation. `mix-blend-mode: lighten` on a dark background (`oklch(0.10)`) means only pixels brighter than the background bleed through — creating a photographic ghost effect. `grayscale(100%)` removes all source color so the oklch palette controls all hue in the composition. `contrast(1.3)` sharpens edges for a documentary/xerox aesthetic. The existing `MkUltraExplainer.astro` extends this with Tailwind's `invert-100` class to flip dark/light areas for specific images.
 
-## OG Share Image — No New Dependency (sharp already installed)
+### CSS filter functions available (verified via MDN)
 
-### Decision: static pre-generated file, not an Astro endpoint
+Ten native CSS filter functions exist. There is no `posterize()`. Posterization requires an SVG `feComponentTransfer` filter referenced via `filter: url(#id)` — not worth the DOM complexity for background textures.
 
-Two approaches exist for OG images in Astro:
+| Function | Use for tone images |
+|----------|-------------------|
+| `grayscale(100%)` | Always — strip source color |
+| `contrast(1.3–2.5)` | Amplify — higher = more xerox/dossier feel |
+| `brightness(0.5–1.2)` | Lower to deepen, raise to lighten halos |
+| `invert(100%)` | Flip dark/light — good for text-heavy CIA documents |
+| `sepia(100%)` | Warm tint without color; lower opacity version looks aged |
+| `hue-rotate(90deg–180deg)` | Psychedelic color cast — works post-grayscale only if paired with `saturate()` |
+| `blur(px)` | Soft diffusion — use sparingly, degrades at high contrast values |
 
-**Option A — Astro endpoint with Satori + sharp:** Create `src/pages/og-image.png.ts`, use `satori` (0.18.3) to render an HTML tree to SVG, convert with sharp to PNG, return as a `Response`. This is appropriate for sites with many pages and dynamic content per page — the image is generated at build time via `getStaticPaths()`.
+**Order matters:** `grayscale()` before other filters eliminates color; applying `sepia()` after `grayscale()` produces a warm grey, not brown.
 
-**Option B — Static file in `public/`:** Pre-process one route photo with sharp (already a devDependency), save as `public/og-image.jpg`, commit to repo. The `<meta property="og:image">` tag points to `https://mkultragravel.com/og-image.jpg`.
+### Filter combination recipes for editorial magazine feel
 
-**Use Option B.** Rationale:
-- This site has 2 pages, not 200. Both pages share the same OG image (a compelling route photo). There is no per-page dynamic content requiring unique OG images.
-- Adding `satori` (which uses the `yoga-layout-wasm` + `opentype.js` dependency chain and requires a font file) for a 2-page site is engineering overhead with no return.
-- sharp is already installed as a devDependency. A one-time script invocation (or even the macOS Preview export) produces the correctly-sized file. This is not a build-step dependency — it's a one-time authoring task.
+All CSS-only. Applied via `style` attribute or additional utility classes on the `<img>`.
 
-### OG image spec
+**Recipe 1: CIA document / declassified xerox**
+```css
+filter: grayscale(100%) contrast(2) brightness(0.7);
+mix-blend-mode: lighten;
+opacity: 0.15;
+```
+Effect: Crushes midtones, lifts edges, looks like a photocopied dossier. Recommended for CIA-MKULTRA document images. Higher opacity than baseline because high contrast already obscures recognizability.
 
-- **Dimensions:** 1200×630px (standard OG aspect ratio, optimal for all platforms)
-- **Format:** JPG at quality 85 (smaller than PNG, acceptable quality loss for a photo)
-- **Source:** Any of the 71 route photos in `images/`. Pick a wide, dramatic, high-contrast shot.
-- **Output path:** `public/og-image.jpg`
-- **Served at:** `https://mkultragravel.com/og-image.jpg`
+**Recipe 2: Deep ghost / subtle texture**
+```css
+filter: grayscale(100%) contrast(1.5) brightness(0.5);
+mix-blend-mode: lighten;
+opacity: 0.10;
+```
+Effect: Very subdued — retreats behind text without competing. Use for large images spanning the full explainer section height.
 
-### One-time sharp script (runs manually, not in prebuild)
+**Recipe 3: Inverted negative (already used in MkUltraExplainer)**
+```css
+filter: grayscale(100%) contrast(1.3) invert(100%);
+mix-blend-mode: lighten;
+opacity: 0.12;
+```
+Effect: Flips dark/light — text-heavy documents read as white-on-dark ghost. Tailwind `invert` class handles this, no custom CSS needed.
 
-```js
-// scripts/generate-og-image.js
-import sharp from "sharp";
-await sharp("images/[chosen-photo].jpg")
-  .resize(1200, 630, { fit: "cover", position: "centre" })
-  .jpeg({ quality: 85 })
-  .toFile("public/og-image.jpg");
+**Recipe 4: Screen mode glow**
+```css
+filter: grayscale(100%) contrast(1.8) brightness(1.2);
+mix-blend-mode: screen;
+opacity: 0.08;
+```
+Effect: Screen brightens and spreads light areas, creating halo-like luminance. Lower opacity required to prevent washout. Use for images with large bright regions (e.g., Escher drawings with white backgrounds).
+
+**What NOT to attempt:**
+- Posterize via SVG `feComponentTransfer` — complexity exceeds visual gain for background texture
+- CSS `color-mix()` for image tinting — only works on color values, not raster image pixels
+- Canvas 2D pixel manipulation — no JS animation libraries per project constraint, and CSS achieves the same result at lower cost
+
+### Mix-blend-mode selection for dark backgrounds (oklch(0.10))
+
+| Mode | Effect on dark bg | Recommended |
+|------|------------------|-------------|
+| `lighten` | Only pixels brighter than dark bg show — perfect ghost effect | YES — default |
+| `screen` | Spreads and brightens light areas — halo/glow | YES — for bright-region images |
+| `overlay` | Punches contrast, dark stays dark | YES — for texture punch |
+| `multiply` | Darkens everything — images become invisible on dark bg | NO |
+| `color-dodge` | Very bright, can blow out at any opacity | ONLY at opacity < 0.05 |
+| `difference` | Unpredictable inversion relative to bg | AVOID |
+
+**Use `lighten` as the default. Use `screen` for images with large bright white regions (CIA documents, Escher drawings) where you want the white to appear to glow.**
+
+### Tailwind v4 utilities available (no custom CSS needed for standard combos)
+
+```html
+<!-- Grayscale -->
+<img class="grayscale ..." />
+
+<!-- Contrast via arbitrary value bracket syntax -->
+<img class="contrast-[2] ..." />
+
+<!-- Blend mode -->
+<img class="mix-blend-lighten ..." />
+<img class="mix-blend-screen ..." />
+<img class="mix-blend-overlay ..." />
+
+<!-- Invert -->
+<img class="invert ..." />
+
+<!-- Opacity -->
+<img class="opacity-10 ..." />
 ```
 
-Run once: `node scripts/generate-og-image.js`. Commit `public/og-image.jpg`. Done. No build-time dependency, no Satori, no font files.
+For multi-filter combinations (e.g., `grayscale(100%) contrast(2) brightness(0.7)`), use an inline `style` attribute or a scoped `<style>` block in the `.astro` component. The `.tone-image` global class handles the shared baseline; per-image variation belongs in the component.
 
 ---
 
-## JSON-LD Event Structured Data — No New Dependency
+## Editorial Magazine Layout (GrinduroExplainer)
 
-### Why inline script, not a library
+### CSS Grid pattern — two-column editorial
 
-`astro-seo-schema` (version 6.0.0) is a community package that wraps JSON-LD in an Astro component. For a single `Event` type on a single page, the wrapper adds a package dependency and import overhead for what is one `<script>` tag. The correct approach for a static site with known, stable schema is inline JSON in the template.
+Snowboarding magazine editorial = large atmospheric image occupies one visual zone, dense mono-spaced text occupies another, they abut or overlap dramatically. No JavaScript required.
 
-### Placement
+**Recommended structure for GrinduroExplainer redesign:**
 
-MK Ultra Gravel is a sporting event. The JSON-LD goes in `index.astro` (the homepage), injected into `BaseLayout.astro`'s `<slot name="head" />`:
+```html
+<section class="relative overflow-hidden">
+  <!-- Tone image — absolute background, full bleed -->
+  <img class="tone-image inset-0 w-full h-full object-cover [recipe filter]" />
+  
+  <!-- Two-column grid for content -->
+  <div class="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-0">
+    <!-- Left column: large decorative image (second tone image, different recipe) -->
+    <div class="hidden md:block relative overflow-hidden">
+      <img class="w-full h-full object-cover [stronger filter recipe]" />
+    </div>
+    <!-- Right column: text content -->
+    <div class="classified-border p-6 md:p-8 ...">
+      <!-- existing text content -->
+    </div>
+  </div>
+</section>
+```
 
-```astro
-<!-- In index.astro frontmatter section -->
+Alternative: Full-bleed single-image approach already proven in `MkUltraExplainer.astro` — this is simpler if only one tone image is needed and the text overlays it. The two-column grid adds visual separation between image-zone and text-zone, closer to the magazine-editorial feel.
+
+### Typography tokens (no additions needed)
+
+The existing design system covers all editorial typography requirements:
+
+- `font-display` (Special Elite) — headlines, pull quotes, drop-caps via `::first-letter`
+- `font-mono` (Space Mono) — body, captions, labels — the mono font itself reads editorial
+- `.stamp` component — rotated red-border classification stamp, already editorial
+- `.classified-border` component — CLASSIFIED header, already editorial
+- `text-accent-green` / `text-accent-red` / `text-accent-white` — existing emphasis hierarchy
+
+No new fonts or component additions are required.
+
 ---
-const eventSchema = {
-  "@context": "https://schema.org",
-  "@type": "SportsEvent",
-  "name": "MK Ultra Gravel",
-  "startDate": "2026-06-07T08:00:00-05:00",
-  "endDate": "2026-06-07T20:00:00-05:00",
-  "eventStatus": "https://schema.org/EventScheduled",
-  "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
-  "location": {
-    "@type": "Place",
-    "name": "Michigan's Upper Peninsula",
-    "address": {
-      "@type": "PostalAddress",
-      "addressRegion": "MI",
-      "addressCountry": "US"
-    }
-  },
-  "description": "100 miles of rowdy, technical gravel through Michigan's Upper Peninsula. Free ride. Mass start. No mercy.",
-  "url": "https://mkultragravel.com",
-  "image": "https://mkultragravel.com/og-image.jpg",
-  "organizer": {
-    "@type": "Organization",
-    "name": "MK Ultra Gravel",
-    "url": "https://mkultragravel.com"
-  },
-  "isAccessibleForFree": true
+
+## Chart.js Annotation: Down Jeep Label Fix
+
+### The problem precisely
+
+Down Jeep: `startMi: 83.55`, `endMi: 84.14`, width = **0.59mi** on a 110mi x-axis. At a 700px-wide chart, each mile ≈ 6.4px, so the box is ≈ 3.8px wide. Any label at `rotation: 0` overflows the box width immediately. At `rotation: -90`, the label renders vertically and should theoretically have room — but the label may be clipping against the chart canvas boundary or the box's own narrow pixel footprint.
+
+### Available label options (chartjs-plugin-annotation 3.1.0, verified from official docs)
+
+Complete label sub-object API for `type: 'box'`:
+
+| Option | Type | Default | Relevant to fix |
+|--------|------|---------|----------------|
+| `rotation` | number | undefined | -90 for narrow — keep or adjust |
+| `position` | `{x, y}` or string | `'center'` | Move anchor point within box |
+| `xAdjust` | number | 0 | Shift label left/right from anchor (pixels) |
+| `yAdjust` | number | 0 | Shift label up/down from anchor |
+| `font.size` | number | — | Reduce for narrow boxes |
+| `content` | string[] | null | Shorten to abbreviation only |
+| `textStrokeWidth` | number | 0 | Halo for legibility |
+| `textStrokeColor` | Color | undefined | Halo color |
+| `display` | boolean/function | false | Suppress entirely |
+
+**There is no `clip`, `overflow`, or `maxWidth` option on the label sub-object.** The label paints wherever its computed center lands, extending freely beyond the parent box boundary.
+
+The global `clip` option on the annotation plugin (`plugins.annotation.clip`) defaults to `true` — this clips all annotation rendering to the chart area. Labels that try to extend beyond the canvas edge get cut off by this clipping.
+
+### Root cause
+
+With `position: { x: 'center', y: 'end' }` and `rotation: -90`, the label anchor is at the center-x of the 3.8px-wide box (≈ mile 83.85 on screen). The text extends vertically from that point. On a chart that ends at ~110mi, mile 83.85 is ≈ 24px from the right edge — so if the rotated label text extends rightward, it can clip against the canvas boundary. The current code places both label lines (`sector.name` + stars) into `content: labelContent`, which at font-size 9 and -90 rotation means the text extends upward from the anchor. This should work if the box bottom is not at the canvas bottom — but the `yAdjust: i % 2 === 0 ? 0 : -16` alternation is designed for horizontal labels and may position the rotated label unexpectedly.
+
+### Fix options (in order of implementation simplicity)
+
+**Option A: Shorten content + reduce font for narrow sectors (simplest, 2-line change)**
+Remove the stars row for narrow sectors; use only the first word of the sector name:
+```js
+content: isNarrow ? [sector.name] : labelContent,
+font: { size: isNarrow ? 7 : 9, family: 'Space Mono, monospace' },
+```
+The sector name "Down Jeep" fits in ~50px at size 7. With -90 rotation from `center/end` anchor, this has adequate vertical clearance.
+
+**Option B: Shift anchor to `'start'` + xAdjust (RECOMMENDED — clean, no new annotations)**
+Move the anchor to the left edge of the box and nudge the label into the open chart space to the left:
+```js
+position: isNarrow ? { x: 'start', y: 'end' } : { x: 'center', y: 'end' },
+xAdjust: isNarrow ? -8 : 0,
+yAdjust: isNarrow ? -8 : (i % 2 === 0 ? 0 : -16),
+rotation: isNarrow ? -90 : 0,
+```
+At mile 83.55 with `x: 'start'`, the anchor is at the left edge of the box. `xAdjust: -8` shifts the label 8px left of that edge, placing it in the open chart area. The -90 rotation then extends the text vertically in space that has room. This keeps one annotation object per sector.
+
+**Option C: Separate standalone `type: 'label'` annotation for narrow sectors (most precise)**
+Disable the in-box label for narrow sectors and create a sibling `type: 'label'` annotation positioned just to the left:
+```js
+// In the box annotation:
+label: { display: false },
+
+// Sibling annotation:
+annotationBoxes[`sector_${i}_label`] = {
+  type: 'label',
+  xValue: sector.startMi - 0.4,
+  content: labelContent,
+  color: starColors[sector.stars] + 'cc',
+  font: { size: 9, family: 'Space Mono, monospace' },
+  rotation: -90,
+  callout: { display: true, position: 'right' },
 };
----
 ```
+Label annotations support callouts (line connecting to a point), which would visually link the floating label to the Down Jeep box. This is the cleanest visual result but adds an annotation object to the map.
 
-```astro
-<!-- Injected via head slot -->
-<script type="application/ld+json" slot="head" set:html={JSON.stringify(eventSchema)} />
-```
+**Option D: Suppress label on narrow sectors (acceptable fallback)**
+Set `label.display: false` for `isNarrow` sectors. The hover tooltip (already implemented via Chart.js tooltip callbacks) provides sector name on interaction. Down Jeep is the only narrow sector; suppressing its annotation label has minimal information loss.
 
-Using `set:html` prevents Astro from escaping the JSON string. The `slot="head"` targets `BaseLayout.astro`'s `<slot name="head" />` which already exists.
+**Recommendation: Try Option B first.** It is a targeted 3-property change to the existing annotation config with no new objects. If the label still clips at narrow viewport widths (mobile), fall back to Option D — the tooltip handles identification at all sizes, and the box border/color still visually identifies the sector.
 
-### Schema type choice
+### No new npm packages needed
 
-Use `SportsEvent` (a subtype of `Event`) rather than generic `Event` — it's the correct Schema.org type for a cycling event and may unlock sport-specific rich results in Google Search.
+`chartjs-plugin-annotation` 3.1.0 is already installed and has all required options. No upgrade is warranted — the fix is configuration, not a missing capability.
 
 ---
 
-## robots.txt — No New Dependency, Static File
+## What NOT to Add
 
-### Approach: static file in `public/`
-
-`public/robots.txt` is copied to `dist/robots.txt` at build time with no processing — this is standard Astro behavior. There is no reason to create a dynamic endpoint for `robots.txt` on a site that has no pages to disallow.
-
-### Content
-
-```
-User-agent: *
-Allow: /
-
-Sitemap: https://mkultragravel.com/sitemap-index.xml
-```
-
-The `Sitemap:` directive points to `sitemap-index.xml`, which is the index file generated by `@astrojs/sitemap`. Google uses this directive as a hint — the sitemap is also submitted directly via Google Search Console, so the `robots.txt` reference is belt-and-suspenders.
+| Avoid | Why | Use Instead |
+|-------|-----|-------------|
+| GSAP or any JS animation library | TBT 0ms goal; CSS `@keyframes` already handles grain/escher/lizard overlays | CSS `animation` property |
+| Canvas 2D image library (Fabric.js, Konva) | Tone images are static textures, not interactive elements | CSS `filter` property |
+| SVG `feColorMatrix` / `feComponentTransfer` for posterize | Requires inline SVG markup per image; `grayscale + contrast + mix-blend-mode` achieves equivalent result with less DOM | CSS filter chain |
+| Astro `<Image>` component for tone images | Tone images live in `public/tone/` for a reason — Astro's image service is bypassed by design | Plain `<img src="/tone/...">` |
+| New Astro integrations for image effects | CSS handles all required transformations at zero build cost | Existing CSS |
+| `chartjs-plugin-annotation` version upgrade | 3.1.0 is current stable (Oct 2024); upgrading for a label position fix risks regression in existing hover/click event handling | Existing API options |
+| CSS `backdrop-filter` | No frosted-glass needed; blend modes are the correct primitive for image-over-dark-background effects | `mix-blend-mode: lighten/screen` |
+| `color-mix()` in oklch for image tinting | Cannot tint raster images; only works on CSS color values | `filter: hue-rotate()` + `mix-blend-mode` |
+| Sharp preprocessing of tone images | Destructive, requires build step changes, gain is nil since CSS achieves the same visual result at paint time | CSS `filter` on `<img>` |
 
 ---
 
-## What NOT to Add and Why
+## Version Compatibility
 
-| Library | Rejected because |
-|---------|-----------------|
-| `satori` (0.18.3) | OG image generation overkill for 2-page site; static pre-generated file is simpler and uses sharp already installed |
-| `astro-seo` / `astro-seo-meta` / `@astrolib/seo` | Thin wrappers over `<meta>` tags; adds a dependency for no capability gain; Astro 6 compatibility varies |
-| `astro-seo-schema` | Single JSON-LD `<script>` tag; wrapping it in a component adds a package for zero DX benefit |
-| `astro-robots-txt` | Community package for dynamic robots.txt; static `public/robots.txt` is simpler, no build-time dependency, no maintenance surface |
-| Netlify Edge Functions for OG image | SSR not in the project; pure static deployment; no serverless needed |
-
----
-
-## Dependency Summary
-
-| Package | Version | Type | Purpose |
-|---------|---------|------|---------|
-| `@astrojs/sitemap` | 3.7.2 | dependency | Generates `sitemap-index.xml` + `sitemap-0.xml` at build time |
-
-All other SEO features are implemented through:
-- Astro configuration (`site` option — enables `Astro.site`)
-- `BaseLayout.astro` template additions (canonical, OG meta, Twitter meta)
-- `index.astro` head slot (JSON-LD)
-- Static file (`public/robots.txt`)
-- One-time sharp script (`scripts/generate-og-image.js`) producing `public/og-image.jpg`
-
----
-
-## astro.config.mjs Final State
-
-```js
-import { defineConfig, fontProviders } from "astro/config";
-import tailwindcss from "@tailwindcss/vite";
-import sitemap from "@astrojs/sitemap";
-
-export default defineConfig({
-  site: "https://mkultragravel.com",           // NEW — enables Astro.site + sitemap URLs
-  integrations: [sitemap()],                    // NEW — generates sitemap at build
-  vite: {
-    plugins: [tailwindcss()],
-  },
-  fonts: [
-    {
-      name: "Space Mono",
-      cssVariable: "--font-mono",
-      provider: fontProviders.google(),
-      weights: [400, 700],
-      styles: ["normal", "italic"],
-      subsets: ["latin"],
-    },
-    {
-      name: "Special Elite",
-      cssVariable: "--font-display",
-      provider: fontProviders.google(),
-      weights: [400],
-      styles: ["normal"],
-      subsets: ["latin"],
-    },
-  ],
-});
-```
+| Package | Version | Note |
+|---------|---------|------|
+| chartjs-plugin-annotation | 3.1.0 | Requires Chart.js 4.x — already matched at 4.5.1 |
+| Tailwind v4 | 4.2.2 | CSS-first config: filter utilities (`grayscale`, `contrast-[val]`, `invert`, `mix-blend-*`) all present via utility classes |
+| Astro | 6.1.1 | No image service configured — `public/tone/` images bypass Astro entirely, correct for this use |
+| CSS filter | — | Baseline Widely Available since September 2016 per MDN; no polyfill needed |
+| CSS mix-blend-mode | — | Baseline Widely Available; creates stacking context, GPU-composited in modern browsers |
 
 ---
 
@@ -331,10 +313,15 @@ export default defineConfig({
 
 | Source | Confidence | What it informed |
 |--------|------------|-----------------|
-| [Astro config reference — site option](https://docs.astro.build/en/reference/configuration-reference/#site) | HIGH | `Astro.site` behavior, canonical URL construction pattern, requirement for sitemap |
-| [Astro API reference — Astro.site](https://docs.astro.build/en/reference/api-reference/) | HIGH | `new URL(Astro.url.pathname, Astro.site)` canonical pattern |
-| [@astrojs/sitemap integration guide](https://docs.astro.build/en/guides/integrations-guide/sitemap/) | HIGH | Installation, config, output files, robots.txt relationship |
-| [withastro/astro sitemap CHANGELOG.md](https://github.com/withastro/astro/blob/main/packages/integrations/sitemap/CHANGELOG.md) | HIGH | Confirmed 3.7.2 is current version |
-| [npm — satori](https://www.npmjs.com/package/satori) | MEDIUM | Confirmed 0.18.3 is current version; informed decision to reject for this use case |
-| [arne.me — Static OG Images in Astro](https://arne.me/blog/static-og-images-in-astro) | MEDIUM | Confirmed Satori + sharp is the standard dynamic approach; confirmed build-time approach is viable |
-| Direct codebase inspection | HIGH | Confirmed `BaseLayout.astro` has `<slot name="head" />`, title/description props, sharp already in devDependencies; confirmed `public/` exists; confirmed no existing sitemap or robots.txt |
+| [MDN: CSS filter](https://developer.mozilla.org/en-US/docs/Web/CSS/filter) | HIGH | All 10 filter functions confirmed, no posterize(), Baseline Widely Available since 2016, filter order semantics |
+| [MDN: mix-blend-mode](https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode) | HIGH | All blend mode values, stacking context behavior, lighten/screen behavior on dark backgrounds |
+| [chartjs-plugin-annotation: Box annotation](https://www.chartjs.org/chartjs-plugin-annotation/latest/guide/types/box.html) | HIGH | Complete label sub-object API table, all properties with defaults, confirmed 3.1.0 |
+| [chartjs-plugin-annotation: Configuration](https://www.chartjs.org/chartjs-plugin-annotation/latest/guide/configuration.html) | HIGH | Global clip option behavior (clip: true by default clips annotations to chart area) |
+| [chartjs-plugin-annotation: Label annotation type](https://www.chartjs.org/chartjs-plugin-annotation/latest/guide/types/label.html) | HIGH | Standalone label type with callout feature — Option C basis |
+| [Tailwind CSS: mix-blend-mode](https://tailwindcss.com/docs/mix-blend-mode) | HIGH | Full utility class name list, responsive variants, isolate utility |
+| [Tailwind CSS: filter utilities](https://tailwindcss.com/docs/filter-grayscale) | HIGH | grayscale, contrast, invert utility classes; arbitrary value bracket syntax confirmed |
+| Direct codebase inspection | HIGH | Confirmed `.tone-image` baseline in global.css, Down Jeep width (0.59mi), existing annotation config structure in ElevationProfile.astro, public/tone/ image list |
+
+---
+*Stack research for: mkUltraGravel editorial explainer redesign + Down Jeep annotation label fix*
+*Researched: 2026-04-13*

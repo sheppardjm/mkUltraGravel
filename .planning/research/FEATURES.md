@@ -1,359 +1,257 @@
-# Feature Landscape: SEO & Social Sharing
+# Feature Landscape: Magazine Editorial Layout + Elevation Label Fix
 
-**Domain:** Event website — SEO and social sharing layer
-**Project:** MK Ultra Gravel
-**Milestone:** SEO & Social Sharing
-**Researched:** 2026-04-09
+**Domain:** Action sports / cycling editorial web design
+**Project:** MK Ultra Gravel — v10.6 Explainer Redesign
+**Researched:** 2026-04-13
+**Confidence:** HIGH (CSS properties), MEDIUM (editorial pattern conventions)
 
 ---
 
-## Context: What Already Exists
+## Context: What This Milestone Adds
 
-The site already has:
-- `<title>` and `<meta name="description">` on all pages
-- `favicon.svg` (Penrose triangle)
-- Two pages: `/` (homepage) and `/results` (redirect to ironpineomnium.com)
-- Canonical domain target: `mkultragravel.com`
-- Current deploy: `mkultragravel.netlify.app`
-- Built with Astro 6 as a static site
+The milestone has two scopes:
+
+1. **Grinduro explainer redesign:** Replace the current `classified-border` box containing 3 paragraphs with a magazine editorial spread — text broken by filtered tone images between paragraphs.
+2. **Elevation label fix:** A separate, smaller scope (likely a bug fix to KOM or sector labels on the elevation profile).
+
+This FEATURES.md covers both. The editorial redesign is the primary creative scope.
+
+---
+
+## Existing Design System (What the Redesign Must Integrate With)
+
+| Token | Value | Notes |
+|-------|-------|-------|
+| `--color-bg-base` | `oklch(0.10 0.01 250)` | Near-black; all tone images render against this |
+| `--color-accent-green` | `oklch(0.85 0.24 145)` | Chartreuse — primary accent, Special Elite headers |
+| `--color-accent-red` | `oklch(0.60 0.22 25)` | Stamp / classified label |
+| `--color-accent-white` | `oklch(0.92 0.01 90)` | Strong text emphasis |
+| `--color-text-body` | `oklch(0.85 0.01 90)` | Body copy |
+| `--color-text-muted` | `oklch(0.70 0.01 90)` | Labels, captions |
+| `--color-border` | `oklch(0.25 0.01 250)` | Subtle separator |
+| `--font-display` | Special Elite | Headers, stamps |
+| `--font-mono` | Space Mono | All body copy |
+
+**Existing animated overlay layers (must NOT be broken or duplicated by the redesign):**
+- `.grain-overlay` — fixed, z-index 9999, 6% opacity SVG noise, full viewport
+- `.escher-overlay` — fixed, z-index 9998, 5% opacity Penrose tessellation with 50s drift
+- `.lizard-bg` — animating background texture
+- All three use `pointer-events: none` and `position: fixed` — they are viewport-level, not section-level
+
+**Existing `.tone-image` class:**
+```css
+.tone-image {
+  opacity: 0.12;
+  mix-blend-mode: lighten;
+  filter: grayscale(100%) contrast(1.3);
+  position: absolute;
+  pointer-events: none;
+}
+```
+This is the baseline treatment already in use on `MkUltraExplainer.astro`. The redesign should branch from here, not reinvent it.
+
+**Tone image inventory (32 files in `images/tone/`):**
+CIA documents, MK Ultra imagery, Escher art, LSD visuals, stickers, movie stills. Mix of JPG, WebP, AVIF. No processed derivatives exist yet — all full-resolution originals.
 
 ---
 
 ## Table Stakes
 
-Features users and crawlers expect. Missing any of these = broken social previews or degraded search performance.
+Features that must exist for the redesign to feel like a magazine editorial. Missing any of these = it reads as a basic text block with pictures stuck in.
 
-### 1. Open Graph Tags (og:*)
-
-| Tag | Required? | Value for This Site |
-|-----|-----------|---------------------|
-| `og:title` | Required | "MK Ultra Gravel" |
-| `og:type` | Required | "website" |
-| `og:image` | Required | Absolute URL to 1200×630 OG image |
-| `og:url` | Required | `https://mkultragravel.com/` |
-| `og:description` | Strongly recommended | 2-3 sentence event description |
-| `og:site_name` | Recommended | "MK Ultra Gravel" |
-| `og:image:width` | Recommended | 1200 |
-| `og:image:height` | Recommended | 630 |
-| `og:image:alt` | Recommended (accessibility) | Description of what the image shows |
-| `og:locale` | Optional | `en_US` (default; can omit) |
-
-**Complexity:** Low. These are static `<meta>` tags in `BaseLayout.astro` head.
-
-**Why it matters:** Facebook, LinkedIn, Discord, Slack, WhatsApp, and iMessage all read OG tags to generate link previews. Without `og:image`, platforms fall back to any image on the page or show no preview.
-
-**Implementation note:** All URLs must be absolute (`https://...`), not relative. Netlify/production canonical domain should be used, not the netlify.app subdomain.
-
----
-
-### 2. Twitter / X Card Tags
-
-| Tag | Required? | Value for This Site |
-|-----|-----------|---------------------|
-| `twitter:card` | Required | `summary_large_image` |
-| `twitter:title` | Recommended | Same as og:title |
-| `twitter:description` | Recommended | Same as og:description |
-| `twitter:image` | Recommended | Same absolute URL as og:image |
-| `twitter:image:alt` | Recommended | Same as og:image:alt |
-| `twitter:site` | Optional | @handle if the event has one |
-
-**Complexity:** Low. Three to five `<meta name="twitter:...">` tags alongside the OG tags.
-
-**Why it matters:** X falls back to OG tags for title and description, but `twitter:card` must be explicitly set to get `summary_large_image` layout (large image above the tweet). Without it, X uses `summary` (small thumbnail), which is visually weak.
-
-**Image specs for X:** 300×157 minimum to trigger large image; 1200×675 recommended (16:9). The 1200×630 OG image passes the minimum requirement and will display acceptably. A separate 1200×675 is marginally better for X but not worth maintaining two images.
-
----
-
-### 3. OG Share Image (1200×630)
-
-A single static image placed at `/og-image.jpg` (or `.png`).
-
-**Platform requirements:**
-
-| Platform | Required Size | Notes |
-|----------|--------------|-------|
-| Facebook | 1200×630 minimum | 1.91:1 aspect ratio; 8MB file limit |
-| Twitter/X | 300×157 minimum, 1200×675 ideal | 5MB limit; 1200×630 displays fine |
-| LinkedIn | 1200×627 minimum | 1.91:1 aspect ratio |
-| Discord | 1200×630 | Same OG tags |
-| Slack | 1200×630 | Same OG tags |
-| WhatsApp | 1200×630 | Same OG tags |
-
-**Universal target:** 1200×630 px, JPEG or PNG, under 1MB file size (under 300KB preferred for fast crawling).
-
-**Content recommendation for this site:**
-- Use a strong route photo as the background (full bleed)
-- Overlay text: event name, date, location, distance
-- Keep text inside the central 80% of the image — platforms crop edges
-- Dark semi-transparent bar behind text for readability
-- Do NOT rely on text alone — the photo is the hook
-
-**Complexity:** Medium. Requires graphic design or a compositing script. If done manually in Figma/Photoshop, it's a one-time artifact. If done programmatically (Astro + Satori), it adds build complexity.
-
-**Recommendation:** Static image. The site has one canonical share image. Dynamic generation (Satori, puppeteer-based) is over-engineered for a single-page event site.
-
----
-
-### 4. JSON-LD Event Structured Data
-
-Placed in a `<script type="application/ld+json">` block in `index.astro` (homepage only).
-
-**Required fields (Google will not show rich result without these):**
-- `name`
-- `startDate` (ISO-8601)
-- `location` (Place with address)
-
-**Recommended fields (needed for full rich result display):**
-
-```json
-{
-  "@context": "https://schema.org",
-  "@type": "Event",
-  "name": "MK Ultra Gravel",
-  "description": "100-mile gravel cycling event. Free ride with $10 suggested donation to Great Lakes Recovery Centers. Grinduro-style timed sectors. Mass start.",
-  "startDate": "2026-06-07T07:00:00",
-  "endDate": "2026-06-07T18:00:00",
-  "eventStatus": "https://schema.org/EventScheduled",
-  "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
-  "location": {
-    "@type": "Place",
-    "name": "Marquette Fire Bell",
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Marquette",
-      "addressRegion": "MI",
-      "addressCountry": "US"
-    }
-  },
-  "image": "https://mkultragravel.com/og-image.jpg",
-  "offers": {
-    "@type": "Offer",
-    "url": "https://www.bikereg.com/mk-ultra-gravel",
-    "price": "0",
-    "priceCurrency": "USD",
-    "availability": "https://schema.org/InStock"
-  },
-  "organizer": {
-    "@type": "Organization",
-    "name": "MK Ultra Gravel",
-    "url": "https://mkultragravel.com"
-  }
-}
-```
-
-**Field notes for this event:**
-- `startDate`: Exact start time unknown — use `T07:00:00` as a placeholder; update when confirmed
-- `endDate`: Estimated — 100 miles at typical gravel pace; use `T18:00:00` or omit if unknown
-- `offers.price`: `"0"` (string, not integer) signals a free event to Google
-- `eventAttendanceMode`: `OfflineEventAttendanceMode` — this is an in-person ride
-- `eventStatus`: `EventScheduled` — the event is planned and on track
-- `streetAddress`: Omit or use the Fire Bell location if a street address is available; Google does not require it
-
-**Complexity:** Low. Copy-paste JSON into a `<script>` block, update with real values. Validate with Google Rich Results Test before launch.
-
----
-
-### 5. Canonical URL Tag
-
-```html
-<link rel="canonical" href="https://mkultragravel.com/" />
-```
-
-**Why it matters:** The site will be accessible at both `mkultragravel.netlify.app` and `mkultragravel.com`. Without canonical, Google may index both and split link equity. The canonical tag tells Google which URL is the definitive one.
-
-**Complexity:** Low. One `<link>` tag in `BaseLayout.astro`. Must use the production domain (`mkultragravel.com`), not the Netlify subdomain. If the canonical domain is not live at build time, this tag should still be present — Google will honor it once the domain resolves.
-
----
-
-### 6. robots.txt
-
-Minimal file in `public/robots.txt`:
-
-```
-User-agent: *
-Allow: /
-
-Sitemap: https://mkultragravel.com/sitemap-index.xml
-```
-
-**Why it matters:** Without a robots.txt, crawlers still index the site, but the Sitemap directive helps Google discover pages faster. The `Allow: /` is explicit (some crawlers interpret missing Disallow as ambiguous).
-
-**Optional — block AI training bots (2025 consideration):**
-
-```
-User-agent: GPTBot
-Disallow: /
-
-User-agent: CCBot
-Disallow: /
-
-User-agent: anthropic-ai
-Disallow: /
-```
-
-This is optional and a values/policy decision, not a technical requirement. The site owner should decide.
-
-**Complexity:** Low. Static file, no build step needed.
-
----
-
-### 7. sitemap.xml
-
-Astro's official `@astrojs/sitemap` integration generates this automatically.
-
-**Setup:**
-```bash
-npm install @astrojs/sitemap
-```
-
-```js
-// astro.config.mjs
-import sitemap from '@astrojs/sitemap';
-
-export default defineConfig({
-  site: 'https://mkultragravel.com',
-  integrations: [sitemap()],
-});
-```
-
-The integration generates `sitemap-index.xml` and `sitemap-0.xml` at build time. The `site` field is mandatory — the integration throws an error without it.
-
-**What gets included:** All pages in `src/pages/` that return HTML. The `/results` page (if it redirects) should be filtered out since it's not indexable content.
-
-**Filter example:**
-```js
-sitemap({
-  filter: (page) => !page.includes('/results'),
-})
-```
-
-**Complexity:** Low. Install package, add to config, set `site` field. Five minutes.
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| **Images between paragraphs** | Action sports magazine cadence: text → image → text. Rhythm breaks text monotony. | LOW | 3 paragraphs = 2 image breaks. Each break is one tone image per gap. |
+| **Full-width image breaks** | Print magazines use full-bleed images as section dividers. Web equivalent is edge-to-edge, escaping content column constraint. | LOW-MEDIUM | CSS Grid full-bleed technique: wrapper with `1fr [content] 1fr`, `.full-bleed { grid-column: 1 / -1 }` |
+| **CSS-filtered tone images** | The design system already establishes this language via `.tone-image`. Editorial spreads in this aesthetic use heavily filtered imagery — not clean photos. | LOW | Layer on top of existing `.tone-image` baseline; vary filter chains per image for visual distinctiveness |
+| **Image opacity low enough to read against** | If tone images are purely decorative texture between paragraphs (not placed behind text), opacity can be higher than the 0.12 background treatment. 20–40% range is workable for between-paragraph images. | LOW | Already controlled by the `.tone-image` class; adjust per-image inline if needed |
+| **Section label / header above explainer** | Editorial sections always have a department label or section header — e.g., "FORMAT EXPLAINER" or "HOW IT WORKS". Currently only "Grinduro Format" in muted text. | LOW | Use `--font-display` (Special Elite) in uppercase with tracking — matches `.stamp` pattern |
+| **Consistent left-edge text column width** | Magazine body copy never runs full viewport width. 45–65 character line length is the reading standard. Current `max-w-2xl` (672px) is appropriate. Maintain on mobile. | LOW | Already achieved; do not break this in the redesign |
+| **Vertical spacing rhythm** | Magazine spreads have generous whitespace between text and image — not tight web padding. `py-8` to `py-12` between elements minimum. | LOW | Tailwind spacing tokens; already exists in design system |
 
 ---
 
 ## Differentiators
 
-Features that go beyond baseline and improve event discovery or sharing quality.
+Features that make this feel like a real magazine spread — not just text with pictures dropped in.
 
-### 1. Per-Page OG Tags (Results Page)
-
-If the `/results` page eventually shows real results instead of redirecting, it warrants its own `og:title` and `og:description`. Currently it redirects, so this is a non-issue — but the `BaseLayout.astro` should accept props for per-page OG overrides so this is easy to add later.
-
-**Implementation:** `BaseLayout.astro` accepts optional `ogTitle`, `ogDescription`, `ogImage` props; falls back to site defaults.
-
-**Complexity:** Low. A minor prop-passing pattern in the layout.
-
----
-
-### 2. Google Search Console Verification
-
-After launch, submit the sitemap to Google Search Console via the URL Inspection tool and request indexing. This is not a code change — it is a post-launch operational step. However, planning for it means ensuring the `site` field in `astro.config.mjs` matches the canonical domain exactly.
-
-**Complexity:** None (code). Low (operational). Zero development work required.
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| **Varied filter chains per tone image** | Single identical filter applied to all 32 images looks like a template. Each break gets a distinct treatment — one green-tinted, one high-contrast noir, one hue-rotated psychedelic. Visual variety signals editorial curation, not automation. | LOW | CSS filter order matters; see recipe table below |
+| **Oversized display type for paragraph openers** | Action sports magazines (Transworld, Dirt, Pinkbike features) use large initial letters or visually heavy first-line type to open feature sections. A `::first-letter` drop cap or scaled first-line with `font-size: 1.5–2em` using Special Elite signals editorial investment. | LOW-MEDIUM | `::first-letter` has 97%+ browser support; `initial-letter` is NOT baseline (missing Firefox as of 2026). Use `::first-letter` with `float: left` + `font-size: 3em` for safe cross-browser drop cap. |
+| **Pull quote between paragraphs** | A key phrase extracted and displayed at larger type creates a visual anchor — tells the reader what the paragraph means before they read it. For Grinduro, "Race the sectors. Suffer together." as a pull quote between paragraphs 2 and 3 lands with weight. | LOW | `blockquote` or `aside` element. Use `--font-display`, large size, `--color-accent-green`, slightly rotated (`transform: rotate(-1deg)`). |
+| **Image caption / source label** | Editorial images have minimal captions below them — one line, muted text, identifying source. For CIA documents this is on-brand: "CIA MKULTRA Collection, 1953" in `text-text-muted text-xs uppercase tracking-widest`. Already used in `MkUltraExplainer.astro` source attribution. | LOW | `<figcaption>` element. Do not over-label — one per image at most. |
+| **Slight rotation on tone images** | Print magazines use subtle tilt on photos for editorial informality — not grid-locked. `transform: rotate(-1deg)` or `rotate(1deg)` alternating per image creates collage texture. | LOW | CSS transform only. Combine with `overflow: hidden` on wrapper to clip rotated edges if needed. |
+| **`mix-blend-mode: lighten` to reveal image on dark bg** | Already established in `.tone-image`. `lighten` means dark pixels in the image disappear into the dark background — only light content shows. This is the core technique for "ghosting" CIA documents onto the dark background. | LOW | Already present in design system; confirmed HIGH confidence from MDN docs |
+| **Different image aspect ratios in sequence** | Magazines break rhythm with a landscape image followed by a portrait crop. Using a wide CIA document scan (landscape) then a portrait LSD artwork creates visual surprise. All tone images are pre-existing assets — no new image creation required. | LOW | `object-fit: cover` on consistent container heights; vary container height between breaks (e.g., `h-32` vs `h-48`) |
 
 ---
 
-### 3. Event Image with Branded Route Photo
+## CSS Filter Recipes
 
-Rather than a generic event banner, using one of the 71 actual route photos from the MK Ultra Gravel course with the event name, date, and "Marquette, MI" overlaid creates a preview image that communicates the actual character of the ride. This is differentiated relative to the vast majority of cycling event sites that use generic imagery.
+These are concrete filter combinations for the tone images. Apply via inline `style` attribute or Tailwind's `[filter:...]` arbitrary property to vary per image.
 
-**Recommendation:** Use a landscape-format photo from the Upper Peninsula terrain (a wooded trail or rocky section works best). Keep the text overlay minimal — event name, date, distance. The terrain communicates region implicitly.
+**Recipe A — Green phantom (CIA document reveal):**
+```css
+filter: grayscale(100%) contrast(1.4) brightness(0.7);
+mix-blend-mode: lighten;
+opacity: 0.25;
+```
+Effect: Stark black-and-white document, faint chartreuse tint from background bleeds through via `lighten` blend mode.
 
-**Complexity:** Low (manual in Figma). Medium (automated with Sharp/Satori).
+**Recipe B — Invert burn (psychedelic/LSD imagery):**
+```css
+filter: invert(1) hue-rotate(100deg) saturate(1.5) contrast(1.2);
+mix-blend-mode: screen;
+opacity: 0.15;
+```
+Effect: Colors shift dramatically — green-dominant psychedelic wash. `screen` blend mode on dark background creates additive glow effect.
 
----
+**Recipe C — Sepia ghost (Escher / vintage print):**
+```css
+filter: sepia(0.8) contrast(1.3) brightness(0.65);
+mix-blend-mode: lighten;
+opacity: 0.30;
+```
+Effect: Warm amber-brown ghost tone — reads as aged paper or vintage print.
 
-### 4. `og:type` "Event" Consideration
+**Recipe D — Hard noir (high-contrast CIA document):**
+```css
+filter: grayscale(100%) brightness(0.5) contrast(2.0);
+mix-blend-mode: lighten;
+opacity: 0.35;
+```
+Effect: Extreme two-tone — only the whitest parts of the image ghost through. Best for text documents where you want letter fragments to emerge.
 
-The OG protocol defines `og:type: "website"` as the default. There is no `event` type in the base OG spec. Using `website` is correct for the homepage. The JSON-LD `@type: "Event"` is the proper way to signal event type to Google — OG and JSON-LD serve different consumers (social platforms vs. search engines).
+**Recipe E — Hue-rotated landscape (outdoor photo):**
+```css
+filter: hue-rotate(180deg) saturate(0.8) contrast(1.1);
+mix-blend-mode: lighten;
+opacity: 0.20;
+```
+Effect: Familiar scene becomes alien — blues become orange-red, greens become purple. Disorienting for LSD sticker imagery.
 
-Do not set `og:type` to anything other than `website` for this site. The Event schema is in JSON-LD, not OG.
+**Note on filter order:** `grayscale()` before `sepia()` yields full gray (sepia has no hue to work with). `sepia()` before `grayscale()` yields full gray too. If combining both, apply `sepia()` only and omit `grayscale()`. `hue-rotate()` after `invert()` shifts the inverted colors, not the originals — useful for psychedelic stacking.
+
+**Blend mode selection guide for dark backgrounds:**
+- `lighten`: Image only visible where lighter than background. On near-black background, most of image shows. Safe default.
+- `screen`: Additive — brighter than `lighten`. Use for glowing/neon effects at low opacity.
+- `multiply`: Image only visible where darker than background. On dark bg, nearly everything disappears. Avoid.
+- `overlay`: Boosted contrast on mid-tones. Works on mid-gray toned images.
 
 ---
 
 ## Anti-Features
 
-Features to deliberately not build for this milestone.
+Features to deliberately NOT build. These degrade UX or conflict with the existing design.
 
 | Anti-Feature | Why Avoid | What to Do Instead |
 |--------------|-----------|-------------------|
-| Dynamic OG image generation (Satori, Puppeteer) | Over-engineered for a single-page event site with one canonical share image. Adds build complexity, Node canvas dependencies, potential Netlify timeout issues | One static JPEG/PNG placed in `public/` |
-| Twitter-specific image (1200×675 vs 1200×630) | The 45px height difference is invisible in practice. Two OG images to maintain for one social platform | Use 1200×630 for all platforms |
-| Multiple sitemaps manually managed | Redundant — `@astrojs/sitemap` handles this automatically at build time | Use the official integration |
-| Schema.org `SportsEvent` subtype | `SportsEvent` exists in Schema.org but Google does not use it for rich results — it treats it as a plain `Event`. Using it adds no value and may confuse validators | Use `@type: "Event"` |
-| `meta name="robots"` tag explicitly set | The site wants to be indexed everywhere. An explicit `index,follow` tag is redundant. It only adds value when you need to BLOCK indexing | Omit entirely; robots.txt + sitemap are sufficient |
-| Structured data for every page | Only the homepage has event content relevant for a rich result. `/results` redirects externally. Over-marking signals spam | JSON-LD on homepage only |
-| Social sharing buttons (tweet this, share on Facebook) | Adds JS weight and third-party tracking for marginal benefit. Event sites spread by link sharing, not social buttons | Clean sharable URL + good OG tags are sufficient |
-| Google Tag Manager / analytics for this milestone | Out of scope. Separate concern from SEO meta tags | Defer to a separate analytics phase if desired |
+| **Parallax scrolling on tone images** | Scrolljacking anti-pattern confirmed by NN/g and multiple sources. Breaks vestibular accessibility, fails on iOS Safari, penalizes users who scroll fast. The existing escher and lizard animations already provide motion texture — more scroll-triggered motion is noise. | Static positioned images. Motion comes from existing fixed-position overlay layers. |
+| **Carousel / slider between paragraphs** | Adds JavaScript, hidden-image SEO penalty, and breaks the linear reading flow that editorial spreads depend on. Action sports magazines do not carousel their feature images. | Static single image per break. Two images total (3 paragraphs = 2 gaps). |
+| **Image caption that restates the paragraph** | Redundant. Captions in editorial design are source attribution or oblique one-liners, not summaries. | Max one-line caption: source name + year. Or omit entirely. |
+| **Border or card box around tone images** | The existing `classified-border` box is used for the text content. Adding more boxes around the images makes everything feel like a data dashboard, not a magazine spread. | Full-bleed images, no border, no background fill, no card chrome. |
+| **JavaScript-based fade-in for images** | The existing `scroll-reveal` animation system already handles entrance animations via IntersectionObserver on `[data-reveal]` elements. Duplicating this with custom JS is a regression. | Add `data-reveal` attribute to tone image containers — they get the standard 0.35s ease-out reveal for free. |
+| **Multiple animated overlay layers per section** | The grain, escher, and lizard overlays are fixed-position at viewport level. Adding section-level animated overlays creates visual noise and performance cost. The fixed layers already provide sufficient texture. | One static tone image per paragraph break. The viewport-level overlays do the animation work. |
+| **Font change from Space Mono** | The monospace font is load-bearing for the brutalist aesthetic. Introducing a display serif or script font for captions or pull quotes would fracture the visual language. Special Elite is already the display face. | Pull quotes: Special Elite. Captions: Space Mono in `text-xs`. These are already the system fonts. |
+| **`initial-letter` CSS property for drop caps** | Not Baseline as of 2026 — absent in Firefox. Using it without fallback creates inconsistent rendering across browsers. | `::first-letter` with `float: left`, `font-size: 3em`, `line-height: 0.8`, `padding-right: 0.15em`. Universal support (97%+). |
+| **Inline SVG or Canvas texture layers per section** | The metaball `TopoDivider.astro` canvas already exists as a section divider. Adding more Canvas elements in the explainer section adds performance cost for marginal visual gain. | CSS filter + blend mode on existing tone images. No new Canvas elements. |
+| **`shape-outside` text wrap around images** | `shape-outside` requires floated elements and is best for silhouetted images with transparency channels. Tone images are rectangular and heavily filtered — there is no meaningful silhouette to wrap. Text should remain in its constrained column, images break out full-bleed between paragraphs. | Full-bleed image breaks. Text column stays constrained with `max-w-2xl`. |
 
 ---
 
 ## Feature Dependencies
 
 ```
-OG image (static file)
-  └── og:image tag requires absolute URL
-  └── twitter:image tag requires same URL
-  └── JSON-LD image field requires same URL
+CSS Grid full-bleed layout
+  └── required by: full-width image breaks
+  └── requires: wrapper element with grid-template-columns: 1fr min(content) 1fr
+  └── text paragraphs default to center column
+  └── .full-bleed images span 1 / -1
 
-Canonical domain (mkultragravel.com)
-  └── All absolute URLs depend on this being decided and set
-  └── astro.config.mjs `site` field must match
-  └── robots.txt Sitemap directive must match
-  └── canonical <link> tag must match
+CSS filter recipes
+  └── requires: tone images loaded in /public/tone/ (already exists)
+  └── enhances: mix-blend-mode: lighten (already on .tone-image)
+  └── varies per image via inline style or Tailwind arbitrary
 
-@astrojs/sitemap
-  └── Requires `site` field in astro.config.mjs
-  └── Requires build to run to generate XML files
-  └── robots.txt should reference generated sitemap-index.xml URL
+Drop cap (::first-letter)
+  └── applies to: first paragraph of redesigned explainer only
+  └── requires: Special Elite font (already loaded)
+  └── uses: float: left pattern (no new dependencies)
+
+Pull quote
+  └── placed between: paragraph 2 and paragraph 3
+  └── uses: Special Elite + accent-green (already tokens)
+  └── conflicts with: classified-border box if kept (pull quote should NOT be inside classified-border)
+
+scroll-reveal entrance
+  └── tone images get: data-reveal attribute
+  └── uses: existing IntersectionObserver in global.css + layout script
+  └── no new JS required
 ```
+
+### Dependency Notes
+
+- **Full-bleed layout requires a grid wrapper at section level.** The current `GrinduroExplainer.astro` wraps content in a `classified-border div`. That box must be removed or restructured — a `classified-border` that constrains everything cannot coexist with full-bleed image breaks that escape the column. Choose: either keep `classified-border` for the text content only (and place images outside/between), or drop the box entirely in favor of the magazine spread structure.
+- **`mix-blend-mode` requires `isolation: isolate` on parent.** If the tone images blend incorrectly with elements behind them (e.g., the fixed overlay layers), add `isolation: isolate` to the section wrapper. This creates a new stacking context, preventing blend modes from compositing against fixed-position ancestors.
 
 ---
 
 ## MVP Recommendation
 
-For this milestone, in priority order:
+This is a single-component redesign. "MVP" here means the minimum that delivers magazine feel vs. the current text box.
 
-1. **Canonical URL tag** — one line, prevents domain-splitting issues from day one
-2. **Open Graph tags** — four required tags; five minutes to implement; unlocks all social previews
-3. **Twitter Card tags** — three tags; builds directly on OG tag work
-4. **OG share image** — the only creative work; 1200×630 JPEG using a route photo
-5. **JSON-LD Event schema** — copy-paste template above; update with real values; validate with Rich Results Test
-6. **robots.txt** — static file in `public/`; include Sitemap directive
-7. **sitemap.xml via @astrojs/sitemap** — install integration, set `site` field, done
+### Launch With (Phase 1: core editorial structure)
 
-Total implementation time estimate: 2-4 hours (dominated by OG image creation).
+- [ ] Remove `classified-border` wrapper from Grinduro explainer (or restructure to allow full-bleed breaks)
+- [ ] Implement CSS Grid full-bleed layout on the section
+- [ ] Add two tone image breaks (between paragraphs 1–2 and 2–3) with filter Recipe A and Recipe D
+- [ ] Apply `data-reveal` to image containers for existing scroll-reveal entrance
+- [ ] Preserve `p.text-text-muted` section label ("Grinduro Format")
 
-Post-launch operational step (no code): Submit sitemap to Google Search Console.
+### Add After Phase 1 (Phase 2: editorial flourish)
+
+- [ ] Drop cap on first paragraph using `::first-letter` (Special Elite, `float: left`, `font-size: 3em`)
+- [ ] Pull quote between paragraphs 2 and 3: "Race the sectors. Suffer together." — Special Elite, accent-green, slight negative rotation
+- [ ] Figure captions under tone images: source attribution line in `text-text-muted text-xs uppercase`
+- [ ] Vary filter recipe between the two image breaks (A + D or B + C — not two identical treatments)
+
+### Elevation Label Fix (Separate Phase)
+
+The phase title includes "elevation label fix" — this is distinct from the editorial redesign. Based on existing phase plans (phases 19 and 20 added KOM bands and bike icon crosshair to the elevation profile), the likely fix is a label positioning or display issue on KOM segment labels or sector bands. Research for that specific bug is in the debug files.
 
 ---
 
-## Validation Checklist
+## Feature Prioritization Matrix
 
-Before shipping this milestone:
-
-- [ ] OG tags verified with [opengraph.xyz](https://www.opengraph.xyz/) (paste URL, see preview)
-- [ ] Twitter Card verified with [cards-dev.x.com/validator](https://cards-dev.x.com/validator)
-- [ ] JSON-LD validated with [Google Rich Results Test](https://search.google.com/test/rich-results)
-- [ ] JSON-LD validated with [Schema.org validator](https://validator.schema.org/)
-- [ ] All absolute URLs use `https://mkultragravel.com/` (not `netlify.app`)
-- [ ] OG image is under 1MB, 1200×630
-- [ ] sitemap.xml accessible at `https://mkultragravel.com/sitemap-index.xml`
-- [ ] robots.txt accessible at `https://mkultragravel.com/robots.txt`
-- [ ] Sitemap URL in robots.txt matches generated sitemap filename
+| Feature | User Value | Implementation Cost | Priority |
+|---------|------------|---------------------|----------|
+| Full-bleed image breaks | HIGH — primary visual impact | LOW | P1 |
+| CSS Grid full-bleed layout | HIGH — enables image breaks | LOW | P1 |
+| CSS filter recipes on tone images | HIGH — CIA aesthetic texture | LOW | P1 |
+| Drop cap (first letter) | MEDIUM — editorial signal | LOW | P2 |
+| Pull quote | MEDIUM — readability anchor | LOW | P2 |
+| Image captions | LOW — attribution only | LOW | P3 |
+| Slight image rotation | LOW — collage texture | LOW | P3 |
 
 ---
 
 ## Sources
 
-- [The Open Graph protocol — ogp.me](https://ogp.me/) (HIGH confidence — authoritative spec)
-- [Google Search Central — Event Structured Data](https://developers.google.com/search/docs/appearance/structured-data/event) (HIGH confidence — official)
-- [X Developer Platform — Summary Card with Large Image](https://developer.twitter.com/en/docs/twitter-for-websites/cards/overview/summary-card-with-large-image) (HIGH confidence — official)
-- [Astro Docs — @astrojs/sitemap](https://docs.astro.build/en/guides/integrations-guide/sitemap/) (HIGH confidence — official)
-- [jsonld.com — Event example](https://jsonld.com/event/) (MEDIUM confidence — community reference verified against Google docs)
-- [OG Image Size Guide 2026](https://myogimage.com/blog/og-image-size-meta-tags-complete-guide) (MEDIUM confidence — verified against platform specs)
-- [Open Graph Image Sizes for Social Media — krumzi.com](https://www.krumzi.com/blog/open-graph-image-sizes-for-social-media-the-complete-2026-guide) (MEDIUM confidence)
-- [OG Image Size Guide — ogpreview.app](https://ogpreview.app/guides/og-image-sizes) (MEDIUM confidence)
-- [Canonical Tag Guide — Ahrefs](https://ahrefs.com/blog/canonical-tags/) (MEDIUM confidence)
-- [robots.txt and SEO — Search Engine Land](https://searchengineland.com/robots-txt-seo-453779) (MEDIUM confidence)
+- [MDN — CSS filter property](https://developer.mozilla.org/en-US/docs/Web/CSS/filter) — HIGH confidence: all filter functions, parameter ranges, order effects
+- [Josh W. Comeau — CSS full-bleed layout](https://www.joshwcomeau.com/css/full-bleed/) — HIGH confidence: CSS Grid full-bleed technique with named columns
+- [MDN — mix-blend-mode](https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode) — HIGH confidence: blend mode values and dark background behavior
+- [MDN — initial-letter](https://developer.mozilla.org/en-US/docs/Web/CSS/initial-letter) — HIGH confidence: "not Baseline" status confirmed, Firefox missing
+- [caniuse.com — CSS initial-letter](https://caniuse.com/css-initial-letter) — HIGH confidence: browser support table
+- [caniuse.com — ::first-letter](https://caniuse.com/css-first-letter) — HIGH confidence: 97%+ support confirmed
+- [DEV Community — CSS Image Filters Guide 2025](https://dev.to/satyam_gupta_0d1ff2152dcc/css-image-filters-the-ultimate-guide-to-stunning-visual-effects-in-2025-2mc4) — MEDIUM confidence: filter combination recipes
+- [NN/g — Parallax Usability](https://www.nngroup.com/articles/parallax-usability/) — HIGH confidence: parallax anti-pattern, scrolljacking UX problems
+- [Beamtic — Avoid Scrolljacking](https://beamtic.com/scrolljacking-a-ux-problem) — MEDIUM confidence: scrolljacking UX anti-pattern
+- [Wikipedia — Pull quote](https://en.wikipedia.org/wiki/Pull_quote) — HIGH confidence: definition and editorial role
+- [Smashing Magazine — Magazine Layout with CSS Grid Areas](https://www.smashingmagazine.com/2023/02/build-magazine-layout-css-grid-areas/) — MEDIUM confidence: CSS Grid editorial patterns
+- Direct codebase inspection: `GrinduroExplainer.astro`, `MkUltraExplainer.astro`, `global.css` — HIGH confidence on existing `.tone-image` class, overlay layer structure, design tokens
+
+---
+
+*Feature research for: MK Ultra Gravel v10.6 Explainer Redesign*
+*Researched: 2026-04-13*
