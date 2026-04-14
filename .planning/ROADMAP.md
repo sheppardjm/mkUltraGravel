@@ -51,7 +51,7 @@ Phases 1-59 shipped across 99 plans. Key capabilities delivered:
 
 **Milestone Goal:** Transform the Grinduro explainer section into a snowboarding-magazine editorial layout with CSS-filtered tone images, and fix the Down Jeep elevation profile label so it renders correctly.
 
-### Phase 60: Down Jeep Elevation Label Fix
+### Phase 60: Down Jeep Elevation Label Fix ✅
 
 **Goal:** The Down Jeep sector name renders horizontally and without clipping on the elevation profile at desktop viewports.
 
@@ -59,16 +59,10 @@ Phases 1-59 shipped across 99 plans. Key capabilities delivered:
 
 **Requirements:** ELEV-09
 
-**Success Criteria** (what must be TRUE):
-1. The Down Jeep sector label displays its name text on the elevation profile at viewport widths >= 640px
-2. The label text is not clipped, truncated, or hidden by the chart boundary
-3. All other sector and KOM labels are visually unchanged
-4. Mobile behavior (< 640px) is documented — label suppression at mobile is preserved by existing `window.innerWidth >= 640` gate
-
-**Plans:** TBD
+**Completed:** 2026-04-13
 
 Plans:
-- [ ] 60-01: Diagnose and fix Down Jeep labelContent conditional; visual QA across all sectors
+- [x] 60-01: Diagnose and fix Down Jeep labelContent conditional; visual QA across all sectors
 
 ---
 
@@ -101,5 +95,5 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1-59 | v1.0–v10.5 | 99/99 | Complete | 2026-04-10 |
-| 60. Down Jeep Elevation Label Fix | v10.6 | 0/TBD | Not started | - |
+| 60. Down Jeep Elevation Label Fix | v10.6 | 1/1 | Complete | 2026-04-13 |
 | 61. GrinduroExplainer Editorial Redesign | v10.6 | 0/TBD | Not started | - |

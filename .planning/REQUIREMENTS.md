@@ -7,7 +7,7 @@
 
 ### Elevation Profile
 
-- [ ] **ELEV-09**: Down Jeep sector label rendered horizontally without clipping on the elevation profile
+- [x] **ELEV-09**: Down Jeep sector label rendered horizontally without clipping on the elevation profile
 
 ### Explainer Layout
 
@@ -43,7 +43,7 @@ None deferred — tight milestone scope.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ELEV-09 | Phase 60 | Pending |
+| ELEV-09 | Phase 60 | Complete |
 | EDIT-01 | Phase 61 | Pending |
 | EDIT-02 | Phase 61 | Pending |
 | EDIT-03 | Phase 61 | Pending |
@@ -59,4 +59,4 @@ None deferred — tight milestone scope.
 
 ---
 *Requirements defined: 2026-04-13*
-*Last updated: 2026-04-13 after roadmap creation*
+*Last updated: 2026-04-13 after Phase 60 completion*
