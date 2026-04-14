@@ -82,11 +82,11 @@ Plans:
 5. A pull quote appears between paragraphs with magazine-style accent-color emphasis
 6. Tone image containers and text blocks animate in on scroll using the existing `data-reveal` pattern
 
-**Plans:** TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 61-01: CSS Grid full-bleed wrapper + containment fix + first tone image
-- [ ] 61-02: Second image break, drop cap, pull quote, scroll-reveal
+- [ ] 61-01: CSS Grid full-bleed layout + two tone image breaks with distinct filter recipes
+- [ ] 61-02: Drop cap typography, pull quote, and scroll-reveal animations
 
 ---
 
