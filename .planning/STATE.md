@@ -5,18 +5,18 @@
 See: .planning/PROJECT.md (updated 2026-04-13)
 
 **Core value:** Get gravel cyclists excited enough about this ride to show up on June 7, 2026.
-**Current focus:** v10.6 — Phase 60: Down Jeep Elevation Label Fix
+**Current focus:** v10.6 — Phase 61: GrinduroExplainer Magazine Editorial Redesign
 
 ## Current Position
 
 Milestone: v10.6 Explainer Redesign + Elevation Fix
 Phase: 61 of 61 (GrinduroExplainer Redesign)
-Plan: — (not yet planned)
-Status: Phase 60 complete — ready to plan Phase 61
-Last activity: 2026-04-14 — Completed 60-01-PLAN.md
+Plan: 01 of 2 complete
+Status: In progress — Plan 01 complete, Plan 02 pending
+Last activity: 2026-04-13 — Completed 61-01-PLAN.md
 
-Progress: 14 milestones shipped, 100 plans across 60 phases complete
-v10.6: [█░░░░░░░░░] 50% (1/2 phases)
+Progress: 14 milestones shipped, 101 plans across 61 phases complete
+v10.6: [███████████] 75% (phase 60 done + 61-01 done, 61-02 pending)
 
 ## Performance Metrics
 
@@ -38,8 +38,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 - v10.3: `labelContent` unconditional for narrow sectors — `isNarrow` controls rotation only, not content. Noted in Key Decisions.
 - v10.6 scope: No new npm packages. Pure CSS + Astro component changes only.
-- v10.6 scope: `classified-border` outer wrapper on GrinduroExplainer must be removed to allow full-bleed image breaks.
+- v10.6 scope: `classified-border` outer wrapper on GrinduroExplainer must be removed to allow full-bleed image breaks. DONE in 61-01.
 - Phase 60: Removed `isNarrow` rotation entirely — start-anchor + xAdjust inset is superior to -90 rotation for narrow horizontal-axis bands.
+- Phase 61-01: CSS Grid 3-column pattern (1fr min(52ch,100%) 1fr) established; full-bleed via grid-column: 1/-1. Recipe A = high-contrast posterize, Recipe B = duotone green.
 
 ### Pending Todos
 
@@ -48,10 +49,10 @@ None.
 ### Blockers/Concerns
 
 - Phase 60: Down Jeep fix may already be in place from v10.3 work. Read `ElevationProfile.astro` label logic before writing plan — if unconditional, phase collapses to visual QA only.
-- Phase 61: `position: relative` on GrinduroExplainer outer wrapper is required before tone images — containment pitfall is well-understood, must verify first in plan execution.
+- Phase 61-02: Drop cap, pull quote, and scroll-reveal layer on top of 61-01 grid foundation. No new npm packages.
 
 ## Session Continuity
 
-Last session: 2026-04-14
-Stopped at: Completed 60-01-PLAN.md (Down Jeep elevation label fix). Ready to plan Phase 61.
+Last session: 2026-04-13
+Stopped at: Completed 61-01-PLAN.md (CSS Grid editorial layout with full-bleed tone image breaks). Ready for 61-02.
 Resume file: None
