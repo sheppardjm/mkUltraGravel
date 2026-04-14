@@ -76,11 +76,12 @@
       label: {
         display: () => window.innerWidth >= 640,
         content: labelContent,
-        position: { x: 'center', y: 'end' },
+        position: { x: isNarrow ? 'start' : 'center', y: 'end' },
+        xAdjust: isNarrow ? 4 : 0,
         color: starColors[sector.stars] + 'cc',
         font: { size: 9, family: 'Space Mono, monospace' },
         yAdjust: i % 2 === 0 ? 0 : -16,
-        rotation: isNarrow ? -90 : 0,
+        rotation: 0,
       },
       click: () => {
         window.dispatchEvent(new CustomEvent('elevation:sectorClick', {
