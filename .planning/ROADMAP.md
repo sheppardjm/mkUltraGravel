@@ -51,18 +51,19 @@ Phases 1-59 shipped across 99 plans. Key capabilities delivered:
 
 **Milestone Goal:** Transform the Grinduro explainer section into a snowboarding-magazine editorial layout with CSS-filtered tone images, and fix the Down Jeep elevation profile label so it renders correctly.
 
-### Phase 60: Down Jeep Elevation Label Fix ✅
+### Phase 60: Down Jeep Elevation Label Fix
 
-**Goal:** The Down Jeep sector name renders horizontally and without clipping on the elevation profile at desktop viewports.
+**Goal:** The Down Jeep sector name renders horizontally and without clipping on the elevation profile at desktop viewports. All sector labels have sufficient vertical clearance to avoid collision at any desktop width.
 
 **Depends on:** Nothing (independent of Phase 61)
 
 **Requirements:** ELEV-09
 
-**Completed:** 2026-04-13
+**Plans:** 2 plans
 
 Plans:
 - [x] 60-01: Diagnose and fix Down Jeep labelContent conditional; visual QA across all sectors
+- [ ] 60-02: Gap closure — increase odd-index yAdjust for Haavisto/Akkala Rd label collision fix
 
 ---
 
@@ -87,5 +88,5 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1-59 | v1.0–v10.5 | 99/99 | Complete | 2026-04-10 |
-| 60. Down Jeep Elevation Label Fix | v10.6 | 1/1 | Complete | 2026-04-13 |
+| 60. Down Jeep Elevation Label Fix | v10.6 | 1/2 | Gap closure | — |
 | 61. GrinduroExplainer Editorial Redesign | v10.6 | 2/2 | Complete | 2026-04-13 |
