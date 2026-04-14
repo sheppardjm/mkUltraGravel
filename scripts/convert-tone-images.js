@@ -30,6 +30,7 @@ const TONE_IMAGES = [
   { src: 'Mkultra-lsd-doc.jpg',      dest: 'Mkultra-lsd-doc.webp',      width: 1000, quality: 60 },
   { src: 'escharian_stairs_fb.webp', dest: 'escharian_stairs_fb.webp',  width: 500, quality: 50 },
   { src: 'square-limit-mc-escher-1964.jpg', dest: 'square-limit-mc-escher.webp', width: 600, quality: 35 },
+  { src: 'PAN_EscherNatWorld-1.webp', dest: 'pan-escher-nat-world.webp', width: 1000, quality: 50 },
 ];
 
 async function convertToneImages() {
