@@ -1,5 +1,5 @@
 ---
-status: complete
+status: diagnosed
 phase: 60-down-jeep-elevation-label-fix
 source: [60-01-SUMMARY.md]
 started: 2026-04-13T22:00:00Z
@@ -41,7 +41,10 @@ skipped: 0
   reason: "User reported: Under 1576px, the sector names on the ele profile begin to collide, specifically, Haavisto with Akkala Rd. Haavisto needs to be higher to avoid collision."
   severity: minor
   test: 3
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "Generic even/odd yAdjust alternation (-16px) on line 83 of ElevationProfile.astro doesn't clear the ~21.6px label height. Akkala Rd and Haavisto are the tightest adjacent pair (3.49mi apart), so they collide horizontally below ~1576px with insufficient vertical offset."
+  artifacts:
+    - path: "src/components/ElevationProfile.astro"
+      issue: "yAdjust: i % 2 === 0 ? 0 : -16 — only 16px offset for ~21.6px tall labels"
+  missing:
+    - "Increase odd-index yAdjust from -16 to -28 for full vertical clearance"
+  debug_session: ".planning/debug/haavisto-akkala-label-collision.md"
