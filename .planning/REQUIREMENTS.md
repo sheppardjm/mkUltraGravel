@@ -43,20 +43,20 @@ None deferred — tight milestone scope.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ELEV-09 | TBD | Pending |
-| EDIT-01 | TBD | Pending |
-| EDIT-02 | TBD | Pending |
-| EDIT-03 | TBD | Pending |
-| EDIT-04 | TBD | Pending |
-| EDIT-05 | TBD | Pending |
-| EDIT-06 | TBD | Pending |
-| EDIT-07 | TBD | Pending |
+| ELEV-09 | Phase 60 | Pending |
+| EDIT-01 | Phase 61 | Pending |
+| EDIT-02 | Phase 61 | Pending |
+| EDIT-03 | Phase 61 | Pending |
+| EDIT-04 | Phase 61 | Pending |
+| EDIT-05 | Phase 61 | Pending |
+| EDIT-06 | Phase 61 | Pending |
+| EDIT-07 | Phase 61 | Pending |
 
 **Coverage:**
 - v10.6 requirements: 8 total
-- Mapped to phases: 0
-- Unmapped: 8 ⚠️
+- Mapped to phases: 8
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-04-13*
-*Last updated: 2026-04-13 after initial definition*
+*Last updated: 2026-04-13 after roadmap creation*
