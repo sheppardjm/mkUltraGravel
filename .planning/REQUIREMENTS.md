@@ -11,19 +11,19 @@
 
 ### Explainer Layout
 
-- [ ] **EDIT-01**: GrinduroExplainer uses CSS Grid full-bleed layout with tone images breaking up the three paragraphs
-- [ ] **EDIT-02**: Tone images from `images/tone/` rendered with heavy CSS filters (grayscale, contrast, blur, brightness) obscuring originals
-- [ ] **EDIT-03**: Each tone image uses a distinct filter recipe (duotone, posterize, high-contrast, etc.)
-- [ ] **EDIT-04**: Mix-blend-mode compositing correct on dark background with existing overlay layers
+- [x] **EDIT-01**: GrinduroExplainer uses CSS Grid full-bleed layout with tone images breaking up the three paragraphs
+- [x] **EDIT-02**: Tone images from `images/tone/` rendered with heavy CSS filters (grayscale, contrast, blur, brightness) obscuring originals
+- [x] **EDIT-03**: Each tone image uses a distinct filter recipe (duotone, posterize, high-contrast, etc.)
+- [x] **EDIT-04**: Mix-blend-mode compositing correct on dark background with existing overlay layers
 
 ### Explainer Typography
 
-- [ ] **EDIT-05**: Drop cap on opening paragraph using `::first-letter`
-- [ ] **EDIT-06**: Pull quote styling on key phrases with magazine-style emphasis
+- [x] **EDIT-05**: Drop cap on opening paragraph using `::first-letter`
+- [x] **EDIT-06**: Pull quote styling on key phrases with magazine-style emphasis
 
 ### Explainer Animation
 
-- [ ] **EDIT-07**: Scroll-reveal entrance animations on images and text blocks (matching existing site pattern)
+- [x] **EDIT-07**: Scroll-reveal entrance animations on images and text blocks (matching existing site pattern)
 
 ## Future Requirements
 
@@ -44,13 +44,13 @@ None deferred — tight milestone scope.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | ELEV-09 | Phase 60 | Complete |
-| EDIT-01 | Phase 61 | Pending |
-| EDIT-02 | Phase 61 | Pending |
-| EDIT-03 | Phase 61 | Pending |
-| EDIT-04 | Phase 61 | Pending |
-| EDIT-05 | Phase 61 | Pending |
-| EDIT-06 | Phase 61 | Pending |
-| EDIT-07 | Phase 61 | Pending |
+| EDIT-01 | Phase 61 | Complete |
+| EDIT-02 | Phase 61 | Complete |
+| EDIT-03 | Phase 61 | Complete |
+| EDIT-04 | Phase 61 | Complete |
+| EDIT-05 | Phase 61 | Complete |
+| EDIT-06 | Phase 61 | Complete |
+| EDIT-07 | Phase 61 | Complete |
 
 **Coverage:**
 - v10.6 requirements: 8 total
@@ -59,4 +59,4 @@ None deferred — tight milestone scope.
 
 ---
 *Requirements defined: 2026-04-13*
-*Last updated: 2026-04-13 after Phase 60 completion*
+*Last updated: 2026-04-13 after Phase 61 completion*

@@ -17,7 +17,7 @@
 - ✅ **v10.3 Mobile Elevation Labels** — Phase 52 (shipped 2026-04-08)
 - ✅ **v10.4 Card Display Polish** — Phases 53-55 (shipped 2026-04-08)
 - ✅ **v10.5 SEO & Social Sharing** — Phases 56-59 (shipped 2026-04-10)
-- 🚧 **v10.6 Explainer Redesign + Elevation Fix** — Phases 60-61 (in progress)
+- ✅ **v10.6 Explainer Redesign + Elevation Fix** — Phases 60-61 (shipped 2026-04-13)
 
 ---
 
@@ -47,7 +47,7 @@ Phases 1-59 shipped across 99 plans. Key capabilities delivered:
 
 ---
 
-## 🚧 v10.6 Explainer Redesign + Elevation Fix (In Progress)
+## ✅ v10.6 Explainer Redesign + Elevation Fix (Shipped 2026-04-13)
 
 **Milestone Goal:** Transform the Grinduro explainer section into a snowboarding-magazine editorial layout with CSS-filtered tone images, and fix the Down Jeep elevation profile label so it renders correctly.
 
@@ -66,7 +66,7 @@ Plans:
 
 ---
 
-### Phase 61: GrinduroExplainer Magazine Editorial Redesign
+### Phase 61: GrinduroExplainer Magazine Editorial Redesign ✅
 
 **Goal:** The Grinduro format explainer reads like an action sports magazine editorial — full-bleed filtered tone images break up the three paragraphs, a drop cap opens the section, and a pull quote gives it rhythm.
 
@@ -74,19 +74,11 @@ Plans:
 
 **Requirements:** EDIT-01, EDIT-02, EDIT-03, EDIT-04, EDIT-05, EDIT-06, EDIT-07
 
-**Success Criteria** (what must be TRUE):
-1. Two filtered tone images appear as full-bleed breaks between the three explainer paragraphs, escaping the text column
-2. Each tone image uses a distinct heavy CSS filter recipe — originals are obscured, not merely tinted
-3. Tone image compositing does not create a white or bright halo against the dark background; overlay layers (grain, escher, lizard) render correctly above the images
-4. The opening paragraph has a drop cap using `::first-letter` in Special Elite at approximately 3em
-5. A pull quote appears between paragraphs with magazine-style accent-color emphasis
-6. Tone image containers and text blocks animate in on scroll using the existing `data-reveal` pattern
-
-**Plans:** 2 plans
+**Completed:** 2026-04-13
 
 Plans:
-- [ ] 61-01: CSS Grid full-bleed layout + two tone image breaks with distinct filter recipes
-- [ ] 61-02: Drop cap typography, pull quote, and scroll-reveal animations
+- [x] 61-01: CSS Grid full-bleed layout + two tone image breaks with distinct filter recipes
+- [x] 61-02: Drop cap typography, pull quote, and scroll-reveal animations
 
 ---
 
@@ -96,4 +88,4 @@ Plans:
 |-------|-----------|----------------|--------|-----------|
 | 1-59 | v1.0–v10.5 | 99/99 | Complete | 2026-04-10 |
 | 60. Down Jeep Elevation Label Fix | v10.6 | 1/1 | Complete | 2026-04-13 |
-| 61. GrinduroExplainer Editorial Redesign | v10.6 | 0/TBD | Not started | - |
+| 61. GrinduroExplainer Editorial Redesign | v10.6 | 2/2 | Complete | 2026-04-13 |
