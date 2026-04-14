@@ -10,13 +10,13 @@ See: .planning/PROJECT.md (updated 2026-04-13)
 ## Current Position
 
 Milestone: v10.6 Explainer Redesign + Elevation Fix
-Phase: 60 of 61 (Down Jeep Elevation Label Fix)
+Phase: 61 of 61 (GrinduroExplainer Redesign)
 Plan: — (not yet planned)
-Status: Ready to plan
-Last activity: 2026-04-13 — Roadmap created for v10.6
+Status: Phase 60 complete — ready to plan Phase 61
+Last activity: 2026-04-14 — Completed 60-01-PLAN.md
 
-Progress: 14 milestones shipped, 99 plans across 59 phases complete
-v10.6: [░░░░░░░░░░] 0% (0/2 phases)
+Progress: 14 milestones shipped, 100 plans across 60 phases complete
+v10.6: [█░░░░░░░░░] 50% (1/2 phases)
 
 ## Performance Metrics
 
@@ -39,6 +39,7 @@ Recent decisions affecting current work:
 - v10.3: `labelContent` unconditional for narrow sectors — `isNarrow` controls rotation only, not content. Noted in Key Decisions.
 - v10.6 scope: No new npm packages. Pure CSS + Astro component changes only.
 - v10.6 scope: `classified-border` outer wrapper on GrinduroExplainer must be removed to allow full-bleed image breaks.
+- Phase 60: Removed `isNarrow` rotation entirely — start-anchor + xAdjust inset is superior to -90 rotation for narrow horizontal-axis bands.
 
 ### Pending Todos
 
@@ -51,6 +52,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-13
-Stopped at: Roadmap created for v10.6. Ready to plan Phase 60.
+Last session: 2026-04-14
+Stopped at: Completed 60-01-PLAN.md (Down Jeep elevation label fix). Ready to plan Phase 61.
 Resume file: None
