@@ -168,6 +168,20 @@
     pointer-events: none;
   }
 
+  .explainer-grid {
+    display: grid;
+    grid-template-columns: 1fr min(52ch, 100%) 1fr;
+  }
+
+  .explainer-grid > * {
+    grid-column: 2;
+  }
+
+  .full-bleed {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
   /* Leaflet dark theme overrides */
   .leaflet-popup.dark-popup .leaflet-popup-content-wrapper {
     background: oklch(0.18 0.01 250);

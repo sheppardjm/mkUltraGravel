@@ -1,17 +1,45 @@
 ---
 // GrinduroExplainer.astro — Grinduro format explainer (CONT-06)
+// Magazine editorial layout: CSS Grid full-bleed with tone image breaks
 ---
-<div class="classified-border p-6 md:p-8 mb-8 text-text-body text-sm leading-relaxed space-y-3">
-  <p class="text-text-muted text-xs uppercase tracking-widest mb-4 !mt-0">Grinduro Format</p>
-  <p>This isn&apos;t a time trial. It&apos;s a mass-start sufferfest with structure.</p>
-  <p>
+<section class="explainer-grid py-8 mb-8">
+  <p class="text-text-muted text-xs uppercase tracking-widest mb-4">Grinduro Format</p>
+
+  <p class="text-text-body text-sm leading-relaxed">
+    This isn&apos;t a time trial. It&apos;s a mass-start sufferfest with structure.
+  </p>
+
+  <div class="full-bleed relative overflow-hidden my-6" style="height: 260px;">
+    <img
+      src="/tone/square-limit-mc-escher.webp"
+      alt=""
+      aria-hidden="true"
+      class="tone-image inset-0 w-full h-full object-cover"
+      style="opacity: 0.40; filter: grayscale(100%) contrast(2.5) brightness(0.55);"
+      loading="lazy"
+    />
+  </div>
+
+  <p class="text-text-body text-sm leading-relaxed">
     <strong class="text-accent-white">Seven gravel sectors</strong> are timed &mdash;
     rated 1&ndash;5 stars by surface brutality, Paris-Roubaix style.
     <strong class="text-accent-green">Three KOM/QOM climbs</strong> are timed separately &mdash;
     fastest up takes the segment.
   </p>
-  <p>
+
+  <div class="full-bleed relative overflow-hidden my-6" style="height: 260px;">
+    <img
+      src="/tone/pan-escher-nat-world.webp"
+      alt=""
+      aria-hidden="true"
+      class="tone-image inset-0 w-full h-full object-cover"
+      style="opacity: 0.35; filter: grayscale(100%) sepia(80%) hue-rotate(60deg) saturate(4) contrast(1.4) brightness(0.7);"
+      loading="lazy"
+    />
+  </div>
+
+  <p class="text-text-body text-sm leading-relaxed">
     Everything between? Challenging, remote, and utterly untimed.
     Ride your own ride. Race the sectors. Suffer together.
   </p>
-</div>
+</section>
